@@ -177,7 +177,7 @@ func (s *CombatScene) drainOrigin(gs *state.GlobalState, d drainFlight) (image.P
 // relicCenter is the middle of one worn relic's card in the row, or false for a relic the row is not
 // drawing — which raises nothing rather than something leaving the corner of the screen.
 func (s *CombatScene) relicCenter(gs *state.GlobalState, id combat.RelicID) (image.Point, bool) {
-	seat, ok := wornSeatOf(gs, id)
+	seat, ok := s.wornSeatOf(gs, id)
 	if !ok {
 		return image.Point{}, false
 	}
@@ -188,14 +188,15 @@ func (s *CombatScene) relicCenter(gs *state.GlobalState, id combat.RelicID) (ima
 // wornSeatOf is where in the relic row one relic is standing, by the key the rules know it as.
 //
 // **The run is the authority on worn order**, exactly as wornRelics says — the screen is looking
-// a position up, not deciding one.
-func wornSeatOf(gs *state.GlobalState, id combat.RelicID) (int, bool) {
+// a position up, not deciding one. The fight's cantrip-relics stand after the run's, in cast order;
+// see paneRelics.
+func (s *CombatScene) wornSeatOf(gs *state.GlobalState, id combat.RelicID) (int, bool) {
 	if gs.Run == nil {
 		return 0, false
 	}
 	key := combat.RelicOf(id).Key
-	for i, worn := range gs.Run.Worn() {
-		if worn == key {
+	for i, worn := range s.paneRelics(gs) {
+		if worn.RelicRecord == key {
 			return i, true
 		}
 	}

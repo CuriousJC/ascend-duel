@@ -940,7 +940,7 @@
       <div class="record">achievement-toast</div>
       <div class="facts">opens on combat · room 0</div>
       <code class="cmd">DUELLO_SCENARIO=achievement-toast go run -tags scenario .</code>
-      <p class="blurb">Four cheap attacks across three forms and four elements, plus a defense: one turn that earns Spectrum, Weaponmaster and Arsenal at once, which is three toasts in a row and the only way to see the queue drain. Jab, Cut and Thump are 1 AP, so the whole thing fits the 6 AP turn. Elementalist is deliberately not reachable from this hand - five elements needs five attacks, and a turn holds five cards, so it and Arsenal cannot both land on one turn. The awards are written to the real profile; point DUELLO_PROFILE at an empty directory to see them land again.</p>
+      <p class="blurb">Four cheap attacks across three forms and four elements, plus a defense: one turn that earns Spectrum, Weaponmaster and Kitchen Sink at once, which is three toasts in a row and the only way to see the queue drain. Jab, Cut and Thump are 1 AP, so the whole thing fits the 6 AP turn. Elementalist is deliberately not reachable from this hand - five elements needs five attacks, and a turn holds five cards, so it and Kitchen Sink cannot both land on one turn. The awards are written to the real profile; point DUELLO_PROFILE at an empty directory to see them land again.</p>
 
       
         <div class="strip">
@@ -1802,21 +1802,26 @@
       <div class="record">cantrips</div>
       <div class="facts">opens on combat · room 0 · against animals-outer-rat</div>
       <code class="cmd">DUELLO_SCENARIO=cantrips go run -tags scenario .</code>
-      <p class="blurb">Two Cantrips of Endurance and two of Might in the consumables pane, against a rat that can be beaten. Cast them between turns: Endurance doubles the life and the ceiling together, Might adds to DMG and turns the DMG row pink, and both stack. Win the fight and the post-battle screen shows the life the run kept - anything above the run&#39;s own ceiling comes back as the ceiling. Four is past the pane&#39;s cap of two on purpose; the corner reads 4/2.</p>
+      <p class="blurb">Every kind of cantrip in the consumables pane beside two worn relics, against a rat that can be beaten. Cast one between turns and its cantrip-relic joins the relic row after the run&#39;s two, weightless - the corner still reads 2/5 - and gone when the fight ends. Endurance doubles the ceiling and keeps the fight&#39;s wound, Might adds to DMG and turns the DMG row pink, Chill doubles ice cards, and the fight log writes the cast and the relic it put on. Drag a cantrip-relic along the row to change where it fires: Chill worn before or after the Ice ring compounds with it either way. Win the fight and the post-battle screen shows the life the run kept - anything above the run&#39;s own ceiling comes back as the ceiling. Four is past the pane&#39;s cap on purpose.</p>
 
       
         <div class="strip">
           <div class="cap">worn, in the sack, and in the pouch</div>
-          <div class="scroll"><img src="cantrips-worn.png" width="942" height="308" alt="worn, in the sack, and in the pouch"></div>
+          <div class="scroll"><img src="cantrips-worn.png" width="1442" height="308" alt="worn, in the sack, and in the pouch"></div>
         </div>
       
 
       <div class="cols">
         
+          <table>
+            <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
+            <tr><td class="key">dmgx-ice</td><td>Ice</td><td class="said">Ice cards deal 2x DMG.</td></tr><tr><td class="key">hp-plus</td><td>Bulwark</td><td class="said">&#43;25 HP for every fight.</td></tr>
+          </table>
+        
         
           <table>
             <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
-            <tr><td class="key">cantrip-endurance</td><td>scroll case</td><td class="said">DOUBLE YOUR LIFE FOR THIS FIGHT</td></tr><tr><td class="key">cantrip-endurance</td><td>scroll case</td><td class="said">DOUBLE YOUR LIFE FOR THIS FIGHT</td></tr><tr><td class="key">cantrip-might</td><td>scroll case</td><td class="said">&#43;10 DMG FOR THIS FIGHT</td></tr><tr><td class="key">cantrip-might</td><td>scroll case</td><td class="said">&#43;10 DMG FOR THIS FIGHT</td></tr>
+            <tr><td class="key">cantrip-endurance</td><td>scroll case</td><td class="said">DOUBLE YOUR LIFE FOR THIS FIGHT</td></tr><tr><td class="key">cantrip-might</td><td>scroll case</td><td class="said">&#43;10 DMG FOR THIS FIGHT</td></tr><tr><td class="key">cantrip-chill</td><td>scroll case</td><td class="said">ICE CARDS DEAL 2x FOR THIS FIGHT</td></tr><tr><td class="key">cantrip-chill</td><td>scroll case</td><td class="said">ICE CARDS DEAL 2x FOR THIS FIGHT</td></tr>
           </table>
         
         

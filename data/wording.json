@@ -24,7 +24,8 @@
     "into": " - {into}",
     "on": " on {into}",
     "casts": "casts",
-    "uses": "uses"
+    "uses": "uses",
+    "wears": "wears"
   },
 
   "outcome": {

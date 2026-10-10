@@ -569,8 +569,11 @@ func verbWord(verb string) string {
 
 // usedVerb is what the duelist does with a consumable: a cantrip is cast, everything else is used.
 func usedVerb(kind string) string {
-	if kind == "cantrip" {
+	switch kind {
+	case "cantrip":
 		return SayVerbCast
+	case "relic":
+		return SayVerbWear
 	}
 	return SayVerbUse
 }

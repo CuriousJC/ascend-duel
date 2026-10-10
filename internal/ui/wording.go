@@ -50,13 +50,15 @@ var (
 )
 
 // Something spent from the consumables pane: "Duelist casts Cantrip of Might - DMG 10 to 20",
-// "Duelist uses Embermark on a jab and a bash".
+// "Duelist uses Embermark on a jab and a bash" — and the cantrip-relic a cast puts on, "Duelist wears
+// Mighty - +10 DMG for this fight.".
 var (
 	SayUsed     = word("used.line", "who", "verb", "subject")
 	SayUsedInto = word("used.into", "into")
 	SayUsedOn   = word("used.on", "into")
 	SayVerbCast = word("used.casts")
 	SayVerbUse  = word("used.uses")
+	SayVerbWear = word("used.wears")
 )
 
 // What became of a card, hung on the end of its line. The first outcome on a line follows

@@ -1,5 +1,6 @@
-// Command cantripsheet renders every cantrip in data/cantrips.json to a PNG and writes an HTML
-// page that shows each one beside the rule it fires and what that rule does to a real duelist.
+// Command cantripsheet renders every cantrip in data/cantrips.json to a PNG — the scroll and the
+// cantrip-relic it casts, side by side — and writes an HTML page that shows each one beside the
+// relic's rules and what wearing it does to a real duelist.
 //
 //	go run ./tools/cantripsheet
 //
@@ -10,19 +11,19 @@
 // # It is a report, not a drawing-board
 //
 // This reads the real file through internal/session, so the catalog is *validated* before anything
-// is drawn: an unknown effect, a Might adding nothing, an Endurance scaling to 100% or less all panic
-// at init exactly as they would in the game.
+// is drawn: a relic rule the grammar refuses, or one waking at a moment a cantrip-relic is never
+// worn for, panics at init exactly as it would in the game.
 //
 // # What to look at
 //
-// **The line against the rule.** `Text` is what a player reads on resting on a cantrip, and nothing
-// checks it against the effect. "+10 DMG" over a record carrying `Amount: 5` is the failure this page
-// exists to make visible.
+// **The lines against the rules.** The scroll's `Text` and the relic's are what a player reads, and
+// nothing checks either against the rules. "+10 DMG" over a relic carrying `Amount: 5` is the
+// failure this page exists to make visible.
 //
-// **The worked example.** Every plate casts the cantrip onto the shipped duelist — at full life and
-// wounded to half — through `session.Cantrip.Cast`, the function the combat screen calls. So the
-// figures are the game's, not a second arithmetic, and "doubles your life" can be read against what
-// doubling actually does to 30 of 60.
+// **The worked example.** Every plate equips the shipped duelist with the cantrip-relic — at full
+// life, wounded to half, and cast twice — through `session.Session.EquipWearing`, the function the
+// combat screen's refit calls, and keeps the wound the way a refit does. So the figures are the
+// game's, not a second arithmetic.
 //
 // # Output
 //
@@ -80,6 +81,7 @@ func run(dir string) error {
 	// **The page walks the file's own order and the bundle walks the sorted one**, the split every
 	// catalog sheet makes: nothing on this page decides an outcome.
 	order := data.CantripFileOrder()
+	records := data.LoadCantrips()
 
 	page := page{
 		Ground:  ground,
@@ -100,31 +102,53 @@ func run(dir string) error {
 		if err != nil {
 			return err
 		}
-		cell, err := write(dir, faces, specFor(c, art, true), "cantrip-"+c.Record+".png", c.Name)
+		cell, err := write(dir, faces, specFor(c, art, true), cards.EssenceStyle,
+			"cantrip-"+c.Record+".png", c.Name)
+		if err != nil {
+			return err
+		}
+		relicArt, err := artwork(c.RelicArt)
+		if err != nil {
+			return err
+		}
+		relicCell, err := write(dir, faces, relicSpecFor(c, relicArt), cards.RelicStyle,
+			"relic-"+c.Record+".png", c.RelicName)
 		if err != nil {
 			return err
 		}
 		plates = append(plates, plate{
-			Cell:     cell,
-			Record:   c.Record,
-			Name:     c.Name,
-			Text:     c.Text,
-			Rule:     ruleLine(c),
-			Examples: examples(c, body),
-			Family:   c.Family,
-			Draw:     c.Draw,
-			Art:      c.Art,
-			Default:  c.Art == data.DefaultCantripArt,
+			Cell:         cell,
+			RelicCell:    relicCell,
+			Record:       c.Record,
+			Name:         c.Name,
+			Text:         c.Text,
+			RelicName:    c.RelicName,
+			RelicText:    c.RelicText,
+			Rules:        ruleLines(records[key].Relic.Rules),
+			Examples:     examples(c, body),
+			Family:       c.Family,
+			Draw:         c.Draw,
+			Art:          c.Art,
+			Default:      c.Art == data.DefaultCantripArt,
+			RelicDraw:    c.RelicDraw,
+			RelicArt:     c.RelicArt,
+			RelicDefault: c.RelicArt == data.DefaultCantripRelicArt,
 		})
 		if c.Art == data.DefaultCantripArt {
 			page.Undrawn++
 		}
+		if c.RelicArt == data.DefaultCantripRelicArt {
+			page.RelicUndrawn++
+		}
 		if c.Draw == "" {
 			page.Unwritten++
 		}
+		if c.RelicDraw == "" {
+			page.RelicUnwritten++
+		}
 	}
 	page.Families = groupByFamily(plates)
-	page.Effects = effectCounts(plates, order)
+	page.Effects = effectCounts(records, order)
 
 	// The two states a carried cantrip is drawn in: lit while the player plans, dim while a round
 	// plays or on a screen where nothing can be cast.
@@ -141,7 +165,8 @@ func run(dir string) error {
 			{"rest", first.Name + " — castable, while planning", true},
 			{"disabled", first.Name + " — dim, mid-round or out of a fight", false},
 		} {
-			cell, err := write(dir, faces, specFor(first, art, s.enabled), "state-"+s.name+".png", s.label)
+			cell, err := write(dir, faces, specFor(first, art, s.enabled), cards.EssenceStyle,
+				"state-"+s.name+".png", s.label)
 			if err != nil {
 				return err
 			}
@@ -160,10 +185,10 @@ func run(dir string) error {
 		return fmt.Errorf("writing %s: %w", out, err)
 	}
 
-	fmt.Printf("wrote %s and %d PNGs — %d cantrips, %d with art of their own and %d with a subject; "+
+	fmt.Printf("wrote %s and %d PNGs — %d cantrips, %d scrolls and %d relics with art of their own; "+
 		"bundles at %s\n",
-		out, len(plates)+len(page.States), page.Count,
-		page.Count-page.Undrawn, page.Count-page.Unwritten, page.Bundles)
+		out, 2*len(plates)+len(page.States), page.Count,
+		page.Count-page.Undrawn, page.Count-page.RelicUndrawn, page.Bundles)
 	return nil
 }
 
@@ -184,35 +209,52 @@ func duelist() (combat.Duelist, error) {
 	return combat.Duelist{DMG: r.DMG, MaxLife: r.HP, CurrentLife: r.HP}, nil
 }
 
-// examples is the cantrip cast onto the duelist at full life and wounded to half, **through Cast**,
-// so the page prints the game's figures rather than working them out a second time. A figure the
-// cast did not move is left out of the line, which is what makes a Might's life line say nothing.
+// examples is the cantrip-relic worn by the duelist at full life, wounded to half, and twice over,
+// **through EquipWearing and a refit's wound**, so the page prints the game's figures rather than
+// working them out a second time. A figure the cast did not move is left out of the line, and a
+// card the relic changes is priced as an attack of each element, which is what makes Chill's line
+// say something.
 func examples(c session.Cantrip, body combat.Duelist) []string {
-	hurt := body
-	hurt.CurrentLife = body.MaxLife / 2
+	run := session.New(nil)
+	bare := run.Equip(body)
+	once := run.EquipWearing(body, session.CantripRelics([]session.Cantrip{c}))
+	twice := run.EquipWearing(body, session.CantripRelics([]session.Cantrip{c, c}))
 
 	var out []string
-	for _, d := range []combat.Duelist{body, hurt} {
-		now := c.Cast(d)
-		var parts []string
-		if now.DMG != d.DMG {
-			parts = append(parts, fmt.Sprintf("DMG %d → %d", d.DMG, now.DMG))
-		}
-		if now.MaxLife != d.MaxLife || now.CurrentLife != d.CurrentLife {
-			parts = append(parts, fmt.Sprintf("life %d/%d → %d/%d",
-				d.CurrentLife, d.MaxLife, now.CurrentLife, now.MaxLife))
-		}
-		if len(parts) == 0 {
-			parts = append(parts, "moves nothing")
-		}
-		out = append(out, strings.Join(parts, ", "))
+	for _, wound := range []int{0, bare.MaxLife / 2} {
+		out = append(out, figures(bare, once, wound))
 	}
+	out = append(out, "cast twice at full: "+figures(bare, twice, 0))
 
-	// **Twice, because stacking is a rule** — each cast reads the duelist the last one left.
-	twice := c.Cast(c.Cast(body))
-	out = append(out, fmt.Sprintf("cast twice at full: DMG %d, life %d/%d",
-		twice.DMG, twice.CurrentLife, twice.MaxLife))
+	// **Every element's attack, priced bare and worn.** A relic changing what a card deals moves no
+	// figure on the duelist, so without this a Chill would read as a cantrip that does nothing. The
+	// worn side is priced at the bare DMG, so a Might's line — already said above — is not repeated
+	// once per element.
+	at := once
+	at.DMG = bare.DMG
+	for _, e := range combat.AllElements {
+		card := combat.Card{Concept: combat.Bash, Element: e}
+		if was, now := bare.CardDamage(card), at.CardDamage(card); was != now {
+			out = append(out, fmt.Sprintf("%s Bash: %d → %d", e, was, now))
+		}
+	}
 	return out
+}
+
+// figures is what a cast moved, read the way a refit carries it: the wound stays a wound.
+func figures(bare, worn combat.Duelist, wound int) string {
+	var parts []string
+	if worn.DMG != bare.DMG {
+		parts = append(parts, fmt.Sprintf("DMG %d → %d", bare.DMG, worn.DMG))
+	}
+	if worn.MaxLife != bare.MaxLife {
+		parts = append(parts, fmt.Sprintf("life %d/%d → %d/%d",
+			bare.MaxLife-wound, bare.MaxLife, max(worn.MaxLife-wound, 1), worn.MaxLife))
+	}
+	if len(parts) == 0 {
+		return "moves no figure on the duelist"
+	}
+	return strings.Join(parts, ", ")
 }
 
 // specFor is a cantrip as the card the pane draws — the fields ui.DrawCantripCard fills: a name and
@@ -227,30 +269,96 @@ func specFor(c session.Cantrip, art image.Image, enabled bool) cards.Spec {
 	}
 }
 
-// ruleLine is what the cantrip does, in the file's own vocabulary. **Deliberately not prose**, for
-// the rune sheet's reason: the sentence a player reads is Text, printed beside this.
-func ruleLine(c session.Cantrip) string {
-	switch c.Effect {
-	case session.CantripScaleLife:
-		return fmt.Sprintf("%s %d%%: life and ceiling x%d/100, for the fight", c.Effect, c.Amount, c.Amount)
-	default:
-		return fmt.Sprintf("%s %d: +%d DMG, for the fight", c.Effect, c.Amount, c.Amount)
+// relicSpecFor is the cantrip-relic as the relic row draws it: ui.RelicSpec's fields, with no rarity
+// because a cantrip-relic is never sold.
+func relicSpecFor(c session.Cantrip, art image.Image) cards.Spec {
+	return cards.Spec{
+		Name:    c.RelicName,
+		Element: cards.Relic,
+		Art:     art,
+		Enabled: true,
 	}
 }
 
-// effectCounts is how many cantrips sit at each effect, every effect listed — an effect nobody has
-// authored into is a mechanic built and never reached for.
-func effectCounts(plates []plate, order []string) []effect {
-	all := []session.CantripEffect{session.CantripAddDMG, session.CantripScaleLife}
-	out := make([]effect, 0, len(all))
-	for _, e := range all {
-		n := 0
-		for _, key := range order {
-			if c, ok := session.CantripByKey(key); ok && c.Effect == e {
-				n++
+// ruleLines turns a cantrip-relic's rules into one line each, in the file's own vocabulary — the
+// relic sheet's layout, so a cantrip-relic and a relic read alike. **Deliberately not prose**: the
+// sentences a player reads are the two Texts, printed beside these.
+func ruleLines(rules []data.RelicRuleData) []string {
+	out := make([]string, 0, len(rules))
+	for _, rule := range rules {
+		line := "when " + rule.When
+		if cond := condition(rule.If); cond != "" {
+			line += ", if " + cond
+		}
+		effects := make([]string, 0, len(rule.Then))
+		for _, e := range rule.Then {
+			effects = append(effects, effect(e))
+		}
+		out = append(out, line+" → "+strings.Join(effects, " and "))
+	}
+	return out
+}
+
+func condition(in *data.RelicIfData) string {
+	if in == nil {
+		return ""
+	}
+	var parts []string
+	if in.Element != "" {
+		parts = append(parts, in.Element)
+	}
+	if in.Form != "" {
+		parts = append(parts, in.Form)
+	}
+	if in.Concept != "" {
+		parts = append(parts, in.Concept)
+	}
+	if in.Tier != 0 {
+		parts = append(parts, fmt.Sprintf("tier %d", in.Tier))
+	}
+	if in.Lead {
+		parts = append(parts, "lead")
+	}
+	if in.Hand != "" {
+		parts = append(parts, in.Hand)
+	}
+	if len(in.Hands) > 0 {
+		parts = append(parts, "any of "+strings.Join(in.Hands, " / "))
+	}
+	if in.MinForms > 0 {
+		parts = append(parts, fmt.Sprintf("%d+ forms", in.MinForms))
+	}
+	return strings.Join(parts, " and ")
+}
+
+func effect(e data.RelicEffectData) string {
+	switch {
+	case e.Element != "":
+		return e.Do + " " + e.Element
+	case e.Amount != 0:
+		return fmt.Sprintf("%s %+d", e.Do, e.Amount)
+	default:
+		return e.Do
+	}
+}
+
+// effectCounts is how many cantrip-relics wake at each moment to do each verb, in the order they are
+// first met in the file — what the catalog reaches for, read off the records.
+func effectCounts(records map[string]data.CantripData, order []string) []effectCount {
+	var out []effectCount
+	seen := map[string]int{}
+	for _, key := range order {
+		for _, rule := range records[key].Relic.Rules {
+			for _, e := range rule.Then {
+				name := rule.When + " / " + e.Do
+				if i, ok := seen[name]; ok {
+					out[i].Count++
+					continue
+				}
+				seen[name] = len(out)
+				out = append(out, effectCount{Name: name, Count: 1})
 			}
 		}
-		out = append(out, effect{Name: e.String(), Count: n})
 	}
 	return out
 }
@@ -282,9 +390,9 @@ func groupByFamily(plates []plate) []family {
 	return out
 }
 
-// write renders one card, saves it, and returns what the page needs to show it.
-func write(dir string, f *cards.Faces, s cards.Spec, name, label string) (cell, error) {
-	img, err := cards.Render(s, cards.EssenceStyle, f)
+// write renders one card at its own style, saves it, and returns what the page needs to show it.
+func write(dir string, f *cards.Faces, s cards.Spec, st cards.Style, name, label string) (cell, error) {
+	img, err := cards.Render(s, st, f)
 	if err != nil {
 		return cell{}, fmt.Errorf("rendering %s: %w", name, err)
 	}
@@ -298,10 +406,7 @@ func write(dir string, f *cards.Faces, s cards.Spec, name, label string) (cell, 
 	if err := png.Encode(out, img); err != nil {
 		return cell{}, fmt.Errorf("encoding %s: %w", name, err)
 	}
-	return cell{
-		File: name, Label: label,
-		Width: cards.EssenceStyle.Width, Height: cards.EssenceStyle.Height,
-	}, nil
+	return cell{File: name, Label: label, Width: st.Width, Height: st.Height}, nil
 }
 
 // artwork decodes one embedded picture. **A key that is in no embed is an error rather than a
@@ -351,24 +456,30 @@ type cell struct {
 	Height int
 }
 
-// plate is one cantrip: the card, and everything the file says about it.
+// plate is one cantrip: the scroll and its relic, and everything the file says about both.
 type plate struct {
-	Cell     cell
-	Record   string
-	Name     string
-	Text     string
-	Rule     string
-	Examples []string
+	Cell      cell
+	RelicCell cell
+	Record    string
+	Name      string
+	Text      string
+	RelicName string
+	RelicText string
+	Rules     []string
+	Examples  []string
 
-	// Family, Draw and Art are the three fields the engine ignores. Default says the picture is the
-	// placeholder rather than one of its own.
-	Family  string
-	Draw    string
-	Art     string
-	Default bool
+	// Family, Draw and Art are the fields the engine ignores, for the scroll and then the relic.
+	// Default says the picture is the placeholder rather than one of its own.
+	Family       string
+	Draw         string
+	Art          string
+	Default      bool
+	RelicDraw    string
+	RelicArt     string
+	RelicDefault bool
 }
 
-type effect struct {
+type effectCount struct {
 	Name  string
 	Count int
 }
@@ -381,14 +492,16 @@ type family struct {
 }
 
 type page struct {
-	Ground    string
-	Count     int
-	Bundles   string
-	Cap       int
-	Body      string
-	Undrawn   int
-	Unwritten int
-	Effects   []effect
-	Families  []family
-	States    []cell
+	Ground         string
+	Count          int
+	Bundles        string
+	Cap            int
+	Body           string
+	Undrawn        int
+	Unwritten      int
+	RelicUndrawn   int
+	RelicUnwritten int
+	Effects        []effectCount
+	Families       []family
+	States         []cell
 }

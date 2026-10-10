@@ -521,13 +521,16 @@ func checkPanelButtonsUnderThePile(t *testing.T, gs *state.GlobalState) {
 	pile, count := deckStackRect(gs), deckCountRect(gs)
 	hands, ledger := ControlColumnSlot(gs, SlotHands), ControlColumnSlot(gs, SlotLedger)
 
-	// One row, HANDS first, between the pile and its count.
+	// One row, HANDS first, under the pile's count and standing on the bottom line.
 	if hands.Min.Y != ledger.Min.Y || hands.Max.X > ledger.Min.X {
 		t.Fatalf("hands %v and ledger %v are not one row, hands first", hands, ledger)
 	}
-	if hands.Min.Y < pile.Max.Y || hands.Max.Y > count.Min.Y {
-		t.Errorf("the row y=%d..%d is not between the pile's bottom %d and the count's top %d",
-			hands.Min.Y, hands.Max.Y, pile.Max.Y, count.Min.Y)
+	if count.Min.Y < pile.Max.Y || hands.Min.Y < count.Max.Y {
+		t.Errorf("down the column: pile ends y=%d, count y=%d..%d, buttons start y=%d — want pile, "+
+			"count, buttons", pile.Max.Y, count.Min.Y, count.Max.Y, hands.Min.Y)
+	}
+	if got := gs.ScreenHeight - hands.Max.Y; got != deckStackBottomInset {
+		t.Errorf("the buttons end %dpx off the bottom edge, want the bottom line's %d", got, deckStackBottomInset)
 	}
 
 	// The air before, between and after the two is equal, to a pixel of rounding.

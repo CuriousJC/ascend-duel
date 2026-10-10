@@ -22,7 +22,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `hands.json` | `LoadHands` | the hand ladder over four matching axes, and what each rung multiplies every hit by |
 | `essences.json` | `LoadEssences` | the deck alterations offered between fights |
 | `runes.json` | `LoadRunes` | the deck alterations spent *during* a fight |
-| `cantrips.json` | `LoadCantrips` | the duelist alterations cast during a fight and lasting until it ends: an `Effect` and an `Amount`, the potion's shape |
+| `cantrips.json` | `LoadCantrips` | the scrolls cast during a fight: the scroll's face, and the cantrip-relic it puts on for the rest of the fight — a `Relic` block with its own `Name`, `Art`, `Draw`, `Text` and `Rules` in the relic grammar. Never in `relics.json`; registered under the cantrip's key |
 | `stones.json` | `LoadStones` | one rung-raiser per hand: which rung it raises, and what its card says |
 | `potions.json` | `LoadPotions` | the bottles the shop sells every visit: which of the duelist's figures each moves, by how much, and what it costs |
 | `tonics.json` | `LoadTonics` | the run-long rule changes the shop offers one per realm: an `Effect`, an `Amount`, an optional `Requires`, and a `Price` — see `internal/session/tonic.go` |

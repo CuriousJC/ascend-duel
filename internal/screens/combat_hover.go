@@ -117,7 +117,7 @@ func (s *CombatScene) hoverRelics(gs *state.GlobalState, at image.Point) bool {
 		return true
 	}
 
-	worn := wornRelics(gs)
+	worn := s.paneRelics(gs)
 	if len(worn) == 0 {
 		return false
 	}
@@ -132,7 +132,10 @@ func (s *CombatScene) hoverRelics(gs *state.GlobalState, at image.Point) bool {
 	}
 	slot := row.RowSlot(gs, i)
 	title, lines := ui.RelicTip(worn[i])
-	s.tip.Point(slot, ui.TipLine(title), ui.TipLines(lines))
+	// **To the left of the card, never under it** *(owner's call)*: a panel under the top row
+	// covers the pane's count and the tab a click hangs there. PointLeft flips right at the
+	// screen's edge.
+	s.tip.PointLeft(slot, ui.TipLine(title), ui.TipLines(lines))
 	return true
 }
 

@@ -5,9 +5,19 @@
     "Family": "The body",
     "Art": "cantrip-endurance",
     "Draw": "a rolled parchment scroll bound with a red cord, a faint red glow of a heartbeat pulsing through the paper",
-    "Effect": "scale-life",
-    "Amount": 200,
-    "Text": "DOUBLE YOUR LIFE\nFOR THIS FIGHT"
+    "Text": "DOUBLE YOUR LIFE\nFOR THIS FIGHT",
+    "Relic": {
+      "Name": "Enduring",
+      "Art": "",
+      "Draw": "a faint ring of red light around a beating heart, its edges dissolving into mist",
+      "Text": "2x max life for this fight.",
+      "Rules": [
+        {
+          "When": "equipped",
+          "Then": [{ "Do": "scale-hp", "Amount": 200 }]
+        }
+      ]
+    }
   },
   {
     "CantripRecord": "cantrip-might",
@@ -15,8 +25,39 @@
     "Family": "The body",
     "Art": "cantrip-might",
     "Draw": "a rolled parchment scroll bound with an iron band, a clenched fist of orange light rising from its open end",
-    "Effect": "add-dmg",
-    "Amount": 10,
-    "Text": "+10 DMG\nFOR THIS FIGHT"
+    "Text": "+10 DMG\nFOR THIS FIGHT",
+    "Relic": {
+      "Name": "Mighty",
+      "Art": "",
+      "Draw": "a faint ring of orange light around a clenched fist, its edges dissolving into mist",
+      "Text": "+10 DMG for this fight.",
+      "Rules": [
+        {
+          "When": "equipped",
+          "Then": [{ "Do": "add-dmg", "Amount": 10 }]
+        }
+      ]
+    }
+  },
+  {
+    "CantripRecord": "cantrip-chill",
+    "Name": "Cantrip of Chill",
+    "Family": "The elements",
+    "Art": "",
+    "Draw": "a rolled parchment scroll bound with a frosted blue cord, rime creeping across the paper and a breath of cold mist curling from its open end",
+    "Text": "ICE CARDS DEAL 2x\nFOR THIS FIGHT",
+    "Relic": {
+      "Name": "Chilled",
+      "Art": "",
+      "Draw": "a faint ring of woven blue ice, its edges dissolving into cold mist",
+      "Text": "Ice cards deal 2x DMG for this fight.",
+      "Rules": [
+        {
+          "When": "card-damage",
+          "If": { "Element": "ice" },
+          "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+        }
+      ]
+    }
   }
 ]

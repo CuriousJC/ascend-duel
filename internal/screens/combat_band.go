@@ -5,6 +5,8 @@ package screens
 // mid-fight stops counting at once, and a carried card can be used here as well as sold.
 
 import (
+	"image"
+
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/scenario"
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -29,8 +31,11 @@ func (s *CombatScene) updateBand(gs *state.GlobalState) {
 		canUse: func(seat int) bool {
 			return heldUsable(s.consumableSpendable(gs), heldConsumables(gs), seat)
 		},
-		use:    func(seat int) { s.spendConsumable(gs, seat) },
-		forget: s.tip.Forget,
+		use:         func(seat int) { s.spendConsumable(gs, seat) },
+		forget:      s.tip.Forget,
+		extraRelics: len(s.cast),
+		relicKeyAt:  func(seat int) (string, bool) { return s.runRelicAt(gs, seat) },
+		relicSeat:   func(key string) (image.Rectangle, bool) { return s.runRelicSeat(gs, key) },
 	})
 }
 
@@ -48,13 +53,20 @@ func (s *CombatScene) sellRelic(gs *state.GlobalState, key string) {
 		s.fighter.CurrentLife, s.fighter.MaxLife, s.fighter.DMG)
 }
 
-// equippedFighter is the duelist the run puts in this room: built from the record, equipped by the
-// run, and given whatever a scenario overrides. **No fight state** — no wound, no shields — which is
-// what refit carries over from the duelist standing here.
+// equippedFighter is the duelist the run puts in this room: built from the record, equipped with the
+// fight's whole relic row — the run's relics and every cantrip-relic cast, in the order the row
+// stands in — and given whatever a scenario overrides. **No fight state** — no wound, no shields —
+// which is what refit carries over from the duelist standing here.
 func (s *CombatScene) equippedFighter(gs *state.GlobalState) combat.Duelist {
+	return s.equippedWorn(gs, s.fightWorn(gs))
+}
+
+// equippedWorn is equippedFighter with a chosen worn row: refit asks for the run's alone as well, to
+// measure what the casts added.
+func (s *CombatScene) equippedWorn(gs *state.GlobalState, worn []combat.WornRelic) combat.Duelist {
 	d := ui.DuelistFromRecord(gs, ui.PlayerRecord).Duelist
 	if gs.Run != nil {
-		d = gs.Run.Equip(d)
+		d = gs.Run.EquipWorn(d, worn)
 	}
 	if scenario.Active() && scenario.Dummy() {
 		d.MaxLife, d.CurrentLife = scenario.DummyLife, scenario.DummyLife
@@ -77,19 +89,22 @@ func (s *CombatScene) equippedFighter(gs *state.GlobalState) combat.Duelist {
 // which is where a sale's proceeds have just gone — the rules take it back at the next DUEL!. The wound stays a
 // wound — life is the new ceiling less what the fight has taken, never below one — and the standing
 // shields, the banked surge and each remaining relic's growth this fight come across
-// as they are. Every cantrip cast this fight is cast again, in order, on the rebuilt duelist,
-// because a cantrip lasts the fight and is not the run's.
+// as they are. Every cantrip-relic cast this fight is worn again, in cast order after the run's,
+// because a cantrip lasts the fight and is not the run's — and **a cast is itself a refit**, which is
+// how a relic put on mid-fight answers `equipped` over the whole worn set.
 func (s *CombatScene) refit(gs *state.GlobalState) {
 	live := s.fighter.Duelist
 	d := s.equippedFighter(gs)
 
-	s.cantripLife, s.cantripDMG = 0, 0
-	for _, c := range s.cast {
-		was := d
-		d = c.Cast(d)
-		s.cantripLife += d.MaxLife - was.MaxLife
-		s.cantripDMG += d.DMG - was.DMG
+	// **What the casts added is measured against the same fighter built without them**, so a
+	// cantrip-relic's life and DMG are told apart from the run's however the two compound.
+	var bare combat.Duelist
+	if gs.Run != nil {
+		bare = s.equippedWorn(gs, gs.Run.WornRelics())
+	} else {
+		bare = s.equippedWorn(gs, nil)
 	}
+	s.cantripLife, s.cantripDMG = d.MaxLife-bare.MaxLife, d.DMG-bare.DMG
 
 	wound := live.MaxLife - live.CurrentLife
 	d.CurrentLife = min(max(d.MaxLife-wound, 1), d.MaxLife)

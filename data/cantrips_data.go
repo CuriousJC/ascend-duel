@@ -4,13 +4,17 @@ package data
 //
 // A rune alters a card; a potion alters the duelist for the rest of the run. A cantrip alters the
 // duelist for the fight it is cast in and no longer — it is carried into a duel in the consumables
-// pane, cast between turns, and gone when the duel ends. That is the whole of what separates it
-// from a potion, and it is why the two share the shape of their records: an `Effect` naming what
-// moves and an `Amount` read against it.
+// pane, cast between turns, and gone when the duel ends.
 //
-// **The rules do not read this file.** A cantrip is carried by a run and cast onto the fighter
-// standing in the room, so the parsing and the closed effect vocabulary live in `internal/session`,
-// exactly as a potion's do. See internal/session/cantrip.go.
+// **Every cantrip is a scroll and a relic.** Casting the scroll puts its cantrip-relic on the
+// duelist for the rest of the fight, weightless and ephemeral, so whatever a cantrip does is said in
+// the relic grammar and answered by the relic machinery — there is no second vocabulary for altering
+// a fight. The relic is written inline on the cantrip and never enters `relics.json`: a
+// cantrip-relic is not a relic the shop can sell, and the two catalogs are kept apart.
+//
+// **The rules do not read this file.** A cantrip is carried by a run, so the parsing lives in
+// `internal/session`, which registers each cantrip-relic's rules with `combat.RegisterRelic` exactly
+// as it registers the catalog's. See internal/session/cantrip.go.
 
 import (
 	_ "embed"
@@ -35,17 +39,44 @@ type CantripData struct {
 	Art    string `json:"Art"`
 	Draw   string `json:"Draw"`
 
-	// Effect is what the cantrip does to the fighter, from a closed vocabulary resolved by
-	// `session.ParseCantripEffect`: `add-dmg` or `scale-life`.
-	Effect string `json:"Effect"`
-
-	// Amount is read against the effect: a flat figure for `add-dmg`, a percentage for
-	// `scale-life` — so 200 is double.
-	Amount int `json:"Amount"`
-
-	// Text is what the cantrip says it does, in the tooltip. **Authored rather than computed**, the
-	// rune's posture: the line is the record's claim and the effect is what the rules fire.
+	// Text is what the scroll says it does, in the tooltip. **Authored rather than computed**, the
+	// rune's posture: the line is the record's claim and the relic's rules are what fire.
 	Text string `json:"Text"`
+
+	// Relic is the cantrip-relic casting this scroll puts on the duelist for the fight.
+	Relic CantripRelicData `json:"Relic"`
+}
+
+// CantripRelicData is the relic a cantrip casts: a relic record's face and rules, without the
+// fields that only mean something on a shelf. **No key of its own** — it is registered under the
+// cantrip's record key, since one cantrip makes exactly one relic. **No Rarity and no Unlock**,
+// because it is never sold and never offered.
+type CantripRelicData struct {
+	// Name is what the relic is called in the row's tooltip and in the fight's account.
+	Name string `json:"Name"`
+
+	// Art and Draw are the relic's own face and brief, beside the scroll's: a cantrip has two
+	// pictures. Empty Art draws DefaultCantripRelicArt.
+	Art  string `json:"Art"`
+	Draw string `json:"Draw"`
+
+	// Text is the relic's line, as a worn relic's tooltip says it.
+	Text string `json:"Text"`
+
+	// Rules are written exactly as a relic's are — see RelicRuleData.
+	Rules []RelicRuleData `json:"Rules"`
+}
+
+// DefaultCantripRelicArt is the face a cantrip-relic with no Art of its own draws: the relic
+// catalog's placeholder, until the cantrip-relics have a default of their own.
+const DefaultCantripRelicArt = DefaultRelicArt
+
+// ArtKey is the picture this cantrip-relic actually draws.
+func (r CantripRelicData) ArtKey() string {
+	if r.Art == "" {
+		return DefaultCantripRelicArt
+	}
+	return r.Art
 }
 
 // DefaultCantripArt is the face a record with no Art of its own draws —

@@ -36,8 +36,10 @@
   .plate {
     display: flex; gap: 18px; align-items: flex-start;
     background: var(--panel); border: 1px solid var(--rule); border-radius: 8px;
-    padding: 16px; width: 520px;
+    padding: 16px; width: 720px;
   }
+  .cards { display: flex; gap: 10px; flex: none; }
+  .name.relic { margin-top: 16px; }
   img { display: block; image-rendering: pixelated; }
   .about { min-width: 0; }
   .name { font-size: 15px; font-weight: 600; margin: 0 0 2px; }
@@ -68,10 +70,11 @@
 
 <h1>Cantrip sheet</h1>
 <p class="facts">
-  2 cantrips, 0 of them drawing the default face, 0 with no
-  subject paragraph written. A bundle of scrolls holds <code>3 for 3, 4 for 5 or 5 for 6 vitae</code>, keep one,
+  3 cantrips. Scrolls: 1 drawing the default face, 0 with no
+  subject written. Cantrip-relics: 3 drawing the default face, 0
+  with no subject written. A bundle of scrolls holds <code>3 for 3, 4 for 5 or 5 for 6 vitae</code>, keep one,
   <strong>drawn with replacement</strong> — so a bundle can repeat. A run carries at most
-  <code>2</code> consumables of every kind together. Examples are cast onto the shipped
+  <code>3</code> consumables of every kind together. Examples are cast onto the shipped
   duelist: <code>10 DMG, 60 life</code>. Shown at 1:1.
 </p>
 <p class="note">
@@ -80,16 +83,18 @@
   <code>data/cantrips.json</code> through <code>internal/session</code>'s own validation.
 </p>
 <p class="note">
-  <strong>Read the sentence against the rule, and the rule against the example.</strong> The line
-  under each name is <code>Text</code>, the tooltip's line. The monospace rule under it is what the
-  record resolves to; the lines under that are <code>Cantrip.Cast</code> run on the duelist at full
-  life, at half, and twice in a row — the game's own arithmetic, since a cast reads the duelist the
-  last one left.
+  <strong>Every cantrip is a scroll and a relic.</strong> Casting the scroll puts its cantrip-relic
+  on the duelist for the rest of the fight, after the run's own relics, <strong>weightless</strong>
+  (it takes no slot) and <strong>ephemeral</strong> (gone when the fight ends). What a cantrip does
+  is whatever its relic's rules do — see MECHANICS.md §Cantrips.
 </p>
 <p class="note">
-  <strong>A cantrip lasts the fight it is cast in.</strong> It is cast between turns, onto the
-  fighter; nothing is written to the run. At a win the life it added comes off the ceiling and a
-  life above the run's own ceiling comes back as the ceiling — see MECHANICS.md §Cantrips.
+  <strong>Read the sentences against the rules, and the rules against the example.</strong> Each
+  plate prints the scroll's <code>Text</code>, the relic's <code>Text</code>, and the relic's rules
+  in the file's own words. The lines under those are <code>Session.EquipWearing</code> run on the
+  duelist at full life, at half (the wound kept, as a mid-fight cast keeps it), and with two casts
+  — the game's own arithmetic — then every element's Bash priced bare and worn, where the relic
+  changes it.
 </p>
 <p class="note">
   <strong>The subject paragraph is the art brief.</strong> The quoted block is <code>Draw</code>;
@@ -98,13 +103,14 @@
 </p>
 
 <h2>What the catalog does</h2>
+<p class="note">Every moment and verb a cantrip-relic reaches for, read off the records.</p>
 <ul class="effects">
 
-  <li class="effect"><strong>add-dmg</strong>
-    1 cantrips</li>
+  <li class="effect"><strong>equipped / scale-hp</strong> 1</li>
 
-  <li class="effect"><strong>scale-life</strong>
-    1 cantrips</li>
+  <li class="effect"><strong>equipped / add-dmg</strong> 1</li>
+
+  <li class="effect"><strong>card-damage / scale-damage</strong> 1</li>
 
 </ul>
 
@@ -114,7 +120,10 @@
 <div class="plates">
   
     <div class="plate">
-      <img src="cantrip-cantrip-endurance.png" width="200" height="280" alt="Cantrip of Endurance">
+      <div class="cards">
+        <img src="cantrip-cantrip-endurance.png" width="200" height="280" alt="Cantrip of Endurance">
+        <img src="relic-cantrip-endurance.png" width="200" height="280" alt="Enduring">
+      </div>
       <div class="about">
         <p class="name">Cantrip of Endurance</p>
         <div class="record">cantrip-endurance</div>
@@ -123,16 +132,28 @@ FOR THIS FIGHT</p>
         
           <p class="draw">a rolled parchment scroll bound with a red cord, a faint red glow of a heartbeat pulsing through the paper</p>
         
-        <p class="rule">scale-life 200%: life and ceiling x200/100, for the fight</p>
-        <p class="example">life 60/60 → 120/120</p><p class="example">life 30/60 → 60/120</p><p class="example">cast twice at full: DMG 10, life 240/240</p>
         
-          <p class="art">art: <code>cantrip-endurance</code></p>
+          <p class="art">scroll art: <code>cantrip-endurance</code></p>
         
+
+        <p class="name relic">casts Enduring</p>
+        <p class="text">2x max life for this fight.</p>
+        
+          <p class="draw">a faint ring of red light around a beating heart, its edges dissolving into mist</p>
+        
+        
+          <p class="art missing">relic: no art of its own — drawing the default relic face</p>
+        
+        <p class="rule">when equipped → scale-hp &#43;200</p>
+        <p class="example">life 60/60 → 120/120</p><p class="example">life 30/60 → 90/120</p><p class="example">cast twice at full: life 60/60 → 240/240</p>
       </div>
     </div>
   
     <div class="plate">
-      <img src="cantrip-cantrip-might.png" width="200" height="280" alt="Cantrip of Might">
+      <div class="cards">
+        <img src="cantrip-cantrip-might.png" width="200" height="280" alt="Cantrip of Might">
+        <img src="relic-cantrip-might.png" width="200" height="280" alt="Mighty">
+      </div>
       <div class="about">
         <p class="name">Cantrip of Might</p>
         <div class="record">cantrip-might</div>
@@ -141,11 +162,55 @@ FOR THIS FIGHT</p>
         
           <p class="draw">a rolled parchment scroll bound with an iron band, a clenched fist of orange light rising from its open end</p>
         
-        <p class="rule">add-dmg 10: &#43;10 DMG, for the fight</p>
-        <p class="example">DMG 10 → 20</p><p class="example">DMG 10 → 20</p><p class="example">cast twice at full: DMG 30, life 60/60</p>
         
-          <p class="art">art: <code>cantrip-might</code></p>
+          <p class="art">scroll art: <code>cantrip-might</code></p>
         
+
+        <p class="name relic">casts Mighty</p>
+        <p class="text">&#43;10 DMG for this fight.</p>
+        
+          <p class="draw">a faint ring of orange light around a clenched fist, its edges dissolving into mist</p>
+        
+        
+          <p class="art missing">relic: no art of its own — drawing the default relic face</p>
+        
+        <p class="rule">when equipped → add-dmg &#43;10</p>
+        <p class="example">DMG 10 → 20</p><p class="example">DMG 10 → 20</p><p class="example">cast twice at full: DMG 10 → 30</p>
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">The elements <span>1 cantrip</span></h3>
+<div class="plates">
+  
+    <div class="plate">
+      <div class="cards">
+        <img src="cantrip-cantrip-chill.png" width="200" height="280" alt="Cantrip of Chill">
+        <img src="relic-cantrip-chill.png" width="200" height="280" alt="Chilled">
+      </div>
+      <div class="about">
+        <p class="name">Cantrip of Chill</p>
+        <div class="record">cantrip-chill</div>
+        <p class="text">ICE CARDS DEAL 2x
+FOR THIS FIGHT</p>
+        
+          <p class="draw">a rolled parchment scroll bound with a frosted blue cord, rime creeping across the paper and a breath of cold mist curling from its open end</p>
+        
+        
+          <p class="art missing">scroll: no art of its own — drawing default-cantrip.png</p>
+        
+
+        <p class="name relic">casts Chilled</p>
+        <p class="text">Ice cards deal 2x DMG for this fight.</p>
+        
+          <p class="draw">a faint ring of woven blue ice, its edges dissolving into cold mist</p>
+        
+        
+          <p class="art missing">relic: no art of its own — drawing the default relic face</p>
+        
+        <p class="rule">when card-damage, if ice → scale-damage &#43;200</p>
+        <p class="example">moves no figure on the duelist</p><p class="example">moves no figure on the duelist</p><p class="example">cast twice at full: moves no figure on the duelist</p><p class="example">ice Bash: 10 → 20</p>
       </div>
     </div>
   

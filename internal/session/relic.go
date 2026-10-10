@@ -3,7 +3,7 @@ package session
 // Relics: the catalog, what the run is wearing, and the moments that fire outside combat.
 //
 // **`relics.json` is parsed here for the reason the essences are** — a relic belongs to a *run*. Two
-// of its moments are `fight-start` and `fight-won`, neither of which happens inside
+// of its moments are `equipped` and `fight-won`, neither of which happens inside
 // `internal/combat` at all, and the accumulator a growing relic carries has to survive a fight. This
 // package is what survives one.
 //
@@ -192,22 +192,28 @@ func RelicID(key string) (combat.RelicID, bool) {
 // a moment, a verb, an element, a form and a concept label are five vocabularies, and
 // a misspelling in any of them is a relic that wears cleanly and does nothing.
 func relicRules(r data.RelicData) ([]combat.RelicRule, error) {
-	out := make([]combat.RelicRule, 0, len(r.Rules))
+	return parseRelicRules(r.RelicRecord, r.Rules)
+}
 
-	for _, rule := range r.Rules {
+// parseRelicRules is relicRules for any rules written in the relic grammar, under the key they will
+// be registered as — a catalog relic's, or a cantrip-relic's, which is written inline on its cantrip.
+func parseRelicRules(key string, rules []data.RelicRuleData) ([]combat.RelicRule, error) {
+	out := make([]combat.RelicRule, 0, len(rules))
+
+	for _, rule := range rules {
 		when, ok := combat.ParseMoment(rule.When)
 		if !ok {
-			return nil, fmt.Errorf("%s wakes at %q, which is not a moment", r.RelicRecord, rule.When)
+			return nil, fmt.Errorf("%s wakes at %q, which is not a moment", key, rule.When)
 		}
 
-		cond, err := relicCondition(r.RelicRecord, rule.If)
+		cond, err := relicCondition(key, rule.If)
 		if err != nil {
 			return nil, err
 		}
 
 		then := make([]combat.RelicEffect, 0, len(rule.Then))
 		for _, e := range rule.Then {
-			effect, err := relicEffect(r.RelicRecord, e)
+			effect, err := relicEffect(key, e)
 			if err != nil {
 				return nil, err
 			}
@@ -407,13 +413,26 @@ func (s *Session) AbsorbGrowth(d combat.Duelist) {
 // state that will have to be serialized, where a position would mean nothing.
 func (s *Session) Grown(key string) int { return s.grown[key] }
 
-// Equip is the `fight-start` moment: the duelist puts the run's relics on and takes whatever they add
-// for the fight.
+// Equip is the `equipped` moment: the duelist puts the run's relics on and takes whatever they add
+// for the fight. It is EquipWorn with the run's own relics, in the run's order.
+func (s *Session) Equip(d combat.Duelist) combat.Duelist { return s.EquipWorn(d, s.WornRelics()) }
+
+// EquipWearing is Equip with the fight's own relics worn after the run's — the cantrip-relics cast
+// so far, in the order a fight starts them in.
+func (s *Session) EquipWearing(d combat.Duelist, extra []combat.WornRelic) combat.Duelist {
+	return s.EquipWorn(d, append(s.WornRelics(), extra...))
+}
+
+// EquipWorn puts a whole worn row on the duelist, in the order given — the run's relics and the
+// fight's cantrip-relics, interleaved however the player has dragged them. **Every relic in it goes
+// through every step**, so a cantrip-relic's `add-dmg` lands with the others' and its `scale-hp`
+// scales the whole body, compounding left to right; the run is never written to, which is what makes
+// a cantrip-relic last only the fight.
 //
 // **The stats are added here rather than baked into the record**, so a relic taken off between fights
 // stops paying. HP raises the ceiling and fills it, because a fight starts at full life; a duelist
 // arriving hurt keeps the wound and gains the headroom.
-func (s *Session) Equip(d combat.Duelist) combat.Duelist {
+func (s *Session) EquipWorn(d combat.Duelist, worn []combat.WornRelic) combat.Duelist {
 	// **The boss bonus goes on before any relic**. It is growth of the duelist's own body rather
 	// than something worn, so a percentage relic scales the grown figure — the ordering this
 	// function already documents below rather than a third rule. See life.go.
@@ -427,7 +446,6 @@ func (s *Session) Equip(d combat.Duelist) combat.Duelist {
 	d.MaxLife = s.raiseLifeForBosses(d.MaxLife)
 	d.CurrentLife = s.raiseLifeForBosses(d.CurrentLife)
 
-	worn := s.WornRelics()
 	for _, w := range worn {
 		d = d.Wearing(w)
 	}

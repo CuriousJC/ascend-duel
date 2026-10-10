@@ -54,7 +54,7 @@ func TestAWardIsRefusedWithACondition(t *testing.T) {
 // goblin is an ice shield, so it banks the point — and the raise still names the card.
 func TestAPrismaticShieldTakesTheFoesElementAndTheCardKeepsItsOwn(t *testing.T) {
 	id := relic(t, "prismatic", RelicRule{
-		When: MomentFightStart,
+		When: MomentEquipped,
 		Then: []RelicEffect{{Do: DoMatchFoeShields}},
 	})
 	a := duelist(10, 6, 500).Wearing(WornRelic{Relic: id})
@@ -76,7 +76,7 @@ func TestAPrismaticShieldTakesTheFoesElementAndTheCardKeepsItsOwn(t *testing.T) 
 // the next round and eats that round's hit too.
 func TestATowerShieldKeepsOneUnspentShield(t *testing.T) {
 	id := relic(t, "tower", RelicRule{
-		When: MomentFightStart,
+		When: MomentEquipped,
 		Then: []RelicEffect{{Do: DoKeepShields, Amount: 1}},
 	})
 	a := duelist(10, 6, 500).Wearing(WornRelic{Relic: id})

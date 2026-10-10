@@ -53,7 +53,7 @@
 //
 // # Three of the relic moments are answered here
 //
-// fight-start in Equip, and fight-won in WonFight — which is also where vitae propagates and where
+// `equipped` in Equip, and fight-won in WonFight — which is also where vitae propagates and where
 // a growing relic takes its step. The third, card-drawn, is answered by DrawnAs and *fired* by the
 // combat screen, once per card as it deals one: the flips and demotions belong to a run and the draw
 // pile belongs to a fight. The order matters and MECHANICS.md

@@ -43,8 +43,10 @@ var tmpl = template.Must(template.New("cantripsheet").Parse(`<!doctype html>
   .plate {
     display: flex; gap: 18px; align-items: flex-start;
     background: var(--panel); border: 1px solid var(--rule); border-radius: 8px;
-    padding: 16px; width: 520px;
+    padding: 16px; width: 720px;
   }
+  .cards { display: flex; gap: 10px; flex: none; }
+  .name.relic { margin-top: 16px; }
   img { display: block; image-rendering: pixelated; }
   .about { min-width: 0; }
   .name { font-size: 15px; font-weight: 600; margin: 0 0 2px; }
@@ -75,8 +77,9 @@ var tmpl = template.Must(template.New("cantripsheet").Parse(`<!doctype html>
 
 <h1>Cantrip sheet</h1>
 <p class="facts">
-  {{.Count}} cantrips, {{.Undrawn}} of them drawing the default face, {{.Unwritten}} with no
-  subject paragraph written. A bundle of scrolls holds <code>{{.Bundles}}</code>, keep one,
+  {{.Count}} cantrips. Scrolls: {{.Undrawn}} drawing the default face, {{.Unwritten}} with no
+  subject written. Cantrip-relics: {{.RelicUndrawn}} drawing the default face, {{.RelicUnwritten}}
+  with no subject written. A bundle of scrolls holds <code>{{.Bundles}}</code>, keep one,
   <strong>drawn with replacement</strong> — so a bundle can repeat. A run carries at most
   <code>{{.Cap}}</code> consumables of every kind together. Examples are cast onto the shipped
   duelist: <code>{{.Body}}</code>. Shown at 1:1.
@@ -87,16 +90,18 @@ var tmpl = template.Must(template.New("cantripsheet").Parse(`<!doctype html>
   <code>data/cantrips.json</code> through <code>internal/session</code>'s own validation.
 </p>
 <p class="note">
-  <strong>Read the sentence against the rule, and the rule against the example.</strong> The line
-  under each name is <code>Text</code>, the tooltip's line. The monospace rule under it is what the
-  record resolves to; the lines under that are <code>Cantrip.Cast</code> run on the duelist at full
-  life, at half, and twice in a row — the game's own arithmetic, since a cast reads the duelist the
-  last one left.
+  <strong>Every cantrip is a scroll and a relic.</strong> Casting the scroll puts its cantrip-relic
+  on the duelist for the rest of the fight, after the run's own relics, <strong>weightless</strong>
+  (it takes no slot) and <strong>ephemeral</strong> (gone when the fight ends). What a cantrip does
+  is whatever its relic's rules do — see MECHANICS.md §Cantrips.
 </p>
 <p class="note">
-  <strong>A cantrip lasts the fight it is cast in.</strong> It is cast between turns, onto the
-  fighter; nothing is written to the run. At a win the life it added comes off the ceiling and a
-  life above the run's own ceiling comes back as the ceiling — see MECHANICS.md §Cantrips.
+  <strong>Read the sentences against the rules, and the rules against the example.</strong> Each
+  plate prints the scroll's <code>Text</code>, the relic's <code>Text</code>, and the relic's rules
+  in the file's own words. The lines under those are <code>Session.EquipWearing</code> run on the
+  duelist at full life, at half (the wound kept, as a mid-fight cast keeps it), and with two casts
+  — the game's own arithmetic — then every element's Bash priced bare and worn, where the relic
+  changes it.
 </p>
 <p class="note">
   <strong>The subject paragraph is the art brief.</strong> The quoted block is <code>Draw</code>;
@@ -105,10 +110,10 @@ var tmpl = template.Must(template.New("cantripsheet").Parse(`<!doctype html>
 </p>
 
 <h2>What the catalog does</h2>
+<p class="note">Every moment and verb a cantrip-relic reaches for, read off the records.</p>
 <ul class="effects">
 {{range .Effects}}
-  <li class="effect{{if not .Count}} empty{{end}}"><strong>{{.Name}}</strong>
-    {{.Count}} cantrips{{if not .Count}} — nobody has authored one{{end}}</li>
+  <li class="effect"><strong>{{.Name}}</strong> {{.Count}}</li>
 {{end}}
 </ul>
 
@@ -118,7 +123,10 @@ var tmpl = template.Must(template.New("cantripsheet").Parse(`<!doctype html>
 <div class="plates">
   {{range .Cantrips}}
     <div class="plate">
-      <img src="{{.Cell.File}}" width="{{.Cell.Width}}" height="{{.Cell.Height}}" alt="{{.Name}}">
+      <div class="cards">
+        <img src="{{.Cell.File}}" width="{{.Cell.Width}}" height="{{.Cell.Height}}" alt="{{.Name}}">
+        <img src="{{.RelicCell.File}}" width="{{.RelicCell.Width}}" height="{{.RelicCell.Height}}" alt="{{.RelicName}}">
+      </div>
       <div class="about">
         <p class="name">{{.Name}}</p>
         <div class="record">{{.Record}}</div>
@@ -126,15 +134,28 @@ var tmpl = template.Must(template.New("cantripsheet").Parse(`<!doctype html>
         {{if .Draw}}
           <p class="draw">{{.Draw}}</p>
         {{else}}
-          <p class="draw missing">no subject written yet</p>
+          <p class="draw missing">no scroll subject written yet</p>
         {{end}}
-        <p class="rule">{{.Rule}}</p>
-        {{range .Examples}}<p class="example">{{.}}</p>{{end}}
         {{if .Default}}
-          <p class="art missing">no art of its own — drawing default-cantrip.png</p>
+          <p class="art missing">scroll: no art of its own — drawing default-cantrip.png</p>
         {{else}}
-          <p class="art">art: <code>{{.Art}}</code></p>
+          <p class="art">scroll art: <code>{{.Art}}</code></p>
         {{end}}
+
+        <p class="name relic">casts {{.RelicName}}</p>
+        <p class="text">{{.RelicText}}</p>
+        {{if .RelicDraw}}
+          <p class="draw">{{.RelicDraw}}</p>
+        {{else}}
+          <p class="draw missing">no relic subject written yet</p>
+        {{end}}
+        {{if .RelicDefault}}
+          <p class="art missing">relic: no art of its own — drawing the default relic face</p>
+        {{else}}
+          <p class="art">relic art: <code>{{.RelicArt}}</code></p>
+        {{end}}
+        {{range .Rules}}<p class="rule">{{.}}</p>{{end}}
+        {{range .Examples}}<p class="example">{{.}}</p>{{end}}
       </div>
     </div>
   {{end}}

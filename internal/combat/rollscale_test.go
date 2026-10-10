@@ -15,7 +15,7 @@ func rollsRelic(t *testing.T, key string, pct int) RelicID {
 	t.Helper()
 
 	return relic(t, key, RelicRule{
-		When: MomentFightStart,
+		When: MomentEquipped,
 		Then: []RelicEffect{{Do: DoScaleRolls, Amount: pct}},
 	})
 }

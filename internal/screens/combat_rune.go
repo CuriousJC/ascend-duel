@@ -312,13 +312,19 @@ func (s *CombatScene) spendStone(gs *state.GlobalState, i int) {
 	saveRun(gs)
 }
 
-// castCantrip takes one out of the scroll case and casts it onto the fighter standing in the room.
+// castCantrip takes one out of the scroll case and puts its cantrip-relic on the fighter standing in
+// the room.
 //
-// **The fighter moves and the run does not.** A cantrip lasts the fight, and the fighter is the
-// fight's: it is rebuilt from the run at the next Init with none of this on it, which is the whole
-// of how a cantrip ends. What the cast raised the ceiling by is tallied on the scene, because the
-// run takes the fighter's life back at the end of the fight and needs to know which part of the
-// ceiling was never the run's — see session.ShedCantrips.
+// **The fighter moves and the run does not.** The cast joins the fight's list and the fighter is
+// refit from the run with every cantrip-relic in that list worn after the run's own — weightless,
+// so a full hand still takes it, and gone at the next Init, which builds the fighter from the run
+// alone. That is the whole of how a cantrip ends. The refit keeps the fight's wound, and it tallies
+// what the casts raised the ceiling by, because the run takes the fighter's life back at the end of
+// the fight and needs to know which part of the ceiling was never the run's — see
+// session.ShedCantrips.
+//
+// **The account gets two lines**: the scroll cast, with whatever figures moved, and the relic it put
+// on, with the relic's own line.
 //
 // **It is gated on planning, like every consumable**, by the predicate the pane's lit state reads:
 // a cast mid-playback would change a duelist whose round was already decided. The next round reads
@@ -341,11 +347,10 @@ func (s *CombatScene) castCantrip(gs *state.GlobalState, i int) {
 	}
 
 	was := s.fighter.Duelist
-	s.fighter.Duelist = c.Cast(s.fighter.Duelist)
 	s.cast = append(s.cast, c)
-	s.cantripLife += s.fighter.MaxLife - was.MaxLife
-	s.cantripDMG += s.fighter.DMG - was.DMG
+	s.refit(gs)
 	s.recordUse(gs, "cantrip", c.Name, castWords(was, s.fighter.Duelist))
+	s.recordUse(gs, "relic", c.RelicName, strings.ReplaceAll(c.RelicText, "\n", " "))
 
 	gs.Journal.Write(journal.Record{Kind: journal.KindCantrip, Key: c.Record, Seat: i})
 	saveRun(gs)

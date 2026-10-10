@@ -78,7 +78,7 @@ which is what makes a relic a *run* concept rather than a combat one.
 | `card-damage` | `combat` | `Card.Damage()` | per card, inside each of its hits' card term |
 | `attack-lands` | `combat` | `throwHit` (hit.go) | **once per hit that connects**, matched against that hit's card |
 | `card-drawn` | `screens` | `CombatScene.drawHand` | **per card, as it leaves the draw pile for the hand** |
-| `fight-start` | `session` | fight setup | once per fight |
+| `equipped` | `session` | `Session.EquipWearing` | whenever the duelist is put together: at the top of every fight, and again mid-fight when a cantrip puts its relic on. **Answered over the whole worn set at once** — a relic arriving mid-fight rebuilds the fighter as if it had been worn all along |
 | `fight-won` | `session` | after the win | once per win |
 | `prizes-dealt` | `screens` | `dealPrizes` | once, as the post-battle cards go down |
 | `turn-taken` | `combat` | `playTurn` | once at the end of each of this duelist's own turns, **including an empty one**. Its `If` is matched against the turn as a whole: the rule fires when *any* card of the turn matches |
@@ -172,13 +172,13 @@ not ignored.
 | `scale-damage` | `card-damage` | `Amount` percent | 200 is double |
 | `set-element` | `card-drawn` | `Element` | the flip: recolors a matching card as it is drawn |
 | `demote-card` | `card-drawn` | `Amount` rungs | steps a matching card **down its own form's ladder** — a 3 AP Skewer is dealt as a 2 AP Thrust. Walks `Neighbor`; a card with no rung below it is left alone |
-| `add-dmg` | `fight-start` | `Amount` | flat DMG for the fight |
-| `add-hp` | `fight-start` | `Amount` | flat HP for the fight |
-| `scale-hp` | `fight-start` | `Amount` percent | scales max life; **the one scaling verb meant to go below 100** — 75 takes a quarter off. Applied *after* every `add-hp`, and never below 1 life |
+| `add-dmg` | `equipped` | `Amount` | flat DMG for the fight |
+| `add-hp` | `equipped` | `Amount` | flat HP for the fight |
+| `scale-hp` | `equipped` | `Amount` percent | scales max life; **the one scaling verb meant to go below 100** — 75 takes a quarter off. Applied *after* every `add-hp`, and never below 1 life |
 | `grow-on-win` | `fight-won` | `Amount` | adds to **this relic's own accumulator**, once per win |
 | `grow-on-turn` | `turn-taken` | `Amount` | the same accumulator, once per matching turn — Momentum |
 | `grow-per-card` | `turn-taken` | `Amount` | the same accumulator, **once for every matching card of the turn** — Ebb & Flow. Refused with no `If`, since there would be nothing to count |
-| `add-dmg-per-vitae` | `fight-start` | `Amount` | adds `Amount` to the duelist's **DMG per vitae the run holds** — Rampant. Folded into the DMG a blow is swung at beside `add-hand-dmg`'s raise, so every hit grows by its card's own multiplier. The verb declares a *rate*; the product is re-read at **every blow** against `Duelist.Vitae`, which moves inside a fight |
+| `add-dmg-per-vitae` | `equipped` | `Amount` | adds `Amount` to the duelist's **DMG per vitae the run holds** — Rampant. Folded into the DMG a blow is swung at beside `add-hand-dmg`'s raise, so every hit grows by its card's own multiplier. The verb declares a *rate*; the product is re-read at **every blow** against `Duelist.Vitae`, which moves inside a fight |
 | `scale-hand-damage` | `blow-formed` | `Amount` | scales **every hit**, after the hand's own multiplier (the HAND RELICS step), when it formed the named rung — the Pairing / Oak / Pentacle family. A **second multiplier**: `Event.Multiplier` stays the ladder's figure, because that is what the banner and hand row show |
 | `scale-damage-per-vitae` | `card-damage` | `Amount` | scales a matching card by **Amount percentage points per vitae held** — Fire of Life. 1 is +1% a vitae |
 | `reset-growth` | `turn-taken` | *nothing* | puts the accumulator back to zero. **Growth is applied first and resets second**, so a turn cannot both bank and lose the same step |
@@ -191,12 +191,12 @@ not ignored.
 | `add-dmg-per-held` | `blow-formed` | `Amount` flat | adds `Amount` to the duelist's **DMG for that one blow, for every card still in hand** matching the rule's card predicate — the jars. Folded in beside `add-hand-dmg`'s raise, so every hit grows by its card's own multiplier. Refused alongside `Lead` or `Hand` — a held card is in neither pile those name |
 | `drain-damage` | `attack-lands` | `Amount` percent | restores that share of each hit that **landed** to whoever threw it — after the shield and the fizzle, so a hit that was eaten drains nothing. **Once per matching hit**: the predicate asks about that hit's card |
 | `heal-share` | `turn-start` | `Amount` percent | restores that share of **maximum** life. Of the maximum rather than of what is left, so it is worth the same however badly the fight is going |
-| `adjust-round-limit` | `fight-start` | `Amount` rounds, **signed** | moves **this fight's** clock — Hermes takes two off. A delta rather than a figure, so it mixes with a relic that buys rounds; **every delta sums and worn order decides nothing**, because addition commutes. Clamped at one round, never at none, and read over the run's number rather than written into it, so selling gives the rounds back |
+| `adjust-round-limit` | `equipped` | `Amount` rounds, **signed** | moves **this fight's** clock — Hermes takes two off. A delta rather than a figure, so it mixes with a relic that buys rounds; **every delta sums and worn order decides nothing**, because addition commutes. Clamped at one round, never at none, and read over the run's number rather than written into it, so selling gives the rounds back |
 | `echo-attack` | `blow-formed` | `Amount` landings | the turn's lead card lands Amount times — a hit each — at even fractions counting down — 3 is full, 2/3, 1/3. Extra landings from two relics **add** rather than compound; capped at `combat.MaxEchoLandings` |
 | `set-form` | `card-drawn` | `Form` | deals a matching card as **its counterpart on that form's ladder** — same declared cost, same element, the concept replaced whole — through `combat.Counterpart`, the form essence's lookup. Chains with the flips and demotions in worn order. The form orbs |
 | `raise-shield` | `turn-start` | `Element`, `Amount` shields | raises that many shields of that element at the top of the wearer's turn, **after the expiry** — the helms. A shield like any other: it eats its own element's heaviest hit first and banks the matched block's AP. Basic is legal. Bounded at `MaxShields`, like a card |
-| `match-foe-shields` | `fight-start` | *nothing* | every shield the wearer's defend cards raise takes **the opponent's element** — the Prismatic Shield. The card keeps its own element for the hand it forms; only the shield changes |
-| `keep-shields` | `fight-start` | `Amount` shields | that many unspent shields survive both lapses — the attacker's turn ending and the owner's next turn arriving — kept in element order. The Tower Shield |
+| `match-foe-shields` | `equipped` | *nothing* | every shield the wearer's defend cards raise takes **the opponent's element** — the Prismatic Shield. The card keeps its own element for the hand it forms; only the shield changes |
+| `keep-shields` | `equipped` | `Amount` shields | that many unspent shields survive both lapses — the attacker's turn ending and the owner's next turn arriving — kept in element order. The Tower Shield |
 | `reflect-damage` | `hit-blocked` | `Amount` percent | sends that share of the eaten hit, **as it would have landed** and rounded down, back at the thrower as plain damage — no drain, no growth. A thrower it kills falls there and the rest of their turn is not thrown. The Thorned Shield |
 | `heal-on-block` | `hit-blocked` | `Amount` flat | restores that much life to the wearer per block, capped at full. The Mending Shield |
 | `vitae-on-block` | `hit-blocked` | `Amount` flat | pays the wearer that much vitae per block, stepping `Duelist.Vitae`. The Tithe Shield |
@@ -216,6 +216,22 @@ never assert a verb into existence.
   actually see on screen. See the `randomness` skill.
 - **Compounding is intended.** Two slash relics are ×4, not ×2, and that is a build.
 
+## A wearing can be weightless or ephemeral
+
+**Both are properties of one wearing, never of a relic** — `combat.WornRelic.Weightless` and
+`.Ephemeral` sit beside the accumulator, and the registered `Relic` knows nothing about them. The
+same rules can be worn plain on one duelist and weightless on another.
+
+- **Weightless takes no slot.** `Duelist.WornRelics` counts only weighted relics against the cap and
+  `Wearing` never refuses a weightless one, so it goes on over a full hand.
+- **Ephemeral lasts the fight it was put on in.** Nothing but the fight's own duelist holds it, so
+  the next fight's fighter is built without it.
+- **A cantrip-relic is both**, and is the only thing that makes either today. Its rules are written
+  inline on its cantrip in `data/cantrips.json`, never in `relics.json`, and are registered under the
+  cantrip's record key. It may not wake at a moment read off the run — `card-drawn`, `fight-won`,
+  `prizes-dealt`, `essence-spent` — because it is never among the run's relics. See MECHANICS.md
+  §Cantrips.
+
 ## Growing relics hold state
 
 Every other relic is a pure function of its record. A relic that gains +5 HP after every fight is
@@ -226,7 +242,7 @@ not — it carries a number that lives on the run:
   "RelicRecord": "heart",
   "Name": "Heart Ring",
   "Rules": [
-    { "When": "fight-start", "Then": [{ "Do": "add-hp", "Amount": 5 }] },
+    { "When": "equipped", "Then": [{ "Do": "add-hp", "Amount": 5 }] },
     { "When": "fight-won",   "Then": [{ "Do": "grow-on-win", "Amount": 5 }] }
   ]
 }
@@ -287,7 +303,9 @@ Reach for these first when an idea sounds too easy.
 - **A relic may not change what a *concept* is.** Cost and amount are per-card
   (`Card.CostDelta`, `Card.AmountPct`); form and label are concept-wide, so a relic targeting
   one of those would change every copy in the deck. Same bound an essence has.
-- **Five worn at once**, until a tonic expands it.
+- **Five worn at once**, until a tonic expands it — **counting only the relics that weigh
+  something**. A weightless wearing takes no slot; see *A wearing can be weightless or ephemeral*
+  below.
 
 ## Where the code is
 
@@ -296,7 +314,7 @@ Reach for these first when an idea sounds too easy.
 | the vocabulary, `RegisterRelic`, and every applier | `internal/combat/relic.go` |
 | parsing `relics.json` into rules, and registering it | `internal/session/relic.go` |
 | what a run wears, and its accumulators | `session.Session` — `Wear`, `Worn`, `WornRelics`, `Grown` |
-| `fight-start` / `fight-won` | `session.Equip`, `session.WonFight` |
+| `equipped` / `fight-won` | `session.EquipWearing` (and `Equip`, which is it with nothing extra), `session.WonFight` |
 | `card-drawn` | `session.DrawnAs`, called per card by `screens.CombatScene.drawHand` — the flips and the demotions, one walk |
 | `prizes-dealt` | `session.Picks` and `session.PrizeVitae`, read by `postbattle.go` |
 | the row on screen | `internal/screens/combat_relics.go` — a lookup from worn key to record |
@@ -517,10 +535,10 @@ way. Then regenerate both pages, `go run ./tools/relicsheet` and `go run ./tools
 run at the top of each round and stepped as the round pays. It is **re-read at every blow**, because
 vitae moves inside a fight: a card carrying `RiderVitaeInHand` pays one every turn it is held, and
 riders fire *before* the attack phase, so what a turn pays is already in the purse that turn's blow
-reads. **A figure resolved once at fight-start is the bug to avoid** — it prices a turn-three blow at
+reads. **A figure resolved once when the relics are equipped is the bug to avoid** — it prices a turn-three blow at
 turn-one rates.
 
-- **The Rampant** — `add-dmg-per-vitae` at `fight-start`, duelist DMG per vitae, raised before any card
+- **The Rampant** — `add-dmg-per-vitae` at `equipped`, duelist DMG per vitae, raised before any card
   is scored — the rung relics' fold, not a flat term. Rare.
 - **The Fire of Life** — `scale-damage-per-vitae` at `card-damage`, percentage points per vitae on a
   matching card. `Amount: 1` is +1% a vitae, which is a tenth of a multiplier per ten held.

@@ -31,10 +31,8 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
-	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
@@ -207,27 +205,10 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 		drawConsumableCard(gs, screen, at.Min, held[raised], canSpend(spendable, held[raised]), false)
 	}
 
-	drawConsumableCount(gs, screen, back, len(held))
-}
-
-// drawConsumableCount writes `held / cap` on the pane's bottom-right corner — the relic pane's
-// figure, in the relic pane's seat, at the relic pane's size.
-//
-// **It is the bare fraction and names nothing** *(owner's call, 2026-09-11)*. It read
-// `0/2 runes` until then, and the noun was the figure repeating what the cards standing on the
-// pane already say. The relic pane's corner lost its word in the same call and the two have to stay
-// twins — see drawRelicCount.
-//
-// The pane is called consumables because that is the shape of the thing — a seat for something a
-// run spends — so a stone or another spendable standing here needs nothing changed here at all,
-// which is what the dropped noun buys.
-func drawConsumableCount(gs *state.GlobalState, screen *ebiten.Image, back image.Rectangle, held int) {
-	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(back.Max.X), float64(back.Max.Y+relicCountTopGap))
-	op.PrimaryAlign = text.AlignEnd
-	op.ColorScale.ScaleWithColor(ui.GroundInk)
-	systems.DrawUI(screen, fmt.Sprintf("%d/%d", held, heldSlots(gs)),
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: relicCountSize}, op)
+	// **`held / cap`, the relic pane's figure in the relic pane's seat** — drawPaneCount, under the
+	// backing's right edge. It names nothing: the pane is called consumables because of its shape, so
+	// a new spendable standing here needs nothing changed.
+	drawPaneCount(gs, screen, back, fmt.Sprintf("%d/%d", len(held), heldSlots(gs)))
 }
 
 // hoverConsumables explains whichever carried rune the cursor is resting on, and reports whether
@@ -255,7 +236,10 @@ func hoverConsumables(gs *state.GlobalState, r image.Rectangle, at image.Point,
 		return false
 	}
 	seat := row.RowSlot(gs, i)
-	tip.Point(seat, ui.TipLine(held[i].Name()),
+	// **To the left of the card, never under it** *(owner's call)*: a panel under the top row
+	// covers the pane's count and the tab a click hangs there. PointLeft flips right at the
+	// screen's edge.
+	tip.PointLeft(seat, ui.TipLine(held[i].Name()),
 		ui.TipLines(consumableTipLines(gs, held[i], essenceTargets)))
 	return true
 }

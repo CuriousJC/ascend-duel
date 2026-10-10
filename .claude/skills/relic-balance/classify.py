@@ -87,7 +87,7 @@ SCOPES = {
     "blow-formed":  "per-blow",
     "turn-taken":   "per-turn",
     "turn-start":   "per-turn",
-    "fight-start":  "per-fight",
+    "equipped":  "per-fight",
     "fight-won":    "per-run",
     "prizes-dealt": "per-run",
     # an essence edits the deck the whole climb is played with, so its reach is the run's

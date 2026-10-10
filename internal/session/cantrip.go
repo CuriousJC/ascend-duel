@@ -3,19 +3,22 @@ package session
 // Cantrips: the run's opinion about the duelist, for one fight.
 //
 // **A potion changes the duelist for the rest of the run; a cantrip changes them for the fight it is
-// cast in**. It is bought sealed, in a bundle of scrolls, carried in the
-// consumables pane beside the runes, and cast between the turns of a duel onto the fighter standing
-// in the room. Nothing it does is written to the run: the fighter is rebuilt from the run at the top
-// of every fight, so what a cantrip added is gone by the next one without anything having to undo it.
+// cast in**. It is bought sealed, in a bundle of scrolls, carried in the consumables pane beside the
+// runes, and cast between the turns of a duel.
+//
+// **Casting a cantrip puts its cantrip-relic on the fighter**, and that relic is the whole of what
+// the cantrip does. It is worn after the run's own relics, weightless — it takes no slot — and
+// ephemeral: the screen holds the fight's casts and hands them to EquipWearing, so the run is never
+// written to and the next fight's fighter is built without them. Every effect a cantrip can have is
+// therefore a relic effect, said in the relic grammar and answered by the relic machinery.
 //
 // **The one figure that crosses the seam is life**, because the wound a fight leaves is carried into
 // the next room — see life.go. A duelist who finishes above the ceiling the run gives them walks out
 // at that ceiling: the life a cantrip added is a heal as long as it lasts and never a debt afterwards.
 // ShedCantrips is that rule.
 //
-// **Stacking is allowed and each cast is contained by itself.** A cast reads the fighter as it
-// stands and moves it; it knows nothing about any other cantrip. Ten Mights are +100 DMG, and two
-// Endurances double a doubled body.
+// **Stacking is allowed, and two casts are two relics.** Ten Mights are ten +10 DMG relics, and two
+// Endurances are two 2x life relics compounding left to right, as any two scaling relics do.
 //
 // **This file is where a record becomes something usable and where a bad one is refused**, the job
 // `potion.go` does for its catalog, and here for its reason: a cantrip is carried by a *run*, and the
@@ -28,59 +31,68 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 )
 
-// CantripEffect is what a cantrip does to the fighter. **A closed vocabulary**, in Go rather than in
-// the file: a new effect is a rule the fighter has to learn how to take, never something
-// `cantrips.json` can assert into existence. Same posture as a potion's effect.
-type CantripEffect int
-
-const (
-	// CantripAddDMG adds its amount to the fighter's DMG.
-	CantripAddDMG CantripEffect = iota
-
-	// CantripScaleLife scales the fighter's life ceiling and the life under it by its amount, as a
-	// percentage — so 200 turns 30 of 60 into 60 of 120.
-	CantripScaleLife
-)
-
-// String is the effect as the file spells it.
-func (e CantripEffect) String() string {
-	switch e {
-	case CantripScaleLife:
-		return "scale-life"
-	default:
-		return "add-dmg"
-	}
-}
-
-// Cantrip is one scroll, resolved against the vocabulary above.
+// Cantrip is one scroll, resolved, with the relic it casts.
 //
 // Comparable, so a screen can hold one by value — exactly as Potion and Stone are.
 type Cantrip struct {
 	Record string
 	Name   string
 
-	// Family is the block the record was authored beside, and Art is the face the card draws —
+	// Family is the block the record was authored beside, and Art is the scroll's face —
 	// **already resolved through data.CantripData.ArtKey**, so a record with no picture of its own
 	// carries the catalog's default. Neither is read by anything that resolves a fight.
 	Family string
 	Art    string
 
-	// Draw is the art brief, carried for the review sheet; nothing that plays the game reads it.
+	// Draw is the scroll's art brief, carried for the review sheet; nothing that plays the game reads
+	// it.
 	Draw string
 
-	Effect CantripEffect
-	Amount int
-
-	// Text is the record's authored line, which the tooltip says.
+	// Text is the scroll's authored line, which the tooltip says.
 	Text string
+
+	// Relic is the cantrip-relic a cast puts on, registered with the rules under the cantrip's own
+	// record key. RelicName, RelicArt, RelicDraw and RelicText are its face, as Name, Art, Draw and
+	// Text are the scroll's — RelicArt already resolved through data.CantripRelicData.ArtKey.
+	Relic     combat.RelicID
+	RelicName string
+	RelicArt  string
+	RelicDraw string
+	RelicText string
+}
+
+// Worn is the cantrip-relic as a duelist wears it: **weightless and ephemeral**, always. Those are
+// properties of the wearing rather than of the relic, and a cast is the only way one is worn.
+func (c Cantrip) Worn() combat.WornRelic {
+	return combat.WornRelic{Relic: c.Relic, Weightless: true, Ephemeral: true}
+}
+
+// CantripRelics is the cantrip-relics a run of casts puts on, in cast order — what EquipWearing is
+// handed.
+func CantripRelics(cast []Cantrip) []combat.WornRelic {
+	out := make([]combat.WornRelic, 0, len(cast))
+	for _, c := range cast {
+		out = append(out, c.Worn())
+	}
+	return out
 }
 
 // cantrips is the validated catalog, keyed by record, and cantripOrder its keys sorted — the walk
 // anything deciding an outcome must use, since a map's own order is randomized.
 //
-// **A bad record panics at init**, for the potion catalog's reason: a scroll naming an effect this
-// build has not got is a card that takes vitae and does nothing.
+// **A bad record panics at init**, for the potion catalog's reason: a scroll whose relic the rules
+// refuse is a card that takes vitae and does nothing.
 var cantrips, cantripOrder = loadCantrips()
+
+// cantripRelics is the catalog by the relic each cantrip casts, for a screen holding a worn relic
+// and wanting its face.
+var cantripRelics = func() map[combat.RelicID]Cantrip {
+	out := make(map[combat.RelicID]Cantrip, len(cantrips))
+	for _, c := range cantrips {
+		out[c.Relic] = c
+	}
+	return out
+}()
 
 // Cantrips is every cantrip in the catalog, in a fixed sorted order.
 func Cantrips() []Cantrip {
@@ -94,6 +106,12 @@ func Cantrips() []Cantrip {
 // CantripByKey finds one by its record key.
 func CantripByKey(key string) (Cantrip, bool) {
 	c, ok := cantrips[key]
+	return c, ok
+}
+
+// CantripByRelic finds the cantrip whose cantrip-relic this is.
+func CantripByRelic(id combat.RelicID) (Cantrip, bool) {
+	c, ok := cantripRelics[id]
 	return c, ok
 }
 
@@ -115,82 +133,70 @@ func loadCantrips() (map[string]Cantrip, []string) {
 	return out, order
 }
 
-// resolveCantrip turns one record into a Cantrip, or says why it cannot.
-//
-// **Each effect refuses the amount that would do nothing**: a Might adding no DMG, or an Endurance
-// scaling life by 100% or less. The second is also the drawback that would make a "cantrip" a curse,
-// and a curse is a design decision rather than a record.
+// resolveCantrip turns one record into a Cantrip and registers its relic, or says why it cannot.
 func resolveCantrip(rec data.CantripData) (Cantrip, error) {
-	if rec.CantripRecord == "" {
-		return Cantrip{}, fmt.Errorf("a record with no CantripRecord")
-	}
-
-	effect, err := ParseCantripEffect(rec.Effect)
+	rules, err := checkCantripRecord(rec)
 	if err != nil {
-		return Cantrip{}, fmt.Errorf("%s: %w", rec.CantripRecord, err)
+		return Cantrip{}, err
 	}
-	switch effect {
-	case CantripAddDMG:
-		if rec.Amount <= 0 {
-			return Cantrip{}, fmt.Errorf("%s: adding %d DMG does nothing", rec.CantripRecord, rec.Amount)
-		}
-	case CantripScaleLife:
-		if rec.Amount <= 100 {
-			return Cantrip{}, fmt.Errorf("%s: scaling life to %d%% is not a strengthening",
-				rec.CantripRecord, rec.Amount)
-		}
+	id, err := combat.RegisterRelic(rec.CantripRecord, rec.Relic.Name, rules)
+	if err != nil {
+		return Cantrip{}, err
 	}
 
 	return Cantrip{
-		Record: rec.CantripRecord,
-		Name:   rec.Name,
-		Family: rec.Family,
-		Art:    rec.ArtKey(),
-		Draw:   rec.Draw,
-		Effect: effect,
-		Amount: rec.Amount,
-		Text:   rec.Text,
+		Record:    rec.CantripRecord,
+		Name:      rec.Name,
+		Family:    rec.Family,
+		Art:       rec.ArtKey(),
+		Draw:      rec.Draw,
+		Text:      rec.Text,
+		Relic:     id,
+		RelicName: rec.Relic.Name,
+		RelicArt:  rec.Relic.ArtKey(),
+		RelicDraw: rec.Relic.Draw,
+		RelicText: rec.Relic.Text,
 	}, nil
 }
 
-// ParseCantripEffect resolves the file's spelling of an effect.
-func ParseCantripEffect(name string) (CantripEffect, error) {
-	switch name {
-	case "add-dmg":
-		return CantripAddDMG, nil
-	case "scale-life":
-		return CantripScaleLife, nil
-	default:
-		return 0, fmt.Errorf("%q is not a cantrip effect the rules have", name)
+// checkCantripRecord holds one record to everything registration would, and hands back its relic's
+// rules.
+//
+// **A cantrip-relic may only wake at a moment the fight's own duelist answers.** The run's relics
+// are also read off the run — the draw's flips, the win's growth and payout, the prizes, an essence
+// spent — and a cantrip-relic is worn by the fighter alone, so a rule at one of those moments would
+// load cleanly and never fire. It is refused here instead.
+func checkCantripRecord(rec data.CantripData) ([]combat.RelicRule, error) {
+	if rec.CantripRecord == "" {
+		return nil, fmt.Errorf("a record with no CantripRecord")
 	}
+	if rec.Relic.Name == "" {
+		return nil, fmt.Errorf("%s casts a relic with no Name", rec.CantripRecord)
+	}
+	rules, err := parseRelicRules(rec.CantripRecord, rec.Relic.Rules)
+	if err != nil {
+		return nil, err
+	}
+	for _, rule := range rules {
+		if !fightMoment(rule.When) {
+			return nil, fmt.Errorf("%s casts a relic that wakes at %s, which a cantrip-relic is never "+
+				"worn for", rec.CantripRecord, rule.When)
+		}
+	}
+	if err := combat.CheckRelic(rec.CantripRecord, rules); err != nil {
+		return nil, err
+	}
+	return rules, nil
 }
 
-// Cast is the cantrip taken by a fighter: the duelist as it stands, moved.
-//
-// **It reads nothing but the duelist it is handed**, which is what makes each cast contained by
-// itself — a second Endurance doubles whatever the first left, and a Might adds to whatever DMG is
-// standing, relics and earlier Mights included.
-//
-// **Life never scales below one**, the rule Equip keeps for a stack of drawbacks: a fighter a cast
-// had killed would be a death nobody's blow caused.
-func (c Cantrip) Cast(d combat.Duelist) combat.Duelist {
-	switch c.Effect {
-	case CantripAddDMG:
-		d.DMG += c.Amount
-	case CantripScaleLife:
-		d.MaxLife = d.MaxLife * c.Amount / 100
-		d.CurrentLife = d.CurrentLife * c.Amount / 100
-		if d.MaxLife < 1 {
-			d.MaxLife = 1
-		}
-		if d.CurrentLife < 1 {
-			d.CurrentLife = 1
-		}
-		if d.CurrentLife > d.MaxLife {
-			d.CurrentLife = d.MaxLife
-		}
+// fightMoment is whether a moment is answered by the fight's duelist, and so reaches a cantrip-relic.
+func fightMoment(m combat.Moment) bool {
+	switch m {
+	case combat.MomentCardDrawn, combat.MomentFightWon, combat.MomentPrizesDealt,
+		combat.MomentEssenceSpent:
+		return false
 	}
-	return d
+	return true
 }
 
 // ShedCantrips is the fighter's life as the run takes it back at the end of a fight: the ceiling

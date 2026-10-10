@@ -172,10 +172,10 @@ func TestTwoDrainRelicsAddRatherThanCompound(t *testing.T) {
 
 func TestADrainIsRefusedAtAnyOtherMoment(t *testing.T) {
 	_, err := RegisterRelic("relictest.drain.wrongmoment", "wrong moment", []RelicRule{{
-		When: MomentFightStart,
+		When: MomentEquipped,
 		Then: []RelicEffect{{Do: DoDrainDamage, Amount: 30}},
 	}})
 	if err == nil {
-		t.Fatal("a drain at fight-start registered, and it would never have fired")
+		t.Fatal("a drain at equipped registered, and it would never have fired")
 	}
 }

@@ -45,8 +45,12 @@ const (
 	// MomentAttackLands fires once per landed blow, in resolveAttackPhase and resolveSoloAttacks.
 	MomentAttackLands
 
-	// MomentFightStart fires once per fight, as the duelist is put together.
-	MomentFightStart
+	// MomentEquipped fires whenever the duelist is put together with a set of relics on: at the top
+	// of every fight for the run's relics, and again mid-fight when something puts a relic on —
+	// a cantrip casting its cantrip-relic. **It is answered over the whole worn set at once**, never
+	// one relic at a time, because its verbs are ordered across relics (every flat add before any
+	// scale): a relic arriving mid-fight rebuilds the fighter as if it had been worn all along.
+	MomentEquipped
 
 	// MomentFightWon fires once per win, after it.
 	MomentFightWon
@@ -141,7 +145,7 @@ const (
 // Moments is every moment in a fixed order, for anything that walks them.
 func Moments() []Moment {
 	return []Moment{MomentCardCost, MomentCardDamage, MomentAttackLands,
-		MomentFightStart, MomentFightWon, MomentPrizesDealt, MomentBlowFormed, MomentTurnTaken,
+		MomentEquipped, MomentFightWon, MomentPrizesDealt, MomentBlowFormed, MomentTurnTaken,
 		MomentCardDrawn, MomentTurnStart, MomentEssenceSpent, MomentHitBlocked}
 }
 
@@ -151,8 +155,8 @@ func (m Moment) String() string {
 		return "card-damage"
 	case MomentAttackLands:
 		return "attack-lands"
-	case MomentFightStart:
-		return "fight-start"
+	case MomentEquipped:
+		return "equipped"
 	case MomentFightWon:
 		return "fight-won"
 	case MomentPrizesDealt:
@@ -349,7 +353,7 @@ const (
 	// is folded into the DMG a blow is swung at beside add-hand-dmg's raise and before the riders
 	// scale it, so every card grows by its own multiplier. See combat.blowDMG.
 	//
-	// **The rate is fixed at fight-start and the purse is not.** The verb sits at fight-start
+	// **The rate is fixed at equipped and the purse is not.** The verb sits at equipped
 	// because that is when the relics are put on, but the figure it produces is re-asked at every
 	// blow against Duelist.Vitae, which moves during a fight. A relic resolved once at the door
 	// would pay a turn-three blow at turn-one prices.
@@ -491,7 +495,7 @@ const (
 	// nothing to match; every creature carries its realm's element, so that is a bare Duelist in a
 	// test and nobody the game fields.
 	//
-	// **A standing property read at the raise**, sitting at fight-start for DoAddDMGPerVitae's
+	// **A standing property read at the raise**, sitting at equipped for DoAddDMGPerVitae's
 	// reason: the relic is put on at the door and asked about later. See ShieldsMatchFoe.
 	//
 	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
@@ -506,7 +510,7 @@ const (
 	// went up. See ShieldStack.Keeping.
 	//
 	// **Two relics add**, like every other count. A standing property read at every lapse, sitting
-	// at fight-start for the reason DoMatchFoeShields does.
+	// at equipped for the reason DoMatchFoeShields does.
 	//
 	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
 	DoKeepShields
@@ -673,7 +677,7 @@ func verbMoment(v RelicVerb) Moment {
 		return MomentCardDrawn
 	case DoAddDMG, DoAddHP, DoScaleHP, DoAddDMGPerVitae, DoScaleRolls, DoAdjustRoundLimit,
 		DoMatchFoeShields, DoKeepShields:
-		return MomentFightStart
+		return MomentEquipped
 	case DoEchoAttack, DoRepeatCard, DoAddHandDMG, DoAddDMGPerHeld, DoScaleHandDamage:
 		return MomentBlowFormed
 	case DoGrowOnWin, DoScalePropagation:
@@ -1064,6 +1068,17 @@ const DefaultRelicSlots = 5
 type WornRelic struct {
 	Relic RelicID
 	Grown int
+
+	// Weightless and Ephemeral are properties of **this one wearing**, never of the relic: the same
+	// rules may be worn plain on one duelist and weightless on another, so they sit here beside the
+	// accumulator rather than on the registered Relic.
+	//
+	// A weightless relic takes no slot — relicSlots counts only the relics that weigh something, so
+	// it is worn on top of a full hand. An ephemeral one lasts the fight it was put on in: nothing
+	// outside the fight's own duelist holds it, so it is not there when the next fight's fighter is
+	// built. A cantrip-relic is both.
+	Weightless bool
+	Ephemeral  bool
 }
 
 // relicSlots is how many relics this duelist may wear, with the two ways the field can be wrong
@@ -1089,21 +1104,54 @@ func (d Duelist) relicSlots() int {
 // **Left to right, and it compounds.** That is a determinism rule rather than a preference:
 // multiplicative effects are order-sensitive, so the order has to be one a rule can name, and worn
 // order is the only order the player can actually see. Two slash relics are x4 and that is a build.
+//
+// **Only a relic that weighs something counts against the slots.** A weightless one is always worn,
+// wherever it sits in the row; the weighted ones are kept until the slots are spent. When nothing is
+// over the cap — which Wearing guarantees — this is the row as it stands.
 func (d Duelist) WornRelics() []WornRelic {
-	n := len(d.Relics)
-	if n <= 0 {
+	if len(d.Relics) == 0 {
 		return nil
 	}
-	if slots := d.relicSlots(); n > slots {
-		n = slots
+	slots, weighted := d.relicSlots(), 0
+	for _, w := range d.Relics {
+		if !w.Weightless {
+			weighted++
+		}
 	}
-	return d.Relics[:n]
+	if weighted <= slots {
+		return d.Relics
+	}
+
+	out := make([]WornRelic, 0, len(d.Relics))
+	weighted = 0
+	for _, w := range d.Relics {
+		if !w.Weightless {
+			if weighted == slots {
+				continue
+			}
+			weighted++
+		}
+		out = append(out, w)
+	}
+	return out
+}
+
+// weightedRelics is how many of the worn relics take a slot.
+func (d Duelist) weightedRelics() int {
+	n := 0
+	for _, w := range d.Relics {
+		if !w.Weightless {
+			n++
+		}
+	}
+	return n
 }
 
 // Wearing returns this duelist with one more relic on, or unchanged if the hand is full. It returns a
-// copy like everything else in this package.
+// copy like everything else in this package. **A weightless relic is never refused**, since it takes
+// no slot.
 func (d Duelist) Wearing(w WornRelic) Duelist {
-	if len(d.Relics) >= d.relicSlots() {
+	if !w.Weightless && d.weightedRelics() >= d.relicSlots() {
 		return d
 	}
 	// **Cloned rather than appended in place.** append may write into the backing array this
@@ -1155,7 +1203,7 @@ func (d Duelist) WearsRelic(id RelicID) bool {
 //
 // **The card is what an `If` is matched against**, and a zero Card is what the three cardless moments
 // pass — a rule with a predicate at one of those is refused at registration, so nothing here has to
-// decide what a form means at `fight-start`.
+// decide what a form means at `equipped`.
 func RelicEffectsAt(worn []WornRelic, m Moment, card Card) []RelicEffect {
 	src := RelicContributionsAt(worn, m, card)
 	if len(src) == 0 {
@@ -1375,7 +1423,7 @@ type relicWard struct {
 // ShieldsMatchFoe reports whether a worn set turns every shield its defend cards raise to the
 // opponent's element — the Prismatic Shield. See DoMatchFoeShields.
 func ShieldsMatchFoe(worn []WornRelic) bool {
-	for _, e := range RelicEffectsAt(worn, MomentFightStart, Card{}) {
+	for _, e := range RelicEffectsAt(worn, MomentEquipped, Card{}) {
 		if e.Do == DoMatchFoeShields {
 			return true
 		}
@@ -1385,7 +1433,7 @@ func ShieldsMatchFoe(worn []WornRelic) bool {
 
 // KeptShields is how many unspent shields a worn set keeps past the moment they would lapse — the
 // Tower Shield. Zero for nearly every run, which is every shield lapsing as it always has.
-func KeptShields(worn []WornRelic) int { return sumAmounts(worn, MomentFightStart, DoKeepShields) }
+func KeptShields(worn []WornRelic) int { return sumAmounts(worn, MomentEquipped, DoKeepShields) }
 
 // blockReward is what one worn relic does when one of its wearer's shields eats a hit: a share of
 // the hit sent back, life, and vitae. Any of the three may be zero.
@@ -1436,14 +1484,14 @@ type relicDrain struct {
 // AddedDMG and AddedHP are what a worn set adds for the fight about to start. They take the worn
 // slice rather than a duelist because `session` applies them while the duelist is still being put
 // together — the stat they add to is the one that has not been set yet.
-func AddedDMG(worn []WornRelic) int { return sumAmounts(worn, MomentFightStart, DoAddDMG) }
+func AddedDMG(worn []WornRelic) int { return sumAmounts(worn, MomentEquipped, DoAddDMG) }
 
 // HPScale is what every worn relic does to maximum life, as a percentage — 100 when nothing scales
 // it. **Compounding left to right**, like every other multiplicative relic effect, so two relics each
 // taking a quarter off leave 56% rather than half.
 func HPScale(worn []WornRelic) int {
 	out := 100
-	for _, e := range RelicEffectsAt(worn, MomentFightStart, Card{}) {
+	for _, e := range RelicEffectsAt(worn, MomentEquipped, Card{}) {
 		if e.Do == DoScaleHP {
 			out = out * e.Amount / 100
 		}
@@ -1456,13 +1504,13 @@ func HPScale(worn []WornRelic) int {
 //
 // **Compounding left to right**, like HPScale and every other multiplicative relic effect.
 //
-// **It is read off the duelist at each roll rather than resolved once at fight-start**, which is
+// **It is read off the duelist at each roll rather than resolved once at equipped**, which is
 // the shape add-damage-per-vitae already has: the verb declares a rate and the product is taken
 // where it is needed. Here it is because the two roll sites are in different phases and neither
 // has a figure to cache on.
 func RollScale(worn []WornRelic) int {
 	out := 100
-	for _, e := range RelicEffectsAt(worn, MomentFightStart, Card{}) {
+	for _, e := range RelicEffectsAt(worn, MomentEquipped, Card{}) {
 		if e.Do == DoScaleRolls {
 			out = out * e.Amount / 100
 		}
@@ -1590,12 +1638,12 @@ func LandingSeats(worn []WornRelic, card Card, lead bool, rungs []HandID) []bool
 //
 // **It is the rate, not the payment.** The multiplication is done at each blow against the
 // duelist's live purse, because vitae moves inside a fight: a card kept in hand pays one. Asking
-// once at fight-start was the first version of this and it was wrong.
+// once at equipped was the first version of this and it was wrong.
 func DMGPerVitae(worn []WornRelic) int {
 	total := 0
 	for _, w := range worn {
 		for _, rule := range RelicOf(w.Relic).Rules {
-			if rule.When != MomentFightStart {
+			if rule.When != MomentEquipped {
 				continue
 			}
 			for _, e := range rule.Then {
@@ -1608,7 +1656,7 @@ func DMGPerVitae(worn []WornRelic) int {
 	return total
 }
 
-// seatsDoing is which worn seats carry a verb at all — the attribution a flat fight-start term
+// seatsDoing is which worn seats carry a verb at all — the attribution a flat equipped term
 // cannot recover from its own figure, since by the time a blow lands it is one number.
 func seatsDoing(worn []WornRelic, do RelicVerb) []bool {
 	seats := make([]bool, len(worn))
@@ -1826,7 +1874,7 @@ func EchoBonus(cardDamage, k, n int) int {
 }
 
 // AddedHP is flat maximum life for the fight.
-func AddedHP(worn []WornRelic) int { return sumAmounts(worn, MomentFightStart, DoAddHP) }
+func AddedHP(worn []WornRelic) int { return sumAmounts(worn, MomentEquipped, DoAddHP) }
 
 // RoundLimitFor is the clock a worn set puts this fight on, given the limit the run is carrying.
 //
@@ -1843,7 +1891,7 @@ func RoundLimitFor(worn []WornRelic, base int) int {
 		return base
 	}
 	limit := base
-	for _, e := range RelicEffectsAt(worn, MomentFightStart, Card{}) {
+	for _, e := range RelicEffectsAt(worn, MomentEquipped, Card{}) {
 		if e.Do == DoAdjustRoundLimit {
 			limit += e.Amount
 		}

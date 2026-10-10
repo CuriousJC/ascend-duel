@@ -25,6 +25,7 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 
 	"github.com/curiousjc/ascend-duel/internal/state"
@@ -205,19 +206,40 @@ func drawRelicPaneBack(screen *ebiten.Image, row image.Rectangle) {
 		relicPaneBackColor, false)
 }
 
-// drawPaneCount writes a pane's fraction on its bottom-right corner: `3/5 relics`, `1/2 held`.
+// drawPaneCount writes a pane's fraction under its backing, **right-aligned with the backing's right
+// edge**: `3/5` under the relics, `1/3` under the consumables.
 //
-// **One function for every pane that has one**, so the two on the top row and the two on the band
-// cannot come to different conclusions about where a corner is or what size the figure is.
-func drawPaneCount(gs *state.GlobalState, screen *ebiten.Image, row image.Rectangle, msg string) {
-	back := relicPaneBackOf(row)
-	top := back.Max.Y + relicCountTopGap
-
+// **One function for every pane that has one, on every screen**, so no two panes and no two
+// screens can come to different conclusions about where the figure stands or what size it is.
+// `back` is the pane's backing — the surface, not the row of cards on it.
+func drawPaneCount(gs *state.GlobalState, screen *ebiten.Image, back image.Rectangle, msg string) {
 	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(back.Max.X), float64(top))
+	op.GeoM.Translate(float64(back.Max.X), float64(back.Max.Y+relicCountTopGap))
 	op.PrimaryAlign = text.AlignEnd
 	op.ColorScale.ScaleWithColor(ui.GroundInk)
 	systems.DrawUI(screen, msg, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: relicCountSize}, op)
+}
+
+// drawRelicPaneFrame is the relic pane on every screen that shows the band: the surface the relics
+// stand on, and `worn / cap` under it.
+//
+// **The one drawing of the pane, called by the fight, the reward screen, the portal, the sealed good
+// and the shop**, because the band is one scene and its pane must not be a different object on one
+// of them. What each screen draws *on* it — the fight's toasting relics, the shop's relics flying to
+// a new seat — is its own; the frame is not.
+//
+// **`worn / cap`, exactly like the pile's `left / owned`.** The numerator is what moves and the
+// denominator never does, so the figure reads as "three of your five fingers are spoken for". **Only
+// the run's relics are counted**: a cantrip-relic is weightless and takes none of the slots, and the
+// denominator is the run's relicSlots rather than any width the row is willing to draw. **It is drawn
+// with nothing worn too**, since `0/5` says the row exists and is empty.
+func drawRelicPaneFrame(gs *state.GlobalState, screen *ebiten.Image, row image.Rectangle) {
+	drawRelicPaneBack(screen, row)
+	if gs.Run == nil {
+		return
+	}
+	drawPaneCount(gs, screen, relicPaneBackOf(row),
+		fmt.Sprintf("%d/%d", len(gs.Run.Worn()), relicSlots(gs)))
 }
 
 // relicSlotMaxGap is the most bare table ever left between two relic cards.
@@ -313,6 +335,146 @@ func wornRelics(gs *state.GlobalState) []data.RelicData {
 	return out
 }
 
+// rowSeat is one seat of the fight's relic row: a relic the run is wearing, by key, or the
+// cantrip-relic of one cast, by its place in the fight's list of casts.
+type rowSeat struct {
+	key  string
+	cast int
+}
+
+// runRelic is whether this seat holds one of the run's relics rather than a cantrip-relic.
+func (r rowSeat) runRelic() bool { return r.cast < 0 }
+
+// relicRowSeats is the fight's relic row, in the order it stands in — **the run's relics and the
+// cantrip-relics interleaved however the player has dragged them**.
+//
+// **The run stays the authority on what it wears, and the fight on what it cast**; this is only the
+// order. So the stored row is reconciled against both every time it is read: a seat whose relic was
+// sold or whose cast is gone is dropped, and a relic or a cast the row has not seen yet goes on the
+// end — which is where a fight opens with the run's relics in the run's own order and where each cast
+// arrives.
+func (s *CombatScene) relicRowSeats(gs *state.GlobalState) []rowSeat {
+	// **Off the run's keys, not off the records the row draws**: what the fighter wears is a rule,
+	// and a key the screen has no picture for is still a relic on the hand.
+	var worn []string
+	if gs.Run != nil {
+		worn = gs.Run.Worn()
+	}
+	isWorn := make(map[string]bool, len(worn))
+	for _, k := range worn {
+		isWorn[k] = true
+	}
+
+	out := make([]rowSeat, 0, len(worn)+len(s.cast))
+	seenKey, seenCast := map[string]bool{}, map[int]bool{}
+	for _, r := range s.rowOrder {
+		switch {
+		case r.runRelic() && isWorn[r.key] && !seenKey[r.key]:
+			seenKey[r.key] = true
+			out = append(out, r)
+		case !r.runRelic() && r.cast < len(s.cast) && !seenCast[r.cast]:
+			seenCast[r.cast] = true
+			out = append(out, r)
+		}
+	}
+	for _, k := range worn {
+		if !seenKey[k] {
+			out = append(out, rowSeat{key: k, cast: -1})
+		}
+	}
+	for i := range s.cast {
+		if !seenCast[i] {
+			out = append(out, rowSeat{cast: i})
+		}
+	}
+	s.rowOrder = out
+	return out
+}
+
+// paneRelics is every relic the fighter is wearing, as records, in the row's order.
+//
+// **The same order the fighter wears them in**, which is what lets a seat the resolver names — a
+// relic's term in a hit's line, a drain leaving its ring — be looked up here by index. See fightWorn,
+// which builds the fighter's row off the same seats.
+//
+// **A cantrip-relic is drawn from its cantrip**, as a relic record with no rarity: it is never sold,
+// so the face has no scarcity to say.
+func (s *CombatScene) paneRelics(gs *state.GlobalState) []data.RelicData {
+	seats := s.relicRowSeats(gs)
+	out := make([]data.RelicData, 0, len(seats))
+	for _, r := range seats {
+		if !r.runRelic() {
+			out = append(out, cantripRelicRecord(s.cast[r.cast]))
+			continue
+		}
+		// **A key with no record still takes its seat**, drawn as the default face under its own key,
+		// so a seat here is always the fighter's seat of the same number.
+		record, ok := gs.Relics[r.key]
+		if !ok {
+			record = data.RelicData{RelicRecord: r.key, Name: r.key}
+		}
+		out = append(out, record)
+	}
+	return out
+}
+
+// fightWorn is the fighter's worn row as rules, in the row's order: the run's relics with their
+// accumulators, and each cast's cantrip-relic, weightless and ephemeral.
+func (s *CombatScene) fightWorn(gs *state.GlobalState) []combat.WornRelic {
+	if gs.Run == nil {
+		return session.CantripRelics(s.cast)
+	}
+	byKey := map[string]combat.WornRelic{}
+	for _, w := range gs.Run.WornRelics() {
+		byKey[combat.RelicOf(w.Relic).Key] = w
+	}
+
+	seats := s.relicRowSeats(gs)
+	out := make([]combat.WornRelic, 0, len(seats))
+	for _, r := range seats {
+		if !r.runRelic() {
+			out = append(out, s.cast[r.cast].Worn())
+			continue
+		}
+		if w, ok := byKey[r.key]; ok {
+			out = append(out, w)
+		}
+	}
+	return out
+}
+
+// runRelicAt is which of the run's relics stands in one seat, and false for a cantrip-relic — which
+// is what keeps a cantrip-relic off the sale tab.
+func (s *CombatScene) runRelicAt(gs *state.GlobalState, seat int) (string, bool) {
+	seats := s.relicRowSeats(gs)
+	if seat < 0 || seat >= len(seats) || !seats[seat].runRelic() {
+		return "", false
+	}
+	return seats[seat].key, true
+}
+
+// runRelicSeat is where one of the run's relics stands in the fight's row, for the sale tab.
+func (s *CombatScene) runRelicSeat(gs *state.GlobalState, key string) (image.Rectangle, bool) {
+	seats := s.relicRowSeats(gs)
+	for i, r := range seats {
+		if r.runRelic() && r.key == key {
+			return relicSlotRect(s.relicPaneRect(gs), i, len(seats)), true
+		}
+	}
+	return image.Rectangle{}, false
+}
+
+// cantripRelicRecord is a cantrip-relic as the row draws a relic.
+func cantripRelicRecord(c session.Cantrip) data.RelicData {
+	return data.RelicData{
+		RelicRecord: c.Record,
+		Name:        c.RelicName,
+		Art:         c.RelicArt,
+		Draw:        c.RelicDraw,
+		Text:        c.RelicText,
+	}
+}
+
 // relicRow is the worn row as a draggable row of cards. **The lifecycle is carddrag.go's**; this is
 // the half that knows the row's geometry and what a drop means.
 //
@@ -400,11 +562,17 @@ func moveWornRelic(gs *state.GlobalState, from, to int) bool {
 // disagree with the row it came out of.
 func drawDraggedRelic(gs *state.GlobalState, screen *ebiten.Image, drag *ui.CardDrag,
 	counters map[string]string) {
+	drawDraggedFrom(gs, screen, drag, counters, wornRelics(gs))
+}
+
+// drawDraggedFrom is drawDraggedRelic over a row the caller names — the combat screen's, which
+// carries the fight's cantrip-relics after the run's.
+func drawDraggedFrom(gs *state.GlobalState, screen *ebiten.Image, drag *ui.CardDrag,
+	counters map[string]string, worn []data.RelicData) {
 
 	if !drag.Dragging() {
 		return
 	}
-	worn := wornRelics(gs)
 	if drag.Origin() >= len(worn) {
 		return
 	}
@@ -665,7 +833,7 @@ func (s *CombatScene) playedCardShake(seat int) int {
 // figure cannot set off from a seat the card is not in. That is the rule every origin on this screen
 // follows; see `handCardCenter`.
 func (s *CombatScene) relicCardCenter(gs *state.GlobalState, seat int) image.Point {
-	at := relicSlotAt(s.relicPaneRect(gs), seat, len(wornRelics(gs)))
+	at := relicSlotAt(s.relicPaneRect(gs), seat, len(s.paneRelics(gs)))
 	return image.Pt(at.X+cards.RelicStyle.Width/2, at.Y+cards.RelicStyle.Height/2)
 }
 
@@ -688,20 +856,13 @@ func (s *CombatScene) relicCardCenter(gs *state.GlobalState, seat int) image.Poi
 func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image) {
 	r := s.relicPaneRect(gs)
 
-	// The surface first, so everything else stands on it.
-	back := s.relicPaneBackRect(gs)
+	// **The surface and its count first, so everything else stands on it** — the frame every screen
+	// showing the band draws. Flat, where the deck panel and the fight log are bevelled: those two
+	// are overlays and a lit edge says they are in front of the game, where this backing covers
+	// nothing and the bevelled cards on it are what is meant to be read.
+	drawRelicPaneFrame(gs, screen, r)
 
-	// **Flat, where the deck panel and the fight log are bevelled** *(owner's call, 2026-08-24)*.
-	// It was sunken for an afternoon, on the argument that the relic cards stand *in* it. What that
-	// misses is what is standing there: five bevelled cards on a bevelled tray on a bevelled
-	// screen is three depths in one corner, and the cards are the thing meant to be read. The two
-	// panels that keep their bevel are overlays — they cover the game, so a lit edge is what says
-	// they are in front of it. This backing covers nothing.
-	vector.FillRect(screen,
-		float32(back.Min.X), float32(back.Min.Y), float32(back.Dx()), float32(back.Dy()),
-		relicPaneBackColor, false)
-
-	worn := wornRelics(gs)
+	worn := s.paneRelics(gs)
 	counters := s.countersNow()
 
 	// **The card under the cursor is drawn last, so it is drawn whole** — see raisedSeat, which is
@@ -746,12 +907,6 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 			cards.RelicStyle, toast.geoAt(at))
 	}
 
-	// **The count hangs off the pane's bottom-right corner** *(2026-09-04, owner's call)*, and the
-	// rule that used to run under the row is gone with the trip through the caption column: the
-	// backing has an edge of its own now, so a second line saying where the row ends was drawing
-	// the same fact twice. See relicCountRect.
-	s.drawRelicCount(gs, screen, len(worn))
-
 	// **The raised card, over the row it stands in** — after the row and before the dragged card,
 	// which still outranks everything.
 	if raised >= 0 && raised < len(worn) && !(s.band.relicDrag.Dragging() && raised == s.band.relicDrag.Origin()) {
@@ -761,53 +916,15 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 	}
 
 	// Last, so the relic riding the cursor is over the rule and the fraction as well as the row.
-	drawDraggedRelic(gs, screen, &s.band.relicDrag, counters)
+	drawDraggedFrom(gs, screen, &s.band.relicDrag, counters, worn)
 }
 
-// relicCountRect is where the worn count stands: **hung off the bottom-right corner of the pane
-// the relics stand on** *(2026-09-04, owner's call)*. It spent a day in the caption column beside
-// the duelist card, which is where the realm and the room were; both have moved back under that
-// card, and a count of the relics belongs against the relics.
-//
-// The rectangle spans the whole backing and the figure is drawn right-aligned in it, so the number
-// sits on the corner however wide the pane gets.
+// relicCountRect is the band the worn count stands in: **under the pane the relics stand on**, the
+// whole width of its backing, with the figure at its right edge — see drawPaneCount.
 func (s *CombatScene) relicCountRect(gs *state.GlobalState) image.Rectangle {
 	back := s.relicPaneBackRect(gs)
 	top := back.Max.Y + relicCountTopGap
 	return image.Rect(back.Min.X, top, back.Max.X, top+relicCountSize)
-}
-
-// drawRelicCount writes `worn / cap` on the pane's bottom-right corner.
-//
-// **`worn / cap`, exactly like the pile's `left / owned`.** The numerator is what moves and the
-// denominator deliberately never does, so the figure is read as "three of your five fingers are
-// spoken for" rather than as two unrelated numbers.
-//
-// **The rule is drawn even with no relics equipped**, which is deliberate — a line with an empty
-// figure under it says the row exists and is empty, where nothing at all says the screen forgot to
-// draw something.
-//
-// **It is the bare fraction, and the noun went on 2026-09-11** *(owner's call)*. What the corner
-// has to say is how many seats are spoken for; the pane under it is full of relic cards, so the
-// word was the figure repeating what the cards it sits on already say. The same call took
-// `runes` off the consumables pane — see drawConsumableCount, which is this figure in the same
-// seat at the same size and has to stay its twin.
-//
-// **The denominator is relicSlots, not maxRelics** *(bug, 2026-09-11)*. It drew `0/8` — the width
-// of the duelist's relic array — from the day the two numbers were split, telling the player they
-// had eight fingers when the cap is five. This is precisely the drift maxRelics' own doc comment
-// says it is guarding against, and it went wrong in the one place that comment points at, so the
-// warning is now a line of code: the run is the authority on how many relics may be worn, and the
-// constant is only ever how wide the row is willing to draw.
-func (s *CombatScene) drawRelicCount(gs *state.GlobalState, screen *ebiten.Image, worn int) {
-	r := s.relicCountRect(gs)
-
-	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(r.Max.X), float64(r.Min.Y))
-	op.PrimaryAlign = text.AlignEnd
-	op.ColorScale.ScaleWithColor(ui.GroundInk)
-	systems.DrawUI(screen, fmt.Sprintf("%d/%d", worn, relicSlots(gs)),
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: relicCountSize}, op)
 }
 
 // relicRow is this screen's worn row, addressed by the shared drag.
@@ -817,7 +934,7 @@ func (s *CombatScene) drawRelicCount(gs *state.GlobalState, screen *ebiten.Image
 func (s *CombatScene) relicRow(gs *state.GlobalState) relicRow {
 	return relicRow{
 		rect: s.relicPaneRect(gs),
-		worn: len(wornRelics(gs)),
+		worn: len(s.paneRelics(gs)),
 		move: func(from, to int) { s.moveRelic(gs, from, to) },
 	}
 }
@@ -836,13 +953,45 @@ func (s *CombatScene) relicRow(gs *state.GlobalState) relicRow {
 //
 // **The round already resolved is not touched**, which is the whole rule this feature is under: the
 // blow being played back was decided against the order the row was in when DUEL! was pressed.
+//
+// **A cantrip-relic drags like any other, and the run only hears about its own.** The move is made on
+// the fight's row; when the relic moved is one of the run's, its place among the run's relics is
+// worked out on both sides of the move and the run is moved by that, so the run keeps the order the
+// player gave its relics and never learns where a cast stood.
 func (s *CombatScene) moveRelic(gs *state.GlobalState, from, to int) {
-	if !moveWornRelic(gs, from, to) {
+	seats := s.relicRowSeats(gs)
+	if from < 0 || from >= len(seats) || to < 0 || to >= len(seats) || from == to {
 		return
 	}
 
+	moved := seats[from]
+	after := make([]rowSeat, 0, len(seats))
+	after = append(after, seats[:from]...)
+	after = append(after, seats[from+1:]...)
+	after = append(after[:to], append([]rowSeat{moved}, after[to:]...)...)
+
+	if moved.runRelic() {
+		runFrom, runTo := runIndex(seats, from), runIndex(after, to)
+		if runFrom != runTo && !moveWornRelic(gs, runFrom, runTo) {
+			return
+		}
+	}
+
+	s.rowOrder = after
 	s.fighter.Duelist = s.fighter.Duelist.MoveRelic(from, to)
 	s.fighterAfter = s.fighterAfter.MoveRelic(from, to)
 
 	trace.Logf("relics", "reordered %d -> %d, worn %v", from, to, gs.Run.Worn())
+}
+
+// runIndex is the place of seat i among the run's relics in a row: how many of the run's relics
+// stand before it.
+func runIndex(seats []rowSeat, i int) int {
+	n := 0
+	for _, r := range seats[:i] {
+		if r.runRelic() {
+			n++
+		}
+	}
+	return n
 }

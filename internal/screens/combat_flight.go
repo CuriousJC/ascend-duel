@@ -34,17 +34,18 @@ import (
 // event.
 
 const (
-	// deckCountSize is the count written under the pile, on the bottom line of the screen.
+	// deckCountSize is the count written directly under the pile.
 	deckCountSize = 22
 
 	deckStackDepth = 3 // backs drawn behind the front one, to read as a pile
 	deckStackStep  = 3 // pixels each one is offset up and left
 
-	// deckStackBottomInset is the air under the bottom line of the screen: the line the pile's count,
-	// the discard badge and the cog at the foot of the control column all sit on.
+	// deckStackBottomInset is the air under the bottom line of the screen: the line the panel
+	// buttons under the pile, the discard badge and the cog at the foot of the control column all
+	// sit on.
 	deckStackBottomInset = 10
 
-	// deckCaptionGap is the air between the between-fights pile and the count written under it.
+	// deckCaptionGap is the air between the pile and the count written under it.
 	deckCaptionGap = 6
 
 	// outboundDriftUp is how far a discarded card rises as it leaves, and outboundSpin how
@@ -172,13 +173,12 @@ func deckStackRect(gs *state.GlobalState) image.Rectangle {
 	return image.Rect(left, top, left+cardWidth, top+cardHeight)
 }
 
-// deckCountRect is the count, left-aligned with the pile on the bottom line of the screen — the
-// line the discard badge and the cog sit on, so the bottom of the screen still reads as one line
-// with the pile raised into the hand row above it.
+// deckCountRect is the count: **directly under the pile, right-aligned with it**, so the number
+// reads as a caption on the pile it counts. The panel buttons stand under it — see underPileSlot.
 func deckCountRect(gs *state.GlobalState) image.Rectangle {
 	pile := deckStackRect(gs)
-	bottom := gs.ScreenHeight - deckStackBottomInset
-	return image.Rect(pile.Min.X, bottom-deckCountSize, pile.Max.X, bottom)
+	top := pile.Max.Y + deckCaptionGap
+	return image.Rect(pile.Min.X, top, pile.Max.X, top+deckCountSize)
 }
 
 // deckStackBounds is the whole pile including the backs behind the front one, which is what
@@ -228,11 +228,12 @@ func (s *CombatScene) drawDeckStack(gs *state.GlobalState, screen *ebiten.Image)
 		s.drawCardBack(gs, screen, image.Pt(front.Min.X-off, front.Min.Y-off), cards.Hand)
 	}
 
-	// **Under the pile, left-aligned with it**, on the bottom line. It shares an edge with the
-	// cards, which is what makes the pile read as the thing the number is about.
+	// **Directly under the pile, right-aligned with it.** It shares an edge with the cards, which is
+	// what makes the pile read as the thing the number is about.
 	count := deckCountRect(gs)
 	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(count.Min.X), float64(count.Min.Y))
+	op.GeoM.Translate(float64(count.Max.X), float64(count.Min.Y))
+	op.PrimaryAlign = text.AlignEnd
 	op.ColorScale.ScaleWithColor(ui.GroundInk)
 	systems.DrawUI(screen, fmt.Sprintf("%d/%d", len(s.deck), s.deckSize()),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: deckCountSize}, op)

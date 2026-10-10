@@ -312,6 +312,10 @@ type CombatScene struct {
 	// rebuilt from the run. See refit.
 	cast []session.Cantrip
 
+	// rowOrder is the order the fight's relic row stands in, read through relicRowSeats, which
+	// reconciles it against what the run wears and what has been cast. See rowSeat.
+	rowOrder []rowSeat
+
 	// relicShake is each worn seat's shake and cardShake each played card's. **One is started when a
 	// figure of the hand dialog sets off**, which the box reports once per item — see
 	// handMathBox.takeShakes — so one beat starts one shake rather than a new one every frame.
@@ -527,7 +531,7 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 
 	// **What the player is wearing is part of hydrating them**, not part of resetting a duel:
 	// relics are run-level and a fight does not take them off. **The run puts them on**, which is
-	// also the `fight-start` moment — a stat relic's DMG and HP arrive here, and a growing one
+	// also the `equipped` moment — a stat relic's DMG and HP arrive here, and a growing one
 	// arrives with whatever it has accumulated. The screen used to parse an element off each
 	// record and set a flag; the grammar is in `session.Equip` now and this is one call.
 	if gs.Run != nil {
@@ -541,6 +545,7 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	s.fightIndex = gs.Run.Fight()
 	s.cantripLife, s.cantripDMG = 0, 0
 	s.cast = nil
+	s.rowOrder = nil
 
 	// **A scenario may name who is standing in the room**, so an interaction can be looked at
 	// against a chosen enemy rather than whoever the journey dealt. Compiled out of every normal
@@ -1952,8 +1957,8 @@ func (s *CombatScene) traceLayout(gs *state.GlobalState) {
 	trace.Rect("relicPane backing", s.relicPaneBackRect(gs))
 	// The slots as they currently stand, not as they would at the cap: the pitch is a function
 	// of how many relics are worn, so a dump of five would describe a row that is not on screen.
-	for i := 0; i < len(wornRelics(gs)); i++ {
-		at := relicSlotAt(s.relicPaneRect(gs), i, len(wornRelics(gs)))
+	for i := 0; i < len(s.paneRelics(gs)); i++ {
+		at := relicSlotAt(s.relicPaneRect(gs), i, len(s.paneRelics(gs)))
 		trace.Rect(fmt.Sprintf("relicSlot[%d]", i), image.Rect(
 			at.X, at.Y, at.X+cards.RelicStyle.Width, at.Y+cards.RelicStyle.Height))
 	}

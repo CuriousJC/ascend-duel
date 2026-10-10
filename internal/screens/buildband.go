@@ -21,7 +21,6 @@ package screens
 // `wornRelics`, `buildTopRowPanes` — so the row cannot drift between screens.
 
 import (
-	"fmt"
 	"image"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
@@ -170,7 +169,7 @@ func drawBuildRelics(gs *state.GlobalState, screen *ebiten.Image, drag *ui.CardD
 	}
 
 	row := buildRelicRect(gs)
-	drawBuildRelicPane(gs, screen, row)
+	drawRelicPaneFrame(gs, screen, row)
 	worn := wornRelics(gs)
 	counters := runCounters(gs)
 	for i, record := range worn {
@@ -184,19 +183,6 @@ func drawBuildRelics(gs *state.GlobalState, screen *ebiten.Image, drag *ui.CardD
 	}
 	// The relic riding the cursor is the band's overlay, drawn over everything — see
 	// drawBandOverlay.
-}
-
-// drawBuildRelicPane is the surface the worn relics stand on and the fraction on its corner.
-//
-// **The band drew neither until 2026-09-06** *(owner's call)*, so the relics the run is wearing were
-// a pane in a fight and five loose cards on the shop and the reward screen — the same row drawn as
-// two different things on three screens. It is split out because the shop draws its own relic cards
-// and still wants the pane under them.
-func drawBuildRelicPane(gs *state.GlobalState, screen *ebiten.Image, row image.Rectangle) {
-	drawRelicPaneBack(screen, row)
-	// The bare fraction, per drawRelicCount — the noun went on 2026-09-11 and this is the same
-	// figure on the band, so it moves with it.
-	drawPaneCount(gs, screen, row, fmt.Sprintf("%d/%d", len(wornRelics(gs)), relicSlots(gs)))
 }
 
 // buildRelicRow is the band's row, addressed by the shared drag: the reward screen's and the shop's.
@@ -258,7 +244,10 @@ func hoverBuildRelics(gs *state.GlobalState, at image.Point, tip *models.Tooltip
 	}
 	seat := relicSlotRect(row, i, len(worn))
 	title, lines := ui.RelicTip(record)
-	tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
+	// **To the left of the card, never under it** *(owner's call)*: a panel under the top row
+	// covers the pane's count and the tab a click hangs there. PointLeft flips right at the
+	// screen's edge.
+	tip.PointLeft(seat, ui.TipLine(title), ui.TipLines(lines))
 	return true
 }
 

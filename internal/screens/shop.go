@@ -600,9 +600,8 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// because a relic here can be sold and moves when the row re-centers. See buildband.go.
 	drawBuildCard(gs, screen, gs.Run.Vitae())
 	drawGuideCard(gs, screen)
-	// **The pane, without its fraction.** The sell tab hangs off the same corner on the same line
-	// as the count would, and the fraction is already said by a row you can count.
-	drawRelicPaneBack(screen, buildRelicRect(gs))
+	// **The pane every screen draws, fraction and all** — see drawRelicPaneFrame.
+	drawRelicPaneFrame(gs, screen, buildRelicRect(gs))
 	s.drawWorn(gs, screen)
 
 	// **The runes the run is carrying, in the pane the fight draws them in** *(2026-09-06)*.

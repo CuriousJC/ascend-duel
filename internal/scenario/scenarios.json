@@ -1741,14 +1741,17 @@
   },
   {
     "ScenarioRecord": "cantrips",
-    "Note": "Two Cantrips of Endurance and two of Might in the consumables pane, against a rat that can be beaten. Cast them between turns: Endurance doubles the life and the ceiling together, Might adds to DMG and turns the DMG row pink, and both stack. Win the fight and the post-battle screen shows the life the run kept - anything above the run's own ceiling comes back as the ceiling. Four is past the pane's cap of two on purpose; the corner reads 4/2.",
-    "Relics": [],
+    "Note": "Every kind of cantrip in the consumables pane beside two worn relics, against a rat that can be beaten. Cast one between turns and its cantrip-relic joins the relic row after the run's two, weightless - the corner still reads 2/5 - and gone when the fight ends. Endurance doubles the ceiling and keeps the fight's wound, Might adds to DMG and turns the DMG row pink, Chill doubles ice cards, and the fight log writes the cast and the relic it put on. Drag a cantrip-relic along the row to change where it fires: Chill worn before or after the Ice ring compounds with it either way. Win the fight and the post-battle screen shows the life the run kept - anything above the run's own ceiling comes back as the ceiling. Four is past the pane's cap on purpose.",
+    "Relics": [
+      "dmgx-ice",
+      "hp-plus"
+    ],
     "Hand": [],
     "Cantrips": [
       "cantrip-endurance",
-      "cantrip-endurance",
       "cantrip-might",
-      "cantrip-might"
+      "cantrip-chill",
+      "cantrip-chill"
     ],
     "Enemy": "animals-outer-rat"
   },

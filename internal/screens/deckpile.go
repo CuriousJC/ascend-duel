@@ -8,9 +8,10 @@ package screens
 // for one panel, and the only control in the game whose meaning was a letter.
 //
 // **It stands in the fight's column** *(owner's call)* — the duelist's, bottom left, with its count
-// on the line the chrome's own squares sit on at the other end. The deck is one object the player
-// tracks across a whole run, so it is in one corner: a pile that changed corners between the duel
-// and the shop would be a thing to find again on every screen. **It is a hand-size card, in the
+// directly under it and the two panel buttons under that, on the line the chrome's own squares sit
+// on at the other end. The deck is one object the player tracks across a whole run, so it is in one
+// corner: a pile that changed corners between the duel and the shop would be a thing to find again
+// on every screen. **It is a hand-size card, in the
 // hand row, on every screen** — the fight's own pile, so nothing about the corner changes when the
 // duel ends.
 //
@@ -39,7 +40,7 @@ import (
 // The pile's geometry is the combat screen's: deckStackRect, deckStackBounds and deckCountRect. **A
 // between-fights screen does not get a pile of its own**, because the bottom third is one layout on
 // every screen that draws it — the pile at hand size in the duelist's column, level with where a hand
-// is dealt, and its count on the bottom line.
+// is dealt, and its count directly under it.
 
 // drawShopPile draws the backs and the count under them.
 //
@@ -66,7 +67,8 @@ func drawDeckPile(gs *state.GlobalState, screen *ebiten.Image) {
 
 	count := deckCountRect(gs)
 	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(count.Min.X), float64(count.Min.Y))
+	op.GeoM.Translate(float64(count.Max.X), float64(count.Min.Y))
+	op.PrimaryAlign = text.AlignEnd
 	op.ColorScale.ScaleWithColor(ui.GroundInk)
 	systems.DrawUI(screen, fmt.Sprintf("%d", gs.Run.Size()),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: deckCountSize}, op)

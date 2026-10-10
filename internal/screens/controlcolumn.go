@@ -8,8 +8,9 @@ package screens
 //   - **The sort tabs** are a block of three, no air between them, standing at the right end of the
 //     card band and centered on the hand's height. They arrange the hand and belong to it — see
 //     sortTabRect.
-//   - **The two panel buttons**, HANDS and the frame's LEDGER, stand in a row under the draw pile.
-//     They open a page over the game and belong to the screen, not to the row — see underPileSlot.
+//   - **The two panel buttons**, HANDS and the frame's LEDGER, stand in a row under the draw pile
+//     and its count. They open a page over the game and belong to the screen, not to the row — see
+//     underPileSlot.
 //
 // **It is exported because the frame is drawn by internal/game**, which imports this package. The
 // ledger belongs to no scene, which is what makes it chrome — but a control standing beside the
@@ -67,16 +68,17 @@ func ControlColumnSlot(gs *state.GlobalState, i int) image.Rectangle {
 	return underPileSlot(gs, i)
 }
 
-// underPileSlot is a panel button's square: in a row under the draw pile,
-// HANDS on the left and LEDGER on the right, the pile's width shared out so the air before, between
-// and after the two is equal, and the row centered between the pile's bottom and its count.
+// underPileSlot is a panel button's square: in a row under the draw pile's count, HANDS on the left
+// and LEDGER on the right, the pile's width shared out so the air before, between and after the two
+// is equal. **The row stands on the bottom line of the screen** — the line the discard badge and the
+// cog sit on — so the pile reads top to bottom as cards, their count, then the two pages.
 func underPileSlot(gs *state.GlobalState, i int) image.Rectangle {
 	pile := deckStackRect(gs)
 	size := ui.PanelButtonSize
 	gap := (pile.Dx() - ControlColumnSlots*size) / (ControlColumnSlots + 1)
 	row := ControlColumnSlots*size + (ControlColumnSlots-1)*gap
 	left := pile.Min.X + (pile.Dx()-row)/2 + (ControlColumnSlots-1-i)*(size+gap)
-	top := pile.Max.Y + (deckCountRect(gs).Min.Y-pile.Max.Y-size)/2
+	top := gs.ScreenHeight - deckStackBottomInset - size
 	return image.Rect(left, top, left+size, top+size)
 }
 

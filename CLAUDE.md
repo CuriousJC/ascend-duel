@@ -163,7 +163,7 @@ go run ./tools/creatureprompt -gaps      # which art briefs are still unwritten,
 go run ./tools/creatureprompt -backdrop goblins-outer-tinker-studio -element fire   # a room's brief
 go run ./tools/stonesheet   # every stone against the rungs it raises, walked by shape
 go run ./tools/runesheet # every rune: the line it prints against the rule that fires
-go run ./tools/cantripsheet  # every cantrip: its line, its effect, and that effect cast onto the duelist
+go run ./tools/cantripsheet  # every cantrip: the scroll beside its cantrip-relic, the rules, and the relic worn by the duelist
 go run ./tools/tonicsheet    # every tonic: its rule, its tooltip, and the realm-by-realm offer for sample runs
 go run ./tools/achievementsheet  # every achievement's Steam fields and icon pair, at 256 and 64: the upload set
 go run ./tools/upgradesheet  # every visible card upgrade, on every form mark, in every upgrade style

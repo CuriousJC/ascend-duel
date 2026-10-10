@@ -88,8 +88,8 @@ func TestAVerbAtTheWrongMomentIsRefused(t *testing.T) {
 	// **The failure this prevents is the quiet one**: a rule that loads, never fires, and looks
 	// exactly like a relic that does nothing. Every verb belongs to one moment and the table in
 	// relic.go is the authority.
-	refused(t, "cost at fight-start", RelicRule{
-		When: MomentFightStart,
+	refused(t, "cost at equipped", RelicRule{
+		When: MomentEquipped,
 		Then: []RelicEffect{{Do: DoAdjustCost, Amount: -1}},
 	})
 	refused(t, "drain at card-cost", RelicRule{
@@ -99,10 +99,10 @@ func TestAVerbAtTheWrongMomentIsRefused(t *testing.T) {
 }
 
 func TestAPredicateOnACardlessMomentIsRefused(t *testing.T) {
-	// `fight-start`, `fight-won` and `prizes-dealt` have no card to match an If against, so a rule
+	// `equipped`, `fight-won` and `prizes-dealt` have no card to match an If against, so a rule
 	// carrying one is either a misunderstanding or a rule that would silently match everything.
-	refused(t, "fight-start with an If", RelicRule{
-		When: MomentFightStart,
+	refused(t, "equipped with an If", RelicRule{
+		When: MomentEquipped,
 		If:   RelicCondition{Element: Fire, HasElement: true},
 		Then: []RelicEffect{{Do: DoAddDMG, Amount: 10}},
 	})
@@ -255,7 +255,7 @@ func TestOneRuleCanDoTwoThings(t *testing.T) {
 	// **`Then` is a list**, which is what buys a relic that does two things at one moment with no
 	// new vocabulary at all.
 	both := relic(t, "both", RelicRule{
-		When: MomentFightStart,
+		When: MomentEquipped,
 		Then: []RelicEffect{
 			{Do: DoAddDMG, Amount: 5},
 			{Do: DoAddHP, Amount: 20},
@@ -344,7 +344,7 @@ func TestTheAccumulatorRidesOnTheWornRelic(t *testing.T) {
 	// A growing relic's own amounts are read as `Amount + accumulator`, and the accumulator travels
 	// with the worn relic because it belongs to a run rather than to the registry.
 	heart := relic(t, "hp-scale",
-		RelicRule{When: MomentFightStart, Then: []RelicEffect{{Do: DoAddHP, Amount: 5}}},
+		RelicRule{When: MomentEquipped, Then: []RelicEffect{{Do: DoAddHP, Amount: 5}}},
 		RelicRule{When: MomentFightWon, Then: []RelicEffect{{Do: DoGrowOnWin, Amount: 5}}})
 
 	fresh := []WornRelic{{Relic: heart}}
@@ -391,7 +391,7 @@ func TestARelicIsOnlyWornOnceTheHandIsNotFull(t *testing.T) {
 	// duelist carrying no number of its own wears DefaultRelicSlots, and one carrying a number wears
 	// that, and there is no ceiling above it any more.
 	worn := relic(t, "filler", RelicRule{
-		When: MomentFightStart,
+		When: MomentEquipped,
 		Then: []RelicEffect{{Do: DoAddDMG, Amount: 1}},
 	})
 
@@ -442,7 +442,7 @@ func TestAnEnemyWearsNothing(t *testing.T) {
 }
 
 func TestHPScalingCompoundsAndDefaultsToWhole(t *testing.T) {
-	// Onslaught's half of the grammar: a fight-start scaling that goes *below* 100, which no other
+	// Onslaught's half of the grammar: a equipped scaling that goes *below* 100, which no other
 	// scaling verb does. A bare duelist has to come out untouched, or every relic in the file would
 	// be quietly resizing a life bar.
 	if got := HPScale(nil); got != 100 {
@@ -450,7 +450,7 @@ func TestHPScalingCompoundsAndDefaultsToWhole(t *testing.T) {
 	}
 
 	quarterOff := relic(t, "cost-life-lost", RelicRule{
-		When: MomentFightStart,
+		When: MomentEquipped,
 		Then: []RelicEffect{{Do: DoScaleHP, Amount: 75}},
 	})
 
@@ -1263,7 +1263,7 @@ func TestGrowPerCardIsRefusedWithNothingToCount(t *testing.T) {
 // own multiplier and nothing is added to a hit afterwards.
 func TestThePurseRaisesTheDuelistsDMG(t *testing.T) {
 	id := relic(t, "rampanttest.pays", RelicRule{
-		When: MomentFightStart,
+		When: MomentEquipped,
 		Then: []RelicEffect{{Do: DoAddDMGPerVitae, Amount: 1}},
 	})
 
@@ -1298,11 +1298,11 @@ func TestThePurseRaisesTheDuelistsDMG(t *testing.T) {
 // rules: combat reports the *rate*, and whoever knows what the run is carrying does the sum.
 func TestDMGPerVitaeIsAskedOfTheRelicsAndNotTheDuelist(t *testing.T) {
 	one := relic(t, "rampanttest.rateOne", RelicRule{
-		When: MomentFightStart,
+		When: MomentEquipped,
 		Then: []RelicEffect{{Do: DoAddDMGPerVitae, Amount: 1}},
 	})
 	two := relic(t, "rampanttest.rateTwo", RelicRule{
-		When: MomentFightStart,
+		When: MomentEquipped,
 		Then: []RelicEffect{{Do: DoAddDMGPerVitae, Amount: 2}},
 	})
 
@@ -1317,11 +1317,11 @@ func TestDMGPerVitaeIsAskedOfTheRelicsAndNotTheDuelist(t *testing.T) {
 
 // TestThePurseIsReReadEveryBlow. The correction that made Rampant right: vitae moves *during* a
 // fight — a card kept in hand pays one every turn it is held — so a relic reading the purse has to
-// be re-asked at each blow. A figure resolved once at fight-start pays a late turn at opening
+// be re-asked at each blow. A figure resolved once at equipped pays a late turn at opening
 // prices, which is the bug this holds against.
 func TestThePurseIsReReadEveryBlow(t *testing.T) {
 	id := relic(t, "rampanttest.reread", RelicRule{
-		When: MomentFightStart,
+		When: MomentEquipped,
 		Then: []RelicEffect{{Do: DoAddDMGPerVitae, Amount: 1}},
 	})
 
@@ -1478,7 +1478,7 @@ func TestTheCounterLabelIsAlwaysOneDecimalPlace(t *testing.T) {
 		RelicRule{When: MomentTurnTaken, Then: []RelicEffect{{Do: DoGrowOnTurn, Amount: 20}}},
 	)
 	flat := relic(t, "counter-flat",
-		RelicRule{When: MomentFightStart, Then: []RelicEffect{{Do: DoAddHP, Amount: 5}}},
+		RelicRule{When: MomentEquipped, Then: []RelicEffect{{Do: DoAddHP, Amount: 5}}},
 		RelicRule{When: MomentTurnTaken, Then: []RelicEffect{{Do: DoGrowOnTurn, Amount: 5}}},
 	)
 
@@ -1725,11 +1725,11 @@ func TestClockDeltasSumAndWornOrderDoesNotMatter(t *testing.T) {
 	}
 
 	shorter := relic(t, "cost-three-rounds", RelicRule{
-		When: MomentFightStart,
+		When: MomentEquipped,
 		Then: []RelicEffect{{Do: DoAdjustRoundLimit, Amount: -2}},
 	})
 	longer := relic(t, "one-more-round", RelicRule{
-		When: MomentFightStart,
+		When: MomentEquipped,
 		Then: []RelicEffect{{Do: DoAdjustRoundLimit, Amount: 1}},
 	})
 
@@ -1769,7 +1769,7 @@ func TestARelicMayNotMoveTheClockByNothing(t *testing.T) {
 	// Signed, so the zero check is the one that catches a typo — a relic moving the clock by no
 	// rounds is a record somebody meant to finish.
 	if _, err := RegisterRelic("still-clock", "Still Clock", []RelicRule{{
-		When: MomentFightStart,
+		When: MomentEquipped,
 		Then: []RelicEffect{{Do: DoAdjustRoundLimit, Amount: 0}},
 	}}); err == nil {
 		t.Fatal("a relic moving the clock by 0 rounds registered")
@@ -1811,5 +1811,19 @@ func TestARelicCountsAWildcard(t *testing.T) {
 	basic := RelicCondition{Element: Basic, HasElement: true}
 	if basic.Matches(jab.SetRider(Rider{Kind: RiderWildElement})) {
 		t.Error("a chromatic Jab matched a basic rule")
+	}
+}
+
+// A weightless relic takes no slot: it goes on over a full hand, and a weighted one still cannot.
+func TestAWeightlessRelicTakesNoSlot(t *testing.T) {
+	d := Duelist{RelicSlots: 1}.
+		Wearing(WornRelic{Relic: 0}).
+		Wearing(WornRelic{Relic: 1, Weightless: true}).
+		Wearing(WornRelic{Relic: 2})
+
+	worn := d.WornRelics()
+	if len(worn) != 2 || worn[0].Relic != 0 || worn[1].Relic != 1 {
+		t.Errorf("one slot, a weighted relic, a weightless one and a second weighted one wear %v, "+
+			"want the first two", worn)
 	}
 }

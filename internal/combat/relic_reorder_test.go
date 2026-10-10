@@ -116,7 +116,7 @@ func TestARelicThatDoesNotGrowReportsNoGrowth(t *testing.T) {
 // relic is adding fifty points of life.
 func TestAFlatGrowingRelicIsNotScaling(t *testing.T) {
 	id := relic(t, "flat-growth",
-		RelicRule{When: MomentFightStart, Then: []RelicEffect{{Do: DoAddHP, Amount: 5}}},
+		RelicRule{When: MomentEquipped, Then: []RelicEffect{{Do: DoAddHP, Amount: 5}}},
 		RelicRule{When: MomentFightWon, Then: []RelicEffect{{Do: DoGrowOnWin, Amount: 5}}})
 
 	e, ok := GrowthEffect(WornRelic{Relic: id, Grown: 45})

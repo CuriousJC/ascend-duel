@@ -1747,7 +1747,7 @@
         "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
       },
       {
-        "When": "fight-start",
+        "When": "equipped",
         "Then": [{ "Do": "scale-hp", "Amount": 75 }]
       }
     ]
@@ -1762,7 +1762,7 @@
     "Rarity": "uncommon",
     "Rules": [
       {
-        "When": "fight-start",
+        "When": "equipped",
         "Then": [{ "Do": "adjust-round-limit", "Amount": 2 }]
       }
     ]
@@ -1781,7 +1781,7 @@
         "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
       },
       {
-        "When": "fight-start",
+        "When": "equipped",
         "Then": [{ "Do": "adjust-round-limit", "Amount": -2 }]
       }
     ]
@@ -1801,7 +1801,7 @@
         "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
       },
       {
-        "When": "fight-start",
+        "When": "equipped",
         "Then": [{ "Do": "add-hp", "Amount": 15 }]
       }
     ]
@@ -1816,7 +1816,7 @@
     "Rarity": "common",
     "Rules": [
       {
-        "When": "fight-start",
+        "When": "equipped",
         "Then": [{ "Do": "add-dmg", "Amount": 10 }]
       }
     ]
@@ -1831,7 +1831,7 @@
     "Rarity": "common",
     "Rules": [
       {
-        "When": "fight-start",
+        "When": "equipped",
         "Then": [{ "Do": "add-hp", "Amount": 25 }]
       }
     ]
@@ -1846,7 +1846,7 @@
     "Rarity": "common",
     "Rules": [
       {
-        "When": "fight-start",
+        "When": "equipped",
         "Then": [{ "Do": "add-hp", "Amount": 5 }]
       },
       {
@@ -1865,7 +1865,7 @@
     "Rarity": "rare",
     "Rules": [
       {
-        "When": "fight-start",
+        "When": "equipped",
         "Then": [{ "Do": "add-dmg-per-vitae", "Amount": 1 }]
       }
     ]
@@ -1987,7 +1987,7 @@
     "Rarity": "rare",
     "Rules": [
       {
-        "When": "fight-start",
+        "When": "equipped",
         "Then": [{ "Do": "scale-rolls", "Amount": 200 }]
       }
     ]
@@ -2017,7 +2017,7 @@
     "Rarity": "uncommon",
     "Rules": [
       {
-        "When": "fight-start",
+        "When": "equipped",
         "Then": [{ "Do": "match-foe-shields" }]
       }
     ]
@@ -2077,7 +2077,7 @@
     "Rarity": "uncommon",
     "Rules": [
       {
-        "When": "fight-start",
+        "When": "equipped",
         "Then": [{ "Do": "keep-shields", "Amount": 1 }]
       }
     ]

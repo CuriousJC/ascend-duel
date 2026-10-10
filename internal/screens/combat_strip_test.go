@@ -45,10 +45,10 @@ func TestTheDeckPileStandsInTheDuelistsColumn(t *testing.T) {
 		t.Errorf("the pile reaches x=%d, into the hand band starting at x=%d", relic.Max.X, left)
 	}
 
-	// The count sits under it, left edges level, and the whole column has to stay on the screen.
+	// The count sits under it, right edges level, and the whole column has to stay on the screen.
 	count := deckCountRect(gs)
-	if count.Min.X != deckStackRect(gs).Min.X {
-		t.Errorf("the count starts at x=%d and the pile at x=%d", count.Min.X, deckStackRect(gs).Min.X)
+	if count.Max.X != deckStackRect(gs).Max.X {
+		t.Errorf("the count ends at x=%d and the pile at x=%d", count.Max.X, deckStackRect(gs).Max.X)
 	}
 	if count.Max.Y > gs.ScreenHeight-deckStackBottomInset {
 		t.Errorf("the count ends at y=%d, past the %dpx bottom inset", count.Max.Y, deckStackBottomInset)
@@ -68,26 +68,26 @@ func TestTheDeckPileStandsInTheDuelistsColumn(t *testing.T) {
 			top, tableRowTop(gs)+cardHeight)
 	}
 
-	// The count is under it rather than on it.
-	if count.Min.Y < deckStackRect(gs).Max.Y {
-		t.Errorf("the count starts at y=%d, inside the pile ending at y=%d", count.Min.Y, deckStackRect(gs).Max.Y)
+	// The count is directly under it, a caption's gap below the pile.
+	if got := count.Min.Y - deckStackRect(gs).Max.Y; got != deckCaptionGap {
+		t.Errorf("the count starts %dpx under the pile, want %d", got, deckCaptionGap)
 	}
 }
 
 func TestTheBottomOfTheScreenIsOneLine(t *testing.T) {
 	gs := testState()
 
-	// **Three things hang off the bottom of the screen and they read as one line**: the deck
-	// pile's count on the left, the discard badge in the middle, and the cog at the foot of the
-	// control column on the right.
+	// **Three things hang off the bottom of the screen and they read as one line**: the panel
+	// buttons under the deck pile on the left, the discard badge in the middle, and the cog at the
+	// foot of the control column on the right.
 	//
 	// The cog is chrome and lives in internal/game, which imports this package and so cannot be
 	// imported back. Its inset is therefore written down rather than read, and
 	// TestTheSettingsButtonSitsAtTheFootOfTheControlColumn holds the other end of it.
 	const cogInset = 10
 
-	if got := gs.ScreenHeight - deckCountRect(gs).Max.Y; got != cogInset {
-		t.Errorf("the deck count sits %dpx off the bottom edge and the cog %dpx", got, cogInset)
+	if got := gs.ScreenHeight - ControlColumnSlot(gs, SlotHands).Max.Y; got != cogInset {
+		t.Errorf("the panel buttons sit %dpx off the bottom edge and the cog %dpx", got, cogInset)
 	}
 
 	// The badge is a disc centered on the Discard button's bottom-right corner, so its lowest

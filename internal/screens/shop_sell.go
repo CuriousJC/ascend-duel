@@ -71,6 +71,10 @@ type sellTab struct {
 	useButton *models.Button
 	using     bool
 	canUse    func(seat int) bool
+
+	// relicSeat is the screen's answer to where a worn relic stands, set by the band every frame;
+	// nil is the run's own seat. See bandHooks.relicSeat.
+	relicSeat func(key string) (image.Rectangle, bool)
 }
 
 // initSellTab builds the tabs the first time and puts any question away.
@@ -133,6 +137,9 @@ func (s *sellTab) showsUse() bool { return s.armed.kind == saleHeld && s.canUse 
 func (s *sellTab) armedSeat(gs *state.GlobalState) (image.Rectangle, bool) {
 	switch s.armed.kind {
 	case saleRelic:
+		if s.relicSeat != nil {
+			return s.relicSeat(s.armed.key)
+		}
 		return wornSeat(gs, s.armed.key)
 	case saleHeld:
 		if s.armed.seat < 0 || s.armed.seat >= len(heldConsumables(gs)) {

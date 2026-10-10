@@ -3,46 +3,127 @@ package session
 import (
 	"testing"
 
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 )
 
-// anyCantrip is a cantrip from the shipped catalog with this effect, whichever one it is.
-func anyCantrip(t *testing.T, e CantripEffect) Cantrip {
+// cantrip is one record from the shipped catalog, by key.
+func cantrip(t *testing.T, key string) Cantrip {
 	t.Helper()
-	for _, c := range Cantrips() {
-		if c.Effect == e {
-			return c
+	c, ok := CantripByKey(key)
+	if !ok {
+		t.Fatalf("the catalog has no %s", key)
+	}
+	return c
+}
+
+// casts is n casts of one cantrip, as the screen hands a fight's casts to EquipWearing.
+func casts(c Cantrip, n int) []combat.WornRelic {
+	out := make([]Cantrip, n)
+	for i := range out {
+		out[i] = c
+	}
+	return CantripRelics(out)
+}
+
+// Two Endurances are two 2x life relics, and they compound: each scales what the one before it
+// left, the way any two scaling relics do.
+func TestEndurancesCompound(t *testing.T) {
+	run := runWith(combat.Plain(combat.Bash))
+	base := combat.Duelist{MaxLife: 60, CurrentLife: 60}
+
+	once := run.EquipWearing(base, casts(cantrip(t, "cantrip-endurance"), 1))
+	twice := run.EquipWearing(base, casts(cantrip(t, "cantrip-endurance"), 2))
+	if once.MaxLife != 120 || twice.MaxLife != 240 {
+		t.Errorf("one Endurance made a 60 body %d and two made it %d, want 120 and 240",
+			once.MaxLife, twice.MaxLife)
+	}
+}
+
+// Ten Mights are ten +10 DMG relics.
+func TestMightsStackByAddition(t *testing.T) {
+	run := runWith(combat.Plain(combat.Bash))
+	d := run.EquipWearing(combat.Duelist{DMG: 10}, casts(cantrip(t, "cantrip-might"), 10))
+	if d.DMG != 110 {
+		t.Errorf("ten Mights left DMG at %d, want 110", d.DMG)
+	}
+}
+
+// Chill doubles an ice card and leaves every other color alone.
+func TestChillDoublesIceCards(t *testing.T) {
+	run := runWith(combat.Plain(combat.Bash))
+	bare := run.Equip(combat.Duelist{DMG: 10})
+	chilled := run.EquipWearing(combat.Duelist{DMG: 10}, casts(cantrip(t, "cantrip-chill"), 1))
+
+	ice := combat.Card{Concept: combat.Bash, Element: combat.Ice}
+	fire := combat.Card{Concept: combat.Bash, Element: combat.Fire}
+	if got, want := chilled.CardDamage(ice), 2*bare.CardDamage(ice); got != want {
+		t.Errorf("a chilled ice Bash deals %d, want %d", got, want)
+	}
+	if got, want := chilled.CardDamage(fire), bare.CardDamage(fire); got != want {
+		t.Errorf("a chilled fire Bash deals %d, want the unchilled %d", got, want)
+	}
+}
+
+// A cantrip-relic takes no slot: a hand full of the run's relics still wears every cast.
+func TestACantripRelicIsWornOverAFullHand(t *testing.T) {
+	run := runWith(combat.Plain(combat.Bash))
+	run.SetRelicSlots(1)
+	for _, key := range Relics() {
+		if run.Wear(key) {
+			break
 		}
 	}
-	t.Fatalf("the catalog has no %s cantrip", e)
-	return Cantrip{}
-}
+	if len(run.Worn()) != 1 {
+		t.Fatalf("the run wears %v, want one relic filling its one slot", run.Worn())
+	}
 
-// An Endurance raises the ceiling and the life under it together, so a wounded duelist keeps the same
-// share of their body: 30 of 60 becomes 60 of 120, not 30 of 120.
-func TestEnduranceScalesTheLifeWithTheCeiling(t *testing.T) {
-	c := anyCantrip(t, CantripScaleLife)
-	d := c.Cast(combat.Duelist{MaxLife: 60, CurrentLife: 30})
-
-	wantMax := 60 * c.Amount / 100
-	wantLife := 30 * c.Amount / 100
-	if d.MaxLife != wantMax || d.CurrentLife != wantLife {
-		t.Errorf("%s turned 30/60 into %d/%d, want %d/%d",
-			c.Record, d.CurrentLife, d.MaxLife, wantLife, wantMax)
+	d := run.EquipWearing(combat.Duelist{DMG: 10}, casts(cantrip(t, "cantrip-might"), 2))
+	if n := len(d.WornRelics()); n != 3 {
+		t.Errorf("a full hand plus two casts wears %d relics, want 3", n)
 	}
 }
 
-// A Might adds to whatever DMG is standing, and ten of them are ten times the amount — each cast is
-// contained by itself and reads only the duelist in front of it.
-func TestMightStacksByAddition(t *testing.T) {
-	c := anyCantrip(t, CantripAddDMG)
-	d := combat.Duelist{DMG: 10}
-	for i := 0; i < 10; i++ {
-		d = c.Cast(d)
+// A cantrip-relic is never the run's: equipping without the casts is the duelist the run would have
+// had, which is what the next fight starts from.
+func TestACantripNeverReachesTheRun(t *testing.T) {
+	run := runWith(combat.Plain(combat.Bash))
+	run.EquipWearing(combat.Duelist{DMG: 10}, casts(cantrip(t, "cantrip-might"), 1))
+	if d := run.Equip(combat.Duelist{DMG: 10}); d.DMG != 10 || len(d.Relics) != 0 {
+		t.Errorf("after a cast the run equips a duelist with DMG %d wearing %v", d.DMG, d.Relics)
 	}
-	if want := 10 + 10*c.Amount; d.DMG != want {
-		t.Errorf("ten casts of %s left DMG at %d, want %d", c.Record, d.DMG, want)
+}
+
+// Every cantrip casts a relic the row can name and the tooltip can say, and the screen can find the
+// cantrip again from the relic it is holding.
+func TestEveryCantripCastsARelic(t *testing.T) {
+	for _, c := range Cantrips() {
+		if c.RelicName == "" || c.RelicText == "" {
+			t.Errorf("%s casts a relic with no name or no line", c.Record)
+		}
+		if back, ok := CantripByRelic(c.Relic); !ok || back.Record != c.Record {
+			t.Errorf("%s's relic does not lead back to it", c.Record)
+		}
+	}
+}
+
+// A cantrip-relic waking at a moment only the run answers would load and never fire, so it is
+// refused.
+func TestACantripRelicMayNotWakeOutsideTheFight(t *testing.T) {
+	for _, when := range []string{"card-drawn", "fight-won", "prizes-dealt", "essence-spent"} {
+		rec := data.CantripData{
+			CantripRecord: "cantrip-test",
+			Name:          "Test",
+			Relic: data.CantripRelicData{
+				Name: "Test",
+				Rules: []data.RelicRuleData{{When: when,
+					Then: []data.RelicEffectData{{Do: "adjust-picks", Amount: 1}}}},
+			},
+		}
+		if _, err := checkCantripRecord(rec); err == nil {
+			t.Errorf("a cantrip-relic waking at %s was accepted", when)
+		}
 	}
 }
 
@@ -70,7 +151,7 @@ func TestShedCantripsClampsToTheRunsCeiling(t *testing.T) {
 func TestTheConsumablesCapCountsEveryKind(t *testing.T) {
 	run := runWith(combat.Plain(combat.Bash))
 	r := anyWithTarget(t, RuneRemove).Record
-	scroll := anyCantrip(t, CantripAddDMG).Record
+	scroll := cantrip(t, "cantrip-might").Record
 
 	if !run.Hold(r) {
 		t.Fatal("an empty pane refused a rune")

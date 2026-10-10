@@ -66,6 +66,20 @@ type bandHooks struct {
 	// forget drops the screen's tooltip after a sale, so it does not go on explaining a card that
 	// is gone. May be nil.
 	forget func()
+
+	// extraRelics is how many relics the row draws beside the run's own: the cantrip-relics cast this
+	// fight, on the combat screen, and zero everywhere else. They are laid out with the run's — the
+	// row's pitch is a function of how many cards are in it — and dragged like them.
+	extraRelics int
+
+	// relicKeyAt is which of the run's relics stands in one seat of the row, and false for a seat
+	// holding something the run does not own and cannot sell. Nil means the row is the run's alone,
+	// seat for seat.
+	relicKeyAt func(seat int) (string, bool)
+
+	// relicSeat is where one of the run's relics stands in the row, for the sale tab to hang under.
+	// Nil means the run's own seat.
+	relicSeat func(key string) (image.Rectangle, bool)
 }
 
 // init puts the band at rest: no drag in progress and nothing armed.
@@ -95,6 +109,7 @@ func (b *bandControls) update(gs *state.GlobalState, h bandHooks) bool {
 		b.sale.armed = shopSale{}
 	}
 	b.sale.canUse = h.canUse
+	b.sale.relicSeat = h.relicSeat
 	if seat, ok := b.sale.takeUse(); ok {
 		if h.use != nil {
 			h.use(seat)
@@ -115,7 +130,7 @@ func (b *bandControls) update(gs *state.GlobalState, h bandHooks) bool {
 	if !pressed {
 		return b.busy()
 	}
-	if b.onBand(gs, at) {
+	if b.onBand(gs, at, h) {
 		return true
 	}
 	// A press anywhere else drops the question.
@@ -125,13 +140,13 @@ func (b *bandControls) update(gs *state.GlobalState, h bandHooks) bool {
 
 // onBand is whether a point is on something the band answers: a worn relic, a carried card, or
 // the tab hanging under one.
-func (b *bandControls) onBand(gs *state.GlobalState, at image.Point) bool {
+func (b *bandControls) onBand(gs *state.GlobalState, at image.Point, h bandHooks) bool {
 	if heldAt(gs, at) >= 0 || b.sale.onTabs(gs, at) {
 		return true
 	}
-	worn := gs.Run.Worn()
-	return ui.HoveredSeat(at, len(worn), func(i int) image.Rectangle {
-		return relicSlotRect(buildRelicRect(gs), i, len(worn))
+	n := len(gs.Run.Worn()) + h.extraRelics
+	return ui.HoveredSeat(at, n, func(i int) image.Rectangle {
+		return relicSlotRect(buildRelicRect(gs), i, n)
 	}) >= 0
 }
 
@@ -143,9 +158,18 @@ func (b *bandControls) relicRow(gs *state.GlobalState, h bandHooks) relicRow {
 	}
 	return relicRow{
 		rect: buildRelicRect(gs),
-		worn: len(wornRelics(gs)),
+		worn: len(wornRelics(gs)) + h.extraRelics,
 		click: func(i int) {
-			if worn := gs.Run.Worn(); !h.closed && i >= 0 && i < len(worn) {
+			if h.closed {
+				return
+			}
+			if h.relicKeyAt != nil {
+				if key, ok := h.relicKeyAt(i); ok {
+					b.sale.arm(relicSale(key))
+				}
+				return
+			}
+			if worn := gs.Run.Worn(); i >= 0 && i < len(worn) {
 				b.sale.arm(relicSale(worn[i]))
 			}
 		},

@@ -1256,7 +1256,7 @@ relics and the stones arrive in. It is saved with the run; a save written before
 resumes onto the default rather than onto no clock.
 
 **A relic may move it, and it moves the fight rather than the run.** `adjust-round-limit` names a
-signed number of rounds at `fight-start`, and `combat.RoundLimitFor` sums the worn set's deltas over
+signed number of rounds at `equipped`, and `combat.RoundLimitFor` sums the worn set's deltas over
 the run's own number each time a fighter is put together — so selling the relic hands the rounds
 straight back, where a relic writing to the run would leave the whole journey moved. Hermes is the
 first record: every card 1 AP cheaper, every fight two rounds shorter.
@@ -1389,13 +1389,13 @@ relic that matches none of them is a new shape and needs its own argument.
 | **Banker** | `fight-won` | a second +1 vitae per 5 held, on top of propagation |
 | **Soul Taker** | `prizes-dealt` | the vitae prize card pays +10 rather than +5. A **flat** +5, not a scaling |
 | **Hungry** | `prizes-dealt` | two post-battle choices instead of one |
-| **Might / Bulwark / The Heart** | `fight-start` | +10 DMG, +25 HP — and The Heart, which grows per fight |
+| **Might / Bulwark / The Heart** | `equipped` | +10 DMG, +25 HP — and The Heart, which grows per fight |
 | **Momentum** | `card-damage` + `turn-taken` | every card gains +0.2x DMG per turn with no defend card in it; a defend card wipes the streak |
 | **Weight of the Flame / Ice / Light / Earth / Power** | `card-damage` + `attack-lands` | their color gains +0.1x DMG per landed hit of that color, and keeps it while worn |
 | **Echo** | `blow-formed` | the blow's first attack card lands three times: full, 2/3, 1/3 |
 | **Twisted Points / Edges / Weights** | `blow-formed` | every stab / slash / crush card lands **twice**, both at full DMG |
 | **Atrophy Ring** | `card-drawn` | every 3 AP attack is dealt as its 2 AP version |
-| **Onslaught** | `card-cost` + `fight-start` | every card 1 AP cheaper, and a quarter off your life — the drawback shape |
+| **Onslaught** | `card-cost` + `equipped` | every card 1 AP cheaper, and a quarter off your life — the drawback shape |
 | **Warm / Cold / Static / Dirty / Eerie Robe** | `card-cost` | every card of that color costs 1 AP less — one per color |
 | **flip x20** | `card-drawn` | recolors a card of one color as another **as it is drawn** — one for each ordered pair; see below |
 
@@ -1841,7 +1841,7 @@ the hand. The two are `add-hand-dmg` and `scale-hand-damage`, and neither one to
 `Event.Multiplier`.
 
 **It is the one-turn counterpart of `add-dmg`, and the names are `dmg` on both for that reason.**
-`add-dmg` fires at `fight-start`, is unconditional, and is added to the duelist in
+`add-dmg` fires at `equipped`, is unconditional, and is added to the duelist in
 `session.Equip` for the whole duel — Might's +10 is on every card of every turn. `add-hand-dmg`
 raises the same stat for one turn and only when the rung it names was satisfied. They stack
 additively, and the strictly stronger shape per point is the unconditional one: a rung relic has to
@@ -2938,8 +2938,19 @@ consumable lighter is a run the player would have to work out had changed.
 **A cantrip is a consumable cast onto the duelist, and it lasts the fight it is cast in.** A potion
 changes the duelist for the rest of the run and a rune changes a card; a cantrip changes the fighter
 standing in the room and is gone when the duel ends. `data/cantrips.json` is the catalog,
-`internal/session/cantrip.go` resolves it and holds the arithmetic, and
+`internal/session/cantrip.go` resolves it and registers its relics, and
 `internal/screens/combat_rune.go`'s `castCantrip` is the cast.
+
+**Every cantrip is a scroll and a cantrip-relic, and casting the scroll puts the relic on.** The
+relic is the whole of what a cantrip does: its rules are written in the relic grammar and answered
+by the relic machinery, so there is one mechanic for altering a fight's arithmetic, not two. A
+cantrip-relic is worn **after the run's relics**, and every one is:
+
+- **weightless** — it takes no relic slot, so a full hand still takes a cast;
+- **ephemeral** — it lasts the fight it was cast in and is never the run's.
+
+Both are properties of the *wearing* — `combat.WornRelic.Weightless` and `.Ephemeral` — not of a
+relic, so the same two can be put on other relics later without a cantrip being involved.
 
 | | |
 |---|---|
@@ -2948,19 +2959,27 @@ standing in the room and is gone when the duel ends. `data/cantrips.json` is the
 | Spent | on the combat screen, **between turns only** — click it; nothing is selected, and it is lit for the whole of planning |
 | Lasts | until the fight ends |
 
-**The record is the potion's shape**: an `Effect` from a closed vocabulary and an `Amount` read
-against it, plus the authored `Text` the tooltip says.
+**The record is the scroll's face plus the relic it casts.** The scroll has a `Name`, `Art`, `Draw`
+and the `Text` its tooltip says; its `Relic` has its own `Name`, `Art`, `Draw` and `Text`, and the
+`Rules` a relic record carries. **The cantrip-relic never enters `relics.json`**: it is not a relic
+the shop can sell, so it has no rarity and no unlock, and it is registered with the rules under the
+cantrip's own record key.
 
-| Effect | Amount | Does |
-|---|---|---|
-| `add-dmg` | a flat figure | adds it to the fighter's DMG |
-| `scale-life` | a percentage | scales the life ceiling **and the life under it** — 200 turns 30/60 into 60/120 |
-
-- **Each cast is contained by itself, and they stack.** A cast reads the fighter as it stands and
-  moves it, knowing nothing about any other cantrip: ten Mights are +100 DMG, and a second
-  Endurance doubles the doubled body.
-- **The run is never written to.** The fighter is rebuilt from the run at the top of every fight,
-  so what a cantrip added is simply not there in the next one. Nothing undoes it.
+- **A cast is a refit.** The cantrip joins the fight's list of casts and the fighter is rebuilt from
+  the run with every cantrip-relic in that list worn after the run's own — `Session.EquipWearing`,
+  the same `equipped` moment that puts the run's relics on at the top of a fight. So a
+  cantrip-relic's `add-dmg` lands with the run's flat adds, and its `scale-hp` scales the whole body
+  after them.
+- **The wound stays a wound.** A refit keeps the damage the fight has done, so an Endurance on 30/60
+  makes 90/120: the ceiling doubles and the wound is the same 30.
+- **They stack, and two casts are two relics.** Ten Mights are ten +10 DMG relics. Two Endurances
+  compound left to right like any two scaling relics: a 60 body is 240.
+- **A cantrip-relic may only wake at a moment the fight's duelist answers.** `card-drawn`,
+  `fight-won`, `prizes-dealt` and `essence-spent` are read off the run's relics, which a
+  cantrip-relic is never among, so a rule at one of them is refused at load rather than loading and
+  never firing.
+- **The run is never written to.** The fighter is rebuilt from the run alone at the top of every
+  fight, so a cantrip-relic is simply not there in the next one. Nothing undoes it.
 - **Life is the one figure that crosses the seam, and above the ceiling is the ceiling** *(owner's
   call, 2026-09-28)*. The wound a fight leaves is carried into the next room, so at a win the run
   takes the fighter's life back against the ceiling it would have had without the casts:
@@ -2970,6 +2989,11 @@ against it, plus the authored `Text` the tooltip says.
 - **Between turns, like every consumable.** `ResolveRound` decides a round before a frame of it is
   drawn, so a cast during playback would change a duelist whose round was already decided. A cast
   on the last round is legal and nearly worthless, which is the player's call to make.
+- **The cantrip-relic stands in the relic row**, after the run's relics, for the rest of the fight.
+  It drags along the row like any relic — worn order is firing order, so where it stands decides
+  what it compounds with — and a run relic dragged past it keeps its place among the run's own
+  relics. It cannot be sold. How a weightless or an ephemeral relic is told apart on its face is not
+  designed yet.
 - **A DMG a cantrip moved is written in the relic pink** on the duelist card for the rest of the
   fight. The life fraction carries no mark; it is simply the bigger number.
 - **A bundle of scrolls draws with replacement** while the catalog is shorter than the smallest
@@ -2979,9 +3003,11 @@ against it, plus the authored `Text` the tooltip says.
 - **Every cast is in the run's account**, as is every rune, stone and essence spent from the pane:
   a `used` record — "Duelist casts Cantrip of Might - DMG 10 to 20", "Duelist uses Embermark on a
   jab" — held by `Session.RecordUse` and written at the top of the round it was spent before, since
-  a round is recorded when it finishes and the spending was the first thing that round did.
-- **`go run ./tools/cantripsheet` is the review page**: each cantrip's line against its effect, and
-  that effect cast onto the shipped duelist through `Cast`.
+  a round is recorded when it finishes and the spending was the first thing that round did. **A cast
+  writes a second line for the relic it put on** — "Duelist wears Mighty - +10 DMG for this fight."
+- **`go run ./tools/cantripsheet` is the review page**: each scroll beside its cantrip-relic, both
+  lines against the relic's rules, and the relic worn by the shipped duelist through
+  `EquipWearing`.
 - **Carried in acquisition order, and written down.** `RunSnapshot.Cantrips` sits beside `Held`; a
   cantrip the catalog no longer holds refuses a resume. A cast is not saved, because a run is never
   resumed inside a fight: a quit after a cast comes back to the top of the fight with the scroll

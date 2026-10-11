@@ -242,10 +242,9 @@ func New(deck []combat.Card) *Session {
 	}
 
 	// **All three fixture seats fail the launch on a key the catalog has not got** *(owner's call,
-	// 2026-09-17)*. They dropped it silently until then, which made a misspelling into a run that
-	// booted fine and quietly tested something else: `mid-run` named its runes `"graft"`,
-	// `"motley"` and `"golden"` — the records' Names rather than their keys — and had been opening
-	// with an empty sack ever since, with nothing anywhere saying so.
+	// 2026-09-17)*. A key dropped silently is a run that boots fine and quietly tests something
+	// else — a record's Name written where its key belongs opens with an empty sack and nothing
+	// anywhere saying so.
 	//
 	// **This is the rule the rest of `internal/scenario` is already under**, one package up: a
 	// misspelled card, element or enemy fails at package init before a window opens, because a

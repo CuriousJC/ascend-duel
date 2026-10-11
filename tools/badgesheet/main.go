@@ -45,9 +45,8 @@
 // game cannot draw either. It walks `cards.BadgeValues`, so a value added to the ladder appears
 // here with nothing edited.
 //
-// **It draws the shipped shape and the two that are not.** `cards.DefaultBadgeShape` is what the
-// game uses; the other outlines are on the page underneath, unnumbered, because the choice of
-// shape is still open and a page that showed only the chosen one could not be used to change it.
+// **It draws the blank badge too**, under the numbered ones: it is what a multiplier nobody drew
+// falls back to, with its figure printed on top in the card's own type.
 //
 // # Output
 //
@@ -165,7 +164,7 @@ func run(dir string) error {
 
 	data := pageData{
 		Ground: ground, Surface: surface, Zoom: zoom,
-		Shape: string(cards.DefaultBadgeShape),
+		Shape: "diamond",
 	}
 
 	for _, sz := range drawnSizes {
@@ -173,7 +172,7 @@ func run(dir string) error {
 		for _, pct := range cards.BadgeValues {
 			row := valueRow{Label: label(pct), Token: cards.BadgeValueToken(pct)}
 			for _, e := range elementRow {
-				c, err := write(dir, cards.BadgeArtKey(cards.DefaultBadgeShape, pct, e), sz.Size)
+				c, err := write(dir, cards.BadgeArtKey(pct, e), sz.Size)
 				if err != nil {
 					return err
 				}
@@ -184,23 +183,16 @@ func run(dir string) error {
 		data.Sizes = append(data.Sizes, block)
 	}
 
-	// The three outlines, unnumbered, at hand size. **The shape is still an open choice**, and a
-	// page drawing only the shipped one could not be used to change it.
-	for _, shape := range []cards.BadgeShape{cards.BadgeDiamond, cards.BadgeCircle, cards.BadgeStarburst} {
-		row := shapeRow{Shape: string(shape)}
-		for _, e := range elementRow {
-			key := "damage-" + string(shape) + "-neutral"
-			if e != cards.Basic {
-				key = "damage-" + string(shape) + "-" + e.String()
-			}
-			c, err := write(dir, key, 32)
-			if err != nil {
-				return err
-			}
-			row.Cells = append(row.Cells, c)
+	// The blank badge, at hand size: what a value nobody drew falls back to.
+	blank := shapeRow{Shape: "blank"}
+	for _, e := range elementRow {
+		c, err := write(dir, cards.BadgeFallbackArtKey(e), 32)
+		if err != nil {
+			return err
 		}
-		data.Shapes = append(data.Shapes, row)
+		blank.Cells = append(blank.Cells, c)
 	}
+	data.Shapes = append(data.Shapes, blank)
 
 	f, err := os.Create(filepath.Join(dir, "index.html"))
 	if err != nil {

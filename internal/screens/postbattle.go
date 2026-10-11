@@ -176,22 +176,10 @@ const (
 	settled
 )
 
-// This screen's two clocks, **both proportions of the game's one speed** *(2026-08-21)*.
+// settledHoldTicks() is this screen's clock, **a proportion of the game's one speed** — see
+// clock.go — so turning the speed down slows the reward screen with the duel.
 //
-// They were raw tick counts — 26 and 100 — written before `beat` existed, which meant this screen
-// was outside the setting the duel is paced by: turning the game's speed down would have sped up a
-// round and left the reward screen exactly as slow as it was. See clock.go. The one behavior
-// change is that the flight is 25 ticks rather than 26, which is a frame and a half.
-//
-// `var` rather than `const` because `beat` is a function, exactly like `victoryHoldTicks()`.
-// settleFlightTicks() is how long the won card takes to cross to the middle.
-//
-// **Cards fly to where they are going, everywhere in this game.** A card that appears in the
-// middle is a card that was never anywhere else, and the whole point of this screen is that a
-// thing was *won* and has come to you.
-func settleFlightTicks() int { return ui.Beat(1, 1) }
-
-// settledHoldTicks() is how long the finished card is held before the screen leaves. **Long
+// It is how long the finished card is held before the screen leaves. **Long
 // enough to read, short enough not to need a button** — the click that picked the card is the
 // last input the player has to make.
 func settledHoldTicks() int { return ui.Beat(4, 1) }
@@ -1049,39 +1037,12 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.tut.draw(gs, screen, s)
 }
 
-// settledSeats lays the settled row out for n cards, centered.
-func settledSeats(gs *state.GlobalState, n int) []image.Rectangle {
-	if n < 1 {
-		n = 1
-	}
-	top := gs.PctY(36)
-	width := n*cardWidth + (n-1)*essenceRowGap
-	x := gs.PctX(50) - width/2
-
-	out := make([]image.Rectangle, 0, n)
-	for i := 0; i < n; i++ {
-		out = append(out, image.Rect(x, top, x+cardWidth, top+cardHeight))
-		x += cardWidth + essenceRowGap
-	}
-	return out
-}
-
-// drawSettled is the card the player picked, **flying to the middle, changing there, and then held
-// while they read what it became**.
+// drawSettled is the essence used where it stands and the picked cards changing where they stand
+// in the row, then held while the player reads what they became. See essenceInPlace.
 //
-// It travels from the seat it was already in, as the card it was — so the card the player has been
-// looking at is the card that moves, and the alteration happens in front of them rather than in the
-// gap between two frames. A card that arrived already changed would be a card the player has to
-// re-read to find out what happened. See cardmorph.go.
-//
-// **The flight carries the old face and the morph carries the new one**, which is why nothing here
-// asks what the essence did: `change` was handed the two faces in aimAt and is the only thing that
-// knows which of the three shapes this is. A removal ends on an empty seat, a duplicate ends on two
-// cards, everything else ends on one.
-// **An eaten card leaves nothing** *(owner's call, 2026-09-08)*. It left an outlined hole until
-// then, on the argument that a blank gap reads as a layout fault — which is true of a seat that was
-// never filled, and not of this one: the player has just watched the card come apart square by
-// square, so the emptiness is the thing they were shown rather than something to explain.
+// **An eaten card leaves nothing** *(owner's call, 2026-09-08)*: the player has just watched the
+// card come apart square by square, so the emptiness is the thing they were shown rather than
+// something to explain.
 func (s *PostBattleScene) drawSettled(gs *state.GlobalState, screen *ebiten.Image) {
 	s.dealtRow.draw(gs, screen)
 	s.use.Draw(gs, screen)

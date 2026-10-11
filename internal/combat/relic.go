@@ -1642,32 +1642,6 @@ func RollScale(worn []WornRelic) int {
 // rollScale is RollScale for a duelist, which is how both roll sites reach it.
 func (d Duelist) rollScale() int { return RollScale(d.WornRelics()) }
 
-// LandingAmounts is what one card of a blow pays, term by term: its own damage first, then a term
-// for every extra landing its relics buy. One entry when nothing repeats or echoes it, which is
-// almost every card in the game.
-//
-// **Two verbs land here and they stack in a fixed order** *(2026-08-22)*: `repeat-card` adds
-// full-strength copies, then `echo-attack` adds its diminishing ladder. Repeats first because they
-// are the card being played again — an echo of a repeated card would be an echo of something that
-// already happened twice, which is a fact about the blow rather than about the card.
-//
-// **Extra landings add rather than compound**, so two relics landing a card three times land it five
-// times, not nine. `MaxEchoLandings` is the ceiling, and it is a width on the event's arrays as much
-// as a rule.
-//
-// `lead` says whether this is the blow's first attack card, which is the only thing the `Lead`
-// predicate reads, and `rungs` is every rung of the blow this card helped form, which is what a
-// `Hand` predicate reads — see RungsOf.
-func LandingAmounts(worn []WornRelic, card Card, lead bool, rungs []HandID, damage int) []int {
-	shape := LandingsOf(worn, card, lead, rungs)
-
-	out := make([]int, 0, shape.Count())
-	for j := 0; j < shape.Count(); j++ {
-		out = append(out, shape.Amount(j, damage))
-	}
-	return out
-}
-
 // LandingShape is how many times one card lands inside a blow and how those landings are priced:
 // full-strength copies from `repeat-card`, then the diminishing ladder from `echo-attack`.
 //

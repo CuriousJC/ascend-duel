@@ -99,7 +99,7 @@ func pinnedDeckSeed() int64 {
 // Selection does double duty here — it is both "queue this for the round" and "this is
 // the one I mean" — so throwing a card out costs the action points it was holding until
 // the moment it leaves. That is a consequence of overloading selection rather than a
-// designed cost; see TODO.md.
+// designed cost.
 func (s *CombatScene) discardSelected() {
 	if !s.planning() || s.discardsLeft <= 0 {
 		return

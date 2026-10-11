@@ -200,11 +200,13 @@ func (s *CombatScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([
 	case tutorial.AnchorDeckStack:
 		return one(deckStackBounds(gs)), true
 	case tutorial.AnchorMathBand:
-		// The band the blow is added up in. **The whole band rather than the figures in it**: the
-		// sum is laid out centered and its width is a function of how many terms the round produced,
-		// so a rectangle round the figures would be a different size every round and the square
-		// would appear to twitch.
-		return one(s.handMathRect(gs)), true
+		// **The hits' lines themselves**, under the cards that threw them. Nothing to point at
+		// until a hand is being worked out.
+		r, ok := s.mathLinesRect(gs)
+		if !ok {
+			return nil, false
+		}
+		return one(r), true
 
 	case tutorial.AnchorAPBar:
 		// The bar is drawn from the hand band's bottom edge — see drawAPBar's caller — and it is

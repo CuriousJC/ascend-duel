@@ -278,3 +278,36 @@ func TestTheRarityInTheFileIsThePriceCharged(t *testing.T) {
 		}
 	}
 }
+
+// **A relic sold weightless needs no finger**: a full row refuses it at weight and takes it
+// weightless, and selling it takes the flag off with it.
+func TestAWeightlessOfferGoesOnOverAFullRowAndSellsOffItsFlag(t *testing.T) {
+	run := rich(t)
+	all := Relics()
+	if len(all) < combat.DefaultRelicSlots+1 {
+		t.Skipf("only %d relics authored; this needs %d", len(all), combat.DefaultRelicSlots+1)
+	}
+	for _, key := range all[:combat.DefaultRelicSlots] {
+		if !run.Wear(key) {
+			t.Fatalf("%s would not go on", key)
+		}
+	}
+
+	extra := all[combat.DefaultRelicSlots]
+	if run.CanBuy(extra) {
+		t.Fatalf("a full row would buy %s with weight", extra)
+	}
+	if !run.CanBuyAs(extra, true) || !run.BuyAs(extra, true) {
+		t.Fatalf("a full row refused %s offered weightless", extra)
+	}
+	if !run.IsWeightless(extra) || run.WeightedCount() != combat.DefaultRelicSlots {
+		t.Errorf("%s went on with weight", extra)
+	}
+
+	if !run.Sell(extra) {
+		t.Fatal("the weightless relic would not sell")
+	}
+	if run.IsWeightless(extra) {
+		t.Errorf("%s kept its weightless flag after it was sold", extra)
+	}
+}

@@ -45,24 +45,30 @@ func SellValue(key string) int { return relicSells[key] }
 //
 // **It exists so the shelf can dim a card rather than swallow a click.** Buy checks the same four
 // things itself — this is the question, not the guard.
-func (s *Session) CanBuy(key string) bool {
+func (s *Session) CanBuy(key string) bool { return s.CanBuyAs(key, false) }
+
+// CanBuyAs is CanBuy for a relic offered weightless or not: a weightless offer needs no free finger.
+func (s *Session) CanBuyAs(key string, weightless bool) bool {
 	price, ok := relicPrices[key]
 	if !ok || s.Price(price) > s.vitae {
 		return false
 	}
-	return s.canWear(key)
+	return s.canWearAs(key, weightless)
 }
 
 // canWear is the row's half of the question: the catalog holds it, it is not already worn, and
 // the fifth finger is not spoken for. Shared with Wear so the shelf and the purchase cannot come to
 // different conclusions.
-func (s *Session) canWear(key string) bool {
+func (s *Session) canWear(key string) bool { return s.canWearAs(key, false) }
+
+// canWearAs is canWear for a relic that is going on weightless, or already flagged so.
+func (s *Session) canWearAs(key string, weightless bool) bool {
 	if _, ok := registeredRelics[key]; !ok {
 		return false
 	}
 	// **Only the relics that weigh something count against the fingers**, and a weightless one goes
 	// on whatever the count.
-	if !s.weightless[key] && s.WeightedCount() >= s.RelicSlots() {
+	if !weightless && !s.weightless[key] && s.WeightedCount() >= s.RelicSlots() {
 		return false
 	}
 	for _, k := range s.worn {
@@ -83,13 +89,20 @@ func (s *Session) canWear(key string) bool {
 // **A sixth relic is refused here rather than swapped for.** Selling is what frees a finger — see
 // Sell — so the trade is two decisions with a price between them rather than one click that quietly
 // throws a relic away.
-func (s *Session) Buy(key string) bool {
-	if !s.canWear(key) {
+func (s *Session) Buy(key string) bool { return s.BuyAs(key, false) }
+
+// BuyAs is Buy for a relic offered weightless or not. **A weightless offer is flagged before it goes
+// on**, so it is not refused a finger it does not need.
+func (s *Session) BuyAs(key string, weightless bool) bool {
+	if !s.canWearAs(key, weightless) {
 		return false
 	}
 	price, ok := relicPrices[key]
 	if !ok || !s.SpendVitae(s.Price(price)) {
 		return false
+	}
+	if weightless {
+		s.SetWeightless(key, true)
 	}
 	return s.Wear(key)
 }
@@ -120,6 +133,9 @@ func (s *Session) Sell(key string) bool {
 
 	s.worn = append(s.worn[:at], s.worn[at+1:]...)
 	delete(s.grown, key)
+	// **Weightless goes with the relic.** It was a property of that purchase, so the same record
+	// bought again later weighs what its own offer says.
+	delete(s.weightless, key)
 	s.AddVitae(SellValue(key))
 	return true
 }

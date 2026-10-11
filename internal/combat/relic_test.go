@@ -478,23 +478,23 @@ func TestAnEchoSeatsTheLeadCardAgainAtDecreasingAmounts(t *testing.T) {
 
 	card := Of(Bash, Fire)
 
-	if got := LandingAmounts(nil, card, true, nil, 30); len(got) != 1 || got[0] != 30 {
+	if got := landingAmounts(nil, card, true, nil, 30); len(got) != 1 || got[0] != 30 {
 		t.Errorf("a bare duelist pays %v for a 30 card, want [30]", got)
 	}
 
 	worn := []WornRelic{{Relic: echo}}
-	if got := LandingAmounts(worn, card, true, nil, 30); len(got) != 3 ||
+	if got := landingAmounts(worn, card, true, nil, 30); len(got) != 3 ||
 		got[0] != 30 || got[1] != 20 || got[2] != 10 {
 		t.Errorf("Echo pays %v for a 30 lead card, want [30 20 10]", got)
 	}
 
 	// **Only the lead card**, which is what the Lead predicate is for.
-	if got := LandingAmounts(worn, card, false, nil, 30); len(got) != 1 {
+	if got := landingAmounts(worn, card, false, nil, 30); len(got) != 1 {
 		t.Errorf("Echo pays %v for a card that does not lead the blow, want one term", got)
 	}
 
 	// Two of them add a landing each rather than multiplying: five landings, not nine.
-	if got := LandingAmounts([]WornRelic{{Relic: echo}, {Relic: echo}}, card, true, nil, 30); len(got) != 5 {
+	if got := landingAmounts([]WornRelic{{Relic: echo}, {Relic: echo}}, card, true, nil, 30); len(got) != 5 {
 		t.Errorf("two echo relics pay %v, want five terms", got)
 	}
 
@@ -526,13 +526,13 @@ func TestARepeatLandsEveryMatchingCardAtFullDamage(t *testing.T) {
 	// **Not only the lead card**, which is the whole difference from Echo: a matching card in the
 	// third seat repeats too.
 	for _, lead := range []bool{true, false} {
-		got := LandingAmounts(worn, crush, lead, nil, 40)
+		got := landingAmounts(worn, crush, lead, nil, 40)
 		if len(got) != 2 || got[0] != 40 || got[1] != 40 {
 			t.Errorf("a crush card (lead %v) pays %v, want [40 40]", lead, got)
 		}
 	}
 
-	if got := LandingAmounts(worn, slash, true, nil, 40); len(got) != 1 {
+	if got := landingAmounts(worn, slash, true, nil, 40); len(got) != 1 {
 		t.Errorf("a slash card pays %v under a crush repeat, want one term", got)
 	}
 }
@@ -553,10 +553,10 @@ func TestARungRepeatLandsOnlyTheCardsOfThatRung(t *testing.T) {
 	worn := []WornRelic{{Relic: repeat}}
 
 	for _, card := range []Card{crushCard(t), slashCard(t)} {
-		if got := LandingAmounts(worn, card, false, []HandID{four, five}, 40); len(got) != 2 {
+		if got := landingAmounts(worn, card, false, []HandID{four, five}, 40); len(got) != 2 {
 			t.Errorf("a card in a satisfied elemental five pays %v, want two landings", got)
 		}
-		if got := LandingAmounts(worn, card, false, []HandID{four}, 40); len(got) != 1 {
+		if got := landingAmounts(worn, card, false, []HandID{four}, 40); len(got) != 1 {
 			t.Errorf("a card in a blow short of the five pays %v, want one landing", got)
 		}
 		if seats := LandingSeats(worn, card, false, []HandID{five}); !seats[0] {
@@ -611,7 +611,7 @@ func TestRepeatsComeBeforeEchoesAndBothAreCapped(t *testing.T) {
 
 	// Repeat first, then the echo ladder over the echo's own count: 30, 30 (the copy), then
 	// two thirds and one third.
-	got := LandingAmounts([]WornRelic{{Relic: repeat}, {Relic: echo}}, crushCard(t), true, nil, 30)
+	got := landingAmounts([]WornRelic{{Relic: repeat}, {Relic: echo}}, crushCard(t), true, nil, 30)
 	want := []int{30, 30, 20, 10}
 	if len(got) != len(want) {
 		t.Fatalf("a repeated and echoed crush card pays %v, want %v", got, want)
@@ -624,7 +624,7 @@ func TestRepeatsComeBeforeEchoesAndBothAreCapped(t *testing.T) {
 
 	// Nothing may seat more landings than the event's arrays are wide.
 	many := []WornRelic{{Relic: repeat}, {Relic: repeat}, {Relic: repeat}, {Relic: echo}, {Relic: echo}}
-	if got := LandingAmounts(many, crushCard(t), true, nil, 30); len(got) > MaxEchoLandings {
+	if got := landingAmounts(many, crushCard(t), true, nil, 30); len(got) > MaxEchoLandings {
 		t.Errorf("five stacked relics pay %d terms, want at most %d", len(got), MaxEchoLandings)
 	}
 }
@@ -1826,4 +1826,14 @@ func TestAWeightlessRelicTakesNoSlot(t *testing.T) {
 		t.Errorf("one slot, a weighted relic, a weightless one and a second weighted one wear %v, "+
 			"want the first two", worn)
 	}
+}
+
+// landingAmounts is what one card pays, landing by landing: LandingsOf's shape priced at `damage`.
+func landingAmounts(worn []WornRelic, card Card, lead bool, rungs []HandID, damage int) []int {
+	shape := LandingsOf(worn, card, lead, rungs)
+	out := make([]int, 0, shape.Count())
+	for j := 0; j < shape.Count(); j++ {
+		out = append(out, shape.Amount(j, damage))
+	}
+	return out
 }

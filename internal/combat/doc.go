@@ -16,7 +16,7 @@
 //
 //   - **Initiative is gone.** With one contiguous turn per side there is no exchange for a
 //     faster action to lead, so the whole lever was reporting a distinction the resolver no
-//     longer made. See the TODO in TODO.md before bringing it back.
+//     longer made.
 //   - **Shields cover the opponent's next turn, not the rest of the round.** Side B acts last, so
 //     a defense that expired at the round boundary would never protect B from anything. Shields
 //     last until the start of their owner's own next turn instead, which is the one rule that is

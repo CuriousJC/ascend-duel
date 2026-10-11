@@ -13,9 +13,8 @@ package ui
 // the arrangement — four rows, one per color, sorted so that a card does not move
 // when it is spent, it only dims.
 //
-// **The extraction was the point, not a side effect.** TODO.md carried this as an entry whose own
-// wording was "do not copy it, which is the failure this entry exists to prevent": three copies
-// of a grid this size would be three places to fix a row that overflows.
+// **One grid, shared**: three copies of a grid this size would be three places to fix a row that
+// overflows.
 //
 // What did *not* move is the combat screen's piles or its draw-pile-as-a-control — those are
 // facts about a fight. See combat_deck.go.

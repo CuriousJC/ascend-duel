@@ -7,8 +7,7 @@
 //
 // Sixteen runes attach seven kinds of rider and, until 2026-09-07, not one of them reached the
 // drawing: a ridden card looked exactly like an unridden one and the only place a rider was
-// visible was the tooltip prose. That is a hand of altered cards the player cannot read. See
-// TODO.md, which is where the owner asked for it to be tracked.
+// visible was the tooltip prose. That is a hand of altered cards the player cannot read.
 //
 // Every rider draws, so the review question is not "does this one look right" but "do these read as
 // a *set*". A page per upgrade could never answer that, which is the relic sheet's argument.

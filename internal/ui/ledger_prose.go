@@ -294,37 +294,19 @@ func termLine(r session.LedgerRecord) session.LedgerLine {
 			{Text: SayText(SayTermDMG, Slots{"n": figure(r.Amount)}), Ink: session.InkRelic},
 		}}
 
-	case session.RoleFlat:
-		// **The relic's name takes the relic ink and the figure does not**: a relic put the term in
-		// every hit, but the term is the hand paying rather than a number a relic moved on a card.
-		return session.LedgerLine{Voice: session.VoiceTerm, Spans: []session.LedgerSpan{
-			{Text: fmt.Sprintf("%-14s", r.Relic+" ("+r.Note+")"), Ink: session.InkRelic},
-			{Text: SayText(SayTermFlat, Slots{"n": figure(r.Amount)})},
-		}}
-
-	case session.RoleHit:
-		// **The card, then its arithmetic, then its relics**, so the column of card names reads
-		// down the blow and each hit's working sits beside the card that threw it.
-		spans := []session.LedgerSpan{{Text: fmt.Sprintf("%-14s", termCardName(r)), Ink: r.Element}}
-		spans = append(spans, sumSpans(r)...)
-		return session.LedgerLine{Voice: session.VoiceTerm, Spans: append(spans, factorNotes(r.Factors)...)}
-
 	case session.RoleTotal:
 		return session.LedgerLine{Voice: session.VoiceTerm, Spans: []session.LedgerSpan{
 			{Text: fmt.Sprintf("%-14s", SayTermTotal)},
 			{Text: strconv.Itoa(r.Total), Ink: session.InkTotal},
 		}}
 
-	case session.RoleSum:
-		return session.LedgerLine{Voice: session.VoiceTerm, Spans: sumSpans(r)}
-
 	default:
-		// RoleCard: the card, what it was worth before its relics, and what each relic did to it.
-		ink := r.Element
-		spans := []session.LedgerSpan{
-			{Text: fmt.Sprintf("%-14s", termCardName(r)), Ink: ink},
-			{Text: fmt.Sprintf("%4d", r.Base), Ink: ink},
-		}
+		// RoleHit, and any role this build does not write — a line read back from an older
+		// account draws as the hit it was part of.
+		// **The card, then its arithmetic, then its relics**, so the column of card names reads
+		// down the blow and each hit's working sits beside the card that threw it.
+		spans := []session.LedgerSpan{{Text: fmt.Sprintf("%-14s", termCardName(r)), Ink: r.Element}}
+		spans = append(spans, sumSpans(r)...)
 		return session.LedgerLine{Voice: session.VoiceTerm, Spans: append(spans, factorNotes(r.Factors)...)}
 	}
 }
@@ -375,7 +357,7 @@ func factorNotes(factors []session.LedgerFactor) []session.LedgerSpan {
 }
 
 // sumSpans is arithmetic written out as the hand dialog it is: `(10 x 2 x 1.5) + 10 x 2.5 = 50`. A hit's
-// line is one term and its flats; a RoleSum read back from an older account is several terms.
+// line is one term and its flats.
 //
 // **A relic's figure stays with the term it priced**, in brackets, rather than being folded into
 // the term or hung on the end of the whole sum. Folding it in hides the relic; hanging it on the

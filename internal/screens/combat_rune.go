@@ -248,7 +248,10 @@ func (s *CombatScene) spendEssence(gs *state.GlobalState, i int) {
 	}
 	s.syncQueue()
 
+	morphed := len(s.Theater.morphs)
 	s.raiseHandMorphs(gs, was, seats)
+	// **Absorbed on the table, and its motes land the change.** See combat_consume.go.
+	s.useHandMotes(gs, ui.ExitAbsorb, ui.EssenceSpec(gs, w, true), morphed, essenceMotes(w))
 	s.beginSettle()
 	saveRun(gs)
 }
@@ -269,6 +272,11 @@ func (s *CombatScene) spendConsumable(gs *state.GlobalState, seat int) {
 		return
 	}
 	c := held[seat]
+
+	// **The seat is read now**, before any of the spends below closes the pane over it — the card
+	// the player clicked is the card that lifts out of it. See combat_consume.go.
+	s.spendSeat = seat
+	defer func() { s.spendSeat = -1 }()
 
 	switch c.Kind {
 	case session.ConsumableStone:
@@ -309,6 +317,8 @@ func (s *CombatScene) spendStone(gs *state.GlobalState, i int) {
 	// Without this the raised rung would not be read until the next fight, which is exactly the
 	// dud a mid-fight consumable must not be. See refit.
 	s.refit(gs)
+	// **It crumbles on the table, and its dust goes to the ladder it raised.** See combat_consume.go.
+	s.useStoneMotes(gs, ui.StoneSpec(gs, stone, true))
 	saveRun(gs)
 }
 
@@ -351,6 +361,10 @@ func (s *CombatScene) castCantrip(gs *state.GlobalState, i int) {
 	s.refit(gs)
 	s.recordUse(gs, "cantrip", c.Name, castWords(was, s.fighter.Duelist))
 	s.recordUse(gs, "relic", c.RelicName, strings.ReplaceAll(c.RelicText, "\n", " "))
+
+	// **The scroll burns on the table, and its embers carry the relic into the band.** See
+	// combat_consume.go.
+	s.useCantripMotes(gs, ui.CantripSpec(gs, c, true))
 
 	gs.Journal.Write(journal.Record{Kind: journal.KindCantrip, Key: c.Record, Seat: i})
 	saveRun(gs)
@@ -462,7 +476,13 @@ func (s *CombatScene) spendRune(gs *state.GlobalState, i int) {
 	// about them. Raised after the hand is final — the resync, the copies and the queue are all
 	// done — so every morph is a ghost of something that has already happened, which is the rule
 	// every mover on this screen is under. See combat_handmorph.go.
+	morphed := len(s.Theater.morphs)
 	s.raiseHandMorphs(gs, was, seats)
+
+	// **The rune fires on the table, and its motes land the change.** See combat_consume.go.
+	s.useHandMotes(gs, ui.ExitSigil, ui.RuneSpec(gs, p, true, false), morphed,
+		ui.Emitter{Element: cards.Arcane, Rate: 1.2, Size: 22,
+			Sprites: ui.FirstDrawn(ui.RuneMoteSprites, []string{"spark-lightning-1", "spark-lightning-2"})})
 
 	// **Spending a rune ends the selection**, and the ending is watched rather than applied.
 	// Leaving the targets lifted said the gesture was still going, and leaving them *queued* spent

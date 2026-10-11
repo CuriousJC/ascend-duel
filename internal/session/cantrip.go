@@ -193,7 +193,7 @@ func checkCantripRecord(rec data.CantripData) ([]combat.RelicRule, error) {
 func fightMoment(m combat.Moment) bool {
 	switch m {
 	case combat.MomentCardDrawn, combat.MomentFightWon, combat.MomentPrizesDealt,
-		combat.MomentEssenceSpent:
+		combat.MomentEssenceSpent, combat.MomentFightBegun:
 		return false
 	}
 	return true
@@ -230,13 +230,11 @@ var StartingCantrips []string
 
 // Scrolls is every cantrip the run is carrying, by record key, in the order they were acquired.
 func (s *Session) Scrolls() []string {
-	out := make([]string, len(s.scrolls))
-	copy(out, s.scrolls)
-	return out
+	return s.scrolls.list()
 }
 
 // ScrollCount is how many cantrips the run is carrying.
-func (s *Session) ScrollCount() int { return len(s.scrolls) }
+func (s *Session) ScrollCount() int { return s.scrolls.len() }
 
 // HoldCantrip puts a cantrip in the scroll case, and reports whether it went in.
 //
@@ -255,7 +253,7 @@ func (s *Session) holdCantrip(key string) bool {
 	if _, ok := cantrips[key]; !ok {
 		return false
 	}
-	s.scrolls = append(s.scrolls, key)
+	s.scrolls.add(key, false)
 	return true
 }
 
@@ -264,9 +262,5 @@ func (s *Session) holdCantrip(key string) bool {
 // **By position rather than by key**, because the case may hold two of the same cantrip and
 // casting one must not be ambiguous about which.
 func (s *Session) DropScroll(i int) bool {
-	if i < 0 || i >= len(s.scrolls) {
-		return false
-	}
-	s.scrolls = append(s.scrolls[:i], s.scrolls[i+1:]...)
-	return true
+	return s.scrolls.drop(i)
 }

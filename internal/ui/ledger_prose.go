@@ -403,7 +403,7 @@ func sumSpans(r session.LedgerRecord) []session.LedgerSpan {
 
 		// **The flat form is for the term the split cannot describe** — an echo's rounding, or a
 		// card that hit the damage floor.
-		if len(t.Scales) == 0 && t.PlayAdd == 0 && t.PlayPct == 0 {
+		if len(t.Scales) == 0 && t.PlayAdd == 0 && t.PlayPct == 0 && t.Awaken == 0 {
 			spans = append(spans, session.LedgerSpan{Text: strconv.Itoa(t.Base), Ink: t.Element})
 			continue
 		}
@@ -459,6 +459,11 @@ func playSpans(t session.LedgerSum) []session.LedgerSpan {
 	}
 	if t.PlayPct != 0 {
 		out = append(out, session.LedgerSpan{Text: " x " + HandMultiplierText(t.PlayPct), Ink: t.Element})
+	}
+	// **What the opener woke comes next**, in the relic pink, so the relics after it are seen to
+	// multiply it.
+	if t.Awaken != 0 {
+		out = append(out, session.LedgerSpan{Text: " + " + strconv.Itoa(t.Awaken), Ink: session.InkRelic})
 	}
 	return out
 }

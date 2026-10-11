@@ -130,6 +130,10 @@ type ShopScene struct {
 	// answers and the shelf does not. See handspanel.go.
 	hands ui.HandsToggle
 
+	// uses are the stones being used up out of the pouch: crumbling in the middle of the screen with
+	// their dust on its way to the hands button. Nothing waits on them. See stoneUseFrom.
+	uses []ui.Consume
+
 	// offered is which packs this visit put up: two of the three, dealt in Init and fixed for the
 	// visit unless the reroll button under them is pressed. **A slice rather than three flags**,
 	// because the pane's two seats are positions and which kind stands in each is the decision.
@@ -137,8 +141,9 @@ type ShopScene struct {
 
 	// stockRNG and packRNG are the visit's two streams, kept so a reroll advances a cursor rather
 	// than starting a second sequence. See Init.
-	stockRNG *rand.Rand
-	packRNG  *rand.Rand
+	stockRNG  *rand.Rand
+	packRNG   *rand.Rand
+	mythicRNG *rand.Rand
 
 	// relicReroll and packReroll are the two buttons under those panes. **Two buttons rather than
 	// one moved between two places**, unlike the worn row's sell tab, because both are up at once.
@@ -226,10 +231,11 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	// beside it — the property TODO.md asked for, and the one that keeps a replayed run exact.
 	s.stockRNG = shopRNG(gs, seeds.ShopStock)
 	s.packRNG = shopRNG(gs, seeds.PackOffer)
+	s.mythicRNG = shopRNG(gs, seeds.MythicRoll)
 	s.rerolls = map[shopPane]int{}
 	s.drunk = map[string]bool{}
 	s.offered = dealPacks(s.packRNG)
-	s.shelf = dealShelf(gs, s.stockRNG)
+	s.shelf = dealShelf(gs, s.stockRNG, s.mythicRNG)
 
 	// **The realm's tonic is settled at its first shop** and every later shop in the realm shows
 	// the same one, or an empty seat once it is drunk. See session/tonic.go.
@@ -281,7 +287,11 @@ func shelfKeys(items []shelfItem) []string {
 //
 // **What is already worn is off the shelf**, rather than shown and refused. A relic on your hand
 // offered back to you is a seat spent saying nothing, and `Buy` would turn the click down anyway.
-func dealShelf(gs *state.GlobalState, rng *rand.Rand) []shelfItem {
+//
+// **A mythic is never on the tickets.** Each seat first rolls one in data.MythicOdds on `mythic`
+// (`seeds.MythicRoll`) and, on a hit, takes a mythic the run is not wearing; otherwise it draws
+// from everything else. A nil `mythic` rolls nothing.
+func dealShelf(gs *state.GlobalState, rng, mythic *rand.Rand) []shelfItem {
 	if gs.Run == nil || rng == nil {
 		return nil
 	}
@@ -291,15 +301,28 @@ func dealShelf(gs *state.GlobalState, rng *rand.Rand) []shelfItem {
 		worn[key] = true
 	}
 
-	var pool []string
+	var pool, mythics []string
 	for _, key := range gs.Run.OfferableRelics() {
-		if !worn[key] {
+		switch {
+		case worn[key]:
+		case session.RelicRarity(key) == data.Mythic:
+			mythics = append(mythics, key)
+		default:
 			pool = append(pool, key)
 		}
 	}
 
 	out := make([]shelfItem, 0, shelfSize)
-	for len(out) < shelfSize && len(pool) > 0 {
+	for len(out) < shelfSize && (len(pool) > 0 || len(mythics) > 0) {
+		if mythic != nil && mythic.Intn(data.MythicOdds) == 0 && len(mythics) > 0 {
+			at := mythic.Intn(len(mythics))
+			out = append(out, shelfItem{key: mythics[at]})
+			mythics = append(mythics[:at], mythics[at+1:]...)
+			continue
+		}
+		if len(pool) == 0 {
+			break
+		}
 		at := drawWeighted(pool, rng)
 		out = append(out, shelfItem{key: pool[at]})
 		pool = append(pool[:at], pool[at+1:]...)
@@ -345,6 +368,14 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 	s.tut.update(gs, s)
 
 	s.move.Tick()
+	kept := s.uses[:0]
+	for i := range s.uses {
+		s.uses[i].Tick()
+		if !s.uses[i].Done() {
+			kept = append(kept, s.uses[i])
+		}
+	}
+	s.uses = kept
 
 	if s.leaving {
 		s.leaving = false
@@ -630,6 +661,10 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.deck.Draw(gs, screen, ui.OwnedContents(gs))
 	s.hands.Draw(gs, screen, ui.OwnedHands(gs))
 	s.drawPouch(gs, screen)
+	// **Over the pouch it came out of**, so a stone used from the open panel is seen going.
+	for _, u := range s.uses {
+		u.Draw(gs, screen)
+	}
 
 	// **Bob over everything, and the spotlight with him.** See combat.go's Draw, whose last line
 	// this is the counterpart of: the scrim dims what is already drawn, so nothing may follow it.

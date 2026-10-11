@@ -184,10 +184,11 @@ counterpart of `deckSeedName`, and it ships empty.
 no graphics context.
 
 **`Rarity` is the price and the odds at once**. One of
-`common`, `uncommon` or `rare`; `data.Rarity` turns it into what the shop charges — 3, 5, 7 — and how
-many tickets the relic holds in the shelf draw — 10, 4, 1. Three tiers rather than a number per
-relic, because a per-relic price can only be judged one relic at a time. **What a relic sells back for is
-deliberately not a field** — it is the tier's own figure, 1 / 2 / 3, computed in
+`common`, `uncommon`, `rare` or `mythic`; `data.Rarity` turns it into what the shop charges — 3, 5,
+7, 10 — and how many tickets the relic holds in the shelf draw — 10, 4, 1, and none for a mythic,
+which each seat rolls for on its own (`data.MythicOdds`). Tiers rather than a number per relic,
+because a per-relic price can only be judged one relic at a time. **What a relic sells back for is
+deliberately not a field** — it is the tier's own figure, 1 / 2 / 3 / 4, computed in
 `internal/session/shop.go`. A record whose rarity is absent or misspelled **panics at load**, like
 every other word this file gets wrong.
 

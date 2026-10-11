@@ -140,13 +140,22 @@ const (
 	//
 	// **Appended, because the enum is append-only.**
 	MomentHitBlocked
+
+	// MomentFightBegun fires once as a fight is set up, before the first hand is dealt — the run's
+	// own moment, answered by session.Session.CopyAtFightStart. It is the Eternity Pearl's.
+	//
+	// **It has no card, so it reads none**, and like every moment answered off the run rather than
+	// the fight's duelist, a cantrip-relic may not wake at it.
+	//
+	// **Appended, because the enum is append-only.**
+	MomentFightBegun
 )
 
 // Moments is every moment in a fixed order, for anything that walks them.
 func Moments() []Moment {
 	return []Moment{MomentCardCost, MomentCardDamage, MomentAttackLands,
 		MomentEquipped, MomentFightWon, MomentPrizesDealt, MomentBlowFormed, MomentTurnTaken,
-		MomentCardDrawn, MomentTurnStart, MomentEssenceSpent, MomentHitBlocked}
+		MomentCardDrawn, MomentTurnStart, MomentEssenceSpent, MomentHitBlocked, MomentFightBegun}
 }
 
 func (m Moment) String() string {
@@ -173,6 +182,8 @@ func (m Moment) String() string {
 		return "essence-spent"
 	case MomentHitBlocked:
 		return "hit-blocked"
+	case MomentFightBegun:
+		return "fight-begun"
 	default:
 		return "card-cost"
 	}
@@ -560,6 +571,48 @@ const (
 	//
 	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
 	DoSetForm
+
+	// DoPierceElement lets the wearer's cards of the effect's Element **land on a creature of that
+	// element** instead of fizzling — the Attunements. A standing property read at the hit, sitting
+	// at equipped for DoMatchFoeShields' reason. See Pierces.
+	//
+	// **The hit lands as any other hit does**: it can be blocked, it drains and it steps a growing
+	// relic. All the pierce takes away is the fizzle.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoPierceElement
+
+	// DoSurgePerCard banks Amount action points for the wearer's next turn **for every card of the
+	// turn the rule matches** — the form Attunements. It is the matched block's surge, paid for
+	// playing a card rather than for a shield eating a hit, and spent the same way: by the top of
+	// the wearer's next turn.
+	//
+	// **Every matching card counts, whatever its hit did** *(owner's call, 2026-10-10)*: a card that
+	// fizzled or was blocked was still played. Refused with no `If`, since there would be nothing to
+	// count — the shape DoGrowPerCard is under.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoSurgePerCard
+
+	// DoAwaken adds Amount damage to **every attack card queued after the turn's first card**, when
+	// the first card matches the rule — the Awakenings. It needs the `First` predicate, and the
+	// rule's card predicates are read against that first card.
+	//
+	// **Added after the card's own multiplier and before the relics that price the card** *(owner's
+	// call, 2026-10-10)*: a 0.5x card and a 2x card behind a fire opener both gain the same 10, and
+	// a Club, a Swarm and the hand all multiply it. The first card gains nothing, and neither does a defense, which deals
+	// nothing for the 10 to join. Two Awakenings that both fire add. See AwakenBonus.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoAwaken
+
+	// DoCopyConsumable puts Amount weightless copies of carried consumables into the run as a fight
+	// begins — the Eternity Pearl. Each copy is of one carried entry picked at random, weightless
+	// copies included, off its own stream (`seeds.PearlCopy`). A weightless copy takes no seat in the
+	// pane and stays until it is spent or sold. See session.Session.CopyAtFightStart.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoCopyConsumable
 )
 
 // RelicVerbs is every verb in a fixed order.
@@ -570,7 +623,8 @@ func RelicVerbs() []RelicVerb {
 		DoAddHandDMG, DoAddDMGPerHeld, DoGrowPerCard, DoAddDMGPerVitae,
 		DoScaleHandDamage, DoScaleDamagePerVitae, DoDrainDamage, DoHealShare, DoScaleRolls,
 		DoAdjustRoundLimit, DoAdjustEssenceTargets, DoRaiseShield, DoMatchFoeShields,
-		DoKeepShields, DoReflectDamage, DoHealOnBlock, DoVitaeOnBlock, DoSetForm}
+		DoKeepShields, DoReflectDamage, DoHealOnBlock, DoVitaeOnBlock, DoSetForm,
+		DoPierceElement, DoSurgePerCard, DoAwaken, DoCopyConsumable}
 }
 
 func (v RelicVerb) String() string {
@@ -641,6 +695,14 @@ func (v RelicVerb) String() string {
 		return "vitae-on-block"
 	case DoSetForm:
 		return "set-form"
+	case DoPierceElement:
+		return "pierce-element"
+	case DoSurgePerCard:
+		return "surge-per-card"
+	case DoAwaken:
+		return "awaken"
+	case DoCopyConsumable:
+		return "copy-consumable"
 	default:
 		return "adjust-cost"
 	}
@@ -669,17 +731,19 @@ func verbMoment(v RelicVerb) Moment {
 		return MomentAttackLands
 	case DoHealShare, DoRaiseShield:
 		return MomentTurnStart
-	case DoGrowOnTurn, DoResetGrowth, DoGrowPerCard:
+	case DoGrowOnTurn, DoResetGrowth, DoGrowPerCard, DoSurgePerCard:
 		return MomentTurnTaken
 	case DoSetElement:
 		return MomentCardDrawn
 	case DoDemoteCard, DoSetForm:
 		return MomentCardDrawn
 	case DoAddDMG, DoAddHP, DoScaleHP, DoAddDMGPerVitae, DoScaleRolls, DoAdjustRoundLimit,
-		DoMatchFoeShields, DoKeepShields:
+		DoMatchFoeShields, DoKeepShields, DoPierceElement:
 		return MomentEquipped
-	case DoEchoAttack, DoRepeatCard, DoAddHandDMG, DoAddDMGPerHeld, DoScaleHandDamage:
+	case DoEchoAttack, DoRepeatCard, DoAddHandDMG, DoAddDMGPerHeld, DoScaleHandDamage, DoAwaken:
 		return MomentBlowFormed
+	case DoCopyConsumable:
+		return MomentFightBegun
 	case DoGrowOnWin, DoScalePropagation:
 		return MomentFightWon
 	case DoAdjustEssenceTargets:
@@ -726,6 +790,12 @@ type RelicCondition struct {
 	// refused at registration — see checkRule.
 	Lead bool
 
+	// First narrows a rule to the **turn's first card, whatever it is** — a defense included — and
+	// the rule's card predicates are then read against that card *(owner's call, 2026-10-10)*.
+	// `Lead` skips to the first attack; this does not. It is the Awakenings' predicate, and like
+	// Lead only `blow-formed` knows the turn, so it is refused anywhere else.
+	First bool
+
 	// Hands narrows a rule to blows that **satisfied** one of the named rungs of the ladder, and it
 	// is the second predicate that is not a fact about a card *(2026-09-05)*.
 	//
@@ -763,8 +833,8 @@ type RelicCondition struct {
 
 // Any reports whether this condition constrains anything at all.
 func (c RelicCondition) Any() bool {
-	return c.HasElement || c.HasForm || c.HasConcept || c.HasTier || c.Lead || c.HasHand() ||
-		c.MinForms > 0
+	return c.HasElement || c.HasForm || c.HasConcept || c.HasTier || c.Lead || c.First ||
+		c.HasHand() || c.MinForms > 0
 }
 
 // HasHand reports whether this condition names any rung at all.
@@ -920,6 +990,13 @@ func CheckRelic(key string, rules []RelicRule) error {
 			return fmt.Errorf("%s narrows a %s rule to the lead card, and only blow-formed knows which card leads",
 				key, rule.When)
 		}
+		if rule.If.First && rule.When != MomentBlowFormed {
+			return fmt.Errorf("%s narrows a %s rule to the first card, and only blow-formed knows the turn",
+				key, rule.When)
+		}
+		if rule.If.First && (rule.If.Lead || rule.If.HasHand() || rule.If.MinForms > 0) {
+			return fmt.Errorf("%s narrows a rule to the first card and to the blow, and they are different questions", key)
+		}
 		if rule.If.HasHand() && rule.When != MomentBlowFormed {
 			return fmt.Errorf("%s narrows a %s rule to a hand, and only blow-formed knows what formed",
 				key, rule.When)
@@ -951,6 +1028,17 @@ func CheckRelic(key string, rules []RelicRule) error {
 			// and the two would then differ only by how many cards the turn happened to hold.
 			if e.Do == DoGrowPerCard && !rule.If.Any() {
 				return fmt.Errorf("%s grows per card and names no card to count", key)
+			}
+			if e.Do == DoSurgePerCard && !rule.If.Any() {
+				return fmt.Errorf("%s surges per card and names no card to count", key)
+			}
+			// **The first card is what an awakening is about**, so a rule that does not name it
+			// would be adding to every card but one for no reason a player could see.
+			if e.Do == DoAwaken && !rule.If.First {
+				return fmt.Errorf("%s awakens the cards after the first and does not narrow to the first card", key)
+			}
+			if e.Do != DoAwaken && rule.If.First {
+				return fmt.Errorf("%s narrows %s to the first card, and only awaken reads it", key, e.Do)
 			}
 			if want := verbMoment(e.Do); want != rule.When {
 				return fmt.Errorf("%s does %s at %s, and %s belongs to %s",
@@ -984,6 +1072,12 @@ func checkEffect(key string, e RelicEffect) error {
 	case DoResetGrowth, DoMatchFoeShields:
 		// The verbs that name no quantity: one puts an accumulator to zero, the other says which
 		// element a shield takes.
+	case DoPierceElement:
+		// **A plain card never fizzles**, so piercing basic is a relic that does nothing — and
+		// Basic is the zero value, so this also catches an effect that forgot its element.
+		if e.Element == Basic {
+			return fmt.Errorf("%s pierces basic, and a basic card never fizzles", key)
+		}
 	case DoRaiseShield:
 		// **Bounded like a card**: one relic raising more shields than one card may would be a
 		// defend card with no cost and a bigger number.
@@ -1304,15 +1398,21 @@ func (d Duelist) CostOf(cards []Card) int {
 // **Compounding, left to right**, which is what makes two matching relics x4 rather than x2. The floor
 // is the one `Card.Damage` holds for the same reason: a card that is meant to deal nothing is not an
 // attack.
-func (d Duelist) CardDamage(c Card) int {
-	// **DUELIST, then CARD, then CARD RELICS** — and the hand and the hand's relics after all three,
-	// in the resolver. The duelist's DMG is already the turn's; the card's own multiplier and its
-	// played riders come next, on this card alone; then the relics price what the card came to. See
-	// MECHANICS.md §Damage: a hit per card, one multiplier.
+func (d Duelist) CardDamage(c Card) int { return d.cardDamageWoken(c, 0) }
+
+// cardDamageWoken is CardDamage with an Awakening's figure added to the card before its relics
+// price it — so a Swarm or a Club multiplies the 10 as it multiplies the card. See DoAwaken.
+func (d Duelist) cardDamageWoken(c Card, woke int) int {
+	// **DUELIST, then CARD, then AWAKENING, then CARD RELICS** — and the hand and the hand's relics
+	// after all of them, in the resolver. The duelist's DMG is already the turn's; the card's own
+	// multiplier and its played riders come next, on this card alone; then what the opener woke;
+	// then the relics price what the card came to. See MECHANICS.md §Damage: a hit per card, one
+	// multiplier.
 	dmg := playRidden(c.Damage(d.DMG), c.DamageOnPlay(), c.ScaleOnPlay())
 	if dmg == 0 {
 		return 0
 	}
+	dmg += woke
 	for _, e := range d.relicEffects(MomentCardDamage, c) {
 		dmg = dmg * e.DamagePct(d.Vitae) / 100
 	}
@@ -1430,6 +1530,27 @@ func ShieldsMatchFoe(worn []WornRelic) bool {
 	}
 	return false
 }
+
+// Pierces reports whether a worn set lets a card of this element land on a creature of its own
+// element rather than fizzle — the Attunements. See DoPierceElement.
+func Pierces(worn []WornRelic, e Element) bool {
+	for _, eff := range RelicEffectsAt(worn, MomentEquipped, Card{}) {
+		if eff.Do == DoPierceElement && eff.Element == e {
+			return true
+		}
+	}
+	return false
+}
+
+// CopiesAtFightStart is how many weightless copies a worn set makes as a fight begins — the
+// Eternity Pearl. Copies from two relics add.
+func CopiesAtFightStart(worn []WornRelic) int {
+	return sumAmounts(worn, MomentFightBegun, DoCopyConsumable)
+}
+
+// CopyingSeats is which worn seats copy a consumable as a fight begins — the relics a screen toasts
+// when the copy is made.
+func CopyingSeats(worn []WornRelic) []bool { return seatsDoing(worn, DoCopyConsumable) }
 
 // KeptShields is how many unspent shields a worn set keeps past the moment they would lapse — the
 // Tower Shield. Zero for nearly every run, which is every shield lapsing as it always has.
@@ -1733,6 +1854,28 @@ func distinctForms(cards []Card) int {
 	return n
 }
 
+// AwakenBonus is what every attack after the turn's first card gains, given that first card, and
+// which worn seats woke. **The rule's card predicates are read against the first card** — a fire
+// Awakening wakes on a fire opener whatever follows it. Two that wake add. See DoAwaken.
+func AwakenBonus(worn []WornRelic, first Card) (int, []bool) {
+	seats := make([]bool, len(worn))
+	total := 0
+	for seat, w := range worn {
+		for _, rule := range RelicOf(w.Relic).Rules {
+			if rule.When != MomentBlowFormed || !rule.If.First || !rule.If.Matches(first) {
+				continue
+			}
+			for _, e := range rule.Then {
+				if e.Do == DoAwaken {
+					total += e.Amount
+					seats[seat] = true
+				}
+			}
+		}
+	}
+	return total, seats
+}
+
 func HandBonus(worn []WornRelic, satisfied []HandID) (int, []bool) {
 	seats := make([]bool, len(worn))
 	total := 0
@@ -1964,6 +2107,10 @@ func (d Duelist) TurnTaken(cards []Card) Duelist {
 					step += e.Amount
 				case DoGrowPerCard:
 					step += e.Amount * countMatches(rule.If, cards)
+				case DoSurgePerCard:
+					// **Banked on the duelist, not on the relic**: it is the matched block's surge,
+					// spent by the top of the next turn, and nothing about it grows.
+					d.Surge += e.Amount * countMatches(rule.If, cards)
 				case DoResetGrowth:
 					reset = true
 				}

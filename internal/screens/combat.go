@@ -357,6 +357,11 @@ type CombatScene struct {
 	// stoneflight.go, and MECHANICS.md for what a rune is.
 	stones []stoneFlight
 
+	// uses are the consumables being used up in the middle of the table, and spendSeat the pane seat
+	// the one being spent stood in, read before the pane closes over it. See combat_consume.go.
+	uses      []combatUse
+	spendSeat int
+
 	// ledgerDealt is what the player's blows in the round being played back came to, and
 	// ledgerWritten says whether that round has been handed to the run's account yet.
 	//
@@ -609,6 +614,14 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	s.luckRNG = rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.LuckRoll, fightIndex(gs.Run))))
 	s.resetDeck(gs.Run)
 
+	// **The `fight-begun` moment**: an Eternity Pearl copies something carried, weightless, before
+	// the first hand. Off its own stream, and once per fight however often this is re-entered.
+	var copied bool
+	if gs.Run != nil {
+		copied = len(gs.Run.CopyAtFightStart(rand.New(rand.NewSource(
+			seeds.ForFight(gs.RunSeed, seeds.PearlCopy, fightIndex(gs.Run)))))) > 0
+	}
+
 	// **After resetDeck**, which is what hands the scene this run: a tonic can widen the round.
 	s.discardsLeft = s.roundDiscards()
 
@@ -618,6 +631,16 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	s.drag = ui.CardDrag{}
 	s.band.init()
 	s.relicShake, s.cardShake = nil, nil
+
+	// **A pearl that copied something toasts as the screen opens** *(owner's call)*, so the copy
+	// floating in the pane has a relic that said it made it.
+	if copied {
+		for seat, did := range combat.CopyingSeats(s.fighter.WornRelics()) {
+			if did {
+				s.shakeRelicAt(seat)
+			}
+		}
+	}
 
 	// A fresh shuffled deck for the opponent too, dealt before it plans, off its own stream.
 	s.enemyPile = decks.NewEnemyPile(s.enemy.Record, s.enemyElement, enemySeed, decks.EnemyHandSize)
@@ -717,6 +740,8 @@ func (s *CombatScene) placeWidgets(gs *state.GlobalState) {
 	s.showDeck = false
 	s.hands.InitInColumn(handsButtonPlace)
 	s.stones = nil
+	s.uses = nil
+	s.spendSeat = -1
 	s.tip = models.Tooltip{DwellTicks: ui.TipDwell()}
 }
 
@@ -915,6 +940,7 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 
 	s.updateBand(gs)
 	s.updateStoneFlights()
+	s.updateUses()
 
 	// Tell the frame a dialog is up, so the game's own chrome stands down rather than sitting
 	// live on top of it. Written unconditionally from what the screen already knows, never
@@ -1311,6 +1337,7 @@ func (s *CombatScene) startRound() {
 	// the hand by the flights seatPlayedCards raises. Nothing here decides anything — the round
 	// above is already resolved. See combat_table.go.
 	s.Theater.firingSeats, s.Theater.enemyFiringSeats = nil, nil
+	s.closeWraps()
 	s.Theater.mathBox.Clear()
 	// **What the dialog showed was a position in last round's log**, and this round's log starts
 	// again from nothing.
@@ -1410,6 +1437,8 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 		}
 
 		s.Theater.mathBox.Tick()
+		// A total that has started landing gets its particles. See combat_particles.go.
+		s.raiseWraps()
 
 		// **The lines need no card raised** *(owner's call)*. The blow's cards are lifted by
 		// noteHand on the `KindHand` beat, which is the announcement — what the hand is made of,
@@ -1495,6 +1524,7 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	// **The finished lines stay on screen until the event after them is reached**, so a FIZZLE or a
 	// BLOCKED is still being read while the flights that did land finish.
 	if s.Theater.mathBox.active && !s.Theater.mathBox.Running() {
+		s.closeWraps()
 		s.Theater.mathBox.Clear()
 		// **The turn-length raise comes down with the lines that used it.** See signalRaise.
 		s.Theater.clearRaise()
@@ -1827,6 +1857,8 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// screen for the few seconds it is up, and it is deliberately over both rows of cards: the
 	// shout is written across the hand row, which is inert while it is up, and every hit's line
 	// under its card. See combat_mathbox.go.
+	// **The wraps under the lines**, so the total reads over its own particles.
+	s.drawParticles(gs, screen, false)
 	s.drawHandMath(gs, screen)
 
 	// **The planned hand's name, in the middle of the half of the table its cards are about to
@@ -1836,7 +1868,9 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// **The damage figures, over the lines they came out of and the card they are flying into.**
 	// They are drawn after the dialog because a figure leaving a line has to be on top of it —
-	// underneath, the first frames of the flight would be hidden by the number it left.
+	// underneath, the first frames of the flight would be hidden by the number it left. **Their trails
+	// go under them**, for the wraps' reason.
+	s.drawParticles(gs, screen, true)
 	s.drawHits(gs, screen)
 
 	// **After the hits, because a drain is a share of one.** A drain's event is reached after the
@@ -1868,6 +1902,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// The sack, beside the hands panel and under the other two, for the same reason: its own
 	// draw puts its button back on top of its own panel.
+	s.drawUses(gs, screen)
 	s.drawStoneFlights(gs, screen)
 
 	// The overlay covers everything, card in flight included, and the X goes on top of it. The

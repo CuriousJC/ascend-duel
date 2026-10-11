@@ -459,19 +459,17 @@ func (s *Session) Stow(key string) bool {
 	if _, ok := essences[key]; !ok {
 		return false
 	}
-	s.satchel = append(s.satchel, key)
+	s.satchel.add(key, false)
 	return true
 }
 
 // Stowed is every essence the run is carrying, by record key, in the order they were acquired.
 func (s *Session) Stowed() []string {
-	out := make([]string, len(s.satchel))
-	copy(out, s.satchel)
-	return out
+	return s.satchel.list()
 }
 
 // StowCount is how many essences are in the satchel.
-func (s *Session) StowCount() int { return len(s.satchel) }
+func (s *Session) StowCount() int { return s.satchel.len() }
 
 // DropStowed takes one out of the satchel by position, and reports whether it was there.
 //
@@ -483,11 +481,7 @@ func (s *Session) StowCount() int { return len(s.satchel) }
 // spend is Drop plus ApplyRune: the card is picked before the essence is clicked and the picker can
 // be backed out of, so dropping first would charge for a choice that was never made.
 func (s *Session) DropStowed(i int) bool {
-	if i < 0 || i >= len(s.satchel) {
-		return false
-	}
-	s.satchel = append(s.satchel[:i], s.satchel[i+1:]...)
-	return true
+	return s.satchel.drop(i)
 }
 
 // CanApplyTo reports whether this essence can be spent on the card with this identity.

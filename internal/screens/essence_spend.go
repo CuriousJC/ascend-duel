@@ -184,6 +184,46 @@ func drawLandings(gs *state.GlobalState, screen *ebiten.Image, lands []essenceLa
 	}
 }
 
+// essenceMotes is what an essence's change travels as: the new element's own sparks for an essence
+// that recolors, and the rune motes for everything else, which changes no color.
+func essenceMotes(w session.Essence) ui.Emitter {
+	if w.Target == session.TargetElement {
+		return ui.Emitter{Element: ui.ArtFor(w.Element), Set: ui.ParticleSparks, Rate: 1.2, Size: 22}
+	}
+	return ui.Emitter{Element: cards.Arcane, Rate: 1.2, Size: 22,
+		Sprites: ui.FirstDrawn(ui.RuneMoteSprites, []string{"spark-lightning-1", "spark-lightning-2"})}
+}
+
+// essenceInPlace is an essence used where it stands — `seat`, its own card's seat — sending its
+// change to every card it was aimed at, which changes where it stands too. **Nothing flies to the
+// middle**: the essence comes apart in light and the deck's cards change in their own row.
+//
+// A copy has no old face to change, so it arrives out of nothing just above the card it copies.
+func essenceInPlace(gs *state.GlobalState, w session.Essence, seat image.Rectangle,
+	lands []essenceLanding, copied bool) ui.Consume {
+
+	to := make([]image.Rectangle, len(lands))
+	changes := make([]ui.Morph, len(lands))
+	for i, l := range lands {
+		r := image.Rect(l.from.Min.X, l.from.Min.Y, l.from.Min.X+cardWidth, l.from.Min.Y+cardHeight)
+		if copied {
+			r = r.Add(image.Pt(cardWidth/3, -cardHeight/3))
+		}
+		to[i], changes[i] = r, l.change
+	}
+	return ui.NewConsume(ui.Consume{
+		Exit:    ui.ExitAbsorb,
+		Face:    ui.EssenceSpec(gs, w, true),
+		Style:   cards.EssenceStyle,
+		From:    seat,
+		Stage:   seat,
+		To:      to,
+		Changes: changes,
+		Motes:   essenceMotes(w),
+		Seed:    cards.MarkSeed(w.Name),
+	})
+}
+
 // earnLadderWraps raises the ladder-wrapped moment for every landing that walked a card off one end
 // of its ladder and onto the other. See achieve.LadderWrapped.
 func earnLadderWraps(gs *state.GlobalState, lands []essenceLanding) {

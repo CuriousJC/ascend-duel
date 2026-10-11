@@ -2,8 +2,10 @@ package screens
 
 import (
 	"image"
+	"math/rand"
 	"testing"
 
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -19,7 +21,7 @@ func TestTheShelfHoldsThreeRelicsTheRunIsNotWearing(t *testing.T) {
 	// would refuse the click anyway.
 	gs := testRun()
 
-	shelf := dealShelf(gs, shopRNG(gs, seeds.ShopStock))
+	shelf := dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil)
 	if len(shelf) != shelfSize {
 		t.Fatalf("the shelf holds %d, want %d", len(shelf), shelfSize)
 	}
@@ -65,10 +67,10 @@ func TestALaterFightIsADifferentShop(t *testing.T) {
 	// but a shelf identical across a whole run would mean the fight index never reached the seed.
 	gs := testRun()
 
-	first := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock)))
+	first := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil))
 	for i := 0; i < 6; i++ {
 		gs.Run.WonFight(0, 0)
-		if !sameKeys(first, shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock)))) {
+		if !sameKeys(first, shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil))) {
 			return
 		}
 	}
@@ -101,7 +103,7 @@ func TestTheShelfIsCutToThreeAndNotPaddedToIt(t *testing.T) {
 			len(session.Relics()), combat.DefaultRelicSlots)
 	}
 
-	if got := dealShelf(&state.GlobalState{}, nil); got != nil {
+	if got := dealShelf(&state.GlobalState{}, nil, nil); got != nil {
 		t.Errorf("a game with no run was offered %v", shelfKeys(got))
 	}
 }
@@ -338,7 +340,7 @@ func TestTheTabsUnderAnArmedStoneStayInsideThePanel(t *testing.T) {
 // way Init does. **The stream is the scene's now** — a reroll advances its cursor — so a test that
 // wants one shelf has to open one, exactly as the screen does.
 func dealShelfFor(gs *state.GlobalState) []shelfItem {
-	return dealShelf(gs, shopRNG(gs, seeds.ShopStock))
+	return dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil)
 }
 
 // The pile stands to the left of the control column and clear of the shelf above it. **The bug it
@@ -367,21 +369,17 @@ func TestTheShopPileStandsClearOfTheColumnAndTheShelf(t *testing.T) {
 	}
 }
 
-// TestARerollRefillsABoughtSeat. **A reroll gives the shelf back whole** *(owner's call,
-// 2026-09-08)*, which is the reversal of the older rule that a spent seat stayed spent for the
-// visit. A player who bought early otherwise had less shelf to reroll than one who had not, while
-// paying the same escalating price for it.
-//
-// It is two-sided: the seat comes back, and it does not come back holding the relic that was just
-// bought — dealShelf draws from what the run is not wearing, and the check is what says so.
-func TestARerollRefillsABoughtSeat(t *testing.T) {
+// TestARerollLeavesABoughtSeatSpent. **A reroll never adds relics to the shelf** *(owner's call)*:
+// a bought seat stays spent, the seats still standing are redrawn, and none of them comes back
+// holding the relic that was just bought. A shelf bought out has nothing to reroll.
+func TestARerollLeavesABoughtSeatSpent(t *testing.T) {
 	gs := testRun()
 	// The purchase is the setup, not the subject, so the purse is filled rather than left at
 	// what a run opens with: which tier lands in seat 0 is a function of the catalog, and a
 	// rare there made this fail on affordability while saying nothing about rerolling.
 	gs.Run.AddVitae(20)
 	s := &ShopScene{stockRNG: shopRNG(gs, seeds.ShopStock)}
-	s.shelf = dealShelf(gs, s.stockRNG)
+	s.shelf = dealShelf(gs, s.stockRNG, nil)
 	if len(s.shelf) == 0 {
 		t.Fatal("the shop dealt no shelf at all")
 	}
@@ -398,12 +396,50 @@ func TestARerollRefillsABoughtSeat(t *testing.T) {
 
 	s.rerollRelics(gs)
 
-	for i, item := range s.shelf {
+	if !s.shelf[0].bought {
+		t.Error("the bought seat came back after a reroll")
+	}
+	for i, item := range s.shelf[1:] {
 		if item.bought {
-			t.Errorf("seat %d is still spent after a reroll", i)
+			t.Errorf("seat %d was standing and is empty after a reroll", i+1)
 		}
 		if item.key == taken {
-			t.Errorf("seat %d offers %s back, and the run is wearing it", i, taken)
+			t.Errorf("seat %d offers %s back, and the run is wearing it", i+1, taken)
 		}
+	}
+
+	for i := range s.shelf {
+		s.shelf[i].bought = true
+	}
+	if s.paneHasSomethingToReroll(gs, shopPaneRelics) {
+		t.Error("a shelf bought out says it has something to reroll")
+	}
+}
+
+// zeroSource is a rand.Source that always answers zero, so every one-in-N roll off it hits.
+type zeroSource struct{}
+
+func (zeroSource) Int63() int64 { return 0 }
+func (zeroSource) Seed(int64)   {}
+
+// TestAMythicIsNeverOnTheTickets. Without its own roll a mythic never reaches the shelf, however
+// many shelves are dealt; a roll that hits puts one in a seat.
+func TestAMythicIsNeverOnTheTickets(t *testing.T) {
+	gs := testRun()
+	stock := shopRNG(gs, seeds.ShopStock)
+	for i := 0; i < 2000; i++ {
+		for _, item := range dealShelf(gs, stock, nil) {
+			if session.RelicRarity(item.key) == data.Mythic {
+				t.Fatalf("%s was drawn on tickets", item.key)
+			}
+		}
+	}
+
+	found := false
+	for _, item := range dealShelf(gs, shopRNG(gs, seeds.ShopStock), rand.New(zeroSource{})) {
+		found = found || session.RelicRarity(item.key) == data.Mythic
+	}
+	if !found {
+		t.Error("a mythic roll that hit put no mythic on the shelf")
 	}
 }

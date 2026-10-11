@@ -64,7 +64,7 @@ const (
 	animNoteSize = systems.TextSmall
 	animWhatSize = systems.TextSmall
 
-	animRowHeight = 34
+	animRowHeight = 31
 )
 
 // animHoldTicks is the still beat between one loop and the next. **A gesture read back to back with
@@ -121,6 +121,10 @@ type AnimationsScene struct {
 	// driven by a progress figure, because a morph owns its own clock â€” asking it to be a pure
 	// function of p would be a second implementation of the thing being reviewed.
 	m ui.Morph
+
+	// use is the consumable the four `use:` entries run, rebuilt when the loop restarts for the
+	// morph's reason: a Consume owns its own clock.
+	use ui.Consume
 }
 
 // animGestures is the vocabulary, in the order a card meets them: arriving, changing, acting,
@@ -282,6 +286,97 @@ var animGestures = []animGesture{
 			systems.DrawSwirl(screen, swirl, portalSwirl(gs))
 		},
 	},
+	{
+		name:  "weightless",
+		where: "drawWeightlessComparison",
+		what:  "Three ways to say a relic takes no slot, on three different relics, a plain ring first.",
+		ticks: func() int { return ui.Beat(8, 1) },
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawWeightlessComparison(gs, screen, at.Min)
+		},
+	},
+	{
+		name:  "use: essence",
+		where: "ui.Consume, ExitAbsorb",
+		what:  "Lifted to the stage, absorbed in rising light; its motes change the card it was aimed at.",
+		ticks: func() int { return animConsumeTicks(ui.ExitAbsorb, 1) },
+		draw:  drawAnimConsume,
+	},
+	{
+		name:  "use: rune",
+		where: "ui.Consume, ExitSigil",
+		what:  "Lifted, it rattles, a sigil turns out from under it, and its motes change both targets.",
+		ticks: func() int { return animConsumeTicks(ui.ExitSigil, 2) },
+		draw:  drawAnimConsume,
+	},
+	{
+		name:  "use: stone",
+		where: "ui.Consume, ExitCrumble",
+		what:  "Lifted, it trembles and crumbles into its own pieces; its motes go to the hand ladder.",
+		ticks: func() int { return animConsumeTicks(ui.ExitCrumble, 0) },
+		draw:  drawAnimConsume,
+	},
+	{
+		name:  "use: cantrip",
+		where: "ui.Consume, ExitBurn",
+		what:  "Lifted, it burns from the bottom up; its embers carry its relic into the band.",
+		ticks: func() int { return animConsumeTicks(ui.ExitBurn, 1) },
+		draw:  drawAnimConsume,
+	},
+	{
+		name:  "wrap: elemental",
+		where: "ui.DrawParticleWrap, MotionElemental",
+		what:  "Particles round a resting total, each element its own physics. Rows: shards, sparks, mixed.",
+		ticks: func() int { return ui.Beat(4, 1) },
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawWrapGrid(gs, screen, at.Min, ui.MotionElemental, false)
+		},
+	},
+	{
+		name:  "wrap: orbit",
+		where: "ui.DrawParticleWrap, MotionOrbit",
+		what:  "The same, but every element circles its total: only the sprite and the color differ.",
+		ticks: func() int { return ui.Beat(4, 1) },
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawWrapGrid(gs, screen, at.Min, ui.MotionOrbit, false)
+		},
+	},
+	{
+		name:  "wrap: glow",
+		where: "ui.DrawParticleWrap, Emitter.Glow",
+		what:  "Elemental physics with each sprite drawn a second time additively, to brighten in its own color.",
+		ticks: func() int { return ui.Beat(4, 1) },
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawWrapGrid(gs, screen, at.Min, ui.MotionElemental, true)
+		},
+	},
+	{
+		name:  "trail: shards",
+		where: "ui.DrawParticleTrail, ParticleShards",
+		what:  "The hit's figure flying into a card, trailing pieces of its element.",
+		ticks: trailGalleryTicks,
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawTrailRows(gs, screen, at.Min, ui.ParticleShards, s.t.Age)
+		},
+	},
+	{
+		name:  "trail: sparks",
+		where: "ui.DrawParticleTrail, ParticleSparks",
+		what:  "The hit's figure flying into a card, trailing sparks of its element's color.",
+		ticks: trailGalleryTicks,
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawTrailRows(gs, screen, at.Min, ui.ParticleSparks, s.t.Age)
+		},
+	},
+	{
+		name:  "trail: mixed",
+		where: "ui.DrawParticleTrail, ParticleMixed",
+		what:  "The hit's figure flying into a card, trailing pieces and sparks together.",
+		ticks: trailGalleryTicks,
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawTrailRows(gs, screen, at.Min, ui.ParticleMixed, s.t.Age)
+		},
+	},
 }
 
 // The two cards the page is drawn with. **Two rather than one**, because a morph needs a card to
@@ -380,6 +475,7 @@ func (s *AnimationsScene) raiseMorph(gs *state.GlobalState) {
 	default:
 		s.m = ui.Morph{}
 	}
+	s.use = animConsume(gs, animGestures[s.at].name)
 }
 
 func (s *AnimationsScene) Update(gs *state.GlobalState) error {
@@ -391,6 +487,7 @@ func (s *AnimationsScene) Update(gs *state.GlobalState) error {
 
 	s.t.Tick()
 	s.m.Tick()
+	s.use.Tick()
 	if s.t.Done() {
 		s.pick(gs, s.at)
 	}

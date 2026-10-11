@@ -3,9 +3,10 @@ package data
 // Rarity is how scarce a relic is: one word carrying both how often the shop offers it and what it
 // costs.
 //
-// **Three tiers and nothing between them** *(owner's call, 2026-08-22)*. A per-ring price let the
-// catalog drift into seventeen numbers that could only be judged one at a time; a tier can be
-// read against every other relic at a glance, and rebalancing a relic is moving it rather than
+// **Three priced tiers and nothing between them** *(owner's call, 2026-08-22)*, plus the mythic,
+// which is not on the ticket curve at all — see MythicOdds. A per-ring price let the catalog drift
+// into seventeen numbers that could only be judged one at a time; a tier can be read against every
+// other relic at a glance, and rebalancing a relic is moving it rather than
 // picking a new figure. The cost of that is real and worth saying: two relics in the same tier are
 // the same price even when one is plainly stronger, and the answer is the tier, not a fourth.
 //
@@ -16,12 +17,13 @@ package data
 // hand-written prices used to cover, now with the whole catalog landing on three of its rungs.
 type Rarity string
 
-// The three tiers. **Strings rather than an enum**, because this one is written in a data file and
+// The tiers. **Strings rather than an enum**, because this one is written in a data file and
 // an ordinal in a file is the hazard every ID in this project is careful to avoid.
 const (
 	Common   Rarity = "common"
 	Uncommon Rarity = "uncommon"
 	Rare     Rarity = "rare"
+	Mythic   Rarity = "mythic"
 )
 
 // rarityTiers is the whole table: what each tier costs and how heavily it is drawn.
@@ -37,9 +39,18 @@ var rarityTiers = map[Rarity]struct {
 	Common:   {price: 3, sell: 1, weight: 10},
 	Uncommon: {price: 5, sell: 2, weight: 4},
 	Rare:     {price: 7, sell: 3, weight: 1},
+	Mythic:   {price: 10, sell: 4, weight: 0},
 }
 
-// Valid reports whether this is one of the three tiers.
+// MythicOdds is the chance, one in this many, that a shelf seat holds a mythic relic.
+//
+// **A mythic is not drawn on tickets.** Its weight is zero, so the ordinary draw never reaches one,
+// and each seat rolls for a mythic on its own stream before it draws. A ticket share would be a
+// fraction of whatever the rest of the catalog weighs, so authoring a common would move how often a
+// mythic turns up; a fixed one-in-a-thousand does not move with anything.
+const MythicOdds = 1000
+
+// Valid reports whether this is one of the tiers.
 func (r Rarity) Valid() bool {
 	_, ok := rarityTiers[r]
 	return ok
@@ -62,9 +73,9 @@ func (r Rarity) Sell() int { return rarityTiers[r].sell }
 
 // Weight is how many tickets a relic of this tier holds in the shelf draw. Relative, not a
 // percentage: a common relic is ten times as likely to be drawn as a rare one, whatever the
-// catalog's mix happens to be.
+// catalog's mix happens to be. **A mythic holds none** — see MythicOdds.
 func (r Rarity) Weight() int { return rarityTiers[r].weight }
 
-// Rarities is the three tiers, cheapest first. For a tool or a test that wants to walk them
+// Rarities is every tier, cheapest first. For a tool or a test that wants to walk them
 // without writing the list down a second time.
-func Rarities() []Rarity { return []Rarity{Common, Uncommon, Rare} }
+func Rarities() []Rarity { return []Rarity{Common, Uncommon, Rare, Mythic} }

@@ -6,7 +6,7 @@
     "Art": "flip-lightning-to-ice",
     "Draw": "ball lightning sphere that is encapsulated in ice",
     "Text": "Every lightning card is dealt as an ice card.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -22,7 +22,7 @@
     "Art": "flip-earth-to-ice",
     "Draw": "a rock sphere with ice covering it",
     "Text": "Every earth card is dealt as an ice card.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -38,7 +38,7 @@
     "Art": "flip-fire-to-ice",
     "Draw": "ball of fire sphere that is encapsulated in ice",
     "Text": "Every fire card is dealt as an ice card.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -54,7 +54,7 @@
     "Art": "flip-ice-to-fire",
     "Draw": "ice sphere that is coveredin flames",
     "Text": "Every ice card is dealt as a fire card.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -70,7 +70,7 @@
     "Art": "flip-lightning-to-fire",
     "Draw": "ball lightning sphere that is covered in fire",
     "Text": "Every lightning card is dealt as a fire card.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -86,7 +86,7 @@
     "Art": "flip-earth-to-fire",
     "Draw": "a rock sphere with molten lava covering it",
     "Text": "Every earth card is dealt as a fire card.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -102,7 +102,7 @@
     "Art": "flip-ice-to-lightning",
     "Draw": "ice sphere that is encapsulated in yellow electrical sparks",
     "Text": "Every ice card is dealt as a lightning card.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -118,7 +118,7 @@
     "Art": "flip-fire-to-lightning",
     "Draw": "ball of fire sphere that is encapsulated in yellow electrical sparks",
     "Text": "Every fire card is dealt as a lightning card.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -134,7 +134,7 @@
     "Art": "flip-earth-to-lightning",
     "Draw": "a rock sphere with lightning surrounding it",
     "Text": "Every earth card is dealt as a lightning card.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -150,7 +150,7 @@
     "Art": "flip-ice-to-earth",
     "Draw": "ice sphere that has been dipped in mud",
     "Text": "Every ice card is dealt as an earth card.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -166,7 +166,7 @@
     "Art": "flip-fire-to-earth",
     "Draw": "ball of fire sphere that has been dipped in mud",
     "Text": "Every fire card is dealt as an earth card.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -182,7 +182,7 @@
     "Art": "flip-lightning-to-earth",
     "Draw": "ball lightning sphere that has been dipped in mud",
     "Text": "Every lightning card is dealt as an earth card.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -198,7 +198,7 @@
     "Art": "flip-fire-to-arcane",
     "Draw": "ball of fire sphere that is encapsulated in purple arcane sparks",
     "Text": "Every fire card is dealt as an arcane card.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -214,7 +214,7 @@
     "Art": "flip-ice-to-arcane",
     "Draw": "ice sphere that is encapsulated in purple arcane sparks",
     "Text": "Every ice card is dealt as an arcane card.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -230,7 +230,7 @@
     "Art": "flip-lightning-to-arcane",
     "Draw": "ball lightning sphere that is encapsulated in purple arcane sparks",
     "Text": "Every lightning card is dealt as an arcane card.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -246,7 +246,7 @@
     "Art": "flip-earth-to-arcane",
     "Draw": "a rock sphere with glowing purple ooze covering it",
     "Text": "Every earth card is dealt as an arcane card.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -262,7 +262,7 @@
     "Art": "flip-arcane-to-fire",
     "Draw": "a purple sphere that is burning with a red flame",
     "Text": "Every arcane card is dealt as a fire card.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -278,7 +278,7 @@
     "Art": "flip-arcane-to-ice",
     "Draw": "a purple sphere covered in ice",
     "Text": "Every arcane card is dealt as an ice card.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -294,7 +294,7 @@
     "Art": "flip-arcane-to-lightning",
     "Draw": "a purple sphere with yellow lightning crackling around it",
     "Text": "Every arcane card is dealt as a lightning card.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -310,7 +310,7 @@
     "Art": "flip-arcane-to-earth",
     "Draw": "a purple sphere dipped into muddy earth",
     "Text": "Every arcane card is dealt as a earth card.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -326,7 +326,7 @@
     "Art": "flip-slash-to-crush",
     "Draw": "a steel orb bristling with sharp blades, every blade wrapped and bound tight in heavy iron chains so that none of the edges are exposed",
     "Text": "Every slash card is dealt as a crush card of the same cost.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -342,7 +342,7 @@
     "Art": "flip-stab-to-crush",
     "Draw": "a steel orb whose spikes have all been sawed off into flat stumps, leaving a rough, lumpy, more nearly round ball",
     "Text": "Every stab card is dealt as a crush card of the same cost.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -358,7 +358,7 @@
     "Art": "flip-crush-to-stab",
     "Draw": "a heavy steel ball with sharp points welded all over its surface, the rough weld seams visible at the base of each point",
     "Text": "Every crush card is dealt as a stab card of the same cost.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -374,7 +374,7 @@
     "Art": "flip-slash-to-stab",
     "Draw": "an orb made of sharp blades whose edges have been carved and chipped away into narrow needle points",
     "Text": "Every slash card is dealt as a stab card of the same cost.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -390,7 +390,7 @@
     "Art": "flip-stab-to-slash",
     "Draw": "a steel ball covered in welded points, with extra strips of metal welded between neighboring points so they join into long cutting edges",
     "Text": "Every stab card is dealt as a slash card of the same cost.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -406,7 +406,7 @@
     "Art": "flip-crush-to-slash",
     "Draw": "a solid steel orb with razor blades embedded deep in its surface, their sharp edges jutting out all around it",
     "Text": "Every crush card is dealt as a slash card of the same cost.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-drawn",
@@ -964,7 +964,7 @@
     "RelicRecord": "repeat-element-four",
     "Name": "Twisted Prism",
     "Family": "Elemental repeats",
-    "Art": "",
+    "Art": "repeat-element-four",
     "Draw": "a double ring, a single band wrapped around into a circle twice, made of copper with strands of rainbow metal twisted through it",
     "Text": "Every card in an Elemental Four of a Kind lands twice, both at full DMG.",
     "Rarity": "uncommon",
@@ -981,7 +981,7 @@
     "RelicRecord": "repeat-element-five",
     "Name": "The Rainbow Knot",
     "Family": "Elemental repeats",
-    "Art": "",
+    "Art": "repeat-element-five",
     "Draw": "an amulet, not a ring: a tangled knot of rainbow metal twisted into itself in an organic knot shape, hung on a platinum chain",
     "Text": "Every card in an Elemental Five of a Kind lands twice, both at full DMG.",
     "Rarity": "uncommon",
@@ -1549,7 +1549,7 @@
     "RelicRecord": "discount-slash",
     "Name": "Whetted",
     "Family": "Form discounts",
-    "Art": "",
+    "Art": "discount-slash",
     "Draw": "top of a steel robe from the chest up with a hood",
     "Text": "Slash cards cost 1 AP less.",
     "Rarity": "rare",
@@ -2154,6 +2154,280 @@
       {
         "When": "turn-start",
         "Then": [{ "Do": "raise-shield", "Element": "ice", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "attune-fire",
+    "Name": "Fire Attunement",
+    "Family": "Elemental attunements",
+    "Art": "attune-fire",
+    "Draw": "a coiled copper chain with sparks of orange vapor wrapping around the chain",
+    "Text": "Fire cards land on fire creatures instead of fizzling.",
+    "Rarity": "uncommon",
+    "Unlock": "fire-attunement",
+    "Rules": [
+      {
+        "When": "equipped",
+        "Then": [{ "Do": "pierce-element", "Element": "fire" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "attune-ice",
+    "Name": "Ice Attunement",
+    "Family": "Elemental attunements",
+    "Art": "attune-ice",
+    "Draw": "a coiled copper chain with sparks of blue vapor wrapping around the chain",
+    "Text": "Ice cards land on ice creatures instead of fizzling.",
+    "Rarity": "uncommon",
+    "Unlock": "ice-attunement",
+    "Rules": [
+      {
+        "When": "equipped",
+        "Then": [{ "Do": "pierce-element", "Element": "ice" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "attune-lightning",
+    "Name": "Lightning Attunement",
+    "Family": "Elemental attunements",
+    "Art": "attune-lightning",
+    "Draw": "a coiled copper chain with sparks of yellow vapor wrapping around the chain",
+    "Text": "Lightning cards land on lightning creatures instead of fizzling.",
+    "Rarity": "uncommon",
+    "Unlock": "lightning-attunement",
+    "Rules": [
+      {
+        "When": "equipped",
+        "Then": [{ "Do": "pierce-element", "Element": "lightning" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "attune-earth",
+    "Name": "Earth Attunement",
+    "Family": "Elemental attunements",
+    "Art": "attune-earth",
+    "Draw": "a coiled copper chain with sparks of green vapor wrapping around the chain",
+    "Text": "Earth cards land on earth creatures instead of fizzling.",
+    "Rarity": "uncommon",
+    "Unlock": "earth-attunement",
+    "Rules": [
+      {
+        "When": "equipped",
+        "Then": [{ "Do": "pierce-element", "Element": "earth" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "attune-arcane",
+    "Name": "Arcane Attunement",
+    "Family": "Elemental attunements",
+    "Art": "attune-arcane",
+    "Draw": "a coiled copper chain with sparks of purple vapor wrapping around the chain",
+    "Text": "Arcane cards land on arcane creatures instead of fizzling.",
+    "Rarity": "uncommon",
+    "Unlock": "arcane-attunement",
+    "Rules": [
+      {
+        "When": "equipped",
+        "Then": [{ "Do": "pierce-element", "Element": "arcane" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "attune-stab",
+    "Name": "Stab Attunement",
+    "Family": "Form attunements",
+    "Art": "attune-stab",
+    "Draw": "a coiled ivory chain with rainbow colored vapor wrapped around it",
+    "Text": "Every stabbing card you play banks +1 AP for your next turn.",
+    "Rarity": "uncommon",
+    "Unlock": "stab-attunement",
+    "Rules": [
+      {
+        "When": "turn-taken",
+        "If": { "Form": "stab" },
+        "Then": [{ "Do": "surge-per-card", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "attune-slash",
+    "Name": "Slash Attunement",
+    "Family": "Form attunements",
+    "Art": "attune-slash",
+    "Draw": "a coiled steel chain with rainbow colored vapor wrapped around it",
+    "Text": "Every slashing card you play banks +1 AP for your next turn.",
+    "Rarity": "uncommon",
+    "Unlock": "slash-attunement",
+    "Rules": [
+      {
+        "When": "turn-taken",
+        "If": { "Form": "slash" },
+        "Then": [{ "Do": "surge-per-card", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "attune-crush",
+    "Name": "Crush Attunement",
+    "Family": "Form attunements",
+    "Art": "attune-crush",
+    "Draw": "a coiled granite chain with rainbow colored vapor wrapped around it",
+    "Text": "Every crushing card you play banks +1 AP for your next turn.",
+    "Rarity": "uncommon",
+    "Unlock": "crush-attunement",
+    "Rules": [
+      {
+        "When": "turn-taken",
+        "If": { "Form": "crush" },
+        "Then": [{ "Do": "surge-per-card", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "awaken-fire",
+    "Name": "Awakening Flame",
+    "Family": "Elemental awakenings",
+    "Art": "awaken-fire",
+    "Draw": "a lapis chain with a bone carved eye pendant, swirling with orange fire swirls",
+    "Text": "If your first card is a fire card, every attack after it deals +10 damage.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "First": true, "Element": "fire" },
+        "Then": [{ "Do": "awaken", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "awaken-ice",
+    "Name": "Awakening Frost",
+    "Family": "Elemental awakenings",
+    "Art": "awaken-ice",
+    "Draw": "a lapis chain with a bone carved eye pendant, swirling with blue ice swirls",
+    "Text": "If your first card is an ice card, every attack after it deals +10 damage.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "First": true, "Element": "ice" },
+        "Then": [{ "Do": "awaken", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "awaken-lightning",
+    "Name": "Awakening Storm",
+    "Family": "Elemental awakenings",
+    "Art": "awaken-lightning",
+    "Draw": "a lapis chain with a bone carved eye pendant, swirling with yellow lightning swirls",
+    "Text": "If your first card is a lightning card, every attack after it deals +10 damage.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "First": true, "Element": "lightning" },
+        "Then": [{ "Do": "awaken", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "awaken-earth",
+    "Name": "Awakening Stone",
+    "Family": "Elemental awakenings",
+    "Art": "awaken-earth",
+    "Draw": "a lapis chain with a bone carved eye pendant, swirling with green earth swirls",
+    "Text": "If your first card is an earth card, every attack after it deals +10 damage.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "First": true, "Element": "earth" },
+        "Then": [{ "Do": "awaken", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "awaken-arcane",
+    "Name": "Awakening Arcana",
+    "Family": "Elemental awakenings",
+    "Art": "awaken-arcane",
+    "Draw": "a lapis chain with a bone carved eye pendant, swirling with purple arcane swirls",
+    "Text": "If your first card is an arcane card, every attack after it deals +10 damage.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "First": true, "Element": "arcane" },
+        "Then": [{ "Do": "awaken", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "awaken-stab",
+    "Name": "Awakening Spear",
+    "Family": "Form awakenings",
+    "Art": "awaken-stab",
+    "Draw": "a lapis chain with a bone carved eye pendant whose iris is ivory, swirling with rainbow swirls",
+    "Text": "If your first card is a stabbing card, every attack after it deals +10 damage.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "First": true, "Form": "stab" },
+        "Then": [{ "Do": "awaken", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "awaken-slash",
+    "Name": "Awakening Blade",
+    "Family": "Form awakenings",
+    "Art": "awaken-slash",
+    "Draw": "a lapis chain with a bone carved eye pendant whose iris is steel, swirling with rainbow swirls",
+    "Text": "If your first card is a slashing card, every attack after it deals +10 damage.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "First": true, "Form": "slash" },
+        "Then": [{ "Do": "awaken", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "awaken-crush",
+    "Name": "Awakening Club",
+    "Family": "Form awakenings",
+    "Art": "awaken-crush",
+    "Draw": "a lapis chain with a bone carved eye pendant whose iris is granite, swirling with rainbow swirls",
+    "Text": "If your first card is a crushing card, every attack after it deals +10 damage.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "First": true, "Form": "crush" },
+        "Then": [{ "Do": "awaken", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "eternity-pearl",
+    "Name": "Eternity Pearl",
+    "Family": "Mythics",
+    "Art": "eternity-pearl",
+    "Draw": "a singular black pearl with an infinity symbol inside it, the rest of the card a background of rainbow vapor",
+    "Text": "At the start of every fight, copy one of your consumables at random. The copy is weightless.",
+    "Rarity": "mythic",
+    "Rules": [
+      {
+        "When": "fight-begun",
+        "Then": [{ "Do": "copy-consumable", "Amount": 1 }]
       }
     ]
   }

@@ -91,13 +91,13 @@ type RelicData struct {
 	Text string `json:"Text"`
 
 	// Rarity is how often the shop offers it, and — through that — what it costs. **One word
-	// decides both**: `common`, `uncommon` or `rare`. A relic does not name a price, because a
-	// catalog where every relic priced itself drifted into seventeen numbers nobody could hold
-	// against each other; three tiers can be read at a glance and a relic can only be moved between
-	// them.
+	// decides both**: `common`, `uncommon`, `rare` or `mythic`. A relic does not name a price,
+	// because a catalog where every relic priced itself drifted into seventeen numbers nobody could
+	// hold against each other; a handful of tiers can be read at a glance and a relic can only be
+	// moved between them.
 	//
-	// **What it sells back for is not a field either.** That is the tier's own figure — 1, 2 or 3
-	// — and it is one rule of the shop.
+	// **What it sells back for is not a field either.** That is the tier's own figure — 1, 2, 3 or
+	// 4 — and it is one rule of the shop.
 	Rarity Rarity `json:"Rarity"`
 
 	// Unlock is the unlock key a player's profile must hold before a shelf may offer this relic.
@@ -155,6 +155,11 @@ type RelicIfData struct {
 	// not a fact about the card. Meaningful at `blow-formed` and refused anywhere else, since no
 	// other moment knows which card leads.
 	Lead bool `json:"Lead,omitempty"`
+
+	// First narrows the rule to **the turn's first card, whatever it is**, and reads the rule's
+	// card predicates against it — the Awakenings. Meaningful at `blow-formed` with `awaken` and
+	// refused anywhere else.
+	First bool `json:"First,omitempty"`
 
 	// Concept names one card by its label — `Bash`. Resolved at load the way a deck list is,
 	// because a concept's ID is registration-ordered and must never be written in a file.

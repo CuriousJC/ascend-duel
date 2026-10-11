@@ -2,6 +2,7 @@ package screens
 
 import (
 	"fmt"
+	"image"
 	"math/rand"
 	"strings"
 	"testing"
@@ -90,7 +91,7 @@ func TestTheSameFightOpensTheSameBag(t *testing.T) {
 func TestTheBagAndTheCanDrawFromTheirOwnStreams(t *testing.T) {
 	gs := testRun()
 
-	shelf := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock)))
+	shelf := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil))
 	before := append([]string(nil), shelf...)
 
 	bag := goodHolding(t, session.ContentsStones)
@@ -100,7 +101,7 @@ func TestTheBagAndTheCanDrawFromTheirOwnStreams(t *testing.T) {
 	dealStones(gs, bag.Record, bag.Size)
 	dealVialEssences(gs, vial.Record, vial.Size)
 
-	after := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock)))
+	after := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil))
 	for i := range before {
 		if before[i] != after[i] {
 			t.Fatalf("the shelf changed after a bag was drawn: %v then %v", before, after)
@@ -338,8 +339,12 @@ func TestTakingAStoneRaisesTheRunsRung(t *testing.T) {
 			t.Errorf("%s pays %d after the stone, want %d", hand, after, want)
 		}
 	}
+	// **The rung moved on the click; the screen only shows it.** The good stays up while the stone is
+	// used and closes when that has played.
+	for i := 0; i < 1000 && g.update(gs, func(image.Point) bool { return false }); i++ {
+	}
 	if g.openNow() {
-		t.Error("the dialog is still up after the stone was taken")
+		t.Error("the dialog is still up after the stone's use has played")
 	}
 }
 

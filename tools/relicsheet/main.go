@@ -476,6 +476,11 @@ func groupByRarity(plates []plate) []tier {
 			// printing "0%" would say the tier is unreachable when what it is is scarce.
 			t.Share = fmt.Sprintf("%.1f", float64(t.Count*r.Weight())*100/float64(total))
 		}
+		// **A mythic is not on the tickets**: each seat rolls one in data.MythicOdds for one,
+		// whatever the rest of the catalog weighs.
+		if r == data.Mythic && t.Count > 0 {
+			t.Share = fmt.Sprintf("%.1f", 100/float64(data.MythicOdds))
+		}
 		out = append(out, t)
 	}
 	return out

@@ -101,7 +101,7 @@ func resumeRelicSlots(saved int) int {
 // **Walked in sorted key order**, per the determinism rules: `LoadRelics` hands back a map, and
 // registering in map order would deal a different set of RelicIDs every launch. Nothing may serialize
 // one, but a tool printing them would still tell a different story each run.
-var registeredRelics, relicPrices, relicSells, relicWeights = registerRelics()
+var registeredRelics, relicPrices, relicSells, relicWeights, relicRarities = registerRelics()
 
 // relicKeys is registeredRelics the other way round: which record a rules-level relic came from.
 // **Built from the same map rather than from a second walk of the file**, so the two cannot disagree
@@ -114,17 +114,18 @@ var relicKeys = func() map[combat.RelicID]string {
 	return out
 }()
 
-// registerRelics hands back all three maps from one walk of the file, rather than reading it twice.
+// registerRelics hands back every map from one walk of the file, rather than reading it twice.
 // **The price, the sell-back and the draw weight are registered here and not with the rules**: `internal/combat` resolves a round and
 // has no purse, so what a relic costs is the run's business in exactly the way its art is a
 // screen's — the same line `RegisterRelic` already draws.
-func registerRelics() (map[string]combat.RelicID, map[string]int, map[string]int, map[string]int) {
+func registerRelics() (map[string]combat.RelicID, map[string]int, map[string]int, map[string]int, map[string]data.Rarity) {
 	records := data.LoadRelics()
 
 	out := make(map[string]combat.RelicID, len(records))
 	prices := make(map[string]int, len(records))
 	sells := make(map[string]int, len(records))
 	weights := make(map[string]int, len(records))
+	rarities := make(map[string]data.Rarity, len(records))
 	for _, key := range data.RelicOrder(records) {
 		rules, err := relicRules(records[key])
 		if err != nil {
@@ -140,14 +141,15 @@ func registerRelics() (map[string]combat.RelicID, map[string]int, map[string]int
 		rarity := records[key].Rarity
 		if !rarity.Valid() {
 			panic(fmt.Sprintf("relics.json: %s has rarity %q, which is not one of common, "+
-				"uncommon or rare", key, rarity))
+				"uncommon, rare or mythic", key, rarity))
 		}
 		out[key] = id
 		prices[key] = rarity.Price()
 		sells[key] = rarity.Sell()
 		weights[key] = rarity.Weight()
+		rarities[key] = rarity
 	}
-	return out, prices, sells, weights
+	return out, prices, sells, weights, rarities
 }
 
 // CheckRelicRecord holds one record to everything registration would, without registering it.
@@ -165,7 +167,7 @@ func CheckRelicRecord(r data.RelicData) error {
 		return err
 	}
 	if !r.Rarity.Valid() {
-		return fmt.Errorf("%s has rarity %q, which is not one of common, uncommon or rare",
+		return fmt.Errorf("%s has rarity %q, which is not one of common, uncommon, rare or mythic",
 			r.RelicRecord, r.Rarity)
 	}
 	return checkUnlock(r)
@@ -282,6 +284,7 @@ func relicCondition(key string, in *data.RelicIfData) (combat.RelicCondition, er
 		cond.MinForms = in.MinForms
 	}
 	cond.Lead = in.Lead
+	cond.First = in.First
 	return cond, nil
 }
 
@@ -371,10 +374,43 @@ func (s *Session) WornRelics() []combat.WornRelic {
 		if !ok {
 			continue
 		}
-		out = append(out, combat.WornRelic{Relic: id, Grown: s.grown[key]})
+		out = append(out, combat.WornRelic{Relic: id, Grown: s.grown[key], Weightless: s.weightless[key]})
 	}
 	return out
 }
+
+// SetWeightless marks a relic as worn weightless or not, by record — before it goes on or while it is
+// worn. **Any relic may be weightless**: it takes no finger, so a full row still takes it. Nothing in
+// the shipped game sets it on a run relic yet; a cantrip-relic is weightless by its own wearing.
+func (s *Session) SetWeightless(key string, on bool) {
+	if s.weightless == nil {
+		s.weightless = map[string]bool{}
+	}
+	if on {
+		s.weightless[key] = true
+		return
+	}
+	delete(s.weightless, key)
+}
+
+// IsWeightless reports whether a relic is worn weightless.
+func (s *Session) IsWeightless(key string) bool { return s.weightless[key] }
+
+// WeightedCount is how many of the worn relics take a finger: every one but the weightless.
+func (s *Session) WeightedCount() int {
+	n := 0
+	for _, key := range s.worn {
+		if !s.weightless[key] {
+			n++
+		}
+	}
+	return n
+}
+
+// StartingWeightless is which of StartingRelics a run opens wearing weightless. **A debug seat**,
+// beside StartingRelics and set from the same place: `internal/scenario` fills it and nothing else
+// may. Set before the relics go on, so a weightless one is not refused a finger.
+var StartingWeightless []string
 
 // AbsorbGrowth takes back whatever a fight grew. **The run's accumulators are the duelist's, after
 // the fight** *(2026-08-22)*.

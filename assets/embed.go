@@ -227,6 +227,14 @@ var screenArt embed.FS
 //go:embed portal/*.png
 var portalArt embed.FS
 
+// THE PARTICLES: small elemental sprites thrown around a hit's total and trailed behind its figure,
+// keyed by filename stem — `particle-<element>-<n>` (a piece of the element) and `spark-<element>-<n>`
+// (a plain fleck in its color). Still pictures; every movement is code. See
+// docs/art/particle_art_prompt.MD, docs/art/spark_art_prompt.MD and ui.DrawParticles.
+//
+//go:embed particle/*.png
+var particleArt embed.FS
+
 // The relic faces, globbed as a family and keyed by filename stem — `relic/fire.png` is
 // `fire`, which is what `data/relics.json` writes in its Art field.
 //
@@ -437,6 +445,7 @@ func LoadImageData() map[string][]byte {
 	embedTree(images, motifArt, "motifs")
 	embedFamily(images, screenArt, "screen")
 	embedFamily(images, portalArt, "portal")
+	embedFamily(images, particleArt, "particle")
 
 	// Bob's face, for the reason the relic art is here: the tutorial draws him into a card
 	// through internal/cards, which has no graphics context.

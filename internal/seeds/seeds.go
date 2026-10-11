@@ -135,6 +135,20 @@ const (
 	// which tonic a realm offers a function of how many relic draws the shelf had made before it,
 	// so authoring a relic would reroll every tonic a run is offered.
 	TonicOrder
+
+	// MythicRoll is whether a shelf seat holds a mythic relic: one roll per seat, before the seat's
+	// ticket draw. Per fight.
+	//
+	// **Its own stream rather than ShopStock's**, although both fill the shelf: a roll on the
+	// shelf's own cursor would move every ticket draw after it, so a roll that misses nine hundred
+	// and ninety-nine times in a thousand would still reroll every ordinary shelf.
+	MythicRoll
+
+	// PearlCopy is which consumable the Eternity Pearl copies at the top of a fight. Per fight.
+	//
+	// **Its own stream rather than any shop stream's**: it is spent in a fight, not on a shelf, and
+	// sharing one would make what the pearl copies a function of what the shop drew.
+	PearlCopy
 )
 
 // stream is what the package knows about each one. A table rather than four switch statements,
@@ -173,6 +187,8 @@ var streams = [...]stream{
 	LuckRoll:     {name: "luck-roll", salt: 0x5EED_1DCC, perFight: true},
 	ScrollStock:  {name: "scroll-stock", salt: 0x5EED_5C20, perFight: true},
 	TonicOrder:   {name: "tonic-order", salt: 0x5EED_70C1},
+	MythicRoll:   {name: "mythic-roll", salt: 0x5EED_3171, perFight: true},
+	PearlCopy:    {name: "pearl-copy", salt: 0x5EED_9EA4, perFight: true},
 }
 
 // fightStride separates one fight's seed from the next within a run. A large odd number so

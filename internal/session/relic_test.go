@@ -5,6 +5,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/seeds"
 )
 
 // The catalog, the worn set, and the three moments that fire out here rather than in a round.
@@ -74,6 +75,45 @@ func TestARelicIsWornOnceAndNoMoreThanFiveAreWornAtAll(t *testing.T) {
 	}
 	if run.Wear("no-such-ring") {
 		t.Error("a record the catalog does not hold went on")
+	}
+}
+
+// **Any relic may be worn weightless**: it goes on over a full row, takes no finger, is handed to
+// the duelist weightless, and comes back that way from a save.
+func TestAWeightlessRelicGoesOnOverAFullRow(t *testing.T) {
+	all := Relics()
+	if len(all) < combat.DefaultRelicSlots+1 {
+		t.Skipf("only %d relics authored; this needs %d", len(all), combat.DefaultRelicSlots+1)
+	}
+	motifs, shape := rosters(t)
+	seed, _ := seeds.Parse(theSeed)
+	run := Start(motifs, shape, seed)
+	run.worn = nil
+	for _, key := range all[:combat.DefaultRelicSlots] {
+		if !run.Wear(key) {
+			t.Fatalf("%s would not go on", key)
+		}
+	}
+
+	extra := all[combat.DefaultRelicSlots]
+	run.SetWeightless(extra, true)
+	if !run.Wear(extra) {
+		t.Fatalf("a weightless %s was refused by a full row", extra)
+	}
+	if got := run.WeightedCount(); got != combat.DefaultRelicSlots {
+		t.Errorf("the row weighs %d, want %d — the weightless relic is counted", got, combat.DefaultRelicSlots)
+	}
+	worn := run.WornRelics()
+	if last := worn[len(worn)-1]; !last.Weightless {
+		t.Error("the duelist is handed the relic with weight")
+	}
+
+	back, _, err := Resume(motifs, shape, run.Snapshot(seed))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !back.IsWeightless(extra) || back.WeightedCount() != combat.DefaultRelicSlots {
+		t.Errorf("a resumed run lost the weightless wearing of %s", extra)
 	}
 }
 

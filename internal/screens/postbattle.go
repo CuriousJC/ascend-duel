@@ -279,10 +279,10 @@ type PostBattleScene struct {
 	// global state, and leaving the screen needs it.
 	skipping bool
 
-	// arrival is the won card's journey to the middle, and arrivedFrom is the seat it set off
-	// from — a prize's place in the row, or the morph's after-slot.
-	arrival     ui.Travel
-	arrivedFrom image.Rectangle
+	// use is the chosen essence being used where it stands: absorbed in its own seat, its motes
+	// carrying the change to the picked cards, which change in the deck row. Its changes are the
+	// lands' morphs. See essenceInPlace.
+	use ui.Consume
 
 	// applyNow is the confirmed alteration, run against the real deck once the settled stage is
 	// over. **The deck is not touched while the result is on screen**, which is what lets the
@@ -338,7 +338,7 @@ func (s *PostBattleScene) Init(gs *state.GlobalState) {
 	s.stage = choosing
 	s.removes, s.copied, s.held = false, false, 0
 	s.lands = nil
-	s.arrival, s.arrivedFrom = ui.Travel{}, image.Rectangle{}
+	s.use = ui.Consume{}
 	s.pendingWhat, s.applyNow = "", nil
 	s.prizes = dealPrizes(gs)
 	s.entry = make([]ui.Travel, len(s.prizes))
@@ -483,14 +483,10 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 	// The settled stage is a held picture rather than a choice: the card that was won is on
 	// screen, and when the hold runs out the screen leaves by itself.
 	if s.stage == settled {
-		if !s.arrival.Done() {
-			s.arrival.Tick()
-			return nil
-		}
-		// **The change is its own beat, and it does not start until the card has landed** — the
-		// same rule the hold below follows, and for the same reason: a dissolve running over a
-		// moving card would put the one thing worth watching on a target the eye is still chasing.
-		if !tickLandings(s.lands) {
+		// **The essence is used where it stands and the cards change where they stand**, and the hold
+		// does not start until every change has landed. See essenceInPlace.
+		if !s.use.Done() {
+			s.use.Tick()
 			return nil
 		}
 		s.held--
@@ -794,7 +790,7 @@ func (s *PostBattleScene) rearm(gs *state.GlobalState) bool {
 	s.stage = choosing
 	s.removes, s.copied, s.held = false, false, 0
 	s.lands = nil
-	s.arrival, s.arrivedFrom = ui.Travel{}, image.Rectangle{}
+	s.use = ui.Consume{}
 	s.pendingWhat, s.applyNow = "", nil
 	s.deal(gs, dealOffer(gs))
 	s.place(gs)
@@ -803,16 +799,21 @@ func (s *PostBattleScene) rearm(gs *state.GlobalState) bool {
 	return true
 }
 
-// settle starts the last stage: the won card flies from wherever it was to the middle, is held
-// there long enough to read, and then the screen leaves.
+// settle starts the last stage: the chosen essence is absorbed in its own seat, its motes carry the
+// change to the picked cards, those change where they stand in the deck row, and the result is
+// held long enough to read before the screen leaves.
 //
-// **The flight is what the stage is**, not decoration on top of it: the hold does not begin until
-// the card lands, so a slower flight is a longer look rather than a card arriving late to a
-// countdown already running.
-func (s *PostBattleScene) settle(gs *state.GlobalState, from image.Rectangle) {
+// **The picked seats are the morphs' while it runs**, so the row leaves them empty — except for a
+// copy, whose original is untouched and stays drawn, the copy arriving just above it.
+func (s *PostBattleScene) settle(gs *state.GlobalState, essence session.Essence, slots []int) {
 	s.stage, s.held = settled, settledHoldTicks()
-	s.arrival = ui.NewTravel(0, settleFlightTicks())
-	s.arrivedFrom = from
+	s.use = essenceInPlace(gs, essence, s.essenceSlot(gs, s.chosen), s.lands, s.copied)
+	if !s.copied {
+		s.dealtRow.hidden = make(map[int]bool, len(slots))
+		for _, slot := range slots {
+			s.dealtRow.hidden[slot] = true
+		}
+	}
 }
 
 // aimAt points the chosen essence at the offered cards and works out what each would become.
@@ -866,7 +867,7 @@ func (s *PostBattleScene) aimAt(gs *state.GlobalState, slots []int) {
 	s.pendingWhat = fmt.Sprintf("%s on %d card(s) %v", essence.Record, len(at), at)
 	s.applyNow = func(run *session.Session) { run.ApplyToAll(essence, ids) }
 	s.tip.Forget()
-	s.settle(gs, from[0])
+	s.settle(gs, essence, slots)
 }
 
 // essenceSlot is where one offered essence is drawn, and the rectangle it is clicked in.
@@ -1082,7 +1083,8 @@ func settledSeats(gs *state.GlobalState, n int) []image.Rectangle {
 // never filled, and not of this one: the player has just watched the card come apart square by
 // square, so the emptiness is the thing they were shown rather than something to explain.
 func (s *PostBattleScene) drawSettled(gs *state.GlobalState, screen *ebiten.Image) {
-	drawLandings(gs, screen, s.lands, s.arrival, s.copied)
+	s.dealtRow.draw(gs, screen)
+	s.use.Draw(gs, screen)
 }
 
 func (s *PostBattleScene) title() string {

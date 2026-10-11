@@ -100,6 +100,11 @@ const (
 	// consumables pane *(owner's call, 2026-10-04)* — cards fly, they never appear. The run already
 	// holds it; this is the picture catching up, and the screen leaves when it lands.
 	goodsCarrying
+
+	// goodsUsing: a stone has been taken out of a bag of rocks and is being used up — lifted to the
+	// middle, crumbled, its dust carried to the duelist card whose ladder it raised. The run already
+	// holds the raise; this is the picture, and the screen leaves when it ends. See stoneUseFrom.
+	goodsUsing
 )
 
 // goods is the dialog: which good was opened, what was drawn from it, and how far through the
@@ -150,6 +155,9 @@ type goods struct {
 	carryFrom image.Rectangle
 	carrySeat int
 	carryTrip ui.Travel
+
+	// use is a stone taken from a bag being used up, through goodsUsing.
+	use ui.Consume
 }
 
 // open puts a good up, drawing what is inside it.
@@ -197,6 +205,7 @@ func (g *goods) reset() {
 	g.removes, g.copied, g.held = false, false, 0
 	g.arrival, g.arrivedFrom, g.applyNow = ui.Travel{}, image.Rectangle{}, nil
 	g.carryFace, g.carryFrom, g.carrySeat, g.carryTrip = cards.Spec{}, image.Rectangle{}, -1, ui.Travel{}
+	g.use = ui.Consume{}
 	g.tip.Forget()
 }
 
@@ -504,6 +513,14 @@ func (g *goods) update(gs *state.GlobalState, pile func(image.Point) bool) bool 
 		}
 		return true
 	}
+	if g.stage == goodsUsing {
+		g.use.Tick()
+		if g.use.Done() {
+			g.reset()
+			return false
+		}
+		return true
+	}
 
 	// The vial's row of cards: the shared sort and drag, with a press that never travels selecting.
 	if len(g.row.offer) > 0 {
@@ -623,12 +640,19 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 
 	case session.ContentsStones:
 		stone := g.stones[i]
-		if gs.Run.UseStone(stone.Record) {
-			gs.Journal.Write(journal.Record{Kind: journal.KindTake, Key: stone.Record, Seat: i})
-			trace.Logf("shop", "bag of rocks: %s, shape %s now at %d stones",
-				stone.Record, stone.Shape, gs.Run.StonesOn(stone.Hands()[0]))
+		if !gs.Run.UseStone(stone.Record) {
+			g.reset()
+			return
 		}
-		g.reset()
+		gs.Journal.Write(journal.Record{Kind: journal.KindTake, Key: stone.Record, Seat: i})
+		trace.Logf("shop", "bag of rocks: %s, shape %s now at %d stones",
+			stone.Record, stone.Shape, gs.Run.StonesOn(stone.Hands()[0]))
+
+		// **It is used up in front of the player**: lifted out of the bag, crumbled in the middle,
+		// its dust carried to the hands button — the ladder it raised — as one spent from the pouch.
+		g.use = stoneUseFrom(gs, ui.StoneSpec(gs, stone, true), g.slot(gs, i))
+		g.stage = goodsUsing
+		g.tip.Forget()
 
 	case session.ContentsRunes:
 		// **A rune is not applied here — it goes into the sack.** That is the whole
@@ -779,6 +803,10 @@ func (g *goods) drawCards(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 	if g.stage == goodsCarrying {
 		g.drawCarry(gs, screen)
+		return
+	}
+	if g.stage == goodsUsing {
+		g.use.Draw(gs, screen)
 		return
 	}
 

@@ -15,7 +15,10 @@ package screens
 // paid for, so skipping it is the player's own choice to spend those vitae on nothing — the reward
 // screen's SKIP, on the same terms. It is a labelled button at the bottom of the screen
 // rather than an X, because an X means "put this away" everywhere else and this forfeits something.
-// The chrome still stands down the way it does on the reward screen.
+//
+// **The bottom corner is the reward screen's**: the cog and the ledger are the frame's and stand up
+// here as they do there, and the hands button stands beside the ledger — so a stone taken from a bag
+// sends its dust to the ladder it raised, exactly as one spent from the pouch does.
 //
 // **It is not a station of a run.** It never touches `session.Phase` — it is reached from the
 // shop's shelf and it goes back to the shop — which is the shape Settings, Achievements, Credits
@@ -61,6 +64,10 @@ type GoodsScene struct {
 	// deck is the panel over the whole deck, opened by clicking the pile. **The same widget the
 	// shop and the fight use**, so a player who has learned to click the pile has learned it here.
 	deck ui.DeckToggle
+
+	// hands is the hand ladder's panel, the shop's own button in the shop's own slot: a bag of rocks
+	// is bought against the ladder, and a stone taken from one sends its dust here.
+	hands ui.HandsToggle
 
 	// skipButton leaves without taking anything, and skipping is its request, consumed by Update —
 	// a button's OnClick reaches no global state, and leaving the screen needs it.
@@ -114,6 +121,9 @@ func (s *GoodsScene) Init(gs *state.GlobalState) {
 	s.band.init()
 
 	s.deck.InitAsPile()
+	s.hands.InitInColumn(func(gs *state.GlobalState) image.Point {
+		return ControlColumnSlotCenter(gs, SlotHands)
+	})
 
 	good, ok := session.GoodByKey(gs.PendingGood)
 	gs.PendingGood = ""
@@ -133,7 +143,12 @@ func (s *GoodsScene) Update(gs *state.GlobalState) error {
 
 	// **The deck panel runs first and swallows the frame**, the shop's own order: while it is up
 	// the cards underneath are dead, so a press meant for the panel cannot reach the row behind it.
+	s.deck.Block(s.hands.IsOpen())
+	s.hands.Block(s.deck.IsOpen())
 	if s.deck.Update(gs, ui.OwnedContents(gs)) {
+		return nil
+	}
+	if s.hands.Update(gs) {
 		return nil
 	}
 
@@ -219,6 +234,7 @@ func (s *GoodsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// Last, and over everything: the panel covers the screen, so nothing of this one may be drawn
 	// on top of it.
 	s.deck.Draw(gs, screen, ui.OwnedContents(gs))
+	s.hands.Draw(gs, screen, ui.OwnedHands(gs))
 }
 
 // skipSeat is where SKIP stands: **centered under the good's row**, on the line the title and the

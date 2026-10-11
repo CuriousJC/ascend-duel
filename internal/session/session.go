@@ -102,6 +102,12 @@ type Session struct {
 	// would mean nothing in a save file.
 	grown map[string]int
 
+	// weightless is which relics the run wears weightless, keyed by record for grown's reason: a
+	// relic taken off and put back on is the same relic. **Any relic may be worn weightless**; it is
+	// a property of the wearing, so it lives here beside the row rather than on the record. See
+	// relic.go's SetWeightless.
+	weightless map[string]bool
+
 	// stones is how many stones the run has put on each rung of the hand ladder, keyed by hand key.
 	// **Keyed by hand rather than by stone record** — a stone lands on every rung of its shape, and
 	// the rung is what the ladder is actually read against. See stone.go.
@@ -116,7 +122,7 @@ type Session struct {
 	// held is the sack: every rune the run is carrying, by record key, in the order they
 	// were acquired. **A list rather than a count per key** — two of the same are two things to
 	// spend, and the board piece draws a card for each. See rune.go.
-	held []string
+	held carriedList
 
 	// duplicated is what the last duplicate rune minted, so the screen can seat the copy in
 	// the hand it was spent from. **Deliberately not snapshotted**: it is a handover between two
@@ -127,16 +133,21 @@ type Session struct {
 	// pouch is the stones the run is carrying but has not spent, by record key, in the order they
 	// were acquired. **A list rather than counts**, unlike `stones` — see stone.go, where the
 	// distinction is written down.
-	pouch []string
+	pouch carriedList
 
 	// satchel is the essences the run is carrying but has not spent, by record key, in the order
 	// they were acquired. **The sack's shape and the pouch's**, for the same argument: two of the
 	// same essence are two cards to draw and two decisions to make. See essence.go.
-	satchel []string
+	satchel carriedList
 
 	// scrolls is the scroll case: the cantrips the run is carrying but has not cast, by record key,
 	// in the order they were acquired. The sack's shape, for the sack's argument. See cantrip.go.
-	scrolls []string
+	scrolls carriedList
+
+	// pearlFight is one more than the index of the last fight the Eternity Pearl copied a
+	// consumable into, so a fight re-entered — a resumed run, a screen coming back — copies once.
+	// See CopyAtFightStart.
+	pearlFight int
 
 	// granted is the stones the last rock-shower rune handed over, so the dialog can show what
 	// the player just got. **Not snapshotted**, for the reason duplicated is not: it is a handover
@@ -246,6 +257,9 @@ func New(deck []combat.Card) *Session {
 	// only `internal/scenario` writes them, which is compiled out of every normal build; `Wear`,
 	// `Hold` and `Carry` go on reporting a refusal to their real callers rather than ending the
 	// process. See StartingRelics, StartingRunes, StartingStones and StartingEssences.
+	for _, key := range StartingWeightless {
+		s.SetWeightless(key, true)
+	}
 	for _, key := range StartingRelics {
 		if _, ok := registeredRelics[key]; !ok {
 			log.Fatalf("StartingRelics names %q, which is in no relic record", key)

@@ -107,6 +107,8 @@ the salt table, so inserting one mid-list re-points every stream after it.
 | `seeds.StoneShower` | fight | `CombatScene.showerRNG` (`internal/screens/combat_rune.go`), mixed with the run's placed-stone count | which stones a rock shower drops, on any change to the shop |
 | `seeds.PackOffer` | fight | `ShopScene.packRNG` (`internal/screens/shop_packs.go`) | which two of the three packs a visit puts up, on any change to the relic shelf |
 | `seeds.ScrollStock` | fight | `dealScrolls` (`internal/screens/shop_goods.go`) | which cantrips a bundle of scrolls holds, on any change to the rune catalog |
+| `seeds.MythicRoll` | fight | `dealShelf` (`internal/screens/shop.go`): one roll per shelf seat, one in `data.MythicOdds`, before the seat's ticket draw | every ticket draw after the roll, so every ordinary shelf a run is dealt |
+| `seeds.PearlCopy` | fight | `Session.CopyAtFightStart`, from `CombatScene.newDuel` | which consumable the Eternity Pearl copies, on any change to what the shop drew |
 | `seeds.TonicOrder` | run | `newTonicOrder` (`internal/session/tonic.go`): one shuffle of the tonic catalog's sorted keys, walked a realm at a time | which tonic every realm offers, on any change to the relic shelf |
 | `seeds.LuckRoll` | fight | `CombatScene.luckRNG`, injected into `ResolveRound` as `Sources.Luck` | what every gold and silver card in the run rolls, on any change to either shuffle |
 | Loot offers | — | **not built** | — |

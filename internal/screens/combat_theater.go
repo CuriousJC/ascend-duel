@@ -352,6 +352,10 @@ type combatTheater struct {
 	// while one of these is up; what waits is the drawing.
 	hits []hitFlight
 
+	// particles are the elemental fields round a line's total and behind a flying figure. **Not in
+	// Running**: nothing waits on decoration. See combat_particles.go.
+	particles []particleField
+
 	// drains are the shares of a blow currently traveling back out of the body they were taken
 	// from, and the reason the drainer's health bar can lag the life it has already been given.
 	// See combat_drain.go — the hits' rule pointing the other way.
@@ -427,6 +431,7 @@ func (t *combatTheater) Tick() {
 	// both of them rewrite the hand. CombatScene.tickDeal and tickSettle drive them.
 
 	t.hits = ui.Advance(t.hits)
+	t.particles = ui.Advance(t.particles)
 	// **A tithe is paid into the VITAE row as it lands**, the signals' rule: the row is the drawing
 	// and the purse the model, and the two meet at the arrival.
 	for i := range t.drains {

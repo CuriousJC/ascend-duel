@@ -14,6 +14,30 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ## Now — quick wins, independent of any design decision
 
+- [ ] **Use the vial's essence in place, as the reward screen does** *(owner asked for this to be
+      tracked)*. The shop's vial of essence still flies the picked card to the middle and morphs it
+      there (`goods.show` → `drawLandings`). The reward screen absorbs the essence in its own seat and
+      sends its motes to the picked cards, which change where they stand in the row:
+      `essenceInPlace` in `internal/screens/essence_spend.go` is that, and `PostBattleScene.settle`
+      shows how to wire it and hide the picked seats (`dealtRow.hidden`).
+
+- [ ] **Fix the `mid-run` scenario** *(owner asked for this to be tracked)*. It fails at launch:
+      its `Relics` name `sundering`, which is in no relic record. Swap it for a live relic in
+      `internal/scenario/scenarios.json`, keeping the fixture's "one of each rarity, five different
+      families" intent, and regenerate `tools/scenariosheet`.
+
+- [ ] **Give a run relic a way to be worn weightless** *(owner asked for this to be tracked)*. Any
+      relic can be weightless now — `Session.SetWeightless` by record, saved with the run, counted
+      out of the fingers and the pane's `n/5`, drawn floating in the band — but nothing in the
+      shipped game sets it on a run relic; only a cantrip's cast wears one weightless, and the
+      `weightless-relics` fixture's `Weightless` list. What grants it is a design question.
+
+- [?] **Design how an ephemeral relic is told apart on its face** *(owner asked for this to be
+      tracked)*. A weightless relic floats (`ui.DrawWeightless`) and its tooltip ends on
+      **Weightless**; an ephemeral one only says **Ephemeral** in its tooltip. A cantrip-relic is
+      both, so whatever ephemeral looks like has to compose with the float. The animation gallery's
+      `weightless` entry is the place to compare options, drawn from the relic's own card.
+
 - [ ] **Check whether a mid-fight re-Equip stacks the run's bonuses a second time** *(owner asked
       for this to be tracked; suspected from reading, not reproduced)*. `CombatScene.spendStone`,
       and the rock-shower branch of `spendRune`, call `gs.Run.Equip(s.fighter.Duelist)` on a fighter

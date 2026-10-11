@@ -128,6 +128,10 @@ type RunSnapshot struct {
 	// nothing in a file.
 	Grown map[string]int `json:"grown"`
 
+	// Weightless is the worn relics that take no finger, by record key. Omitted when there are none,
+	// which is every run today.
+	Weightless []string `json:"weightless,omitempty"`
+
 	// Stones is how many stones the run has put on each rung of the hand ladder, by **hand key**.
 	// A name rather than a seat, on the same terms `Worn` names a relic record: a seat is a position
 	// in the catalog this build loaded, and a file outlives the build that wrote it.
@@ -164,6 +168,14 @@ type RunSnapshot struct {
 	// key, **in acquisition order**. A cantrip cast mid-fight is not written anywhere — what it did
 	// lasts only as long as the fight, and a run is never resumed inside one.
 	Cantrips []string `json:"cantrips,omitempty"`
+
+	// WeightlessCarried is which carried entries take no seat in the consumables pane, as positions in
+	// Held, Pouch, Satchel and Cantrips. Omitted when there are none.
+	WeightlessCarried *CarriedSnapshot `json:"weightlessCarried,omitempty"`
+
+	// PearlFight is one more than the index of the last fight the Eternity Pearl copied into, so a
+	// resumed fight does not copy a second time. Zero when it has never fired.
+	PearlFight int `json:"pearlFight,omitempty"`
 
 	// LastRune is the record key of the rune the run spent most recently, which is what a
 	// chimera copies. **A name, never an ordinal**, the rule every vocabulary in this file is
@@ -284,6 +296,7 @@ type LedgerSumSnapshot struct {
 	Base    int    `json:"base,omitempty"`
 	PlayAdd int    `json:"playAdd,omitempty"`
 	PlayPct int    `json:"playPct,omitempty"`
+	Awaken  int    `json:"awaken,omitempty"`
 	Scales  []int  `json:"scales,omitempty"`
 }
 
@@ -359,4 +372,12 @@ func DeleteRun(s Store) error { return s.remove(runFile) }
 type RiderSnapshot struct {
 	Kind   string `json:"kind"`
 	Amount int    `json:"amount"`
+}
+
+// CarriedSnapshot is a position list per carried kind.
+type CarriedSnapshot struct {
+	Held     []int `json:"held,omitempty"`
+	Pouch    []int `json:"pouch,omitempty"`
+	Satchel  []int `json:"satchel,omitempty"`
+	Cantrips []int `json:"cantrips,omitempty"`
 }

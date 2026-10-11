@@ -13,9 +13,9 @@ package combat
 // different code — the resolver reads Category and never Form; the hand matcher reads Form and
 // never Category — which is exactly why they are two fields rather than one enum.
 //
-// **FormNone is a real answer**, and it belongs to every enemy card. A form is the player's deck
-// axis, so an enemy card claiming to be a crush would be saying something untrue about a deck
-// the player cannot build hands against.
+// **Every card has a form**, the player's and every creature's — RegisterConcept refuses one
+// without. FormNone is the zero value of the type and means "no form named", which only a relic's
+// condition or effect ever says.
 //
 // Split out of element.go and combat.go on 2026-08-21, which held the element enum, the card and
 // the card's taxonomy in two files that were mostly about something else.
@@ -299,10 +299,8 @@ func ParseCategory(name string) (Category, bool) {
 // is and there are four. Every form but Defend resolves in the attack phase, so the form is the
 // finer distinction and the one worth putting on a card face.
 //
-// **FormNone is the zero value and is a real answer**, not a failure: the opponent's cards
-// belong to no form. Forms are the player's deck axis — three ways of building a pair — and
-// an enemy Attack claiming to be a crush would be saying something untrue about a deck the player
-// cannot build hands against.
+// **FormNone is the zero value and no card carries it.** It is what a relic condition or effect
+// holds when it names no form; every registered concept has one of the four.
 type Form int
 
 const (

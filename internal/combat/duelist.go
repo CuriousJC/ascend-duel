@@ -160,11 +160,9 @@ type Duelist struct {
 	// every hit multiplied through the hand table.
 	//
 	// **It is what an enemy is** *(2026-08-17, owner's call)*. Hands are the player's mechanic:
-	// the hands are counted off concepts, and an enemy has no axis to play with — every enemy
-	// card in `data/enemies.json` is authored `basic` and `FormNone`, so an opponent's "hand"
-	// was whatever its planner happened to afford. Now an
-	// enemy holding three cards swings three times and the player can read the round off the
-	// cards on the table.
+	// an opponent's "hand" would be whatever its planner happened to afford, so an enemy holding
+	// three cards swings three times and the player can read the round off the cards on the
+	// table.
 	//
 	// **The default is false, so a plain `Duelist{}` hands.** Hands are the norm and this is the
 	// exception, which is why the field is named for the exception rather than for the norm: a
@@ -175,10 +173,8 @@ type Duelist struct {
 	// side is a person, and it must not learn: the balance tool plays both sides headlessly, and
 	// a rule keyed on the side would be a rule that cannot be tested from the other end.
 	//
-	// The alternative considered and rejected was deriving it from the cards — an enemy card is
-	// `FormNone`, so "no form, no hand" needs no field at all. It was rejected because it
-	// couples two things that are not the same thing: affixes are designed to *transform* an
-	// enemy deck, and a card that gained a form would silently gain hands with it.
+	// **It is not derived from the cards.** A creature's cards carry forms exactly as the
+	// player's do, so whether a duelist forms hands has to be said about the duelist.
 	SoloAttacks bool
 
 	// HandStones is how many stones this duelist holds for each rung of the hand ladder, indexed

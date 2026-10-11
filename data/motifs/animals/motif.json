@@ -43,6 +43,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 4
         },
         {
@@ -50,6 +52,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 3
         },
         {
@@ -57,6 +61,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 1
         }
       ]
@@ -82,6 +88,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 2
         },
         {
@@ -89,13 +97,17 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 4
         },
         {
-          "Label": "Maul",
+          "Label": "Savage Bite",
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 2
         }
       ]
@@ -117,10 +129,12 @@
       "Actions": 4,
       "Cards": [
         {
-          "Label": "Snort",
+          "Label": "Tusk Flick",
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "stab",
+          "Flavor": "stab-horn",
           "Copies": 1
         },
         {
@@ -128,6 +142,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "stab",
+          "Flavor": "stab-horn",
           "Copies": 3
         },
         {
@@ -135,6 +151,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 4
         }
       ]
@@ -160,6 +178,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 2
         },
         {
@@ -167,6 +187,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 4
         },
         {
@@ -174,6 +196,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 2
         }
       ]
@@ -199,6 +223,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 4
         },
         {
@@ -206,13 +232,17 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 3
         },
         {
-          "Label": "Sepsis",
+          "Label": "Fester Bite",
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 1
         }
       ]
@@ -238,6 +268,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 1
         },
         {
@@ -245,6 +277,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 3
         },
         {
@@ -252,6 +286,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 4
         }
       ]
@@ -277,6 +313,8 @@
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 3
         },
         {
@@ -284,6 +322,8 @@
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 4
         },
         {
@@ -291,13 +331,17 @@
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 3
         },
         {
-          "Label": "The Pack Answers",
+          "Label": "Pack Bite",
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 2
         }
       ],
@@ -324,6 +368,8 @@
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "stab",
+          "Flavor": "stab-horn",
           "Copies": 3
         },
         {
@@ -331,6 +377,8 @@
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 4
         },
         {
@@ -338,6 +386,8 @@
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 3
         },
         {
@@ -345,6 +395,8 @@
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 2
         }
       ],
@@ -371,6 +423,8 @@
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 3
         },
         {
@@ -378,6 +432,8 @@
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 4
         },
         {
@@ -385,13 +441,17 @@
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 3
         },
         {
-          "Label": "All At Once",
+          "Label": "Every Jaw",
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 2
         }
       ],

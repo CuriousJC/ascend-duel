@@ -43,6 +43,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 2
         },
         {
@@ -50,6 +52,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 4
         },
         {
@@ -57,6 +61,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 2
         }
       ]
@@ -82,6 +88,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 4
         },
         {
@@ -89,6 +97,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "slash",
+          "Flavor": "slash-lash",
           "Copies": 3
         },
         {
@@ -96,6 +106,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 1
         }
       ]
@@ -117,10 +129,12 @@
       "Actions": 4,
       "Cards": [
         {
-          "Label": "Jab",
+          "Label": "Knuckle Rap",
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 1
         },
         {
@@ -128,6 +142,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 3
         },
         {
@@ -135,6 +151,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 4
         }
       ]
@@ -160,6 +178,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "stab",
+          "Flavor": "stab-shot",
           "Copies": 4
         },
         {
@@ -167,13 +187,17 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "stab",
+          "Flavor": "stab-shot",
           "Copies": 3
         },
         {
-          "Label": "Suppress",
+          "Label": "Bullet Hail",
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "stab",
+          "Flavor": "stab-shot",
           "Copies": 1
         }
       ]
@@ -199,6 +223,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 2
         },
         {
@@ -206,6 +232,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 4
         },
         {
@@ -213,6 +241,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 2
         }
       ]
@@ -234,10 +264,12 @@
       "Actions": 5,
       "Cards": [
         {
-          "Label": "Graft",
+          "Label": "Graft Fist",
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 1
         },
         {
@@ -245,6 +277,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-club",
           "Copies": 3
         },
         {
@@ -252,6 +286,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 4
         }
       ]
@@ -277,6 +313,8 @@
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 3
         },
         {
@@ -284,6 +322,8 @@
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 4
         },
         {
@@ -291,13 +331,17 @@
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 3
         },
         {
-          "Label": "Nothing Holds",
+          "Label": "Wall Breaker",
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 2
         }
       ],
@@ -324,6 +368,8 @@
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 3
         },
         {
@@ -331,6 +377,8 @@
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 4
         },
         {
@@ -338,13 +386,17 @@
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 3
         },
         {
-          "Label": "All Of Them",
+          "Label": "Mass Grip",
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 2
         }
       ],
@@ -367,31 +419,39 @@
       "Actions": 6,
       "Cards": [
         {
-          "Label": "Test",
+          "Label": "Test Strike",
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 3
         },
         {
-          "Label": "Iterate",
+          "Label": "Piston Fist",
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 4
         },
         {
-          "Label": "Finalise",
+          "Label": "Final Slam",
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 3
         },
         {
-          "Label": "Version Last",
+          "Label": "Overdrive",
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 2
         }
       ],

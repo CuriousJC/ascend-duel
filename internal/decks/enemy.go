@@ -17,6 +17,11 @@ import (
 // place a concept and an element become cards.
 var enemyConcepts = buildEnemyConcepts()
 
+// enemyFlavors is the picture flavor of every creature concept, filled as the concepts register.
+// **A picture, never a rule**: nothing in internal/combat reads it, and it is here only because
+// this is the one place a motif card and its concept are both in hand.
+var enemyFlavors = map[combat.ConceptID]string{}
+
 // conceptCopies is one registered concept and how many of it a deck holds.
 type conceptCopies struct {
 	id     combat.ConceptID
@@ -44,11 +49,12 @@ func buildEnemyConcepts() map[string][]conceptCopies {
 			}
 			var list []conceptCopies
 			for _, c := range rec.Cards {
-				id, err := combat.RegisterConcept(rec.Record, c)
+				id, err := combat.RegisterConcept(rec.Record, c.CardData)
 				if err != nil {
 					panic("motifs: " + err.Error())
 				}
 				list = append(list, conceptCopies{id: id, copies: c.Copies})
+				enemyFlavors[id] = c.Flavor
 			}
 			out[rec.Record] = list
 		}
@@ -83,6 +89,13 @@ func EnemyCards(record, element string) []combat.Card {
 		}
 	}
 	return out
+}
+
+// EnemyFlavor is the enemy_card_art.json flavor a creature's card wears, or false for a card that
+// is not a creature's. What draws a card asks it; the rules never do.
+func EnemyFlavor(id combat.ConceptID) (string, bool) {
+	f, ok := enemyFlavors[id]
+	return f, ok
 }
 
 // EnemyRecords is every record with a deck, sorted. For a tool walking the roster.

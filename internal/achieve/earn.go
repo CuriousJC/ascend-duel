@@ -161,9 +161,9 @@ func (c clause) holds(turn []combat.Card) bool {
 		if len(cards) == 0 {
 			return false
 		}
-		// **Every card must carry a value on the axis**, so a formless card cannot slip through a
-		// `same` clause by having nothing to disagree with — the same reading matchValue takes in
-		// the hand matcher, where FormNone and Basic are absences rather than values.
+		// **Every card must carry a value on the axis**, so a basic card cannot slip through an
+		// element `same` clause by having nothing to disagree with — the same reading matchValue
+		// takes in the hand matcher, where Basic is an absence rather than a value.
 		for _, card := range cards {
 			if _, ok := axisValue(card, c.axis); !ok {
 				return false
@@ -223,16 +223,11 @@ func axisValue(c combat.Card, axis combat.Axis) (int, bool) { return combat.Matc
 // different: "how many slashing cards have I played" is the form, and "how many Bashes" is the
 // concept. Counting both costs one map entry each and is what lets an achievement be authored on
 // either without a Go change.
-//
-// **A card with no form contributes no form tally**, and never a `form:none` — a counter naming an
-// absence is a counter nothing should ever ask about.
 func CountersFor(turn []combat.Card) map[string]int {
 	out := map[string]int{}
 	for _, c := range turn {
 		out[counterConcept+c.Spec().Key]++
-		if f := c.Form(); f != combat.FormNone {
-			out[counterForm+f.String()]++
-		}
+		out[counterForm+c.Form().String()]++
 		switch {
 		case c.Rider().Kind == combat.RiderWildElement:
 			for _, e := range combat.AllElements {

@@ -35,6 +35,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 4
         },
         {
@@ -42,6 +44,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 3
         },
         {
@@ -49,6 +53,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 1
         }
       ]
@@ -69,6 +75,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 2
         },
         {
@@ -76,6 +84,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 4
         },
         {
@@ -83,6 +93,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "stab",
+          "Flavor": "stab-ray",
           "Copies": 2
         }
       ]
@@ -103,6 +115,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 1
         },
         {
@@ -110,6 +124,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 3
         },
         {
@@ -117,6 +133,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-lash",
           "Copies": 4
         }
       ]
@@ -137,6 +155,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 2
         },
         {
@@ -144,13 +164,17 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 4
         },
         {
-          "Label": "Brood Fury",
+          "Label": "Brood Rake",
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 2
         }
       ]
@@ -171,6 +195,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 1
         },
         {
@@ -178,6 +204,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 3
         },
         {
@@ -185,6 +213,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 4
         }
       ]
@@ -205,6 +235,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "stab",
+          "Flavor": "stab-ray",
           "Copies": 4
         },
         {
@@ -212,6 +244,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 3
         },
         {
@@ -219,6 +253,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 1
         }
       ]
@@ -239,6 +275,8 @@
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 3
         },
         {
@@ -246,6 +284,8 @@
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 4
         },
         {
@@ -253,6 +293,8 @@
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 3
         },
         {
@@ -260,6 +302,8 @@
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 2
         }
       ],
@@ -281,6 +325,8 @@
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 3
         },
         {
@@ -288,6 +334,8 @@
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 4
         },
         {
@@ -295,6 +343,8 @@
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 3
         },
         {
@@ -302,6 +352,8 @@
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 2
         }
       ],
@@ -323,6 +375,8 @@
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 3
         },
         {
@@ -330,6 +384,8 @@
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 4
         },
         {
@@ -337,6 +393,8 @@
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "stab",
+          "Flavor": "stab-sting",
           "Copies": 3
         },
         {
@@ -344,6 +402,8 @@
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "stab",
+          "Flavor": "stab-sting",
           "Copies": 2
         }
       ],

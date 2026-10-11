@@ -165,11 +165,27 @@ rung; it is one constant. **It is not a term in the damage formula** — a hand'
 applies to the cards' own hits, never to a reference swing added on top, so `DMG` reaches a hit
 only through its card.
 
-**A creature's cards belong to no form** — each creature authors its own deck under
-`data/motifs/`, and every card in it is `FormNone`. That is a real answer
-rather than a fallthrough: forms are the *player's* deck axis, and an enemy card claiming to be
-a crush would be claiming membership of a deck the player can build hands against. They draw
-with a blank corner.
+**A creature's cards carry a form too: stab, slash or crush**, never defend, since a creature
+raises no shields. Each creature authors its own deck under `data/motifs/`, and every card in it
+names its form beside its cost, so the corner mark on a creature's card means what it means on
+the player's. **The form is one language across both sides of the table**: a stab is a stab
+whoever throws it, so a relic that one day answers incoming slashes reads the same word the
+player's slash relics do. A creature still forms no hands — see §Enemies do not form hands — so
+its form is a fact about the blow rather than a hand axis.
+
+**Every motif leans on a form**, because a realm is chosen by motif and a player building against
+one form should have realms that suit them and realms that do not. Bites, stings, beaks, arrows
+and rays are stab; claws, blades, lashes and every breath or blast are slash; fists, clubs,
+grips, swallows and falling weight are crush. The lean of each motif and the flavor of every card
+are in the `enemy-cards` skill.
+
+**A creature card's picture is its flavor, not its own.** `data/enemy_card_art.json` holds a
+short list of flavors — `stab-bite`, `slash-claw`, `crush-grip` — each one picture per element,
+and every card names one. A wolf's Bite and a lion's Bite are two cards over one picture. A flavor
+belongs to one form, and a card naming a flavor of another form is refused at load.
+
+**No creature card shares a name with a player card**, and no name means two forms anywhere on the
+roster. A Jab is the player's stab, so a goblin's thrust is a Knife Jab.
 
 **The three forms cost the same and hit the same, and differ only in which cards pair with which.**
 That is enough to make a hand a *choice* — holding two Cleaves is not the same as holding a Cleave
@@ -751,7 +767,7 @@ four:
 **`cost` is the fourth axis.** It is genuinely
 orthogonal to the other three in the player's deck — every cost tier holds three or four forms, and
 every form spans all three costs — so a hand counting cost is not a hand counting form under
-another name. **Every card carries a cost, so this axis has no absence**, unlike `FormNone` and
+another name. **Every card carries a cost and a form, so neither axis has an absence**, unlike
 `Basic`.
 
 **The of-a-kind ladder exists once per axis on the first three above the Pair**, as its own
@@ -766,9 +782,10 @@ so **every card hand is also a form hand**; element is independent of both, whic
 Thump beside a fire Thump is a card hand and no kind of elemental one. That asymmetry is what the
 tie-break and the multiplier ordering below both exist to answer.
 
-**A card with no value on an axis matches nothing on it.** `FormNone` and `Basic` are absences
-rather than values, so an enemy's formless colorless deck cannot build a form or an elemental hand
-at all — its whole ladder is the concept axis, which is what its `Copies` field was always buying.
+**A card with no value on an axis matches nothing on it.** `Basic` is an absence rather than a
+value, so a creature's deck dealt with no realm behind it — a test fixture — cannot build an
+elemental hand. **Every card has a form**, the player's and every creature's, so the form axis has
+no absence at all.
 The player's defenses carry a color like everything else, and it is inert for the same reason.
 
 **Exactly one hand still applies, and a tie goes to the narrowest axis.** Two Thumps and two
@@ -2231,7 +2248,10 @@ scratch before adding one.
   is still what a relic demoting a card as it is dealt reads: a relic aimed at nothing, and a wrap
   there would turn one that weakens a hand into one that hands it the top rung.
 - **The two ladders never meet.** A defend card is not an attack, so it walks its own rung list and
-  wraps inside it; a card with no form has no ladder at all.
+  wraps inside it.
+- **Only the player's cards stand on a ladder.** A creature's card has a form but no rung, so it
+  is never promoted, demoted or turned into another form, and a player card told to change form
+  always lands on a player card.
 
 ### The card says what the card does
 
@@ -3384,11 +3404,9 @@ most. The player learns a deck. `go run ./tools/motifsheet` is where one is read
 there is no multiplier and no hand off an enemy's turn. `Duelist.SoloAttacks`
 carries it and `resolveSoloAttacks` is the phase.
 
-**Hands are the player's axis and an enemy has no way into it.** A hand counts copies of a
-*concept*, and every creature card is `FormNone`, so what an enemy "formed" was an accident of
-what its planner could afford. Now
-three cards on the table mean three hits, which is a round the player can read off the table
-before pressing DUEL!.
+**Hands are the player's axis and an enemy has no way into it.** A creature's cards carry forms,
+but a hand off one would be an accident of what its planner could afford, so three cards on the
+table mean three hits — a round the player can read off the table before pressing DUEL!.
 
 - **The player's shields answer the whole turn.** A shield stands through the opposing turn and
   eats the heaviest hit in it rather than the first — see §Shields. Spending one on whichever

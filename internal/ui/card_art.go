@@ -10,6 +10,7 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/decks"
 	"github.com/curiousjc/ascend-duel/internal/entities"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
@@ -409,6 +410,10 @@ var artworkCache = map[string]image.Image{}
 // none of it — see data/card_art_data.go.
 var cardArt = data.LoadCardArt()
 
+// enemyCardArt is the creature cards' picture catalog, one record per flavor. See
+// data/enemy_card_art_data.go.
+var enemyCardArt = data.LoadEnemyCardArt()
+
 // cardArtwork is the picture for one card in the element it is wearing, or nil for a pairing
 // nobody has drawn yet — which is almost all of them, and draws the card as it always looked.
 //
@@ -419,7 +424,14 @@ var cardArt = data.LoadCardArt()
 //
 // **The form needs no rule here**: a card told to be another form becomes that form's concept, so
 // its own label already names the picture.
+//
+// **A creature's card draws its flavor**, out of enemy_card_art.json, in the realm's element it
+// was dealt as: two creatures' Bites are two cards over one picture. A flavor with no Art yet
+// draws the card as it always looked, exactly as an undrawn player card does.
 func cardArtwork(c combat.Card) image.Image {
+	if flavor, ok := decks.EnemyFlavor(c.Concept); ok {
+		return artworkFrom(enemyCardArt[flavor].ArtKey(c.Element.String()))
+	}
 	rec, ok := cardArt[cardArtRecord(c)]
 	if !ok {
 		return nil

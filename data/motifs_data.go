@@ -26,6 +26,7 @@ import (
 	"path"
 	"sort"
 	"strings"
+	"sync"
 )
 
 //go:embed motifs
@@ -225,7 +226,19 @@ type MotifRecord struct {
 	// Cards is this record's own deck, authored per record. Two creatures of one motif are two
 	// different fights, so they hold different cards rather than the same cards at different
 	// weights.
-	Cards []CardData `json:"Cards"`
+	Cards []MotifCard `json:"Cards"`
+}
+
+// MotifCard is one creature card: the card language every card in the game is written in, plus
+// the flavor its picture is found under.
+//
+// **Every creature card carries a form**, stab, slash or crush — the same vocabulary as the
+// player's attacks, so the corner mark on a creature's card means what it means on the player's.
+// **The flavor is a picture, never a rule**: it names a record in enemy_card_art.json, shared by
+// every card across the roster that attacks the same way, and nothing in internal/combat sees it.
+type MotifCard struct {
+	CardData
+	Flavor string `json:"Flavor"`
 }
 
 // AllowsRealm reports whether this motif may theme a given realm. A zero band means every realm,
@@ -552,8 +565,21 @@ func checkRecord(m MotifData, r MotifRecord, file string) {
 		if len(c.Elements) > 0 {
 			panic(where + ": " + c.Label + " names its own elements, and a creature's colour is the realm's")
 		}
+		if !isEnemyForm(c.Form) {
+			panic(where + ": " + c.Label + " has the form \"" + c.Form + "\", and a creature card is stab, slash or crush")
+		}
+		flavor, ok := enemyCardArt()[c.Flavor]
+		if !ok {
+			panic(where + ": " + c.Label + " names the flavor \"" + c.Flavor + "\", which enemy_card_art.json does not have")
+		}
+		if flavor.Form != c.Form {
+			panic(where + ": " + c.Label + " is a " + c.Form + " and names the " + flavor.Form + " flavor " + c.Flavor)
+		}
 	}
 }
+
+// enemyCardArt is the flavor catalog, parsed once for every card the roster checks.
+var enemyCardArt = sync.OnceValue(LoadEnemyCardArt)
 
 // checkAffinities refuses an empty affinity list, a name that is not an element, and a repeat.
 // Shared by a creature and a backdrop, which take their realm's element the same way.

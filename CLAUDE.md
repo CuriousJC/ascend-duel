@@ -101,6 +101,7 @@ skill that does not exist.
 | [`data`](.claude/skills/data/SKILL.md) | adding a file to `data/`, adding or changing a field on one, authoring cards / enemies / relics / essences, or writing a loader |
 | [`randomness`](.claude/skills/randomness/SKILL.md) | adding any roll, adding or seeding a stream, touching a salt or a seed, writing a shuffle, or deciding whether a mechanic should be random at all |
 | [`combat-screen`](.claude/skills/combat-screen/SKILL.md) | touching any `internal/screens/combat*.go`, `internal/combat`, or anything about how a round is drawn or played back |
+| [`enemy-cards`](.claude/skills/enemy-cards/SKILL.md) | authoring or renaming a creature card, adding or changing an attack flavor in `data/enemy_card_art.json`, deciding a motif's form lean, or generating and installing enemy card art |
 | [`motifs`](.claude/skills/motifs/SKILL.md) | adding a motif directory, adding or changing a creature or a backdrop under `data/motifs/`, authoring creatures, bosses or rooms, touching `data/journey.json`, wiring anything that picks an opponent or a backdrop, or asking what a motif is still missing and what to author next |
 | [`relics`](.claude/skills/relics/SKILL.md) | designing, **discussing** or **analysing** a proposed relic, adding to `relics.json`, adding a moment or an effect verb, wiring anything that reads a worn relic, or deciding whether a relic is locked behind an achievement |
 | [`art-batch`](.claude/skills/art-batch/SKILL.md) | generating art options for a record and choosing between them, a folder of generated pictures turning up to be looked at, or installing, replacing or comparing anything in `assets/` |
@@ -156,6 +157,7 @@ go run ./tools/relicsheet -archive   # the relics out of the game, off data/arch
 go run ./tools/essencesheet    # every essence to PNGs + a page grouped by what it changes about a card
 go run ./tools/handsheet    # every rung of the hand ladder as a real hand, by multiplier, with its odds
 go run ./tools/motifsheet   # the roster motif by motif: card, stat line, deck, coverage grid
+go run ./tools/enemycardsheet  # every creature-card flavor in five elements, every card wearing it, each motif's form lean
 go run ./tools/motifreport  # how full each motif is: briefs still TBD, missing art, rooms with no backdrop
 go run ./tools/backdropsheet  # every room once per element, beside its brief; unpainted ones as the default
 go run ./tools/creatureprompt -record goblins-outer-bomber -element ice   # the four-layer brief

@@ -77,9 +77,12 @@ creatures stay in one file, and its rooms sit beside them in a second.
   "Affinities": ["fire", "ice", "lightning", "earth"],
   "HP": 100, "DMG": 5, "Actions": 5,
   "Cards": [
-    { "Label": "Fuse", "Verb": "attack", "Amount": 50,  "Cost": 1, "Copies": 4 },
-    { "Label": "Lob",  "Verb": "attack", "Amount": 100, "Cost": 2, "Copies": 3 },
-    { "Label": "Big Bang", "Verb": "attack", "Amount": 200, "Cost": 3, "Copies": 1 }
+    { "Label": "Firecracker", "Verb": "attack", "Amount": 50,  "Cost": 1,
+      "Form": "slash", "Flavor": "slash-blast", "Copies": 4 },
+    { "Label": "Lob", "Verb": "attack", "Amount": 100, "Cost": 2,
+      "Form": "crush", "Flavor": "crush-mass", "Copies": 3 },
+    { "Label": "Big Bang", "Verb": "attack", "Amount": 200, "Cost": 3,
+      "Form": "slash", "Flavor": "slash-blast", "Copies": 1 }
   ]
 }
 ```
@@ -102,6 +105,10 @@ creatures stay in one file, and its rooms sit beside them in a second.
   hold different cards rather than the same cards at different weights. **A card may not name its
   own elements** — the colour is the realm's — and costs run 1 to 3, because the cost column is
   tick marks stacked down a fixed band.
+- **Every card carries a `Form` and a `Flavor`.** The form is stab, slash or crush; the flavor is a
+  record in `data/enemy_card_art.json` of the same form, and it is the card's picture. Choosing
+  them, the motif's form lean, and the naming rules are the `enemy-cards` skill — load it before
+  authoring a card.
 
 ## The bases are step-zero quantities
 
@@ -235,6 +242,8 @@ Everything below is a panic at package init, in `data/motifs_data.go`:
 - a `Tier` outside the three, an affinity that is not an element, an empty or repeating affinity list
 - a title on a creature, a record with no art family, a non-positive stat
 - a record with no cards, a card with no copies, a cost outside 1..3, a card naming its own elements
+- a card with no form or the defend form, a flavor `enemy_card_art.json` does not have, or a flavor
+  of another form
 - an inverted realm band
 - **the journey cannot be offered without a repeat** — `data.MustFillJourney`. Realm one is offered
   one motif and every realm above it `data.PortalOffers`, one behind each portal, and **every offer is

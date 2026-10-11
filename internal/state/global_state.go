@@ -454,6 +454,17 @@ const (
 	// one the player walks into. **A station of the run** — it is where session.PhasePortal is drawn
 	// — and appended, because ActiveScreen is append-only.
 	Portal
+
+	// Compendium is the player's book of the game: their lifetime statistics, their achievements,
+	// and every catalog — relics, cantrips, potions and the rest — with what they have found of each
+	// and how often they have used it. **The program's screen rather than a run's**, like
+	// Achievements, which it is the way into; appended, because ActiveScreen is append-only.
+	Compendium
+
+	// Victory is the journey won: the last realm's boss beaten, and the choice between claiming the
+	// victory and walking on into the endless journey. **A station of the run** — it is where
+	// session.PhaseVictory is drawn — and appended, because ActiveScreen is append-only.
+	Victory
 )
 
 func (active ActiveScreen) String() string {
@@ -482,6 +493,10 @@ func (active ActiveScreen) String() string {
 		return "Crashed"
 	case Portal:
 		return "Portal"
+	case Compendium:
+		return "Compendium"
+	case Victory:
+		return "Victory"
 	default:
 		return "Unknown"
 	}

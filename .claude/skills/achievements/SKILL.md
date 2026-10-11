@@ -20,7 +20,7 @@ after the run that earned them is gone.
 | The vocabulary and the validator — trigger kinds, clause modes, axes, moment and counter names | `internal/achieve` (`go doc ./internal/achieve` is the story) |
 | What a player has earned, on disk | `internal/profile` — `Achievements`, `Unlocks`, `Counters` |
 | **The one place progress is written** | `internal/screens/achieve.go` |
-| The page that shows them | `internal/screens/achievements.go` |
+| The page that shows them | `internal/screens/achievements.go`, reached from the Compendium (`compendium.go`) |
 | The toast | `internal/ui/toast.go`, raised by `internal/game` |
 | The design record | MECHANICS.md §Achievements, and the chosen-seed paragraph in §The profile |
 
@@ -52,6 +52,13 @@ How it is held, and what it means for anything new:
   never to exempt the file the write is in.
 - `TestAChosenSeedProgressesNothing` is the behavioral half: a chosen-seed run's turn, win and
   settle leave the profile as it was, and the same code rolled does not.
+
+**Lifetime statistics are the one write a chosen seed still makes.** A statistic is a record rather
+than a reward, so a finished run's tally goes onto the profile either way — `Profile.Stats` for a
+rolled run, `Profile.ChosenStats` for a chosen one — through `recordRunStats` in `achieve.go`, which
+is called once by `endRun` and is deliberately not gated on `progresses`. `RecordRun`, `Stats` and
+`ChosenStats` are on the tripwire list like every other write. The figures themselves are counted
+by `internal/session/stats.go` as the run plays; see MECHANICS.md §Lifetime statistics.
 
 **What is not progress, and is not gated:** the run's own state (it is thrown away with the run),
 settings, and `TutorialSeen`. The journal and the ledger still record a chosen-seed run in full —

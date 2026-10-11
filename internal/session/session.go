@@ -5,6 +5,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/journey"
+	"github.com/curiousjc/ascend-duel/internal/profile"
 	"github.com/curiousjc/ascend-duel/internal/tutorial"
 )
 
@@ -210,6 +211,22 @@ type Session struct {
 	// which locked relics this run may be offered. **nil means not yet handed one**, which only a
 	// save from before runs carried them can be. See unlock.go.
 	unlocks []string
+
+	// stats is what the run has come to so far, by name — see stats.go. Saved with the run and
+	// handed to the profile once, when the run ends.
+	stats profile.Tally
+
+	// victorious says the run has won the journey — beaten the last realm's boss — whether or not it
+	// walked on past it. Saved. See victory.go.
+	victorious bool
+
+	// duel is what the duel under way has come to, held apart from stats until it settles.
+	//
+	// **Not saved, and that is the point of it being separate.** A consumable spent mid-duel saves
+	// the run, and a resume puts the player back at the top of the room — so a round counted
+	// straight into stats would be counted again when the duel is fought a second time. TallyFight
+	// is what moves it across.
+	duel profile.Tally
 }
 
 // ChooseSeed marks this run as started on a code the player entered. SeedChosen reads it back.
@@ -363,6 +380,8 @@ func (s *Session) AddVitae(n int) {
 		return
 	}
 	s.vitae += n
+	s.count(StatVitaeEarned, n)
+	s.stats.Max(StatBestVitaeHeld, s.vitae)
 }
 
 // SpendVitae takes from the purse, and **reports whether it could**. A run cannot go into debt:
@@ -375,6 +394,7 @@ func (s *Session) SpendVitae(n int) bool {
 		return false
 	}
 	s.vitae -= n
+	s.count(StatVitaeSpent, n)
 	return true
 }
 
@@ -413,6 +433,7 @@ func (s *Session) WonFight(lifeLeft, maxLife int) {
 	if journey.RoomOf(s.fight) == journey.RoomPortal {
 		s.bossWins++
 	}
+	s.noteVictory()
 
 	s.fight++
 }

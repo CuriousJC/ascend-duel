@@ -91,6 +91,9 @@ func TestTheMenuScreensGoBackWhereTheyCameFrom(t *testing.T) {
 		{"credits", state.Credits, func(gs *state.GlobalState) {
 			(&CreditsScene{}).leave(gs)
 		}},
+		{"compendium", state.Compendium, func(gs *state.GlobalState) {
+			(&CompendiumScene{}).leave(gs)
+		}},
 	} {
 		gs := saveState(t)
 		gs.ReturnScreen = state.Shop

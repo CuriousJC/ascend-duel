@@ -27,6 +27,9 @@ const (
 
 	// EndedByChoice is the player giving the run up from the settings screen.
 	EndedByChoice = "abandoned"
+
+	// EndedInVictory is the player claiming the victory after the journey was won. See victory.go.
+	EndedInVictory = "victory"
 )
 
 // RunSummary is a finished run, in numbers.
@@ -40,8 +43,12 @@ type RunSummary struct {
 	// they can be given.
 	Seed string
 
-	// Ended is EndedInDefeat or EndedByChoice.
-	Ended string
+	// Ended is EndedInDefeat, EndedByChoice or EndedInVictory.
+	//
+	// Victorious is whether the run won the journey, which a run walked on past the victory and
+	// ended later in a defeat still did.
+	Ended      string
+	Victorious bool
 
 	// Realm is how far up the journey the run got, and Rooms is how many duels it entered.
 	//
@@ -78,6 +85,8 @@ func (s *Session) Summarize(runSeed int64, ended string) RunSummary {
 		Ended: ended,
 		Realm: s.Realm(),
 		Vitae: s.vitae,
+
+		Victorious: s.victorious,
 	}
 
 	for _, f := range s.ledger.Fights {

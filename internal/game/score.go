@@ -79,6 +79,7 @@ var screenTunes = map[state.ActiveScreen]tune{
 	state.Shop:       {track: darkFantasy01},
 	state.RunOver:    {track: music.Score},
 	state.Portal:     {track: music.Score},
+	state.Victory:    {track: music.Score},
 
 	// The screen a panic ends on. **The score rather than {keep: true}**, which would leave the
 	// shop's loop playing over a crash report — a destination like RunOver, not an overlay the
@@ -89,6 +90,7 @@ var screenTunes = map[state.ActiveScreen]tune{
 	// Opened from anywhere, and back where they came from. See the note above.
 	state.Settings:     {keep: true},
 	state.Achievements: {keep: true},
+	state.Compendium:   {keep: true},
 	state.Credits:      {keep: true},
 	state.Animations:   {keep: true},
 

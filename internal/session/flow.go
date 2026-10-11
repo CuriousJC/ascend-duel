@@ -39,10 +39,15 @@ const (
 	// its portals open onto. **It is a station of the loop that is only stood at after a portal
 	// room** — after an outer or an inner room, Advance walks straight past it. See PortalDue.
 	PhasePortal
+
+	// PhaseVictory is the journey won: the last realm's boss beaten, and the choice between claiming
+	// the victory and walking on into the endless journey. **It is stood at once a run, straight
+	// after that fight** — after every other fight, Advance walks past it. See VictoryDue.
+	PhaseVictory
 )
 
 // phaseNames is what each phase is called, for traces and for the day a run is written down.
-var phaseNames = [...]string{"fight", "reward", "shop", "portal"}
+var phaseNames = [...]string{"fight", "reward", "shop", "portal", "victory"}
 
 func (p Phase) String() string {
 	if p < 0 || int(p) >= len(phaseNames) {
@@ -56,7 +61,10 @@ func (p Phase) String() string {
 // **The loop is data rather than a switch** so that adding a station is one entry here — which is
 // the whole reason the phase left the screens. A scene that is not built yet still holds its place
 // in the order; what decides whether it is *shown* is whether `screens` has one registered for it.
-var order = []Phase{PhaseFight, PhaseReward, PhaseShop, PhasePortal}
+//
+// **The victory sits between the fight and its reward**, so the win that earned it still pays out
+// when the player chooses to walk on.
+var order = []Phase{PhaseFight, PhaseVictory, PhaseReward, PhaseShop, PhasePortal}
 
 // Phase is where the run is.
 func (s *Session) Phase() Phase { return s.phase }
@@ -76,11 +84,18 @@ func (s *Session) Advance() {
 	// WonFight and then advances straight from the duel to the reward, so claiming on every Advance
 	// emptied the payout one tick before the screen that reads it out was built. The narration then
 	// said a win paid nothing while the purse held the money.
-	if s.phase != PhaseFight {
+	//
+	// **Nor on the way out of the victory**, which comes between the fight and its reward and so
+	// leaves the payout for the post-battle screen to read out.
+	if s.phase != PhaseFight && s.phase != PhaseVictory {
 		s.ClaimSpoils()
 	}
 
 	s.phase = s.after(s.phase)
+	// **The victory is only stood at once**, straight after the fight that won the journey.
+	if s.phase == PhaseVictory && !s.VictoryDue() {
+		s.phase = s.after(s.phase)
+	}
 	// **The portal is only stood at when one is open.** After an outer or an inner room there is no
 	// choice to make, so the loop goes straight on to the next fight.
 	if s.phase == PhasePortal && !s.PortalDue() {

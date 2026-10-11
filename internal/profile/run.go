@@ -206,6 +206,13 @@ type RunSnapshot struct {
 	// **Sentences rather than events**, because a run of combat.Events is megabytes of mostly-zero
 	// arrays. See session/ledger.go for the arithmetic behind that.
 	Ledger []LedgerFightSnapshot `json:"ledger,omitempty"`
+
+	// Stats is what the run has come to so far, by name: the tally the profile is handed when the
+	// run ends. See internal/session/stats.go.
+	Stats Tally `json:"stats"`
+
+	// Victorious is whether the run has won the journey, claimed or walked on past.
+	Victorious bool `json:"victorious,omitempty"`
 }
 
 // LedgerFightSnapshot is one duel of the run's account.

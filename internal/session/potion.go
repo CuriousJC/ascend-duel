@@ -193,6 +193,7 @@ func (s *Session) Drink(key string) bool {
 	case PotionLife:
 		s.lifeBonus += p.Amount
 	}
+	s.count(StatPotionDrunk+key, 1)
 	return true
 }
 

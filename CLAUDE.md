@@ -778,13 +778,13 @@ screen's and the vial's row of the player's own cards: the three sort tabs the c
 carries, drag to reorder, and a selection that moves with its card. A sort re-applies on a deal and
 on a tab press, never every frame, so a drag holds until the player asks for an order back.
 
-### Five screens that are not stations of a run
+### Six screens that are not stations of a run
 
-**Settings, Achievements, Credits, RunOver and Goods.** None appears in `screens/flow.go` —
-which is what "not a station" means mechanically — and the chrome stands down on the first four.
-Goods keeps the reward screen's corner: the cog, the ledger and its own hands button. The
-first three are reached by an `actions.Open*` call and record `gs.ReturnScreen` so Back works
-from anywhere; **RunOver is the exception and goes to the title outright**, because the screen
+**Settings, the Compendium, Achievements, Credits, RunOver and Goods.** None appears in
+`screens/flow.go` — which is what "not a station" means mechanically — and the chrome stands down on
+the first five. Goods keeps the reward screen's corner: the cog, the ledger and its own hands
+button. The first four are reached by an `actions.Open*` call and record `gs.ReturnScreen` so Back
+works from anywhere — Achievements is opened from inside the Compendium and comes back to it; **RunOver is the exception and goes to the title outright**, because the screen
 it came from was drawing a run that has ended and there is nowhere to put the player back to.
 
 **Goods is the fifth and it is the one with a door of its own**. It is a sealed good, opened:
@@ -1725,7 +1725,8 @@ picking the active scene out of one registry. `internal/ui/scene.go` is the `Sce
 `screens.advanceRun`; nothing names its successor.
 
 ```
-fight  →  reward  →  shop  →  portal  →  fight ...     (the portal only after a portal room)
+fight  →  victory  →  reward  →  shop  →  portal  →  fight ...
+          (the victory once a run, after the last realm's boss; the portal only after a portal room)
 ```
 
 - **`session.Phase` is the station** — see `internal/session/flow.go`, which holds the order.
@@ -1738,6 +1739,11 @@ fight  →  reward  →  shop  →  portal  →  fight ...     (the portal only 
   `internal/screens/portal.go` and MECHANICS.md §The portal.
 - **Adding a screen is therefore three edits**: a phase in `session/flow.go`, an entry in
   `screens/flow.go`, and an entry in the registry in `internal/game`. No existing scene changes.
+- **The victory is the same kind of station**, stood at once a run: `Session.VictoryDue` is true only
+  straight after the last realm's boss, and the victory is counted in `WonFight`, before the player
+  answers — claiming it ends the run through `endRun` with `session.EndedInVictory`, continuing walks
+  on to the boss's reward. See `internal/screens/victory.go` and MECHANICS.md §The journey is won at
+  its last boss.
 - **`screens.enterRun` is the same table read at the door**. Continue puts the player
   on whichever scene draws the station the run was saved at, falling back to the combat screen for a
   phase with no scene — the same courtesy `advanceRun` extends during play.
@@ -1776,6 +1782,14 @@ fight  →  reward  →  shop  →  portal  →  fight ...     (the portal only 
   misspelling fails the launch rather than producing a row that sits locked forever. **A new
   moment is a constant in `internal/achieve/catalog.go` plus the one call site that raises it**,
   never something a file can assert into existence. See MECHANICS.md §Achievements.
+- **Lifetime statistics are a run's tally, handed to the profile once, when the run ends.**
+  `internal/session/stats.go` names every figure and counts purchases and uses inside the session
+  methods that perform them; a round is counted off the resolved log into a per-duel tally that joins
+  the run's only when the duel settles, because a consumable spent mid-duel saves the run and a
+  resume refights the room. `screens.recordRunStats` is the one write, and a chosen seed goes to
+  `Profile.ChosenStats` rather than nowhere. A new purchase or use is one `s.count` call in the
+  method that does it, and the Compendium reads it with no edit if it is a family prefix it already
+  shows.
 - **`profile.Counters` is bumped in memory and written when a duel ends**. A card played is not
   a disk write; `screens.settleCounters` is the one place the tallies land, on a win and on a
   defeat alike. A crash mid-duel loses that duel's counts, which was taken deliberately rather

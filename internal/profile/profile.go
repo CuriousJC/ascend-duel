@@ -83,6 +83,16 @@ type Profile struct {
 	// `unknown` takes for a field this build has never heard of.
 	Counters map[string]int `json:"counters,omitempty"`
 
+	// Stats is every finished run the player rolled, added together: duels won and lost, damage
+	// dealt, what was bought and used, and the records. ChosenStats is the same for runs started on
+	// a chosen seed. See stats.go for why the two are kept apart rather than one being dropped.
+	//
+	// **A run in progress is in neither.** It keeps its own tally, saved with it, and is added here
+	// once when it ends — so a resume cannot count a fight twice and a page wanting the whole
+	// picture adds the run on as it reads. See internal/session/stats.go.
+	Stats       Tally `json:"stats"`
+	ChosenStats Tally `json:"chosenStats"`
+
 	// Settings is what the player has chosen about the program rather than about a run: how loud
 	// the score is and how fast the game moves. **They are on the profile rather than in a file
 	// of their own** *(owner's call, 2026-08-27)* — the profile is already the per-user file the
@@ -332,6 +342,12 @@ func (p *Profile) merged() map[string]any {
 	if len(p.Counters) > 0 {
 		out["counters"] = p.Counters
 	}
+	if !p.Stats.Empty() {
+		out["stats"] = p.Stats
+	}
+	if !p.ChosenStats.Empty() {
+		out["chosenStats"] = p.ChosenStats
+	}
 	out["settings"] = p.Settings
 	return out
 }
@@ -340,7 +356,7 @@ func (p *Profile) merged() map[string]any {
 var known = map[string]bool{
 	"version": true, "installId": true, "tutorialSeen": true,
 	"achievements": true, "unlocks": true, "handsDiscovered": true,
-	"counters": true, "settings": true,
+	"counters": true, "settings": true, "stats": true, "chosenStats": true,
 }
 
 func unrecognized(raw map[string]any) map[string]any {

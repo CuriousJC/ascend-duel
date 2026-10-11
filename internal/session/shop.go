@@ -104,7 +104,11 @@ func (s *Session) BuyAs(key string, weightless bool) bool {
 	if weightless {
 		s.SetWeightless(key, true)
 	}
-	return s.Wear(key)
+	if !s.Wear(key) {
+		return false
+	}
+	s.count(StatRelicBought+key, 1)
+	return true
 }
 
 // Sell takes a worn relic off and pays its tier's sell-back figure. It reports whether

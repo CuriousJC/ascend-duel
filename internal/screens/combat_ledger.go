@@ -66,6 +66,14 @@ func (s *CombatScene) closeLedgerFight() {
 		outcome = session.OutcomeLost
 	}
 	s.run.EndFight(outcome)
+
+	// **The duel settles into the run's statistics here too**, for this function's reason: it is the
+	// one place a finished duel is written down whichever way it went.
+	creature := ""
+	if s.enemy != nil {
+		creature = s.enemy.Record
+	}
+	s.run.TallyFight(creature, outcome == session.OutcomeWon, s.round)
 }
 
 // dealtBy is what one side's hits came to in a round: the damage that actually landed on the

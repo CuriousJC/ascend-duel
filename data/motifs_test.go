@@ -71,3 +71,58 @@ func TestArtIsPerElement(t *testing.T) {
 		}
 	}
 }
+
+// TestEveryCreatureCardWearsAFlavorOfItsOwnForm. checkRecord refuses a creature card with no
+// form, with a flavor enemy_card_art.json does not have, or with a flavor of another form — the
+// corner mark and the picture must never disagree about whether a bite is a stab. This states the
+// rule and checks each refusal fires.
+func TestEveryCreatureCardWearsAFlavorOfItsOwnForm(t *testing.T) {
+	m := LoadMotifs()["goblins"]
+	r := m.Records[0]
+	good := r.Cards[0]
+
+	refuses := func(name string, c MotifCard) {
+		t.Helper()
+		rec := r
+		rec.Cards = []MotifCard{c}
+		defer func() {
+			if recover() == nil {
+				t.Errorf("a card with %s loaded", name)
+			}
+		}()
+		checkRecord(m, rec, "test")
+	}
+
+	noForm := good
+	noForm.Form = ""
+	refuses("no form", noForm)
+
+	defend := good
+	defend.Form = "defend"
+	refuses("the defend form", defend)
+
+	unknown := good
+	unknown.Flavor = "stab-spoon"
+	refuses("a flavor the catalog does not have", unknown)
+
+	crossed := good
+	crossed.Form = "crush"
+	crossed.Flavor = "stab-bite"
+	refuses("a flavor of another form", crossed)
+
+	art := LoadEnemyCardArt()
+	used := map[string]bool{}
+	motifs := LoadMotifs()
+	for _, key := range MotifOrder(motifs) {
+		for _, rec := range motifs[key].Records {
+			for _, c := range rec.Cards {
+				used[c.Flavor] = true
+			}
+		}
+	}
+	for _, flavor := range EnemyCardArtOrder(art) {
+		if !used[flavor] {
+			t.Errorf("no creature card wears %s, so its pictures would never be drawn", flavor)
+		}
+	}
+}

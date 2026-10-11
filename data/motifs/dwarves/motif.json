@@ -39,17 +39,21 @@
       "Actions": 4,
       "Cards": [
         {
-          "Label": "Pick",
+          "Label": "Pick Swing",
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-club",
           "Copies": 2
         },
         {
-          "Label": "Swing",
+          "Label": "Mattock",
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-club",
           "Copies": 4
         },
         {
@@ -57,6 +61,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-club",
           "Copies": 2
         }
       ]
@@ -82,6 +88,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-club",
           "Copies": 1
         },
         {
@@ -89,6 +97,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-club",
           "Copies": 3
         },
         {
@@ -96,6 +106,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-mass",
           "Copies": 4
         }
       ]
@@ -117,10 +129,12 @@
       "Actions": 6,
       "Cards": [
         {
-          "Label": "Prod",
+          "Label": "Haft Butt",
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-club",
           "Copies": 4
         },
         {
@@ -128,13 +142,17 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "slash",
+          "Flavor": "slash-blade",
           "Copies": 3
         },
         {
-          "Label": "Ambush",
+          "Label": "Axe Ambush",
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-blade",
           "Copies": 1
         }
       ]
@@ -160,6 +178,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 1
         },
         {
@@ -167,6 +187,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "slash",
+          "Flavor": "slash-blade",
           "Copies": 3
         },
         {
@@ -174,6 +196,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 4
         }
       ]
@@ -195,24 +219,30 @@
       "Actions": 5,
       "Cards": [
         {
-          "Label": "Chisel",
+          "Label": "Mallet",
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-club",
           "Copies": 2
         },
         {
-          "Label": "Mark",
+          "Label": "Rune Hammer",
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-club",
           "Copies": 4
         },
         {
-          "Label": "Struck Rune",
+          "Label": "Rune Blast",
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 2
         }
       ]
@@ -238,6 +268,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-blade",
           "Copies": 4
         },
         {
@@ -245,6 +277,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "slash",
+          "Flavor": "slash-blade",
           "Copies": 3
         },
         {
@@ -252,6 +286,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-blade",
           "Copies": 1
         }
       ]
@@ -277,27 +313,35 @@
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-club",
           "Copies": 3
         },
         {
-          "Label": "Hall Gate",
+          "Label": "Gate Fall",
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-mass",
           "Copies": 4
         },
         {
-          "Label": "Vault Shut",
+          "Label": "Vault Door",
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-mass",
           "Copies": 3
         },
         {
-          "Label": "Sealed Forever",
+          "Label": "Entomb",
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-mass",
           "Copies": 2
         }
       ],
@@ -320,17 +364,21 @@
       "Actions": 6,
       "Cards": [
         {
-          "Label": "Ember",
+          "Label": "Cinder Blast",
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 3
         },
         {
-          "Label": "Quench",
+          "Label": "Steam Burst",
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 4
         },
         {
@@ -338,6 +386,8 @@
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 3
         },
         {
@@ -345,6 +395,8 @@
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 2
         }
       ],
@@ -367,10 +419,12 @@
       "Actions": 6,
       "Cards": [
         {
-          "Label": "Lantern",
+          "Label": "Lantern Swing",
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-club",
           "Copies": 3
         },
         {
@@ -378,6 +432,8 @@
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-club",
           "Copies": 4
         },
         {
@@ -385,13 +441,17 @@
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-mass",
           "Copies": 3
         },
         {
-          "Label": "Nothing Comes Up",
+          "Label": "Deep Collapse",
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-mass",
           "Copies": 2
         }
       ],

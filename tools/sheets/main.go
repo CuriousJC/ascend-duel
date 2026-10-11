@@ -88,6 +88,14 @@ var sheets = []sheet{
 			"climb and where its coverage grid is checked.",
 	},
 	{
+		Dir:   "enemycardsheet",
+		Tool:  "./tools/enemycardsheet",
+		Title: "Enemy card sheet",
+		Blurb: "The pictures a creature's cards wear: every attack flavor in each element, every " +
+			"creature card that wears it, and how each motif leans across stab, slash and crush. " +
+			"A realm is chosen by motif, so this is where a motif's form lean is checked.",
+	},
+	{
 		Dir:   "motifreport",
 		Tool:  "./tools/motifreport",
 		Title: "Motif report",

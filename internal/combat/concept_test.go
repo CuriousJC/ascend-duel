@@ -33,14 +33,15 @@ func TestTheRegistryRefusesACardTheRulesCannotResolve(t *testing.T) {
 		name string
 		card data.CardData
 	}{
-		{"no label", data.CardData{Verb: "attack", Amount: 100, Cost: 1}},
-		{"unknown verb", data.CardData{Label: "Bad1", Verb: "smite", Amount: 100, Cost: 1}},
+		{"no label", data.CardData{Verb: "attack", Amount: 100, Cost: 1, Form: "stab"}},
+		{"unknown verb", data.CardData{Label: "Bad1", Verb: "smite", Amount: 100, Cost: 1, Form: "stab"}},
+		{"no form", data.CardData{Label: "Bad2", Verb: "attack", Amount: 100, Cost: 1}},
 		{"unknown form", data.CardData{Label: "Bad3", Verb: "attack", Amount: 100, Cost: 1, Form: "punch"}},
-		{"zero amount", data.CardData{Label: "Bad4", Verb: "attack", Amount: 0, Cost: 1}},
-		{"negative cost", data.CardData{Label: "Bad5", Verb: "attack", Amount: 100, Cost: -1}},
+		{"zero amount", data.CardData{Label: "Bad4", Verb: "attack", Amount: 0, Cost: 1, Form: "stab"}},
+		{"negative cost", data.CardData{Label: "Bad5", Verb: "attack", Amount: 100, Cost: -1, Form: "stab"}},
 
 		// Nothing reduces a blow to zero — a card that did would delete a whole opposing turn.
-		{"total defense", data.CardData{Label: "Bad6", Verb: "defend", Amount: 100, Cost: 3}},
+		{"total defense", data.CardData{Label: "Bad6", Verb: "defend", Amount: 100, Cost: 3, Form: "defend"}},
 	}
 
 	for _, c := range cases {
@@ -53,7 +54,7 @@ func TestTheRegistryRefusesACardTheRulesCannotResolve(t *testing.T) {
 func TestAKeyIsScopedToItsOwner(t *testing.T) {
 	// Forty creatures will want a card called Bite and they will not all want it at the same cost.
 	// The label collides freely; the key must not.
-	bite := data.CardData{Label: "Bite", Verb: "attack", Amount: 100, Cost: 2, Copies: 1}
+	bite := data.CardData{Label: "Bite", Verb: "attack", Amount: 100, Cost: 2, Form: "stab", Copies: 1}
 
 	wolf, err := RegisterConcept("TestWolf", bite)
 	if err != nil {
@@ -93,6 +94,7 @@ func TestTheDamageLadderIsTheCardsMultiplier(t *testing.T) {
 	for i, c := range cases {
 		id := mustTestConcept("Ladder"+string(rune('a'+i)), data.CardData{
 			Label: "Ladder" + string(rune('a'+i)), Verb: "attack", Amount: c.amount, Cost: 1,
+			Form: "stab",
 		})
 		if got := Plain(id).Damage(c.dmg); got != c.want {
 			t.Errorf("%d%% of DMG %d = %d, want %d", c.amount, c.dmg, got, c.want)

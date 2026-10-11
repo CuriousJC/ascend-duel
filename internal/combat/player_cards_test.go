@@ -1,6 +1,10 @@
 package combat
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/curiousjc/ascend-duel/data"
+)
 
 // The 2026-08-15 card set: three attack forms of three tiers, plus the three plans. Each of
 // the plans gets the case that says what it does, and the ladder gets the structural cases that
@@ -416,6 +420,39 @@ func TestTheLadderWalksItsOwnForm(t *testing.T) {
 	// form and therefore no ladder at all.
 	if up, _ := Neighbor(Brace, 1); ConceptOf(up).Verb != VerbShield {
 		t.Error("promoting a defense produced an attack")
+	}
+}
+
+// TestACreatureCardStandsOnNoLadder. A creature's cards carry forms and share the player's
+// registry, so a ladder read over the whole registry would put an ogre's club in the player's
+// crush row — and a Bash promoted, or a Slice told to be crush, could come out as a creature's
+// card. Only the player's concepts stand on a ladder.
+func TestACreatureCardStandsOnNoLadder(t *testing.T) {
+	club := data.CardData{Label: "Club", Verb: "attack", Amount: 100, Cost: 2, Form: "crush", Copies: 1}
+	ogre, ok := ConceptByKey(ScopedKey("TestLadderOgre", club.Label))
+	if !ok {
+		var err error
+		if ogre, err = RegisterConcept("TestLadderOgre", club); err != nil {
+			t.Fatalf("registering the ogre's club: %v", err)
+		}
+	}
+
+	for _, id := range Ladder(Bash) {
+		if id == ogre {
+			t.Error("the player's crush ladder holds a creature's card")
+		}
+	}
+	if got, ok := Counterpart(Slice, FormCrush); !ok || got != Bash {
+		t.Errorf("a Slice told to be crush came out as %v, want Bash", got)
+	}
+	if _, ok := Neighbor(ogre, 1); ok {
+		t.Error("a creature's card was promoted")
+	}
+	if _, ok := Counterpart(ogre, FormSlash); ok {
+		t.Error("a creature's card was turned into another form")
+	}
+	if Ladder(ogre) != nil {
+		t.Error("a creature's card has a ladder")
 	}
 }
 

@@ -35,6 +35,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "stab",
+          "Flavor": "stab-sting",
           "Copies": 4
         },
         {
@@ -42,6 +44,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "slash",
+          "Flavor": "slash-lash",
           "Copies": 3
         },
         {
@@ -49,6 +53,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 1
         }
       ]
@@ -69,6 +75,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 2
         },
         {
@@ -76,6 +84,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "slash",
+          "Flavor": "slash-lash",
           "Copies": 4
         },
         {
@@ -83,6 +93,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 2
         }
       ]
@@ -103,6 +115,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "stab",
+          "Flavor": "stab-sting",
           "Copies": 1
         },
         {
@@ -110,13 +124,17 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "slash",
+          "Flavor": "slash-lash",
           "Copies": 3
         },
         {
-          "Label": "Thicket",
+          "Label": "Thorn Thicket",
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "stab",
+          "Flavor": "stab-sting",
           "Copies": 4
         }
       ]
@@ -137,13 +155,17 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-lash",
           "Copies": 2
         },
         {
-          "Label": "Wind",
+          "Label": "Winding Vine",
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 4
         },
         {
@@ -151,6 +173,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 2
         }
       ]
@@ -167,10 +191,12 @@
       "Actions": 4,
       "Cards": [
         {
-          "Label": "Waft",
+          "Label": "Rot Waft",
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 1
         },
         {
@@ -178,6 +204,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 3
         },
         {
@@ -185,6 +213,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 4
         }
       ]
@@ -205,6 +235,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 4
         },
         {
@@ -212,6 +244,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 3
         },
         {
@@ -219,6 +253,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 1
         }
       ]
@@ -239,6 +275,8 @@
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 3
         },
         {
@@ -246,6 +284,8 @@
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-club",
           "Copies": 4
         },
         {
@@ -253,13 +293,17 @@
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-mass",
           "Copies": 3
         },
         {
-          "Label": "Old Growth",
+          "Label": "Timber Fall",
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-mass",
           "Copies": 2
         }
       ],
@@ -277,10 +321,12 @@
       "Actions": 6,
       "Cards": [
         {
-          "Label": "Whisker",
+          "Label": "Grass Lash",
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-lash",
           "Copies": 3
         },
         {
@@ -288,20 +334,26 @@
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "stab",
+          "Flavor": "stab-shot",
           "Copies": 4
         },
         {
-          "Label": "Overrun",
+          "Label": "Strangleweed",
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 3
         },
         {
-          "Label": "The Field Turns",
+          "Label": "Field Lash",
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-lash",
           "Copies": 2
         }
       ],
@@ -323,13 +375,17 @@
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-lash",
           "Copies": 3
         },
         {
-          "Label": "Bloom",
+          "Label": "Spore Bloom",
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 4
         },
         {
@@ -337,13 +393,17 @@
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "stab",
+          "Flavor": "stab-sting",
           "Copies": 3
         },
         {
-          "Label": "Everything Is One",
+          "Label": "Mycelial Grip",
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 2
         }
       ],

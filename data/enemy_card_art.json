@@ -1,0 +1,100 @@
+[
+  {
+    "Flavor": "stab-blade",
+    "Form": "stab",
+    "Name": "Blade point",
+    "Art": "",
+    "Draw": "A held point thrusting forward: a long dagger or spear-head made of vapor, driving out of the upper left toward the lower right, its tip drawn to a hard needle point. Behind the guard the grip frays into trailing smoke where a hand would be. Nothing else in the picture."
+  },
+  {
+    "Flavor": "stab-shot",
+    "Form": "stab",
+    "Name": "Shot",
+    "Art": "",
+    "Draw": "Something flying at you: a single arrow made of vapor in hard flight, steep and diagonal, its head a sharp point and its fletching streaming back into a long smoky trail. Two fainter arrows follow behind it in the trail, smaller, to say a volley."
+  },
+  {
+    "Flavor": "stab-sting",
+    "Form": "stab",
+    "Name": "Sting",
+    "Art": "",
+    "Draw": "A small natural point: a curved insect stinger made of vapor, ringed in segments, arching down from the top of the card with a single bead of venom gathering at its needle tip. The body it belongs to is only a dissolving wisp at the top edge."
+  },
+  {
+    "Flavor": "stab-horn",
+    "Form": "stab",
+    "Name": "Horn",
+    "Art": "",
+    "Draw": "A big natural point: a heavy curved horn made of vapor, thick at the root and tapering to a blunt-sharp tip, hooking up and forward as if tossed by a head we cannot see. The root dissolves into smoke at the lower left."
+  },
+  {
+    "Flavor": "stab-ray",
+    "Form": "stab",
+    "Name": "Ray",
+    "Art": "",
+    "Draw": "A piercing line of light: a narrow, perfectly straight beam of dense vapor crossing the card on a steep diagonal, brightest along its spine, ending in a tight starburst where it strikes. It starts from a small glowing eye-shaped knot of vapor at the upper left."
+  },
+  {
+    "Flavor": "stab-bite",
+    "Form": "stab",
+    "Name": "Bite",
+    "Art": "",
+    "Draw": "Teeth going in: a pair of open jaws made of vapor seen from the side, upper and lower rows of long pointed fangs about to close, the two front fangs the longest. No head behind them, only the jaws, their hinge dissolving into smoke at the back."
+  },
+  {
+    "Flavor": "slash-blade",
+    "Form": "slash",
+    "Name": "Blade",
+    "Art": "",
+    "Draw": "An edge in a hand: a broad curved blade made of vapor, sword or axe-like, caught at the end of a sweeping cut from upper right to lower left, with a crescent of trailing vapor following the arc of its edge. The grip frays into smoke where a hand would be."
+  },
+  {
+    "Flavor": "slash-claw",
+    "Form": "slash",
+    "Name": "Claw",
+    "Art": "",
+    "Draw": "Claws raking: three long hooked talons made of vapor dragging down across the card on a diagonal, spread like the fingers of a paw, each leaving a parallel trail of vapor behind its tip. The paw they grow from is only a dissolving knot at the top."
+  },
+  {
+    "Flavor": "slash-lash",
+    "Form": "slash",
+    "Name": "Lash",
+    "Art": "",
+    "Draw": "Something long and flexible: a single whip, vine or tail made of vapor, cracking across the card in one long S-curve from the upper left, thick at the base and thinning to a snapping tip at the lower right."
+  },
+  {
+    "Flavor": "slash-blast",
+    "Form": "slash",
+    "Name": "Blast",
+    "Art": "",
+    "Draw": "A wall of force sweeping over you: a broad crescent-shaped wave of dense vapor rolling across the card from left to right, its leading edge a sharp curved front and its body billowing behind it, like a breath, a shockwave or a gale given a shape."
+  },
+  {
+    "Flavor": "crush-club",
+    "Form": "crush",
+    "Name": "Club",
+    "Art": "",
+    "Draw": "A blunt thing in a hand: a heavy knotted club or hammer-head made of vapor, swung down from the upper right at the top of its arc, the head massive and squared, the haft fraying into smoke where a hand would be."
+  },
+  {
+    "Flavor": "crush-body",
+    "Form": "crush",
+    "Name": "Fist",
+    "Art": "",
+    "Draw": "The body as the weapon: one huge clenched fist made of vapor punching straight out of the card toward the viewer, knuckles foremost and foreshortened, the forearm behind it dissolving into a rush of smoke."
+  },
+  {
+    "Flavor": "crush-grip",
+    "Form": "crush",
+    "Name": "Grip",
+    "Art": "",
+    "Draw": "Holding and squeezing: a thick coil made of vapor wound twice round an empty space in the middle of the card and tightening, like a serpent's body or a closing tentacle, the coils pressing hard against each other. The end of the coil fades into smoke."
+  },
+  {
+    "Flavor": "crush-mass",
+    "Form": "crush",
+    "Name": "Boulder",
+    "Art": "",
+    "Draw": "A weight arriving: one great rough boulder made of dense vapor falling from the top of the card, heavy and angular, with a trail of smaller stones and smoke streaming up behind it."
+  }
+]

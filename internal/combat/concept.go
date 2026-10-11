@@ -140,13 +140,15 @@ func RegisterConcept(scope string, c data.CardData) (ConceptID, error) {
 		return NoConcept, fmt.Errorf("%s names verb %q, which is not one of %s", key, c.Verb, verbList())
 	}
 
-	form := FormNone
-	if c.Form != "" {
-		f, ok := ParseForm(c.Form)
-		if !ok {
-			return NoConcept, fmt.Errorf("%s names form %q, which the rules do not have", key, c.Form)
-		}
-		form = f
+	// **Every card has a form**, the player's and every creature's: it is the mark in the corner,
+	// the axis a pair is counted on, and the word a relic names. A card with none is refused, so
+	// FormNone is only ever an unset field — a relic condition naming no form — and never a card.
+	if c.Form == "" {
+		return NoConcept, fmt.Errorf("%s names no form, and every card is stab, slash, crush or defend", key)
+	}
+	form, ok := ParseForm(c.Form)
+	if !ok || form == FormNone {
+		return NoConcept, fmt.Errorf("%s names form %q, which the rules do not have", key, c.Form)
 	}
 
 	if c.Cost < 0 {
@@ -338,10 +340,12 @@ func (c Concept) Tier() int { return c.Cost }
 // so a card an essence cheapened does not slide down the ladder on the way across. Asking for the form a card already has answers the card
 // itself: a wasted pick, and the player's to waste.
 //
-// A form with no ladder — `FormNone`, which every enemy card is — reports false.
+// **Only the player's concepts stand on a ladder.** A creature's card carries a form, and it shares
+// this registry with the player's — so a ladder read over every concept would turn a Slice told to
+// be crush into an Ogre's club. A creature's card, or a form with no ladder, reports false.
 func Counterpart(id ConceptID, form Form) (ConceptID, bool) {
 	from := ConceptOf(id)
-	if form == FormNone || from.Form == FormNone {
+	if form == FormNone || !onLadder(id) {
 		return NoConcept, false
 	}
 	if form == from.Form {
@@ -358,7 +362,7 @@ func Counterpart(id ConceptID, form Form) (ConceptID, bool) {
 	}
 	want := tiers[slices.Index(own, from.Tier())%len(tiers)]
 
-	for other := range registry {
+	for other := range ladderLen() {
 		if c := registry[other]; c.Form == form && c.Tier() == want {
 			return ConceptID(other), true
 		}
@@ -366,10 +370,17 @@ func Counterpart(id ConceptID, form Form) (ConceptID, bool) {
 	return NoConcept, false
 }
 
+// ladderLen is how many concepts, from the front of the registry, stand on the form ladders: the
+// player's deck list, which registers first. Everything after it is a creature's.
+func ladderLen() int { return len(playerConcepts) }
+
+// onLadder reports whether a concept is one of the player's, and so has a ladder at all.
+func onLadder(id ConceptID) bool { return id >= 0 && int(id) < ladderLen() }
+
 // formTiers is every declared cost the form's concepts stand on, cheapest first.
 func formTiers(form Form) []int {
 	var tiers []int
-	for other := range registry {
+	for other := range ladderLen() {
 		if c := registry[other]; c.Form == form && !slices.Contains(tiers, c.Tier()) {
 			tiers = append(tiers, c.Tier())
 		}
@@ -381,10 +392,8 @@ func formTiers(form Form) []int {
 // Neighbor is the concept one rung up or down the same form's ladder, or false if there is
 // none — the top of a form cannot be promoted and the bottom cannot be demoted.
 //
-// **A form with no name has no ladder.** Every enemy card is `FormNone`, and they share this
-// registry with the player's, so matching on the zero form would step a Goblin's Bite onto a
-// Slime's. The player's cards are the only ones with a form, which is exactly the set that has a
-// ladder to walk.
+// **Only the player's concepts have a ladder.** A creature's cards carry forms too and share this
+// registry, so a ladder matched on form alone would step a Goblin's Stab onto a Slime's Glob.
 //
 // **The verb is matched rather than required to be an attack**. The defenses are a ladder too —
 // Brace and Block at 1/2 AP for 1/2 shields — so an Exalt or a Debase reaches them the same way it
@@ -396,12 +405,12 @@ func formTiers(form Form) []int {
 // `data/duelist_cards.json` declares rather than a second list to keep in step with it.
 func Neighbor(id ConceptID, step int) (ConceptID, bool) {
 	from := ConceptOf(id)
-	if from.Form == FormNone {
+	if !onLadder(id) {
 		return NoConcept, false
 	}
 
 	want := from.Tier() + step
-	for other := range registry {
+	for other := range ladderLen() {
 		c := registry[other]
 		if c.Form == from.Form && c.Verb == from.Verb && c.Tier() == want {
 			return ConceptID(other), true
@@ -413,20 +422,20 @@ func Neighbor(id ConceptID, step int) (ConceptID, bool) {
 // Ladder is every concept standing on one concept's own ladder — same form, same verb — in rung
 // order, cheapest first.
 //
-// **A form with no name has no ladder**, exactly as Neighbor has none: every enemy card is
-// `FormNone` and they share this registry with the player's, so a ladder matched on the zero form
-// would be every enemy card in the game standing in one row.
+// **Only the player's concepts have a ladder**, exactly as Neighbor reads it: a creature's cards
+// share this registry, so a ladder matched on form alone would put every creature's slashes in the
+// player's slash row.
 //
 // It scans the registry rather than reading a table, so the ladder stays a consequence of what
 // `data/duelist_cards.json` declares.
 func Ladder(id ConceptID) []ConceptID {
 	from := ConceptOf(id)
-	if from.Form == FormNone {
+	if !onLadder(id) {
 		return nil
 	}
 
 	var out []ConceptID
-	for other := range registry {
+	for other := range ladderLen() {
 		c := registry[other]
 		if c.Form == from.Form && c.Verb == from.Verb {
 			out = append(out, ConceptID(other))

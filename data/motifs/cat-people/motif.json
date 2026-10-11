@@ -43,6 +43,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 4
         },
         {
@@ -50,6 +52,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 3
         },
         {
@@ -57,6 +61,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 1
         }
       ]
@@ -82,6 +88,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 2
         },
         {
@@ -89,13 +97,17 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "stab",
+          "Flavor": "stab-blade",
           "Copies": 4
         },
         {
-          "Label": "Cutpurse",
+          "Label": "Purse Cut",
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-blade",
           "Copies": 2
         }
       ]
@@ -117,10 +129,12 @@
       "Actions": 4,
       "Cards": [
         {
-          "Label": "Bat",
+          "Label": "Swat",
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 1
         },
         {
@@ -128,6 +142,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 3
         },
         {
@@ -135,6 +151,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 4
         }
       ]
@@ -156,10 +174,12 @@
       "Actions": 6,
       "Cards": [
         {
-          "Label": "Stalk",
+          "Label": "Stalking Claw",
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 4
         },
         {
@@ -167,6 +187,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 3
         },
         {
@@ -174,6 +196,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 1
         }
       ]
@@ -195,10 +219,12 @@
       "Actions": 5,
       "Cards": [
         {
-          "Label": "Feint",
+          "Label": "Feint Thrust",
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "stab",
+          "Flavor": "stab-blade",
           "Copies": 2
         },
         {
@@ -206,6 +232,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "stab",
+          "Flavor": "stab-blade",
           "Copies": 4
         },
         {
@@ -213,6 +241,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-blade",
           "Copies": 2
         }
       ]
@@ -238,13 +268,17 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 1
         },
         {
-          "Label": "Crush",
+          "Label": "Crushing Bite",
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "stab",
+          "Flavor": "stab-bite",
           "Copies": 3
         },
         {
@@ -252,6 +286,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 4
         }
       ]
@@ -273,31 +309,39 @@
       "Actions": 6,
       "Cards": [
         {
-          "Label": "Correct",
+          "Label": "Cuff Claw",
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 3
         },
         {
-          "Label": "Discipline",
+          "Label": "Rake",
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 4
         },
         {
-          "Label": "Matriarch's Due",
+          "Label": "Mother's Claws",
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 3
         },
         {
-          "Label": "All Her Children",
+          "Label": "Every Claw",
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 2
         }
       ],
@@ -320,17 +364,21 @@
       "Actions": 6,
       "Cards": [
         {
-          "Label": "Unseen",
+          "Label": "Unseen Blade",
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "stab",
+          "Flavor": "stab-blade",
           "Copies": 3
         },
         {
-          "Label": "Behind You",
+          "Label": "Back Thrust",
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "stab",
+          "Flavor": "stab-blade",
           "Copies": 4
         },
         {
@@ -338,13 +386,17 @@
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "stab",
+          "Flavor": "stab-blade",
           "Copies": 3
         },
         {
-          "Label": "Gone Again",
+          "Label": "Vanishing Stab",
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "stab",
+          "Flavor": "stab-blade",
           "Copies": 2
         }
       ],
@@ -367,10 +419,12 @@
       "Actions": 6,
       "Cards": [
         {
-          "Label": "Bat Down",
+          "Label": "Bronze Swat",
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 3
         },
         {
@@ -378,6 +432,8 @@
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "slash",
+          "Flavor": "slash-blast",
           "Copies": 4
         },
         {
@@ -385,13 +441,17 @@
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 3
         },
         {
-          "Label": "None Shall Pass",
+          "Label": "Guardian Claw",
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "slash",
+          "Flavor": "slash-claw",
           "Copies": 2
         }
       ],

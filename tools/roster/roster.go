@@ -149,7 +149,7 @@ type Entry struct {
 	Motif string
 	Tier  string
 
-	Cards []data.CardData
+	Cards []data.MotifCard
 }
 
 // MotifPool is every record in every motif file, motif by motif, shallowest band first.
@@ -323,7 +323,7 @@ func stripFor(f *cards.Faces, e Entry) (*image.RGBA, error) {
 
 	deck := make([]*image.RGBA, 0, len(e.Cards))
 	for _, c := range e.Cards {
-		img, err := cards.Render(cardSpec(c, e.Element), cards.Hand, f)
+		img, err := cards.Render(cardSpec(c.CardData, e.Element), cards.Hand, f)
 		if err != nil {
 			return nil, fmt.Errorf("rendering %s.%s: %w", e.Record, c.Label, err)
 		}
@@ -569,13 +569,13 @@ func element(names []string) cards.Element {
 }
 
 // deckRows is the table under a strip: one row per concept, in the order the strip draws them.
-func deckRows(list []data.CardData) []row {
+func deckRows(list []data.MotifCard) []row {
 	out := make([]row, 0, len(list))
 	for _, c := range list {
 		out = append(out, row{
 			Label:  c.Label,
 			Verb:   c.Verb,
-			Effect: effectText(c),
+			Effect: effectText(c.CardData),
 			Cost:   c.Cost,
 			Copies: c.Copies,
 		})

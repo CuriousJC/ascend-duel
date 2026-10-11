@@ -53,9 +53,10 @@ type CardData struct {
 	Cost int `json:"Cost"`
 
 	// Form is which group of cards this concept belongs to — stab, slash, crush or defend. Empty
-	// means none, which is what every enemy card is: a form is the player's deck axis, the thing
-	// a pair is counted on and the mark in the card's corner, and an enemy card claiming to be a
-	// crush would be saying something untrue about a deck the player cannot build hands against.
+	// means none. **Every card the game deals has one**: the player's, and every creature's, whose
+	// cards are stab, slash or crush and are refused at load without one. A form is the thing a
+	// pair is counted on and the mark in the card's corner; a creature forms no hands, so on its
+	// cards the form says what kind of blow is coming.
 	Form string `json:"Form"`
 
 	// Elements is which colors this concept ships in. Empty means `basic` alone.

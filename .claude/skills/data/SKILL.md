@@ -27,6 +27,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `potions.json` | `LoadPotions` | the bottles the shop sells every visit: which of the duelist's figures each moves, by how much, and what it costs |
 | `tonics.json` | `LoadTonics` | the run-long rule changes the shop offers one per realm: an `Effect`, an `Amount`, an optional `Requires`, and a `Price` — see `internal/session/tonic.go` |
 | `goods.json` | `LoadGoods` | the sealed goods: which catalog is inside, how many are drawn, what the player keeps, and what it costs |
+| `enemy_card_art.json` | `LoadEnemyCardArt` | the pictures a creature's cards wear: one record per attack flavor (`stab-bite`, `crush-grip`), each a `Form`, a `Name`, an `Art` stem drawn as `<Art>-<element>`, and a `Draw` brief pasted after `docs/art/enemy_card_art_prompt.MD`. Every motif card names one in its `Flavor`; the `enemy-cards` skill is the procedure |
 | `upgrade_art.json` | `LoadUpgradeArt` | the art an upgraded card wears over its face: one record per upgrade plus `default`, each an `Art` stem under `assets/upgrade-art/` and a `Draw` brief — the `card_art.json` shape. Keys are checked against `systems.Upgrade` names in `internal/cards`, which `data` cannot import |
 | `screen_art.json` | `LoadScreenArt` | the backdrops behind every screen that is not a duel: one record per picture, the `Screens` it stands behind, a `Draw` brief pasted after `docs/art/screen_art_prompt.MD`, and optional `Anchors` — a card, a button or a painted place a brief positions something against, held to the layout by tests in `internal/screens`. Screen names are checked against `state.ActiveScreen` in `internal/state`, which `data` cannot import |
 | `achievements.json` | `LoadAchievements` | what the player has done: Steamworks' own achievement fields under Steamworks' own names, an icon and its brief, what is said when it lands, and a trigger |
@@ -91,12 +92,15 @@ creature's. Seven fields:
 - **No player card is drab**. Every card in the deck ships in one of the five
   elements, the defenses included — a color is worth a hand axis and a relic discount even
   where nothing the card does is elemental.
-- **A creature card carries no element of its own, and no form.** The colour belongs to the
+- **A creature card carries no element of its own, and always a form.** The colour belongs to the
   creature and comes from the realm: a record is dealt as one element and its whole deck takes it,
   the way a duelist's Jab is a concept that ships in five colours. A card naming its own elements
-  is **refused at load** — it would be a second answer to a question the realm already answers. A
-  form would be worse: it would claim a creature card forms hands, and
-  hands are the player's axis.
+  is **refused at load** — it would be a second answer to a question the realm already answers.
+  **The form is required** — stab, slash or crush, the player's own words — and so is a `Flavor`
+  naming a record in `data/enemy_card_art.json` of the same form: a creature card is a
+  `data.MotifCard`, the card language plus that one picture field. A creature still forms no hands
+  (`SoloAttacks`), and its concepts stand on no form ladder. The `enemy-cards` skill is the
+  procedure.
 
 ### Validation lives at registration, not in a cross-check
 

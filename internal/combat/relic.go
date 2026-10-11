@@ -759,8 +759,8 @@ func verbMoment(v RelicVerb) Moment {
 // the two vitae relics want and why the field is optional in the file.
 //
 // Comparable, and each predicate carries its own "is it set" flag because every one of the three has
-// a meaningful zero value: Basic is an element, FormNone is a form, and concept zero is the
-// player's first card.
+// a meaningful zero value: Basic is an element, FormNone is the form a condition names when it names
+// none, and concept zero is the player's first card.
 type RelicCondition struct {
 	Element    Element
 	HasElement bool
@@ -1845,7 +1845,7 @@ func distinctForms(cards []Card) int {
 	n := 0
 	for _, c := range cards {
 		f := c.Form()
-		if f == FormNone || int(f) >= len(seen) || seen[f] {
+		if int(f) >= len(seen) || seen[f] {
 			continue
 		}
 		seen[f] = true

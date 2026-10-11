@@ -106,8 +106,7 @@ const (
 	// a concept only by being its four elemental copies.
 	AxisConcept Axis = iota
 
-	// AxisForm counts cards of the same form — stab, slash, crush or defend. `FormNone` never
-	// counts, so an enemy's formless deck cannot build one.
+	// AxisForm counts cards of the same form — stab, slash, crush or defend.
 	//
 	// **Defend is a fourth form as of 2026-08-23**, since those cards join hands too. Twelve of the
 	// player's forty-eight cards share it, which makes it the commonest value on this axis.
@@ -149,13 +148,10 @@ func ParseAxis(name string) (Axis, bool) {
 
 // matchValue is what one card counts as on this axis, and whether it counts at all.
 //
-// **`FormNone` and `Basic` are absences rather than values** *(2026-08-19)*, so a card carrying
-// one matches nothing on that axis. Every enemy card is both, which is what stops a formless,
-// colorless deck from reading as a table full of elemental hands.
-//
-// **The player has no basic card left** *(2026-08-23)*. The defenses used to be the exception and
-// were excluded before this was asked anyway; they now ship in the five colors like every attack,
-// so `FormDefend` and every element are live values here and the absences belong to the enemies.
+// **`Basic` is an absence rather than a value**, so a basic card matches nothing on the element
+// axis. No player card is basic; a creature's deck dealt with no realm behind it — a fixture — is,
+// and it must not read as a table full of elemental hands. **Every card has a form**, so the form
+// axis always counts.
 // **It was unexported until 2026-09-06.** `internal/decks` mirrored it in three lines rather than
 // have it exported, on the argument that copying a rule that small was the smaller risk;
 // `internal/achieve` then wanted the same reading for the turn achievements, and two mirrors of one
@@ -168,8 +164,7 @@ func matchValue(c Card, a Axis) (int, bool) { return MatchValue(c, a) }
 func MatchValue(c Card, a Axis) (int, bool) {
 	switch a {
 	case AxisForm:
-		f := c.Form()
-		return int(f), f != FormNone
+		return int(c.Form()), true
 	case AxisElement:
 		e := c.Element
 		return int(e), e != Basic

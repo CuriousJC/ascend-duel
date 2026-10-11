@@ -5,17 +5,12 @@ import (
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/combat"
-
-	// **Imported for its side effect as much as for its cards.** Registering the enemy decks is
-	// what puts a genuinely formless, colorless card in the registry, and a formless card is the
-	// case every absence rule here turns on. `combat.Card{}` is not one — concept zero is a real
-	// player card with a real form.
 	"github.com/curiousjc/ascend-duel/internal/decks"
 )
 
-// drabCard is an enemy's card: no form, no color. The absence, rather than a card that happens to
-// be the zero value.
-func drabCard(t *testing.T) combat.Card {
+// basicCard is a creature's card dealt with no realm behind it — the one card the game can deal
+// that carries no element, which is the absence the element axis turns on.
+func basicCard(t *testing.T) combat.Card {
 	t.Helper()
 	records := decks.EnemyRecords()
 	if len(records) == 0 {
@@ -25,12 +20,10 @@ func drabCard(t *testing.T) combat.Card {
 	if len(cards) == 0 {
 		t.Fatalf("%s has no cards", records[0])
 	}
-	c := cards[0]
-	if c.Form() != combat.FormNone || c.Element != combat.Basic {
-		t.Fatalf("an enemy card is meant to carry neither a form nor a color, got %v/%v",
-			c.Form(), c.Element)
+	if cards[0].Element != combat.Basic {
+		t.Fatalf("a creature dealt with no realm is meant to be basic, got %v", cards[0].Element)
 	}
-	return c
+	return cards[0]
 }
 
 // card is a player card of a named concept and element, which is what a turn is made of.
@@ -332,17 +325,6 @@ func TestAWildcardCountsInEveryElement(t *testing.T) {
 	}
 }
 
-// TestAnEnemyCardCountsTowardNoForm, which is the same rule the hand matcher holds: FormNone and
-// Basic are absences rather than values.
-func TestAnEnemyCardCountsTowardNoForm(t *testing.T) {
-	got := CountersFor([]combat.Card{drabCard(t)})
-	for name := range got {
-		if name == "form:none" {
-			t.Error("a formless card contributes no form tally")
-		}
-	}
-}
-
 // TestCountsAreAThresholdNotACrossing. ByCounts is asked once at the end of a duel against settled
 // figures, so it must report everything at or over its mark rather than what moved last.
 func TestCountsAreAThresholdNotACrossing(t *testing.T) {
@@ -468,13 +450,9 @@ func TestABadRecordIsRefused(t *testing.T) {
 
 // TestAnAxisReadsTheSameWayTheHandMatcherDoes. This package keeps its own axisValue because
 // combat's is unexported, and a silent disagreement would mean an achievement counting a hand the
-// ladder does not. The rule that matters is that FormNone and Basic are absences.
+// ladder does not. The rule that matters is that Basic is an absence and a form always counts.
 func TestAnAxisReadsTheSameWayTheHandMatcherDoes(t *testing.T) {
-	drab := drabCard(t)
-	if _, ok := axisValue(drab, combat.AxisForm); ok {
-		t.Error("FormNone is an absence, not a form")
-	}
-	if _, ok := axisValue(drab, combat.AxisElement); ok {
+	if _, ok := axisValue(basicCard(t), combat.AxisElement); ok {
 		t.Error("Basic is an absence, not an element")
 	}
 

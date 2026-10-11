@@ -35,6 +35,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 2
         },
         {
@@ -42,6 +44,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 4
         },
         {
@@ -49,6 +53,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 2
         }
       ]
@@ -65,10 +71,12 @@
       "Actions": 5,
       "Cards": [
         {
-          "Label": "Spit",
+          "Label": "Glob",
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-mass",
           "Copies": 4
         },
         {
@@ -76,6 +84,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 3
         },
         {
@@ -83,6 +93,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 1
         }
       ]
@@ -99,10 +111,12 @@
       "Actions": 4,
       "Cards": [
         {
-          "Label": "Seep",
+          "Label": "Seeping Grip",
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 1
         },
         {
@@ -110,6 +124,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 3
         },
         {
@@ -117,6 +133,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 4
         }
       ]
@@ -133,10 +151,12 @@
       "Actions": 5,
       "Cards": [
         {
-          "Label": "Drip",
+          "Label": "Heavy Drip",
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-mass",
           "Copies": 2
         },
         {
@@ -144,13 +164,17 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 4
         },
         {
-          "Label": "Harden",
+          "Label": "Hard Slam",
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 2
         }
       ]
@@ -171,6 +195,8 @@
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 1
         },
         {
@@ -178,6 +204,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 3
         },
         {
@@ -185,6 +213,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 4
         }
       ]
@@ -201,10 +231,12 @@
       "Actions": 5,
       "Cards": [
         {
-          "Label": "Grit",
+          "Label": "Bounce",
           "Verb": "attack",
           "Amount": 50,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 4
         },
         {
@@ -212,6 +244,8 @@
           "Verb": "attack",
           "Amount": 100,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 3
         },
         {
@@ -219,6 +253,8 @@
           "Verb": "attack",
           "Amount": 200,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-mass",
           "Copies": 1
         }
       ]
@@ -235,31 +271,39 @@
       "Actions": 6,
       "Cards": [
         {
-          "Label": "Glint",
+          "Label": "Prism Glob",
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-mass",
           "Copies": 3
         },
         {
-          "Label": "Refract",
+          "Label": "Prism Smother",
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 4
         },
         {
-          "Label": "Prism Beam",
+          "Label": "Prism Slam",
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-body",
           "Copies": 3
         },
         {
-          "Label": "Whole Spectrum",
+          "Label": "Spectrum Crush",
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 2
         }
       ],
@@ -277,10 +321,12 @@
       "Actions": 6,
       "Cards": [
         {
-          "Label": "Fray",
+          "Label": "Fraying Grip",
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 3
         },
         {
@@ -288,6 +334,8 @@
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-grip",
           "Copies": 4
         },
         {
@@ -295,13 +343,17 @@
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-mass",
           "Copies": 3
         },
         {
-          "Label": "Nothing Left",
+          "Label": "Final Collapse",
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-mass",
           "Copies": 2
         }
       ],
@@ -323,6 +375,8 @@
           "Verb": "attack",
           "Amount": 60,
           "Cost": 1,
+          "Form": "crush",
+          "Flavor": "crush-mass",
           "Copies": 3
         },
         {
@@ -330,6 +384,8 @@
           "Verb": "attack",
           "Amount": 120,
           "Cost": 2,
+          "Form": "crush",
+          "Flavor": "crush-mass",
           "Copies": 4
         },
         {
@@ -337,6 +393,8 @@
           "Verb": "attack",
           "Amount": 250,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-mass",
           "Copies": 3
         },
         {
@@ -344,6 +402,8 @@
           "Verb": "attack",
           "Amount": 300,
           "Cost": 3,
+          "Form": "crush",
+          "Flavor": "crush-mass",
           "Copies": 2
         }
       ],

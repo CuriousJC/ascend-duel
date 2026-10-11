@@ -3,8 +3,7 @@ package profile
 // **The player, as opposed to the run: what has been achieved, what has been unlocked, and whether
 // the tutorial has been watched.**
 //
-// See TODO.md's profile entry for the shape this is filling in, and doc.go for why it is its own
-// file rather than a field on the run.
+// See doc.go for why it is its own file rather than a field on the run.
 
 import (
 	"crypto/rand"

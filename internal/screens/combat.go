@@ -1980,12 +1980,6 @@ func (s *CombatScene) traceLayout(gs *state.GlobalState) {
 
 	band := handBand(gs, s.laidOutCount())
 	trace.Rect("handBand", band)
-	// The band above the hand. Nothing is drawn there at rest — the feed left it on
-	// 2026-08-18 — but the hand dialog and the planned hand's name are both laid out
-	// against it, so it is worth a rectangle in the dump.
-	trace.Rect("mathBand", image.Rect(
-		tableInset, handTop(gs)-mathBandGapAboveCards-mathBandHeight,
-		gs.ScreenWidth-tableInset, handTop(gs)-mathBandGapAboveCards))
 	trace.Rect("duelistCard", ui.DuelistCardRect(gs))
 	trace.Rect("enemyCard", ui.EnemyCardRect(gs))
 	trace.Rect("relicPane", s.relicPaneRect(gs))

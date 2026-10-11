@@ -117,3 +117,50 @@ func drawWeightlessGhost(screen, face *ebiten.Image, at image.Point, t, phase fl
 	glow.ColorScale.ScaleAlpha(float32(0.08 + 0.14*pulse))
 	screen.DrawImage(face, glow)
 }
+
+// ephemeralTreatments is the ephemeral comparison's four columns: how a worn relic can be drawn,
+// with the two properties of the wearing on and off.
+var ephemeralTreatments = []struct {
+	name                  string
+	weightless, ephemeral bool
+}{
+	{"plain", false, false},
+	{"weightless", true, false},
+	{"weightless + ephemeral", true, true},
+}
+
+// drawEphemeralComparison is the page: one row per relic, one column per treatment, each drawn with
+// the game's own drawing over a relic pane's backing.
+func drawEphemeralComparison(gs *state.GlobalState, screen *ebiten.Image, origin image.Point) {
+	w := float64(cards.RelicStyle.Width) * weightlessScale
+	h := float64(cards.RelicStyle.Height) * weightlessScale
+	pitch := int(w) + 110
+	t := float64(gs.Count)
+
+	for col, tr := range ephemeralTreatments {
+		animText(gs, screen, tr.name, origin.X+col*pitch, origin.Y-14, animNoteSize, ui.GroundInk)
+	}
+	for row, key := range weightlessSamples {
+		r, ok := gs.Relics[key]
+		if !ok {
+			continue
+		}
+		face := ui.CardImage(gs, ui.RelicSpec(gs, r, "", true, false), cards.RelicStyle)
+		y := origin.Y + row*weightlessRowPitch
+		vector.DrawFilledRect(screen, float32(origin.X-10), float32(y+6),
+			float32(len(ephemeralTreatments)*pitch), float32(h)+28, relicPaneBackColor, false)
+
+		for col, tr := range ephemeralTreatments {
+			at := image.Pt(origin.X+col*pitch, y+20)
+			img := ui.EphemeralIf(face, tr.ephemeral)
+			if tr.weightless {
+				ui.DrawWeightless(screen, img, at, weightlessScale, t, float64(row)*2.1)
+				continue
+			}
+			op := &ebiten.DrawImageOptions{Filter: ebiten.FilterLinear}
+			op.GeoM.Scale(weightlessScale, weightlessScale)
+			op.GeoM.Translate(float64(at.X), float64(at.Y))
+			screen.DrawImage(img, op)
+		}
+	}
+}

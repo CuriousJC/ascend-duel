@@ -251,7 +251,7 @@ func TestParallelFiguresEmptyTheBarAsEachArrives(t *testing.T) {
 
 func TestTheLandingFigureIsTheSumsTotalContinuing(t *testing.T) {
 	// **Four things have to match for one number to appear to set off rather than two to swap**:
-	// the point, the frame, the color and the size. The point is `handMathRect`'s center at both
+	// the point, the frame, the color and the size. The point is the sum's total at both
 	// ends; the frame is `advancePlayback` clearing the box on the same tick the figure launches;
 	// and these are the other two.
 	//

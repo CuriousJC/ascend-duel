@@ -291,11 +291,8 @@ var cantripArt embed.FS
 var cardArt embed.FS
 
 // The damage badges, globbed the same way — `damage/damage-diamond-fire.png` is the key
-// `damage-diamond-fire`, which is what cards.BadgeArtKey builds.
-//
-// **Three shapes in six colors, and only one shape is drawn.** Which one is
-// `cards.DefaultBadgeShape`; the other twelve files are kept because the choice is still open and
-// regenerating a batch to change one's mind is the expensive way to look at an alternative.
+// `damage-diamond-fire`, which is what cards.BadgeFallbackArtKey builds, and every numbered one is
+// what cards.BadgeArtKey builds.
 //
 //go:embed damage/*.png
 var damageArt embed.FS

@@ -21,7 +21,7 @@ func TestTheShelfHoldsThreeRelicsTheRunIsNotWearing(t *testing.T) {
 	// would refuse the click anyway.
 	gs := testRun()
 
-	shelf := dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil)
+	shelf := dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil, nil)
 	if len(shelf) != shelfSize {
 		t.Fatalf("the shelf holds %d, want %d", len(shelf), shelfSize)
 	}
@@ -67,10 +67,10 @@ func TestALaterFightIsADifferentShop(t *testing.T) {
 	// but a shelf identical across a whole run would mean the fight index never reached the seed.
 	gs := testRun()
 
-	first := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil))
+	first := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil, nil))
 	for i := 0; i < 6; i++ {
 		gs.Run.WonFight(0, 0)
-		if !sameKeys(first, shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil))) {
+		if !sameKeys(first, shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil, nil))) {
 			return
 		}
 	}
@@ -103,7 +103,7 @@ func TestTheShelfIsCutToThreeAndNotPaddedToIt(t *testing.T) {
 			len(session.Relics()), combat.DefaultRelicSlots)
 	}
 
-	if got := dealShelf(&state.GlobalState{}, nil, nil); got != nil {
+	if got := dealShelf(&state.GlobalState{}, nil, nil, nil); got != nil {
 		t.Errorf("a game with no run was offered %v", shelfKeys(got))
 	}
 }
@@ -340,7 +340,7 @@ func TestTheTabsUnderAnArmedStoneStayInsideThePanel(t *testing.T) {
 // way Init does. **The stream is the scene's now** — a reroll advances its cursor — so a test that
 // wants one shelf has to open one, exactly as the screen does.
 func dealShelfFor(gs *state.GlobalState) []shelfItem {
-	return dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil)
+	return dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil, nil)
 }
 
 // The pile stands to the left of the control column and clear of the shelf above it. **The bug it
@@ -379,7 +379,7 @@ func TestARerollLeavesABoughtSeatSpent(t *testing.T) {
 	// rare there made this fail on affordability while saying nothing about rerolling.
 	gs.Run.AddVitae(20)
 	s := &ShopScene{stockRNG: shopRNG(gs, seeds.ShopStock)}
-	s.shelf = dealShelf(gs, s.stockRNG, nil)
+	s.shelf = dealShelf(gs, s.stockRNG, nil, nil)
 	if len(s.shelf) == 0 {
 		t.Fatal("the shop dealt no shelf at all")
 	}
@@ -428,7 +428,7 @@ func TestAMythicIsNeverOnTheTickets(t *testing.T) {
 	gs := testRun()
 	stock := shopRNG(gs, seeds.ShopStock)
 	for i := 0; i < 2000; i++ {
-		for _, item := range dealShelf(gs, stock, nil) {
+		for _, item := range dealShelf(gs, stock, nil, nil) {
 			if session.RelicRarity(item.key) == data.Mythic {
 				t.Fatalf("%s was drawn on tickets", item.key)
 			}
@@ -436,10 +436,31 @@ func TestAMythicIsNeverOnTheTickets(t *testing.T) {
 	}
 
 	found := false
-	for _, item := range dealShelf(gs, shopRNG(gs, seeds.ShopStock), rand.New(zeroSource{})) {
+	for _, item := range dealShelf(gs, shopRNG(gs, seeds.ShopStock), rand.New(zeroSource{}), nil) {
 		found = found || session.RelicRarity(item.key) == data.Mythic
 	}
 	if !found {
 		t.Error("a mythic roll that hit put no mythic on the shelf")
+	}
+}
+
+// TestTheWeightlessRollMovesNoRelic. **The roll has its own stream**, so a shelf dealt with it holds
+// exactly the relics one dealt without it does; a roll that always hits makes every seat weightless.
+func TestTheWeightlessRollMovesNoRelic(t *testing.T) {
+	gs := testRun()
+	plain := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil, nil))
+	floated := dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil, rand.New(zeroSource{}))
+	if !sameKeys(plain, shelfKeys(floated)) {
+		t.Fatalf("the weightless roll changed the shelf: %v, then %v", plain, shelfKeys(floated))
+	}
+	for _, item := range floated {
+		if !item.weightless {
+			t.Errorf("%s was not weightless under a roll that always hits", item.key)
+		}
+	}
+	for _, item := range dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil, nil) {
+		if item.weightless {
+			t.Errorf("%s was weightless with no roll", item.key)
+		}
 	}
 }

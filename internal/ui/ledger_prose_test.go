@@ -51,11 +51,10 @@ func TestEveryRecordKindReadsAsSomething(t *testing.T) {
 	}
 }
 
-// A term is several kinds of line in one column and each is picked by its role, so a role with no
-// case falls through to the card term and prints a card that is not there.
+// A term is several kinds of line in one column and each is picked by its role; a role this build
+// does not write draws as a hit, so a line read back from an older account still says something.
 func TestEveryTermRoleReadsAsSomething(t *testing.T) {
-	roles := []string{session.RoleHit, session.RoleCard, session.RoleFlat, session.RoleDMG,
-		session.RoleSum, session.RoleTotal}
+	roles := []string{session.RoleHit, session.RoleDMG, session.RoleTotal, "a-role-nothing-writes"}
 
 	for _, role := range roles {
 		rec := session.LedgerRecord{

@@ -65,6 +65,12 @@ const (
 	animWhatSize = systems.TextSmall
 
 	animRowHeight = 31
+
+	// The list is two columns of buttons: a button's width, and the pitch from one column's centers
+	// to the next's.
+	animButtonWidth  = 250
+	animColumnPitch  = 262
+	animLegendOffset = 34
 )
 
 // animHoldTicks is the still beat between one loop and the next. **A gesture read back to back with
@@ -78,7 +84,8 @@ func animHoldTicks() int { return ui.Beat(2, 3) }
 // percentage and laid out in pixels from there.
 const (
 	animListLeftPct  = 5
-	animListTopPct   = 20
+	animTitleTopPct  = 5
+	animListTopPct   = 12
 	animStageLeftPct = 34
 	animStageTopPct  = 24
 	animNotesTopPct  = 84
@@ -97,6 +104,11 @@ type animGesture struct {
 	name  string
 	where string
 	what  string
+
+	// definedOnly says the game never makes this movement: it is built and shown here to be compared
+	// or chosen, and nothing outside this page calls it. **Its button wears the carnelian face**, so
+	// what the game does and what it merely has are told apart at a glance.
+	definedOnly bool
 
 	// ticks is how long one run of it takes, read off the game's own clock so the gallery slows
 	// down and speeds up with the speed slider exactly as the real thing does.
@@ -296,6 +308,15 @@ var animGestures = []animGesture{
 		},
 	},
 	{
+		name:  "ephemeral",
+		where: "ui.EphemeralFace, ephemeral.go",
+		what:  "A relic that leaves after the fight fades to its foot and breaks its border: plain, weightless, both.",
+		ticks: func() int { return ui.Beat(8, 1) },
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawEphemeralComparison(gs, screen, at.Min)
+		},
+	},
+	{
 		name:  "use: essence",
 		where: "ui.Consume, ExitAbsorb",
 		what:  "Lifted to the stage, absorbed in rising light; its motes change the card it was aimed at.",
@@ -333,37 +354,41 @@ var animGestures = []animGesture{
 		},
 	},
 	{
-		name:  "wrap: orbit",
-		where: "ui.DrawParticleWrap, MotionOrbit",
-		what:  "The same, but every element circles its total: only the sprite and the color differ.",
-		ticks: func() int { return ui.Beat(4, 1) },
+		name:        "wrap: orbit",
+		definedOnly: true,
+		where:       "ui.DrawParticleWrap, MotionOrbit",
+		what:        "The same, but every element circles its total: only the sprite and the color differ.",
+		ticks:       func() int { return ui.Beat(4, 1) },
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
 			drawWrapGrid(gs, screen, at.Min, ui.MotionOrbit, false)
 		},
 	},
 	{
-		name:  "wrap: glow",
-		where: "ui.DrawParticleWrap, Emitter.Glow",
-		what:  "Elemental physics with each sprite drawn a second time additively, to brighten in its own color.",
-		ticks: func() int { return ui.Beat(4, 1) },
+		name:        "wrap: glow",
+		definedOnly: true,
+		where:       "ui.DrawParticleWrap, Emitter.Glow",
+		what:        "Elemental physics with each sprite drawn a second time additively, to brighten in its own color.",
+		ticks:       func() int { return ui.Beat(4, 1) },
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
 			drawWrapGrid(gs, screen, at.Min, ui.MotionElemental, true)
 		},
 	},
 	{
-		name:  "trail: shards",
-		where: "ui.DrawParticleTrail, ParticleShards",
-		what:  "The hit's figure flying into a card, trailing pieces of its element.",
-		ticks: trailGalleryTicks,
+		name:        "trail: shards",
+		definedOnly: true,
+		where:       "ui.DrawParticleTrail, ParticleShards",
+		what:        "The hit's figure flying into a card, trailing pieces of its element.",
+		ticks:       trailGalleryTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
 			drawTrailRows(gs, screen, at.Min, ui.ParticleShards, s.t.Age)
 		},
 	},
 	{
-		name:  "trail: sparks",
-		where: "ui.DrawParticleTrail, ParticleSparks",
-		what:  "The hit's figure flying into a card, trailing sparks of its element's color.",
-		ticks: trailGalleryTicks,
+		name:        "trail: sparks",
+		definedOnly: true,
+		where:       "ui.DrawParticleTrail, ParticleSparks",
+		what:        "The hit's figure flying into a card, trailing sparks of its element's color.",
+		ticks:       trailGalleryTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
 			drawTrailRows(gs, screen, at.Min, ui.ParticleSparks, s.t.Age)
 		},
@@ -437,20 +462,26 @@ func (s *AnimationsScene) Init(gs *state.GlobalState) {
 		s.back = models.NewButton(220, ui.ButtonMedium, "BACK", func() { s.leave(gs) })
 		for i := range animGestures {
 			i := i
-			b := models.NewButton(280, ui.ButtonTiny, animGestures[i].name, func() { s.pick(gs, i) })
+			b := models.NewButton(animButtonWidth, ui.ButtonTiny, animGestures[i].name, func() { s.pick(gs, i) })
 			b.TextSize = animNameSize
+			b.BaseColor = systems.ButtonJade
+			if animGestures[i].definedOnly {
+				b.BaseColor = systems.ButtonRed
+			}
 			s.rows = append(s.rows, b)
 		}
 	}
 
 	left := gs.PctX(animListLeftPct)
 	top := gs.PctY(animListTopPct)
+	// **Two columns, filled down then across**, so the list reads in the order it is written.
+	perColumn := (len(s.rows) + 1) / 2
 	for i, b := range s.rows {
-		b.ScreenX = left + 140
-		b.ScreenY = top + i*animRowHeight + animRowHeight/2
+		b.ScreenX = left + animButtonWidth/2 + (i/perColumn)*animColumnPitch
+		b.ScreenY = top + (i%perColumn)*animRowHeight + animRowHeight/2
 	}
 
-	s.back.ScreenX, s.back.ScreenY = left+140, gs.ScreenHeight-70
+	s.back.ScreenX, s.back.ScreenY = left+animButtonWidth/2, gs.ScreenHeight-70
 	s.pick(gs, s.at)
 }
 
@@ -497,8 +528,10 @@ func (s *AnimationsScene) Update(gs *state.GlobalState) error {
 func (s *AnimationsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	ui.FillGround(screen)
 
-	animText(gs, screen, animTitle, gs.PctX(animListLeftPct), gs.PctY(11),
+	animText(gs, screen, animTitle, gs.PctX(animListLeftPct), gs.PctY(animTitleTopPct),
 		animTitleSize, ui.GroundInk)
+	animText(gs, screen, "jade: the game uses it  -  carnelian: defined, not used",
+		gs.PctX(animListLeftPct), gs.PctY(animTitleTopPct)+animLegendOffset, animNoteSize, animStageInk)
 
 	for _, b := range s.rows {
 		systems.DrawButton(gs, screen, b)

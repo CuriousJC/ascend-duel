@@ -16,8 +16,8 @@
 // bound is a bug that only shows up on the machine of the player who plays most.
 //
 // **It goes through profile.Store rather than through `os`.** Nothing above the storage boundary
-// may know a save is a file — see the platform-readiness ticket in TODO.md — and a second thing
-// reaching for `filepath` is a second thing to port.
+// may know a save is a file, and a second thing reaching for `filepath` is a second thing to
+// port.
 //
 // # What is in it, and in what order
 //

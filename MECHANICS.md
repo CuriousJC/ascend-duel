@@ -53,14 +53,13 @@ The run is written to disk between rooms and every run has a six-character code 
 | [Cantrips](#cantrips--altering-the-duelist-for-one-fight) | strengthening the duelist for the fight a cantrip is cast in | built |
 | [Tonics](#tonics) | permanent changes to the chassis, one offered per realm | built |
 | [Vitae](#vitae) | the currency and what a win pays | built |
-| [The journey](#the-journey) | eight realms, three rooms, the portal, the growth curve | built except the door choice |
+| [The journey](#the-journey) | eight realms, three rooms, the portal, the growth curve | built |
 | [Enemies](#enemies) | the roster, the planner, what a creature may do | built |
 | [The profile](#the-profile--what-survives-a-run) | what outlives a run, and the menus around it | built |
 | [Achievements](#achievements) | the three triggers and the closed vocabulary | built |
 | [Randomness](#randomness) | what is rolled and what may never be | built |
 | [The ledger](#the-ledger--the-runs-account-of-itself) | the run's account of itself | built |
 | [Overlays](#overlays) | the panels that cover the table | built |
-| [Open questions](#open-questions) | every `[?]` in one place | — |
 
 ---
 
@@ -104,14 +103,6 @@ hand multiplier.
 
 **Nothing subtracts from the action budget, so it has no floor.** Every term is non-negative. A
 future subtraction brings its own floor with it.
-
-`[?]` **Nothing has measured the roster against a hit per card.** Enemy HP and damage are tuned
-by hand, no simulation exists, and losing to a realm that cannot be beaten looks exactly like
-losing to bad draws — see *Enemies* below.
-
-`[?]` **How enemies scale through the realms.** Enemies are fully-specified records with no level
-term. A level multiplier — damage `level × 10`, speed `level × 5` — is the shape that has been
-suggested. Nothing scales with realm today.
 
 ---
 
@@ -715,11 +706,6 @@ mechanism that pays for that choice.
 the opponent's turn: there is one axis, one number per rung, and one place to look for what a hand
 is worth.
 
-Hands are **discovered**, not given, and discovery persists on the **profile** — part of the
-roguelike unlock structure, not the run. `[?]` **Discovery is not enforced** —
-`profile.Profile.HandsDiscovered` is the field waiting for it and every hand is live. Gating the
-*table* is the whole of the change when it lands; nothing else moves.
-
 ### The catalog is data
 
 *`data/hands.json`, with `data/hands_data.go` holding its shape and
@@ -915,10 +901,6 @@ hit**, with every relic its card matches.
 made the hand. Two readers ask the narrower question: `RiderScaleInCombo` — the `DMG IF IT SCORES`
 upgrade, whose whole subject is membership — and the screen's lift, which says which cards made the
 rung.
-
-`[?]` **What a hit per card opens.** A hit is the unit an element can be judged on, so an ice hit
-against an ice creature *healing* it rather than harming it is now a rule with somewhere to live.
-Not built.
 
 ### What the axis costs
 
@@ -1156,10 +1138,9 @@ inside a hand whose own two cards deal nothing. The Pair paying the identity mea
 loses nothing to the multiplier — what can still cost them is which cards the rung is made of. **Reading the board to avoid that is part of the game** rather than a bug to design out.
 
 **Hand IDs are written in the file, never derived.** There is **one ID per catalog key**, so
-reordering the cards cannot renumber a hand a player has already found — which matters the day
-profile discovery starts recording them. **They are banded by axis**: 1 for the No Hand, 10 for
+reordering the cards cannot renumber a hand. **They are banded by axis**: 1 for the No Hand, 10 for
 the merged Pair, 11–15 concept, 21–25 form, 31–38 element. The gaps are deliberate, so a new rung
-lands in its own band without moving anything. **Once a profile records them, they freeze.**
+lands in its own band without moving anything.
 
 **Straights are dropped rather than invented** — the concepts have no natural order to be
 consecutive in, and the grammar has no notion of consecutiveness for one to be written in.
@@ -1720,6 +1701,13 @@ knows what comes after the shop — `session.PhaseShop` is a station of the run 
   mythic the run is not wearing; otherwise it draws on tickets from everything else. A share of the
   tickets would move every time a common was authored; a flat 0.1% a seat does not. **A mythic
   wears a near-black border** so the art is the loudest thing on the card.
+- **One shelf relic in twenty is sold weightless** *(owner's call, 2026-10-11)*. Every seat rolls
+  one in twenty (`data.WeightlessOdds`) on its own stream, `seeds.ShelfWeightless`, after its relic
+  is picked and whatever its rarity, and a hit is drawn floating on the shelf. It costs what it
+  always costs, goes on over a full row, and keeps the flag for as long as it is worn; selling it
+  takes the flag off, so the same record bought again weighs what its new offer says. **A roll and
+  not a rule because it is a find rather than a decision**: it never moves a price or a pick, and a
+  run that never sees one has lost nothing it was counting on.
 - **Three priced tiers rather than a number per relic.** A per-relic price can only be judged one relic
   at a time and drifts; a tier is read against the whole catalog at a glance, and rebalancing a
   relic is moving it rather than inventing a figure. **What that costs, said out loud:** two relics
@@ -3068,12 +3056,16 @@ cantrip's own record key.
   consumables pane holds three. The run keeps the flag per relic record
   (`Session.SetWeightless`), saves it with the run, and hands it to the duelist on the worn relic;
   only the relics that weigh something count against the fingers or toward the pane's `n/5`. Nothing
-  in the shipped game sets it on a run relic yet.
+  in the shipped game sets it on a run relic but a weightless offer on the shelf — see §The shop.
 - **A weightless relic floats off the row it takes no slot in** *(owner's call)*: lifted, drifting,
   a little see-through, with a band of light passing down it, drawn from its own card with no art
   of its own. A relic that is firing toasts like any other. Its tooltip ends on the word
-  **Weightless**, and an ephemeral one's on **Ephemeral**. How an ephemeral relic is told apart on
-  its face is not designed yet.
+  **Weightless**, and an ephemeral one's on **Ephemeral**.
+- **An ephemeral relic fades toward its foot and its border is broken** *(owner's call,
+  2026-10-11)*: 90% opaque across the top, 10% across the bottom, with the border cut by breaks long
+  and short (`ui.EphemeralFace`) — a relic that leaves after the fight, drawn already going. The
+  breaks are derived from the outline, never rolled. It is a mask over its own card, so it composes with the float: a cantrip's relic
+  is both, faded and lifted.
 - **A DMG a cantrip moved is written in the relic pink** on the duelist card for the rest of the
   fight. The life fraction carries no mark; it is simply the bigger number.
 - **A bundle of scrolls draws with replacement** while the catalog is shorter than the smallest
@@ -3255,20 +3247,14 @@ unrelated creatures who happen to share a corridor.
   can offer and then fail to build is worse than one that never existed.
 - **A record is dealt as exactly one element and its whole deck takes it.** There is no element
   anywhere on a creature's card: the colour belongs to the creature, the way a duelist's Jab is a
-  concept that ships in five colours. Today the element marks the attacks and picks the picture,
-  and `[?]` what else it should do — a resistance, something the realm does to the *player* — is
-  open.
+  concept that ships in five colours. The element marks the attacks, picks the picture,
+  and makes a hit of its own element fizzle — see §A creature's own element.
 - **A record carries one picture per element it can be dealt as.** A fire goblin serf and an ice
   goblin serf are two drawings of one creature.
 
 - **The portal room is the realm's third room and the boss is a record of the same motif.** It is a
   face the player can be told about, tiered above the two rooms below it and further along the
   growth curve than either, but it is not a separate catalog: a goblin realm ends on a goblin.
-- `[?]` **A boss has no advantage of its own yet.** What separates it from the creatures below it
-  is its place on the curve and its own base stat line. One advantage per boss, drawn from a pool
-  the record carries out of a closed vocabulary, is the decision still to make. See TODO.md.
-- `[?]` Whether an inner-chamber creature should differ from an outer one by anything other than
-  its place on the curve.
 
 ### The growth curve
 
@@ -3313,10 +3299,6 @@ it is the only way on: there is no Back and no Skip.
   run code plus its picks is the whole path.
 - **Past the top of the journey the journey wraps onto realm one's single offer**, and a portal with one
   realm behind it is walked past rather than shown.
-- **After fights 1 and 2: a choice of two doors** — "next fight on this realm", where the portal is
-  "next realm". Not built.
-- **Doors hint at what is behind them.** Cold coming off the door for an ice enemy, smoke for
-  fire — the shape of what is coming without its name.
 - **Generate every option, always.** Rolling only the chosen one shifts every subsequent draw in
   the run.
 
@@ -3378,12 +3360,6 @@ which is several times the journey on its own; the growth curve multiplies on to
 that costs a player is unmeasured** — read the realm bands off `go run ./tools/motifsheet` rather
 than from a figure written here.
 
-`[?]` Whether the curve should be flatter now that it stacks on the roster's own progression, or
-whether the roster should flatten instead and let the curve carry the journey.
-
-`[?]` What distinguishes one portal from another. `[?]` Whether the shop and the door choice
-are one screen or two, and in which order.
-
 ---
 
 ## Enemies
@@ -3419,8 +3395,6 @@ before pressing DUEL!.
   card came round first would make it worth least against exactly the opponents that swing most.
 - **It is a flag on the duelist, never a rule about side B.** The engine has no idea which side is a
   person and must not learn — a headless simulation plays both sides.
-- **`[?]` Whether a boss or an affix can give an enemy hands back.** The flag is per duelist, so
-  nothing in the rules forbids it.
 
 ### One planner
 
@@ -3851,71 +3825,15 @@ relic bought or sold, the stone spent and the rung it raised, and what the purse
 
 ## Overlays
 
-Two kinds, and the distinction matters because there is no Escape key and no right click:
+Two kinds, and the distinction matters because there is no right click, and Escape only presses the settings cog:
 
 - **Modal** — fills the screen, everything behind goes dead, requires a deliberate action to
-  leave. The deck overlay today; a hand reference later. Its exit must be the brightest thing
+  leave. The deck panel and the hands panel. Its exit must be the brightest thing
   on screen or it is a trap.
-- **Transient** — flashes over a frozen screen, takes no input, dismisses itself. The **HAND**
-  splash. Needs no exit affordance precisely because it accepts nothing.
-
-**The freeze is already built.** `eventDwell` decides how long each event holds the screen, so a
-`KindHand` event with a splash-length dwell gets a frozen screen for free and the splash draws
-while the playback cursor rests there. Presentation-only, so it cannot touch the outcome, and
-splash length joins the pacing constants destined to become the game-speed setting.
+- **Transient** — flashes over a frozen screen, takes no input, dismisses itself. Needs no exit
+  affordance precisely because it accepts nothing.
 
 **A hand never has to be drawn *across* rows**, because it gets a line of its own, in amber, at
 the moment it forms. The bracket-or-join problem simply stopped existing, which
 is worth recording as the pattern — **one row per slot was being asked to answer two questions at
 once, and the fix was a line of prose, not a cleverer drawing.**
-
-The **hand splash** above is still wanted and still unbuilt; a sentence makes a hand *legible*,
-not *loud*. Freezing the screen for a splash-length `KindHand` remains free.
-
----
-
-## Open questions
-
-Every `[?]` above, in one place. Each is a decision nobody has taken, not a thing nobody has
-written down.
-
-**Balance, and the reason all of it is open:** *nothing in this repo simulates a duel.* An
-unwinnable realm looks exactly like a run of bad draws, no test goes red, and every price and
-every stat below is therefore a judgment.
-
-- `[?]` **Nothing has measured the roster against a hit per card.** Enemy HP and DMG are tuned
-  by hand, and every flat bonus and drain scales with how many hits a turn throws.
-- `[?]` **How enemies scale through the realms.** Records carry no level term; the growth curve is the
-  only thing that scales one.
-- `[?]` **Whether the growth curve should be flatter**, now that it compounds on top of the
-  roster's own progression — or whether the roster should flatten and let the curve carry it.
-- `[?]` **Whether a Pair relic is priced right.** A turn satisfies every rung its cards reach, so
-  the Pair family is near-unconditional while still being priced as a conditional one.
-
-**Mechanics that exist and are unfinished:**
-
-- `[?]` **Hand discovery is not enforced.** `profile.Profile.HandsDiscovered` is the field waiting
-  for it and every rung is live.
-- `[?]` **Almost every relic is about attacking.** The one defensive mechanic is among the game's
-  strongest and no verb reaches it; filling the gap means a verb that raises, keeps or spends a
-  shield.
-- `[?]` **Where a run acquires a *carried* essence** — a shop seat, a sealed good, a reward that
-  offers keep-or-spend. Only a fixture puts one in the satchel today.
-- `[?]` **Long press is unbuilt**, and it is the whole of the touchscreen and controller story for
-  the reveal hover already gives.
-
-**Journey and rooms:**
-
-- `[?]` **What distinguishes one portal from another.**
-- `[?]` **Whether the shop and the door choice are one screen or two**, and in which order.
-- `[?]` **Whether a boss carries an affix by default**, and whether several bosses on one realm
-  should differ in shape rather than only in name and picture.
-- `[?]` **Whether a boss or an affix may give an enemy hands back.** The flag is per duelist, so
-  nothing in the rules forbids it.
-
-**Determinism and color:**
-
-
-
-- `[?]` **Eight of the ten upgrade inks are placeholders** on a wheel with no hue left to claim.
-

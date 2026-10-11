@@ -65,7 +65,6 @@
 
   "term": {
     "dmg": "+{n} DMG",
-    "flat": "+{n} each hit",
     "total": "every hit",
     "lands": "  + {relic} lands it again",
     "grown": " (grown {n})"

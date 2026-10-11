@@ -211,9 +211,9 @@ func drawBadge(dst *image.RGBA, s Spec, st Style, f *Faces) error {
 		st.GlyphInset+st.BadgeSize, st.BadgeTop+st.BadgeSize)
 
 	// **The numeral is part of the drawing for every value somebody drew**, in the card's own
-	// element and one shape across the whole catalog — see DefaultBadgeShape and BadgeValues. Type
+	// element and one shape across the whole catalog — see BadgeValues. Type
 	// and art do not reduce the same way, and the badge is drawn at 32 and at 16.
-	if key := BadgeArtKey(DefaultBadgeShape, s.BadgePct, s.Element); key != "" {
+	if key := BadgeArtKey(s.BadgePct, s.Element); key != "" {
 		if glyph := systems.ArtMark(key, st.BadgeSize, st.BadgeSize); glyph != nil {
 			placeInk(dst, glyph, box, st.GlyphScale, glyphFade(s), st)
 			return nil
@@ -223,7 +223,7 @@ func drawBadge(dst *image.RGBA, s Spec, st Style, f *Faces) error {
 	// **A value nobody drew gets the blank badge and printed type**, which is what the whole
 	// mechanic looked like before the numerals arrived. It is reachable: a boss deck carries 60,
 	// 120 and 250, and the `add-dmg` essence scales a card to 150% of whatever it was.
-	if glyph := systems.ArtMark(badgeFallbackArtKey(DefaultBadgeShape, s.Element), st.BadgeSize, st.BadgeSize); glyph != nil {
+	if glyph := systems.ArtMark(BadgeFallbackArtKey(s.Element), st.BadgeSize, st.BadgeSize); glyph != nil {
 		placeInk(dst, glyph, box, st.GlyphScale, glyphFade(s), st)
 	}
 
@@ -294,19 +294,8 @@ func sampleAt(dst *image.RGBA, x, y int) color.RGBA {
 	return c
 }
 
-// BadgeShape is which outline the damage badge takes. Three were drawn so the choice could be made
-// by looking rather than by imagining; all three ship, and one is drawn.
-type BadgeShape string
-
-const (
-	BadgeCircle    BadgeShape = "circle"
-	BadgeStarburst BadgeShape = "starburst"
-	BadgeDiamond   BadgeShape = "diamond"
-)
-
-// DefaultBadgeShape is the one the game draws. **The single place the choice is made**, so trying
-// another is one edit rather than a rename across an asset directory.
-const DefaultBadgeShape = BadgeDiamond
+// badgeShape is the damage badge's outline, as it is spelled in the badge files' names.
+const badgeShape = "diamond"
 
 // BadgeValues is every multiplier the numbered badges are drawn for, in ladder order.
 //
@@ -320,7 +309,7 @@ const DefaultBadgeShape = BadgeDiamond
 // and every creature (50, 100, 200) with room above for what a relic or an essence can push a card
 // to. It does **not** cover everything the rules can produce — the `add-dmg` essence scales a card
 // to 150%, so a Skewer reaches 4.5x and a Jab lands on 0.75x, and a boss deck carries 60, 120 and
-// 250 — and that is what badgeFallbackArtKey is for.
+// 250 — and that is what BadgeFallbackArtKey is for.
 var BadgeValues = []int{25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900}
 
 // badgeValueTokens is the filename token for each drawn value. **Words for the fractions**, because
@@ -340,29 +329,28 @@ func BadgeValueToken(pct int) string { return badgeValueTokens[pct] }
 // is not one of the five elements answers the neutral drawing, exactly as MarkArtKey does, so a
 // creature's card draws a hueless badge rather than none. A value nobody drew answers **""**, and
 // the caller falls back to the blank badge with the figure printed on it — see
-// badgeFallbackArtKey. A missing value has to be a visible difference rather than a missing badge.
-func BadgeArtKey(shape BadgeShape, pct int, e Element) string {
+// BadgeFallbackArtKey. A missing value has to be a visible difference rather than a missing badge.
+func BadgeArtKey(pct int, e Element) string {
 	tok := badgeValueTokens[pct]
 	if tok == "" {
 		return ""
 	}
 	if !hasArt(e) {
-		return "damage-" + string(shape) + "-" + tok + "-neutral"
+		return "damage-" + badgeShape + "-" + tok + "-neutral"
 	}
-	return "damage-" + string(shape) + "-" + tok + "-" + e.String()
+	return "damage-" + badgeShape + "-" + tok + "-" + e.String()
 }
 
-// badgeFallbackArtKey is the blank badge, with no numeral drawn on it, for a multiplier outside
+// BadgeFallbackArtKey is the blank badge, with no numeral drawn on it, for a multiplier outside
 // BadgeValues. The figure is printed on top of it in the card's own type.
 //
-// **It is the same eighteen files the unnumbered set shipped as**, kept rather than deleted: a
-// value nobody drew still has to show *something*, and a blank badge under printed type is the
-// picture that was on screen before the numerals arrived.
-func badgeFallbackArtKey(shape BadgeShape, e Element) string {
+// A value nobody drew still has to show *something*, and a blank badge under printed type is the
+// honest picture of it.
+func BadgeFallbackArtKey(e Element) string {
 	if !hasArt(e) {
-		return "damage-" + string(shape) + "-neutral"
+		return "damage-" + badgeShape + "-neutral"
 	}
-	return "damage-" + string(shape) + "-" + e.String()
+	return "damage-" + badgeShape + "-" + e.String()
 }
 
 // drawCounter puts Spec.Counter on a disc centered on the card’s bottom-right corner.

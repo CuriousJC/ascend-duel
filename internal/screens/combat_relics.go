@@ -836,6 +836,14 @@ func (s *CombatScene) wornWeightless(seat int) bool {
 	return s.fighter.Relics[seat].Weightless
 }
 
+// wornEphemeral reports whether the relic in this seat leaves at the end of the fight.
+func (s *CombatScene) wornEphemeral(seat int) bool {
+	if s.fighter == nil || seat < 0 || seat >= len(s.fighter.Relics) {
+		return false
+	}
+	return s.fighter.Relics[seat].Ephemeral
+}
+
 // relicCardCenter is the middle of one worn seat's card, which is where that relic's multiplier sets
 // off from on its way into its line.
 //
@@ -915,7 +923,16 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 		if !toast.lit && s.wornWeightless(i) {
 			face := ui.CardImage(gs, ui.RelicSpec(gs, relic, counters[relic.RelicRecord], true, false),
 				cards.RelicStyle)
-			ui.DrawWeightless(screen, face, at, 1, float64(gs.Count), float64(i)*2.1)
+			ui.DrawWeightless(screen, ui.EphemeralIf(face, s.wornEphemeral(i)), at, 1,
+				float64(gs.Count), float64(i)*2.1)
+			continue
+		}
+
+		// **An ephemeral relic fades toward its bottom edge** *(owner's call)*, on the same float
+		// as the rest of the row. See ui.EphemeralFace.
+		if !toast.lit && s.wornEphemeral(i) {
+			ui.DrawEphemeralFloating(gs, screen, at, i,
+				ui.RelicSpec(gs, relic, counters[relic.RelicRecord], true, false), cards.RelicStyle)
 			continue
 		}
 
@@ -943,8 +960,10 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 		switch {
 		case s.relicSeatArriving(raised):
 		case s.wornWeightless(raised):
-			ui.DrawWeightless(screen, ui.CardImage(gs, spec, cards.RelicStyle), at, 1,
-				float64(gs.Count), float64(raised)*2.1)
+			ui.DrawWeightless(screen, ui.EphemeralIf(ui.CardImage(gs, spec, cards.RelicStyle),
+				s.wornEphemeral(raised)), at, 1, float64(gs.Count), float64(raised)*2.1)
+		case s.wornEphemeral(raised):
+			ui.DrawEphemeralFloating(gs, screen, at, raised, spec, cards.RelicStyle)
 		default:
 			ui.DrawFloatingCard(gs, screen, at, raised, spec, cards.RelicStyle)
 		}

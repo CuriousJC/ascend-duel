@@ -28,8 +28,8 @@ import (
 // that has already left. Nothing in this file is consulted by a rule, a predicate or a
 // button's enabled state.
 //
-// It is animated on its own clock rather than through beatTicks. That is deliberate
-// and recorded in TODO.md: playback pacing is one constant with one caller precisely so a
+// It is animated on its own clock rather than through beatTicks. That is deliberate:
+// playback pacing is one constant with one caller precisely so a
 // new event kind cannot silently inherit a timing nobody chose, and card movement is not an
 // event.
 

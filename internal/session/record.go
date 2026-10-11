@@ -107,23 +107,11 @@ const (
 	// times and writes three. What became of the hit attaches to its line.
 	RoleHit = "hit"
 
-	// RoleCard is one landing's card and relics without its arithmetic. **Nothing writes it**; the
-	// translator still reads it, so an account saved with one on it still draws.
-	RoleCard = "card"
-
-	// RoleFlat is a term no card paid, which named the relic that put it in every hit. **Nothing
-	// writes it**; the translator still reads it, so an account saved with one on it still draws.
-	RoleFlat = "flat"
-
 	// RoleDMG is what a relic did to the DMG the blow was swung at. **It is not a term and carries
 	// no figure in a hit's line's column** — the bigger figure is already inside every card term below
 	// it, and this says where it came from. Without it the relic would be invisible, which is the
 	// one thing a relic may never be.
 	RoleDMG = "dmg"
-
-	// RoleSum is several terms written out as one sum. **Nothing writes it**; the translator still
-	// reads it, so an account saved with one on it still draws.
-	RoleSum = "sum"
 
 	// RoleTotal is what every hit of a blow came to together, under the hits.
 	RoleTotal = "total"

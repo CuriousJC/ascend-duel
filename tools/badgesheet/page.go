@@ -71,11 +71,10 @@ const pageHTML = `<!doctype html>
 </table>
 {{end}}
 
-<h2>The three outlines, unnumbered</h2>
+<h2>The blank badge</h2>
 <p class="note">
-  The shape is still an open choice, so all three ship and one is drawn — see
-  <code>DefaultBadgeShape</code>. These are the blank badges, which are also what a multiplier
-  nobody drew falls back to, with its figure printed on top in the card's own type.
+  What a multiplier nobody drew falls back to, with its figure printed on top in the card's own
+  type — see <code>cards.BadgeFallbackArtKey</code>.
 </p>
 <table class="zoomed">
   <tr>

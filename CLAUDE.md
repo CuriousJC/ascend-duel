@@ -170,7 +170,7 @@ go run ./tools/tonicsheet    # every tonic: its rule, its tooltip, and the realm
 go run ./tools/achievementsheet  # every achievement's Steam fields and icon pair, at 256 and 64: the upload set
 go run ./tools/upgradesheet  # every visible card upgrade, on every form mark, in every upgrade style
 go run ./tools/goodsheet     # every sealed good beside the offer it actually makes
-go run ./tools/badgesheet    # every damage badge: eleven values by six colors, in all three outlines
+go run ./tools/badgesheet    # every damage badge: eleven values by six colors, and the blank fallback
 go run ./tools/interfacesheet # the lettering in every ink, every button face, square button, glyph and bar cell
 go run ./tools/scenariosheet # every debug fixture: what it plugs in and the command that launches it
 go run ./tools/scenariodeck -form slash -size 40   # writes a scenario's Deck block to stdout
@@ -667,8 +667,7 @@ vocabulary below, and building against it is correct — the controller layer is
 happens before release, not a thing each new screen bolts on. What each new screen owes it is one
 question answered while the screen is being designed: **could a focus ring walk this?** A control
 that only answers to a cursor's position, an action with no discrete step, or an ordering that
-exists only as a drag is a screen that will have to be redesigned rather than adapted. See the
-platform-readiness section of [TODO.md](TODO.md) for the ticket and its constraints.
+exists only as a drag is a screen that will have to be redesigned rather than adapted.
 
 **Two rules the controller work does not get to bend.** There is no virtual cursor — a pad drives
 focus, never a hidden mouse. And a semantic action reaches only controls that are visible on the
@@ -1084,12 +1083,11 @@ the page it is all reviewed on.
   both ways, at 18pt. `blitGlyph` clips whatever it composites to the rounded shape, which is what
   keeps a mark placed hard into a corner from squaring the card off.
 - **The damage badge carries the card's multiplier, and the numeral is drawn into the art.**
-  `cards.BadgeArtKey` picks it by shape, value and element out of `assets/damage/`; a value with
+  `cards.BadgeArtKey` picks it by value and element out of `assets/damage/`; a value with
   no drawn badge falls back to the blank badge with its figure printed on top, which is the one
-  fallback in the interface art. **Which outline it takes is still open** —
-  `cards.DefaultBadgeShape` is the one line that picks, and `go run ./tools/badgesheet` is the
-  matrix it is chosen on. `cards.Spec` still has no `Damage` field: the badge says what the
-  *card* multiplies by, never what the wielder would deal with it.
+  fallback in the interface art. **The outline is the diamond**, and `go run ./tools/badgesheet`
+  is the matrix the set is reviewed on. `cards.Spec` still has no `Damage` field: the badge says
+  what the *card* multiplies by, never what the wielder would deal with it.
 - **A card's picture is a function of the card *and who is holding it*.** A slash in the hands
   of someone wearing The Sickle must not read "2x DMG" and deal four times their DMG — the card's
   multiplier and the relic's scaling are applied in different places. `ui.HeldBy` is the

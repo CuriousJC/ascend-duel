@@ -104,7 +104,6 @@ var (
 // words around the figures.
 var (
 	SayTermDMG     = word("term.dmg", "n")
-	SayTermFlat    = word("term.flat", "n")
 	SayTermTotal   = word("term.total")
 	SayFactorLands = word("term.lands", "relic")
 	SayFactorGrown = word("term.grown", "n")

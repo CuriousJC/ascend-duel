@@ -21,8 +21,6 @@ import (
 	"image"
 	"sort"
 
-	"github.com/hajimehoshi/ebiten/v2"
-
 	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -38,8 +36,8 @@ import (
 // essence that eats eats all of them. The scene carries that as its own flag and this carries the
 // card.
 type essenceLanding struct {
-	// from is the seat this card was drawn in when it was picked, and the seat it flies out of.
-	// **The card that moves is the card the player was looking at.**
+	// from is the seat this card was drawn in when it was picked, and the seat it changes in.
+	// **The card that changes is the card the player was looking at, where they were looking at it.**
 	from image.Rectangle
 
 	before combat.Card
@@ -120,68 +118,6 @@ func previewEssence(gs *state.GlobalState, w session.Essence, at []int,
 		}
 	}
 	return lands, true
-}
-
-// tickLandings steps every change by one frame and reports whether they have all finished.
-//
-// **One beat for all of them** *(owner's call, the shield break's rule and the hand morph's)*. Four
-// cards changing one after another is four pauses over a row the player is waiting to read, and
-// what the beat says is one thing about the essence rather than one thing about each card.
-func tickLandings(lands []essenceLanding) bool {
-	done := true
-	for i := range lands {
-		if !lands[i].change.Done() {
-			lands[i].change.Tick()
-			done = false
-		}
-	}
-	return done
-}
-
-// landingSeats is how many settled seats a row of landings takes: one each, or two each while a
-// copy is being made — the original and the copy standing beside it.
-func landingSeats(lands []essenceLanding, copied bool) int {
-	if copied {
-		return 2 * len(lands)
-	}
-	return len(lands)
-}
-
-// drawLandings puts the settled row up: every picked card flying to its own seat in the middle,
-// changing there, and held while the player reads what it became.
-//
-// **The flight carries the old face and the morph carries the new one**, which is why nothing here
-// asks what the essence did beyond the one flag it is handed: a removal ends on an empty seat, a
-// duplicate ends on two cards, everything else ends on one.
-//
-// **An eaten card leaves nothing.** The morph is what draws the absence, by having no second face
-// to hand over to — a seat outlined over the space a dissolve has just cleared puts the card's
-// silhouette back on the table the frame after eating it.
-func drawLandings(gs *state.GlobalState, screen *ebiten.Image, lands []essenceLanding,
-	arrival ui.Travel, copied bool) {
-
-	seats := settledSeats(gs, landingSeats(lands, copied))
-
-	for i, l := range lands {
-		seat := i
-		if copied {
-			seat = 2 * i
-		}
-		if seat >= len(seats) {
-			return
-		}
-
-		at := ui.FlyingTo(l.from, seats[seat], arrival)
-		if !copied {
-			ui.DrawMorph(gs, screen, at, l.change)
-			continue
-		}
-
-		// The card that was picked, untouched: while a copy is being made it is drawn plainly, and
-		// the morph in the seat beside it is the whole of what is happening.
-		ui.DrawCard(gs, screen, at, cards.Hand, l.before, ui.HeldByRun(gs, l.before), true, false)
-		ui.DrawMorph(gs, screen, seats[seat+1].Min, l.change)
-	}
 }
 
 // essenceMotes is what an essence's change travels as: the new element's own sparks for an essence

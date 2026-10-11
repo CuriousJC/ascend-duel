@@ -119,9 +119,8 @@ that shows up only on the machine of the player who plays most.
   `internal/profile` and the audio device are already under.
 - **Capture may never change an outcome.** It joins playback speed, the debug flags,
   `internal/trace`, `internal/idle` and the scripted demo. `ResolveRound` never sees any of it.
-- **It writes through the storage boundary, not through `os`.** See the platform-readiness ticket in
-  `TODO.md`: nothing above the backend may know a save is a file, and a second thing reaching for
-  `filepath` is a second thing to port.
+- **It writes through the storage boundary, not through `os`.** Nothing above the backend may know
+  a save is a file, and a second thing reaching for `filepath` is a second thing to port.
 - **`internal/combat` may never import any of it**, for `internal/trace`'s reason: the rules package
   stays free of everything, which is what makes it testable without a window.
 - **No file name is taken from further up without being checked.** `checkName` refuses a name

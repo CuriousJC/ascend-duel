@@ -58,8 +58,8 @@ const (
 	// event.
 	anchorRelic
 
-	// anchorSumLine is a hit's line of figures in the hand dialog, under the card that threw it.
-	anchorSumLine
+	// anchorHitLine is a hit's line of figures in the hand dialog, under the card that threw it.
+	anchorHitLine
 
 	// anchorBlow is where a hit's damage figure was last seen, and it is the one anchor with a rule
 	// rather than a rectangle: **the hit's own line when the turn scored a hand, the acting card's
@@ -105,7 +105,7 @@ func (a anchor) String() string {
 		return "the target fighter's card"
 	case anchorRelic:
 		return "the relic named on the event"
-	case anchorSumLine:
+	case anchorHitLine:
 		return "the hit's line"
 	case anchorBlow:
 		return "wherever this hit's figure last was"
@@ -213,11 +213,11 @@ var choreography = map[combat.EventKind]flightSpec{
 		"the bar reaching zero says it; a word as well would say it twice",
 	},
 	combat.KindHand: {
-		anchorActorSeat, anchorSumLine, gestureFly,
+		anchorActorSeat, anchorHitLine, gestureFly,
 		"each card's own figure flies out of that card into its hit's line - the dialog that started this",
 	},
 	combat.KindFizzled: {
-		anchorNone, anchorSumLine, gestureStrike,
+		anchorNone, anchorHitLine, gestureStrike,
 		"a fizzle wastes one hit, so what is struck out is that hit's line and nothing else - the word says why",
 	},
 	combat.KindHealed: {

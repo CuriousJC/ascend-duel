@@ -42,6 +42,10 @@ var rarityTiers = map[Rarity]struct {
 	Mythic:   {price: 10, sell: 4, weight: 0},
 }
 
+// WeightlessOdds is the chance, one in this many, that a shelf seat's relic is sold weightless —
+// worn without taking a finger. Every seat rolls, whatever its rarity.
+const WeightlessOdds = 20
+
 // MythicOdds is the chance, one in this many, that a shelf seat holds a mythic relic.
 //
 // **A mythic is not drawn on tickets.** Its weight is zero, so the ordinary draw never reaches one,

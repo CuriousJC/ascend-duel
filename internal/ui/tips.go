@@ -256,9 +256,7 @@ func ElementWord(element string) string {
 // RoundTimerTip explains the bar under the journey place: what the cells are, and what happens when
 // the last one lights.
 //
-// **The bar has no legend anywhere else**, which is the objection TODO.md already files against
-// every other figure written straight onto the table — so it arrives with one rather than joining
-// the list. The sentence names the consequence in full: a player who has read this cannot be
+// **The bar has no legend anywhere else**, so it arrives with one. The sentence names the consequence in full: a player who has read this cannot be
 // surprised by the death, and a timer that killed without having said so would be the worst kind
 // of hidden rule.
 // SortTip names one sort tab. **A title and nothing under it**: the button's picture says the rest.

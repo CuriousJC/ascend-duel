@@ -15,9 +15,8 @@ import "github.com/curiousjc/ascend-duel/internal/tutorial"
 
 // Teach attaches a script to this run, starting it at its first step.
 //
-// **Nothing in the game calls it yet.** Whether a given player has already been taught is a
-// profile question and there is no profile — see TODO.md — so today the caller is the scenario
-// fixture. When a real trigger arrives it calls this and nothing else changes.
+// The caller is the run's builder, `screens.buildRun`, once `tutorialForThisRun` has said this
+// run is taught.
 func (s *Session) Teach(script tutorial.Script) { s.tutorial = tutorial.NewRun(script) }
 
 // Tutorial is the teaching run, or nil if this run is not being taught. **Nil is the ordinary

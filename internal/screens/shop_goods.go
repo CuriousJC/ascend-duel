@@ -88,12 +88,10 @@ const (
 	// essence row already follow.
 	goodsPick
 
-	// goodsShowing: an essence has been spent and what it did is on screen — the card flies to the
-	// middle and changes there, exactly as it does on the reward screen *(owner's call,
-	// 2026-09-16)*. It was missing here: the vial applied the essence on the click and closed, so
-	// the one screen where a player pays five vitae for an alteration was the one that never showed
-	// them the alteration. **Only the vial reaches this stage** — a stone and a rune change no card,
-	// so there is nothing to watch.
+	// goodsShowing: an essence has been spent and what it did is on screen — the essence is used
+	// where it stands and the picked cards change where they stand in the row, exactly as on the
+	// reward screen. See essenceInPlace. **Only the vial reaches this stage** — a stone and a rune
+	// change no card, so there is nothing to watch.
 	goodsShowing
 
 	// goodsCarrying: a rune or a cantrip has been taken and is flying into its seat in the
@@ -138,16 +136,14 @@ type goods struct {
 	tip models.Tooltip
 
 	// What the spent essence did, held on screen through goodsShowing. **The reward screen's own
-	// fields and the same rules** — see PostBattleScene, where each of these is written up: the card
-	// that flies is the card the player was looking at, the morph is the change happening in front
-	// of them, and the deck is not touched until the hold is over.
-	lands       []essenceLanding
-	removes     bool
-	copied      bool
-	held        int
-	arrival     ui.Travel
-	arrivedFrom image.Rectangle
-	applyNow    func(*session.Session)
+	// fields and the same rules** — see PostBattleScene, where each of these is written up: the
+	// cards change in the seats the player picked them in, and the deck is not touched until the
+	// hold is over. The change itself runs on `use`.
+	lands    []essenceLanding
+	removes  bool
+	copied   bool
+	held     int
+	applyNow func(*session.Session)
 
 	// What a taken rune or cantrip looks like on its way to the pane, through goodsCarrying: its
 	// face, the seat it left, the pane seat it is landing in, and the clock.
@@ -156,7 +152,8 @@ type goods struct {
 	carrySeat int
 	carryTrip ui.Travel
 
-	// use is a stone taken from a bag being used up, through goodsUsing.
+	// use is a card being used up: a stone taken from a bag, through goodsUsing, or a vial's
+	// essence absorbed in its own seat, through goodsShowing.
 	use ui.Consume
 }
 
@@ -200,10 +197,9 @@ func (g *goods) openNow() bool { return g.stage != goodsClosed }
 func (g *goods) reset() {
 	g.good, g.stage = session.Good{}, goodsClosed
 	g.stones, g.essences, g.runes, g.cantrips = nil, nil, nil, nil
-	g.row.offer, g.row.selected = nil, nil
+	g.row.offer, g.row.selected, g.row.hidden = nil, nil, nil
 	g.lands = nil
-	g.removes, g.copied, g.held = false, false, 0
-	g.arrival, g.arrivedFrom, g.applyNow = ui.Travel{}, image.Rectangle{}, nil
+	g.removes, g.copied, g.held, g.applyNow = false, false, 0, nil
 	g.carryFace, g.carryFrom, g.carrySeat, g.carryTrip = cards.Spec{}, image.Rectangle{}, -1, ui.Travel{}
 	g.use = ui.Consume{}
 	g.tip.Forget()
@@ -636,7 +632,7 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 			Seat:    i,
 			Targets: deckCardIDs(gs, g.selectedDeckIndexes()),
 		})
-		g.show(gs, essence, g.selectedSlots())
+		g.show(gs, essence, i, g.selectedSlots())
 
 	case session.ContentsStones:
 		stone := g.stones[i]
@@ -681,15 +677,16 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 	}
 }
 
-// show is the vial's last stage: the picked card flies to the middle, the essence changes it there,
-// and the dialog closes once the player has had time to read what it became.
+// show is the vial's last stage: the essence in `seat` is used where it stands, the picked cards
+// change where they stand, and the dialog closes once the player has had time to read what they
+// became.
 //
 // **The preview runs the real essence against a throwaway copy of the run**, and the deck is not
 // touched until the hold is over — both are the reward screen's rules, written up in
 // PostBattleScene.aimAt. A preview computed by its own arithmetic is a preview that can disagree
 // with the thing it is previewing, and a deck altered while the result is on screen would make the
 // after-card impossible to draw from anything but a deck that has already moved on.
-func (g *goods) show(gs *state.GlobalState, essence session.Essence, slots []int) {
+func (g *goods) show(gs *state.GlobalState, essence session.Essence, seat int, slots []int) {
 	if gs.Run == nil || len(slots) == 0 {
 		return
 	}
@@ -720,7 +717,16 @@ func (g *goods) show(gs *state.GlobalState, essence session.Essence, slots []int
 	g.copied = essence.Target == session.TargetDuplicate
 
 	g.stage, g.held = goodsShowing, settledHoldTicks()
-	g.arrival, g.arrivedFrom = ui.NewTravel(0, settleFlightTicks()), from[0]
+
+	// **The picked seats are the morphs' while it runs**, so the row leaves them empty — except for
+	// a copy, whose original is untouched and stays drawn. PostBattleScene.settle's rule.
+	g.use = essenceInPlace(gs, essence, g.slot(gs, seat), lands, g.copied)
+	if !g.copied {
+		g.row.hidden = make(map[int]bool, len(slots))
+		for _, slot := range slots {
+			g.row.hidden[slot] = true
+		}
+	}
 
 	// **The commitment is by identity, not by position**, the reward screen's rule: an essence may
 	// take several cards, and removing one moves every deck position above it.
@@ -730,18 +736,12 @@ func (g *goods) show(gs *state.GlobalState, essence session.Essence, slots []int
 	trace.Logf("shop", "vial of essence: %s aimed at deck positions %v", essence.Record, at)
 }
 
-// tickShowing runs the held picture: the flight, then the change, then the hold, and the deck edit
-// at the end of it.
-//
-// **The change does not start until the card has landed**, and the hold does not start until the
-// change has finished — the reward screen's ordering, and for its reason: a dissolve running over a
-// moving card puts the one thing worth watching on a target the eye is still chasing.
+// tickShowing runs the held picture: the essence used in its seat and the cards changing in theirs,
+// then the hold, and the deck edit at the end of it. **The hold does not start until every change
+// has landed** — the reward screen's ordering.
 func (g *goods) tickShowing(gs *state.GlobalState) {
-	if !g.arrival.Done() {
-		g.arrival.Tick()
-		return
-	}
-	if !tickLandings(g.lands) {
+	if !g.use.Done() {
+		g.use.Tick()
 		return
 	}
 
@@ -798,7 +798,8 @@ func (g *goods) drawCards(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 
 	if g.stage == goodsShowing {
-		g.drawShowing(gs, screen)
+		g.row.draw(gs, screen)
+		g.use.Draw(gs, screen)
 		return
 	}
 	if g.stage == goodsCarrying {
@@ -851,16 +852,6 @@ func (g *goods) title() string {
 		return "CHANGED"
 	}
 	return g.good.Title
-}
-
-// drawShowing is the picked card flying to the middle, changing there, and held while it is read.
-//
-// **The flight carries the old face and the morph carries the new one**, which is why nothing here
-// asks what the essence did — `change` was handed the two faces in show and is the only thing that
-// knows which of the three shapes this is. A removal ends on an empty seat, a duplicate ends on two
-// cards, everything else ends on one.
-func (g *goods) drawShowing(gs *state.GlobalState, screen *ebiten.Image) {
-	drawLandings(gs, screen, g.lands, g.arrival, g.copied)
 }
 
 // hint is the line under the title: the record's own, plus how far an essence reaches when a relic

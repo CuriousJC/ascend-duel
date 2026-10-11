@@ -101,10 +101,11 @@ func NewGame() *Game {
 			state.Credits:    &screens.CreditsScene{},
 			state.Settings:   &screens.SettingsScene{},
 
-			// **The two menu screens** *(2026-09-03)*. Neither is a station of a run, so neither
-			// appears in screens/flow.go — they are reached from the title menu and put the player
-			// back where they came from, exactly as Settings does.
+			// **The menu screens.** None is a station of a run, so none appears in screens/flow.go —
+			// they are reached from the title menu and the Compendium, and put the player back where
+			// they came from, exactly as Settings does.
 			state.Achievements: &screens.AchievementsScene{},
+			state.Compendium:   &screens.CompendiumScene{},
 
 			// **The end-of-run splash.** Not a station either: the run is already gone by the time
 			// it draws, which is why it reads a summary off the state rather than the run.
@@ -129,6 +130,9 @@ func NewGame() *Game {
 			// **The choice of realm after a portal room.** A station of the run, so it is also in
 			// screens/flow.go against session.PhasePortal. See screens/portal.go.
 			state.Portal: &screens.PortalScene{},
+
+			// **The journey won.** A station of the run like the portal, drawn once a run at most.
+			state.Victory: &screens.VictoryScene{},
 		},
 	}
 }

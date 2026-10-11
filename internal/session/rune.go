@@ -607,6 +607,7 @@ func (s *Session) ApplyRuneRolling(p Rune, ids []int, rng *rand.Rand) bool {
 	if !s.CanApplyRune(p, ids) {
 		return false
 	}
+	spent := p.Record
 
 	// **Resolved before anything reads it**, so a chimera is never asked what it does. From here
 	// down `p` is the rune that actually fires, and the chimera is gone — which is what keeps
@@ -621,6 +622,7 @@ func (s *Session) ApplyRuneRolling(p Rune, ids []int, rng *rand.Rand) bool {
 	// **Remembered on the way in rather than on the way out.** Every branch below returns from
 	// inside itself, so a single recording after the switch would be a line nothing reaches.
 	s.rememberRune(p)
+	s.count(StatRuneUsed+spent, 1)
 
 	// **Both handovers are emptied here, by the rune that is firing, rather than by the branch
 	// that fills them** *(2026-09-17)*. They say what *this* rune did, and the combat screen reads

@@ -175,6 +175,7 @@ func (s *Session) UseStone(key string) bool {
 	for _, hand := range stone.Hands() {
 		s.stones[hand]++
 	}
+	s.count(StatStoneUsed+key, 1)
 	return true
 }
 

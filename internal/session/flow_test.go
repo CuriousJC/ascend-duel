@@ -18,11 +18,11 @@ func TestTheLoopComesBackRoundToTheFight(t *testing.T) {
 	// **The whole point of a loop is that it closes.** Walking every station once has to land back
 	// where it started, or the run stops after one lap in whichever station forgot its successor —
 	// which is exactly the failure the hardcoded jumps could produce. An ordinary room's lap has no
-	// portal in it, so it is one station shorter.
+	// portal and no victory in it, so it is two stations shorter.
 	run := New(testDeck())
 	start := run.Phase()
 
-	for i := 0; i < PhaseCount-1; i++ {
+	for i := 0; i < PhaseCount-2; i++ {
 		run.Advance()
 	}
 	if run.Phase() != start {
@@ -49,20 +49,21 @@ func TestThePortalIsWalkedPastAfterAnOrdinaryRoom(t *testing.T) {
 func TestEveryStationIsVisitedExactlyOncePerPortalLap(t *testing.T) {
 	// A station left out of the order is a screen the player never sees; a station in it twice is
 	// one they see twice. Neither fails anywhere else. The lap after a portal room is the one that
-	// stands at all four.
+	// stands at every station but the victory, which only the journey's last boss opens — see
+	// TestBeatingTheLastBossIsAVictoryOnce.
 	motifs, shape := rosters(t)
 	run := Start(motifs, shape, 1)
 	run.JumpTo(2, 0, 50, 50)
 	run.WonFight(50, 50)
 	seen := map[Phase]int{run.Phase(): 1}
 
-	for i := 0; i < PhaseCount-1; i++ {
+	for i := 0; i < PhaseCount-2; i++ {
 		run.Advance()
 		seen[run.Phase()]++
 	}
 
-	if len(seen) != PhaseCount {
-		t.Fatalf("a lap visited %d stations, not %d", len(seen), PhaseCount)
+	if len(seen) != PhaseCount-1 || seen[PhaseVictory] != 0 {
+		t.Fatalf("a portal lap visited %d stations, not %d, and never the victory", len(seen), PhaseCount-1)
 	}
 	for p, n := range seen {
 		if n != 1 {

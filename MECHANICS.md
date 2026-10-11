@@ -34,6 +34,10 @@ Wounds carry from room to room and nothing between fights heals them, so the jou
 budget: life comes back only through what the player spends on it.
 The run is written to disk between rooms and every run has a six-character code that replays it.
 
+**Beating the eighth realm's boss wins the run.** The player may claim the victory there or walk on
+into the endless realms past it; either way the run is a victory. See §The journey is won at its
+last boss.
+
 ## Contents
 
 | Section | What it settles | Status |
@@ -3300,6 +3304,20 @@ step = (realm - 1) * 3 + room          room: outer 0, inner 1, portal 2
 - **Nothing caps it.** The journey has a configured height and the journey wraps past it; the curve
   keeps counting, which is what makes the endless journey a number rather than a rewrite.
 
+### The journey is won at its last boss
+
+**Beating the boss of the last realm — the journey's configured height, eight — wins the run**, and
+the game stops to say so: a victory screen between that fight and its reward, with two answers.
+
+- **CLAIM VICTORY** ends the run there, as a win, on the end-of-run splash headed VICTORY.
+- **CONTINUE** takes the boss's reward and walks on into the endless realms past the last one, where
+  the curve keeps climbing until the duelist falls or the player gives up.
+
+**Either way the run is a victory, and it is counted the moment the boss falls** *(owner's call,
+2026-10-11)*. Walking on risks nothing already won: a run that falls in the endless realms ends on a
+splash headed JOURNEY WON, and the lifetime statistics count it among the journeys won. The screen is
+stood at once a run — the realm it checks is met only once.
+
 ### The portal
 
 **A realm's boss opens two portals, and the player walks through one.** Behind each is a realm — a
@@ -3541,11 +3559,24 @@ makes a run repeatable; a button that dealt it again would be a retry with a lon
 draws numbers rather than holding a finished run open — a `Session` still alive behind that page
 would be a run that is over and still resumable.
 
-### Two menu screens
+### The menu screens
 
-**Achievements** and **Credits** hang off the title menu. Neither is a station of a run: they read
-the profile and a list of names, they never touch `session.Phase`, and each records where the player
-came from so Back works from anywhere — the same shape the settings screen has.
+**The Compendium** and **Credits** hang off the title menu, and **Achievements** is inside the
+Compendium. None is a station of a run: they read the profile and a list of names, they never touch
+`session.Phase`, and each records where the player came from so Back works from anywhere — the same
+shape the settings screen has.
+
+**The Compendium is the player's book of the game**: a page of books, each opening as a dialog over
+it — the statistics, the achievements, the bestiary, and every catalog a run buys from or spends.
+
+- **A catalog book is every record in the catalog, in its own order, as its own card.** A record the
+  player has never had is drawn dark, down to a silhouette, and its tooltip keeps its name and its
+  rule back; one they have had carries its count — bought, drunk, cast, used, opened, beaten — and
+  its full tooltip. A creature counts as met once it has been fought, won or lost.
+- **The statistics book is two records behind two tabs**: rolled runs and chosen-seed runs. See
+  §Lifetime statistics.
+- **Both read the run in progress as well as the finished ones**, so a relic bought an hour ago is
+  not still marked unfound.
 
 - **Achievements lists what has not been earned as well as what has**, grayed. A page showing
   only what you already have says nothing on the day you most want to read it.
@@ -3574,8 +3605,26 @@ one rolled is marked **seed chosen**, saved with the run and written to the jour
 The dialog says so before START: an **Achievements enabled** box at its top is ticked while the
 wheels hold the rolled code, clears when a wheel is turned off it, and RANDOM ticks it again.
 A chosen seed is a journey that could have been looked up in advance, so **a run on one progresses
-nothing**: no lifetime tally moves, no achievement is awarded and nothing unlocks while it lasts.
-Whatever the profile keeps across runs is kept for rolled runs only.
+nothing**: no achievement counter moves, no achievement is awarded and nothing unlocks while it
+lasts. The one thing it is still written into is the lifetime statistics, in a record of its own —
+see §Lifetime statistics.
+
+### Lifetime statistics
+
+**The profile keeps a lifetime account of play**: runs won, lost and abandoned, duels won and lost,
+damage dealt and taken, what was bought and spent, the creatures beaten and the ones that killed the
+player, and the records — the biggest hit, the furthest realm, the fastest win. Damage and cards
+played are also kept by element and by form, and every rung of the hand ladder by how often it was
+formed.
+
+- **A run keeps its own tally, saved with it, and the profile is handed it once — when the run
+  ends.** A duel's rounds join the run's tally only when the duel settles, so a duel quit halfway and
+  fought again from the top on resume is counted once.
+- **A chosen seed is still written down, into a record of its own** *(owner's call, 2026-10-11)*. A
+  chosen seed earns nothing, but a statistic is a record rather than a reward; keeping the two apart
+  leaves the rolled figures ones the achievements could have been earned against.
+- **Every figure is a name, never an ordinal** — `relic:<key>`, `dealt:element:fire` — so a relic
+  authored tomorrow is counted with nothing edited.
 
 **Nothing about the profile is ever fatal.** A missing file is a new player, a corrupt file is a
 new player, an unwritable directory is a session whose progress is not recorded — the same rule

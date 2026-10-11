@@ -356,6 +356,7 @@ func (s *CombatScene) castCantrip(gs *state.GlobalState, i int) {
 		return
 	}
 
+	gs.Run.CountCantrip(c.Record)
 	was := s.fighter.Duelist
 	s.cast = append(s.cast, c)
 	s.refit(gs)

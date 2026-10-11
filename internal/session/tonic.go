@@ -321,6 +321,7 @@ func (s *Session) DrinkTonic(key string) bool {
 		return false
 	}
 	s.drunkTonics = append(s.drunkTonics, key)
+	s.count(StatTonicDrunk+key, 1)
 	return true
 }
 

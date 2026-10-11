@@ -1327,6 +1327,13 @@ func (s *CombatScene) startRound() {
 	s.recordHandsPlayed(log)
 	s.noteShieldsRaised(log)
 
+	// **The round into the run's statistics**, beside the other readings of the resolved round and
+	// for their reason. The queue is still the turn the resolver was handed, which is what a hit's
+	// Slot indexes. See session/stats.go.
+	if s.run != nil {
+		s.run.TallyRound(log, s.fighterActions)
+	}
+
 	// **The turn as it was played, kept for the achievements.** Taken here, beside the other two
 	// readings of the resolved round, and for the same reason: this is the last moment the queue
 	// exists. See playedTurn and drainTurn.

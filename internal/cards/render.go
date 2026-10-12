@@ -123,7 +123,28 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 				return drawTextHCentered(dst, f, size, s, st.Width, y, c)
 			}
 		}
-		if err := draw(img, f, st.NameSize, s.Name, st.TextLeft, st.NameTop, ink(NameInk)); err != nil {
+		if lines, size, ok, err := nameLines(f, s.Name, st); err != nil {
+			return nil, err
+		} else if ok {
+			// **A name too wide for its band breaks onto two lines**, smaller, whose block ends where
+			// the one line would have — so it grows up into the face rather than off the card.
+			_, one, err := f.Measure(st.NameSize, s.Name)
+			if err != nil {
+				return nil, err
+			}
+			_, lh, err := f.Measure(size, s.Name)
+			if err != nil {
+				return nil, err
+			}
+			lh = lh * nameLeadingPct / 100
+			y := st.NameTop + one - len(lines)*lh
+			for _, line := range lines {
+				if err := draw(img, f, size, line, st.TextLeft, y, ink(NameInk)); err != nil {
+					return nil, err
+				}
+				y += lh
+			}
+		} else if err := draw(img, f, st.NameSize, s.Name, st.TextLeft, st.NameTop, ink(NameInk)); err != nil {
 			return nil, err
 		}
 	}

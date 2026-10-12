@@ -123,6 +123,50 @@ func (f *Faces) Measure(size float64, s string) (width, lineHeight int, err erro
 	return width, m.Ascent.Ceil() + m.Descent.Ceil(), err
 }
 
+// nameLeadingPct is how far apart a two-line name's lines sit, as a share of the font's line
+// height: the name is capitals-led and has few descenders, so the font's full leading leaves a gap
+// that reads as two names rather than one.
+const nameLeadingPct = 82
+
+// nameLines is a card's name broken for its style, at the size it is drawn: two lines when it is
+// wider than st.NameWrapWidth and has a space to break at, and ok false when it stays one line.
+//
+// **It breaks at the space that leaves the two lines nearest equal**, measured rather than counted,
+// so "Toxin Flood" breaks between its words and a three-word name keeps its longer pair together.
+func nameLines(f *Faces, name string, st Style) ([]string, float64, bool, error) {
+	if st.NameWrapWidth <= 0 || !strings.Contains(name, " ") {
+		return nil, 0, false, nil
+	}
+	w, _, err := f.Measure(st.NameSize, name)
+	if err != nil || w <= st.NameWrapWidth {
+		return nil, 0, false, err
+	}
+	size := st.NameWrapSize
+	if size <= 0 {
+		size = st.NameSize
+	}
+	words := strings.Fields(name)
+	best, bestGap := 1, -1
+	for i := 1; i < len(words); i++ {
+		a, _, err := f.Measure(size, strings.Join(words[:i], " "))
+		if err != nil {
+			return nil, 0, false, err
+		}
+		b, _, err := f.Measure(size, strings.Join(words[i:], " "))
+		if err != nil {
+			return nil, 0, false, err
+		}
+		gap := a - b
+		if gap < 0 {
+			gap = -gap
+		}
+		if bestGap < 0 || gap < bestGap {
+			best, bestGap = i, gap
+		}
+	}
+	return []string{strings.Join(words[:best], " "), strings.Join(words[best:], " ")}, size, true, nil
+}
+
 // drawText draws a string in the prose glyphs with its top-left corner at (x, y).
 //
 // **The baseline lands where the font's would have** — y plus the face's ascent — because every

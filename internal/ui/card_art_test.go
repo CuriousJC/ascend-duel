@@ -692,6 +692,60 @@ func TestEveryBleedingCardArtIsTheCardsOwnSize(t *testing.T) {
 	}
 }
 
+// **A creature card's picture is a figure kept inside the open field**, at the card's own size.
+//
+// Every weight a flavor lists must answer a picture in every element, since a missing one is a
+// realm whose cards silently draw nothing. Each is 200x280 like every card picture, and transparent
+// everywhere outside data.EnemyCardArtField — so the form mark, the cost ticks, the badge and the
+// name are printed on the card's own surface rather than over vapor. `tools/relicart -kind
+// enemy-card` fits a picture into the field on the way in; this is what fails on one copied in by
+// hand.
+func TestEveryEnemyCardArtIsAFigureInTheField(t *testing.T) {
+	pictures := assets.LoadImageData()
+	field := data.EnemyCardArtField
+	w, h := cards.Hand.Width, cards.Hand.Height
+	for _, key := range data.EnemyCardArtFileOrder() {
+		f := data.LoadEnemyCardArt()[key]
+		if f.Art == "" {
+			continue
+		}
+		for _, weight := range f.Weights {
+			for _, el := range data.AffinityElements {
+				art := f.ArtKey(weight, el)
+				raw := pictures[art]
+				if len(raw) == 0 {
+					t.Errorf("%s draws %q at %s in %s, which no asset answers", key, art, weight, el)
+					continue
+				}
+				img, _, err := image.Decode(bytes.NewReader(raw))
+				if err != nil {
+					t.Errorf("%s: decoding %s: %v", key, art, err)
+					continue
+				}
+				b := img.Bounds()
+				if b.Dx() != w || b.Dy() != h {
+					t.Errorf("%s is %dx%d where a card is %dx%d — file it with tools/relicart", art, b.Dx(), b.Dy(), w, h)
+					continue
+				}
+				stray := 0
+				for y := b.Min.Y; y < b.Max.Y; y++ {
+					for x := b.Min.X; x < b.Max.X; x++ {
+						if image.Pt(x, y).In(field) {
+							continue
+						}
+						if _, _, _, a := img.At(x, y).RGBA(); a > 0 {
+							stray++
+						}
+					}
+				}
+				if stray > 0 {
+					t.Errorf("%s draws %d pixels outside the open field %v, under the mark, the ticks or the name", art, stray, field)
+				}
+			}
+		}
+	}
+}
+
 // TestTheFaceCacheIsBounded holds the cap that stops a long session growing without limit.
 //
 // **It files nil faces, which is the negative-cached entry, so the test creates no images and

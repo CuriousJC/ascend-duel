@@ -1,9 +1,9 @@
 # Enemy card art prompt
 
-One picture per **attack flavor** per element: **the attacking part alone, made of swirling colored
-vapor, on a transparent background.** A creature's cards wear these. A wolf's Bite and a lion's
-Bite are one picture, so a picture is never about a creature. It is about a kind of blow: jaws
-closing, claws raking, a club coming down.
+One picture per **attack flavor**, per **weight**, per element: **the attacking part alone, made of
+swirling colored vapor, on a transparent background.** A creature's cards wear these. A wolf's Bite
+and a lion's Bite are one picture, so a picture is never about a creature. It is about a kind of
+blow, jaws closing, claws raking, a club coming down, and how hard it lands.
 
 The game lays it over the card's own face, which is sometimes plain off-white (#F0EFEA) and
 sometimes a rich material. **The subject has to read clearly on every one of those**, which is
@@ -55,22 +55,49 @@ frays into trailing smoke and stops.
   arriving. The picture should read as its form at a glance, before it reads as anything else.
 - **The color of the vapor says the element.** All of the subject is vapor, so all of it is
   colored.
-- **One picture serves every cost.** The same flavor is worn by a creature's cheapest card and
-  its dearest, so the subject is drawn at one committed, mid-sized scale. Do not draw it small and
-  tentative or vast and overwhelming.
+- **The weight says how hard the blow lands**, and a player must see it at a glance: a creature
+  holding a light sting and a crushing sting is holding two different threats. See the weights
+  below.
 
 **The vapor holds a hard shape.** It is smoke or mist, denser at the core and fraying at the
 trailing edges, but the attacking part itself keeps a crisp, readable silhouette: a fang is a
 sharp point, a claw is a hooked edge, a boulder is a heavy angular mass. **Vapor that drifts into
 a vague cloud has lost the subject**, and that is the failure to avoid.
 
+### The four weights
+
+Every flavor is drawn at four weights, and each record names one. **The weights of a flavor are one
+blow at four strengths**: the same attacking part, the same direction and the same family of shape,
+escalating. A light bite and a crushing bite are plainly the same kind of jaws.
+
+| Weight | What it is |
+|---|---|
+| `light` | a quick, small, single strike: slim, short, sharp, little trail |
+| `medium` | the blow as `Draw` describes it |
+| `heavy` | the blow at full commitment: thicker, denser vapor, a longer and heavier trail |
+| `crushing` | the most of it there can be: massive, multiplied or overwhelming, the vapor dense and the outline heavy |
+
+**Draw every weight large, filling the open field.** The game scales each picture to its weight's
+size when it installs it, so a light picture is shown smaller than a heavy one whatever size it was
+drawn at. A light subject drawn small loses its detail when it is scaled; drawn large, it keeps it.
+
+**So heavier has to read in the shape, not the size.** What separates the weights is mass, density
+and number: a slim point against a broad one, two claws against five, one stone against an
+avalanche, a thin outline against a heavy one, wispy vapor against packed vapor. Shrink every
+picture of a flavor to the same size and the four weights must still be told apart at a glance.
+
 ### Where the subject goes
 
-**The subject fills the open middle of the card**, using the full height of the field, about y 46
-to y 236, and the full width right of the left-hand column. Diagonals are good: a blow crossing the
-card from one corner toward the other reads as motion without any motion lines. **The attacking
-part may run out toward an edge**, but its working end, the point, the edge or the striking face,
-stays well inside the field.
+**The subject fills the open middle of the card and stays inside it**: about x 46 to 196 and y 46
+to 236 on the finished card, which on the canvas is roughly **the right 77% of the width and the
+middle 68% of the height** (x 245 to 1040, y 245 to 1250 at 1060 x 1484). Diagonals are good: a blow
+crossing the field from one corner toward the other reads as motion without any motion lines.
+
+**Nothing crosses into the left-hand column or the bottom strip, trailing smoke included.** The
+card's mark, its bars, its badge and its name are printed there, and vapor running under them
+makes them unreadable. A heavy subject, a fist, a boulder, a coil, a wave, is the one most tempted
+to fill the card; draw it smaller rather than let it spill. The same applies to the top edge: the
+subject starts below the corner mark, not behind it.
 
 ## Drawing
 
@@ -96,7 +123,7 @@ the lower right.
 Avoid: any background at all, a ground plane, a cast shadow, a glow or halo spreading off the
 subject into the background, a creature or any part of one beyond the attacking part, faces, eyes
 (except where the brief makes an eye the source of a ray), scenery, props, borders, frames,
-panels, particles floating free of the subject, sparks, motion lines, and clutter of any kind.
+panels, particles floating free of the subject, motion lines, and clutter of any kind.
 **No text anywhere**: no title, no label, no caption, no numeral, no signature, no watermark.
 
 Priority order: **transparent background -> subject outlined and saturated enough to read on any
@@ -104,13 +131,18 @@ ground -> the blow readable as its form -> coherent color -> material shading.**
 
 ## The subject
 
-The block pasted below this prompt is one record, in JSON, with an `Elements` list beside it:
-**draw one picture per element in the list**, each the same subject in that element's color, and
-name each file as `Files` gives it.
+The block pasted below this prompt is one batch, in JSON: a `Batch` name and a list of `Records`,
+each with an `Elements` list and a `Files` list beside it: **draw one picture per element in each
+record's list**, each its own drawing of that record's subject in that element's vapor, and name
+each file as `Files` gives it. Every record is a different subject; never let one record's picture
+borrow another's.
 
-**Read `Draw` and nothing else as the subject.** `Flavor`, `Form` and `Name` are context, and none
-of them is to be rendered as a word. If `Draw` is empty, stop and say so rather than inventing a
-subject.
+**A record's subject is `Draw` at its `Weight`.** `Draw` describes the blow at medium weight: the
+attacking part, its direction and its composition. `WeightBrief` says what the blow is at this
+record's weight; keep `Draw`'s attacking part, direction and placement, and change what
+`WeightBrief` changes. A medium record's `WeightBrief` is `Draw` itself. `Flavor`, `Form`, `Name`
+and `Weight` are context, and none of them is to be rendered as a word. If `Draw` is empty, stop and
+say so rather than inventing a subject.
 
 **The element is the color the vapor is built in**, and the five are the game's own:
 
@@ -128,17 +160,33 @@ its shadowed side, just inside the contour. Stay inside the row. Drifting to a n
 fire into red, lightning into orange, ice into teal, earth into olive or arcane into pink, is the
 failure.
 
-**The same flavor in two colors is the same picture in two hues, not two pictures.** A fire bite
-and an ice bite are one set of jaws, one angle, one composition, one framing, and two colors of
-vapor.
+**The five elements of one flavor are five drawings of one idea, never one drawing recolored.**
+They are siblings: the same attacking part, at the same size, in the same place on the card,
+driving the same way, so a fire bite and an ice bite are plainly the same blow. Everything else is
+drawn fresh for each element: the exact silhouette, how the edge breaks up, the number and shape of
+the curls, where the vapor trails off, and a few degrees of angle. **Laid side by side, no two may
+trace over each other.** A set that is one outline flood-filled in five colors is the failure.
 
-**What the element changes besides the hue is what the vapor is *like***: flame curls upward,
-frost mist settles and goes brittle at the edges, a charged haze crackles, loam hangs heavy, and
-witch-light glows from inside. It never changes the subject, its angle or its placement.
+**The element is the vapor's character as much as its color**, and it should change the shape of
+the edges, not only their hue:
 
-Name each image `<Flavor>-<element>`, like `stab-bite-fire`. Give me the file itself if there is
-only one, and a single zip file of everything if there is more than one, so I can download it all
-at once. Never a link per file.
+| Element | What the vapor is like |
+|---|---|
+| `fire` | hot orange vapor: licking, upward-curling tongues that thin into smoke at the trailing edge, brightest at the working end, shedding a few embers that stay attached to the trail |
+| `ice` | cold blue vapor: slow, heavy, settling mist shot through with tiny suspended frost crystals, its edges going **brittle and faceted** rather than curling, points and edges hardening into clear shards |
+| `lightning` | crackling yellow vapor: a charged, unsettled haze streaked with **hairline arcs that fork across the subject**, its edges jagged and broken into angles rather than smooth curls |
+| `earth` | green loam vapor: a slow, dense, **granular** cloud like turned soil hanging in the air, clotted and heavy, carrying flecks of grit, its trailing edge crumbling rather than curling |
+| `arcane` | purple witch-light vapor: a smooth, **self-lit** shimmer that glows faintly from inside, its curls long and calligraphic, fraying into drifting motes rather than smoke |
+
+Embers, arcs, crystals, grit and motes belong to the subject and stay attached to it or to its
+trail. Nothing floats free across the card.
+
+Name each image exactly as `Files` gives it, `<Flavor>-<weight>-<element>.png`, like
+`stab-bite-heavy-fire.png`,
+with nothing added to the name. **Another artist may be drawing the same flavor in parallel**, so
+the batch, not the filename, is what keeps the two apart: give me **one zip named `<Batch>.zip`**,
+holding **one folder named `<Batch>`** with every image inside it. Never a link per file and never
+loose files.
 
 ---
 
@@ -157,3 +205,16 @@ at once. Never a link per file.
    creature, and the picture has to serve every creature that strikes this way.
 6. **Does it read as its form?** Cover the corner of the card and ask whether this is a point
    going in, an edge going across, or weight arriving. It should be obvious.
+7. **Lay a record's five pictures side by side.** Are they plainly the same blow, and plainly five
+   drawings? An outline that traces exactly over its neighbour is a recolor; redraw it.
+8. **Does it read as its weight, at the same size as the others?** A light picture is slim, single
+   and quick; a crushing one is massive, dense and many. Shrink a light and a crushing record of
+   one flavor to the same height and lay them side by side: the difference should still be obvious
+   from across a room.
+9. **Did every record in the list come back, in every element it lists?** Count the files against
+   `Files`, and check they are all inside the `<Batch>` folder of `<Batch>.zip`.
+10. **Count anything countable.** Fingers, claws, fangs, segments: if `Draw` gives a number, the
+   picture has exactly that many in every element. A wrong count is the most common reason a
+   picture is thrown away.
+11. **Does anything cross into the left-hand column, the bottom strip or the top-left corner?**
+   Reduce to 200 x 280 and check that x below 46, y below 46 and y above 236 are empty.

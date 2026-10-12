@@ -75,7 +75,9 @@ go run ./tools/relicart -kind relic
 ```
 
 Its inbox is `.scratch/to-process-<kind>-art/` and its kinds are `relic`, `essence`, `rune`,
-`stone`, `cantrip`, `card`, `upgrade` and `other`. **A flat magenta ground is keyed out on the way
+`stone`, `cantrip`, `card`, `upgrade`, `other` and `enemy-card` — the last files
+`<flavor>-<weight>-<element>.png` under its flavor and fits each figure into the card's open field; the
+`enemy-cards` skill has its procedure. **A flat magenta ground is keyed out on the way
 in** — the fallback the card prompt asks for from a generator that cannot write transparency. A stem naming no record is refused rather than filed.
 
 The installed art is always the set `current`, so installing first is what makes the page a
@@ -89,8 +91,9 @@ go run ./tools/artcompare -catalog relic
 go run ./tools/artcompare -catalog relic -set warm=artreview\relic-warm -set cool=artreview\relic-cool
 ```
 
-- Catalogs: `card`, `relic`, `essence`, `rune`, `stone`, `cantrip`, `other`. Creature, boss and backdrop
-  pictures are **not** in the table.
+- Catalogs: `card`, `relic`, `essence`, `rune`, `stone`, `cantrip`, `other`, `enemy-card` (the
+  creature cards' attack flavors, one row per flavor per element). Creature portraits, bosses and
+  backdrops are **not** in the table.
 - Any number of sets. `artreview/<catalog>-<label>/` is discovered as `<label>`; `-set label=dir`
   replaces discovery outright.
 - Output is `artreview/out-<catalog>/index.html`. **Open it for the owner** rather than describing

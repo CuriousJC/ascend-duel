@@ -425,12 +425,13 @@ var enemyCardArt = data.LoadEnemyCardArt()
 // **The form needs no rule here**: a card told to be another form becomes that form's concept, so
 // its own label already names the picture.
 //
-// **A creature's card draws its flavor**, out of enemy_card_art.json, in the realm's element it
-// was dealt as: two creatures' Bites are two cards over one picture. A flavor with no Art yet
-// draws the card as it always looked, exactly as an undrawn player card does.
+// **A creature's card draws its flavor**, out of enemy_card_art.json, at the weight its damage
+// puts it at and in the realm's element it was dealt as: two creatures' Bites are two cards over
+// one picture, and a nip and a mauling are two pictures. A weight with no pictures yet draws the
+// card as it always looked, exactly as an undrawn player card does.
 func cardArtwork(c combat.Card) image.Image {
 	if flavor, ok := decks.EnemyFlavor(c.Concept); ok {
-		return artworkFrom(enemyCardArt[flavor].ArtKey(c.Element.String()))
+		return artworkFrom(enemyCardArt[flavor].ArtKey(data.EnemyCardWeight(c.Amount()), c.Element.String()))
 	}
 	rec, ok := cardArt[cardArtRecord(c)]
 	if !ok {

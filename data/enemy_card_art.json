@@ -2,99 +2,209 @@
   {
     "Flavor": "stab-blade",
     "Form": "stab",
-    "Name": "Blade point",
-    "Art": "",
-    "Draw": "A held point thrusting forward: a long dagger or spear-head made of vapor, driving out of the upper left toward the lower right, its tip drawn to a hard needle point. Behind the guard the grip frays into trailing smoke where a hand would be. Nothing else in the picture."
+    "Name": "Point",
+    "Art": "stab-blade",
+    "Weights": [
+      "medium"
+    ],
+    "Draw": "A held point thrusting forward: a long dagger or spear-head made of vapor, driving out of the upper left toward the lower right, its tip drawn to a hard needle point. Behind the guard the grip frays into trailing smoke where a hand would be. Nothing else in the picture.",
+    "Ladder": {
+      "crushing": "A massive lance-head with two more spear-points thrusting beside it in a tight fan, the trail a torrent.",
+      "heavy": "A long, broad-bladed spear-head driving deep, its trail thick and long.",
+      "light": "A short, slim knife-point barely past its guard, a quick jab with a short trail."
+    }
   },
   {
     "Flavor": "stab-shot",
     "Form": "stab",
     "Name": "Shot",
-    "Art": "",
-    "Draw": "Something flying at you: a single arrow made of vapor in hard flight, steep and diagonal, its head a sharp point and its fletching streaming back into a long smoky trail. Two fainter arrows follow behind it in the trail, smaller, to say a volley."
+    "Art": "stab-shot",
+    "Weights": [
+      "medium"
+    ],
+    "Draw": "Something flying at you: a single arrow made of vapor in hard flight, steep and diagonal, its head a sharp point and its fletching streaming back into a long smoky trail. Two fainter arrows follow behind it in the trail, smaller, to say a volley.",
+    "Ladder": {
+      "crushing": "A dense volley: five or more arrows in a tight converging sheaf, their trails one wide stream.",
+      "heavy": "One big heavy-headed bolt in flight with two more close behind it.",
+      "light": "A single small dart alone in flight, no followers."
+    }
   },
   {
     "Flavor": "stab-sting",
     "Form": "stab",
     "Name": "Sting",
-    "Art": "",
-    "Draw": "A small natural point: a curved insect stinger made of vapor, ringed in segments, arching down from the top of the card with a single bead of venom gathering at its needle tip. The body it belongs to is only a dissolving wisp at the top edge."
+    "Art": "stab-sting",
+    "Weights": [
+      "medium"
+    ],
+    "Draw": "A small natural point: a scorpion's tail made of vapor, a chain of four or five distinct rounded segments, each clearly separated from the next by a pinched joint, curling over from the top of the card and ending in a bulb with a thin, hooked needle stinger pointing down and forward. A single bead of venom hangs from the needle tip. The tail is slender and articulated, never a smooth cone or a horn. Where it would join a body it is only a dissolving wisp at the top edge.",
+    "Ladder": {
+      "crushing": "A huge armored tail coiled to strike, its needle as long as a sword and venom streaming from it.",
+      "heavy": "A long thick tail of five or six segments, the needle long and hooked, venom dripping in several beads.",
+      "light": "A short tail of two or three segments ending in a small needle, a quick prick."
+    }
   },
   {
     "Flavor": "stab-horn",
     "Form": "stab",
     "Name": "Horn",
-    "Art": "",
-    "Draw": "A big natural point: a heavy curved horn made of vapor, thick at the root and tapering to a blunt-sharp tip, hooking up and forward as if tossed by a head we cannot see. The root dissolves into smoke at the lower left."
+    "Art": "stab-horn",
+    "Weights": [
+      "medium"
+    ],
+    "Draw": "A big natural point: a heavy curved horn made of vapor, thick at the root and tapering to a blunt-sharp tip, hooking up and forward as if tossed by a head we cannot see, its surface ridged with growth rings. One solid piece, not jointed and not a tail. The root dissolves into smoke at the lower left.",
+    "Ladder": {
+      "crushing": "A pair of enormous curved horns goring forward together, side by side.",
+      "heavy": "A great ridged horn as thick as a tree root, hooking hard upward.",
+      "light": "A single short sharp spike, a quick prod."
+    }
   },
   {
     "Flavor": "stab-ray",
     "Form": "stab",
     "Name": "Ray",
-    "Art": "",
-    "Draw": "A piercing line of light: a narrow, perfectly straight beam of dense vapor crossing the card on a steep diagonal, brightest along its spine, ending in a tight starburst where it strikes. It starts from a small glowing eye-shaped knot of vapor at the upper left."
+    "Art": "stab-ray",
+    "Weights": [
+      "medium"
+    ],
+    "Draw": "A piercing line of light: a narrow, perfectly straight beam of dense vapor crossing the card on a steep diagonal, brightest along its spine, ending in a tight starburst where it strikes. It starts from a small glowing eye-shaped knot of vapor at the upper left.",
+    "Ladder": {
+      "crushing": "Three beams converging on one blinding point, the burst where they meet spreading wide.",
+      "heavy": "A thick beam with a blazing core and a wide flare where it strikes.",
+      "light": "A thin single beam, a needle of light, with a small spark where it lands."
+    }
   },
   {
     "Flavor": "stab-bite",
     "Form": "stab",
     "Name": "Bite",
-    "Art": "",
-    "Draw": "Teeth going in: a pair of open jaws made of vapor seen from the side, upper and lower rows of long pointed fangs about to close, the two front fangs the longest. No head behind them, only the jaws, their hinge dissolving into smoke at the back."
+    "Art": "stab-bite",
+    "Weights": [
+      "medium"
+    ],
+    "Draw": "Teeth going in: a pair of open jaws made of vapor seen from the side, upper and lower rows of long pointed fangs about to close, the two front fangs the longest. No head behind them, only the jaws, their hinge dissolving into smoke at the back.",
+    "Ladder": {
+      "crushing": "An enormous maw with row behind row of fangs, gaping wide enough to fill the field.",
+      "heavy": "A big wide-open maw with long curved fangs, the jaws gaping.",
+      "light": "A small snapping jaw with short teeth, a nip."
+    }
   },
   {
     "Flavor": "slash-blade",
     "Form": "slash",
     "Name": "Blade",
-    "Art": "",
-    "Draw": "An edge in a hand: a broad curved blade made of vapor, sword or axe-like, caught at the end of a sweeping cut from upper right to lower left, with a crescent of trailing vapor following the arc of its edge. The grip frays into smoke where a hand would be."
+    "Art": "slash-blade",
+    "Weights": [
+      "medium"
+    ],
+    "Draw": "An edge in a hand: a broad curved blade made of vapor, sword or axe-like, caught at the end of a sweeping cut from upper right to lower left, with a crescent of trailing vapor following the arc of its edge. The grip frays into smoke where a hand would be.",
+    "Ladder": {
+      "crushing": "A colossal two-handed great-blade mid-cleave, its crescent trail sweeping the whole field.",
+      "heavy": "A heavy broadsword or axe in a full sweep, its crescent trail wide.",
+      "light": "A short knife's quick nick, its crescent trail thin and small."
+    }
   },
   {
     "Flavor": "slash-claw",
     "Form": "slash",
     "Name": "Claw",
-    "Art": "",
-    "Draw": "Claws raking: three long hooked talons made of vapor dragging down across the card on a diagonal, spread like the fingers of a paw, each leaving a parallel trail of vapor behind its tip. The paw they grow from is only a dissolving knot at the top."
+    "Art": "slash-claw",
+    "Weights": [
+      "medium"
+    ],
+    "Draw": "Claws raking: three long hooked talons made of vapor dragging down across the card on a diagonal, spread like the fingers of a paw, each leaving a parallel trail of vapor behind its tip. The paw they grow from is only a dissolving knot at the top.",
+    "Ladder": {
+      "crushing": "Five huge talons of a great paw tearing down the whole field, each trail a deep gouge.",
+      "heavy": "Four long hooked talons raking deep, their trails long and wide apart.",
+      "light": "Two short claws in a quick scratch, their trails short."
+    }
   },
   {
     "Flavor": "slash-lash",
     "Form": "slash",
     "Name": "Lash",
-    "Art": "",
-    "Draw": "Something long and flexible: a single whip, vine or tail made of vapor, cracking across the card in one long S-curve from the upper left, thick at the base and thinning to a snapping tip at the lower right."
+    "Art": "slash-lash",
+    "Weights": [
+      "medium"
+    ],
+    "Draw": "Something long and flexible: a single whip, vine or tail made of vapor, cracking across the card in one long S-curve from the upper left, thick at the base and thinning to a snapping tip at the lower right.",
+    "Ladder": {
+      "crushing": "Three heavy tendrils lashing across each other in one blow.",
+      "heavy": "A thick heavy vine or tail in a long S, cracking hard at its tip.",
+      "light": "A thin short whip with one small curl, a flick."
+    }
   },
   {
     "Flavor": "slash-blast",
     "Form": "slash",
     "Name": "Blast",
-    "Art": "",
-    "Draw": "A wall of force sweeping over you: a broad crescent-shaped wave of dense vapor rolling across the card from left to right, its leading edge a sharp curved front and its body billowing behind it, like a breath, a shockwave or a gale given a shape."
+    "Art": "slash-blast",
+    "Weights": [
+      "medium"
+    ],
+    "Draw": "A wall of force sweeping over you: a broad crescent-shaped wave of dense vapor rolling across the card from left to right, its leading edge a sharp curved front and its body billowing behind it, like a breath, a shockwave or a gale given a shape.",
+    "Ladder": {
+      "crushing": "A towering wall of force in layered crests, breaking over the whole field.",
+      "heavy": "A tall rolling wave of force, its crest curling over and its body churning.",
+      "light": "A small puff of force, a narrow crescent like a short breath."
+    }
   },
   {
     "Flavor": "crush-club",
     "Form": "crush",
     "Name": "Club",
-    "Art": "",
-    "Draw": "A blunt thing in a hand: a heavy knotted club or hammer-head made of vapor, swung down from the upper right at the top of its arc, the head massive and squared, the haft fraying into smoke where a hand would be."
+    "Art": "crush-club",
+    "Weights": [
+      "medium"
+    ],
+    "Draw": "A blunt thing in a hand: a heavy knotted club or hammer-head made of vapor, swung down from the upper right at the top of its arc, the head massive and squared, the haft fraying into smoke where a hand would be.",
+    "Ladder": {
+      "crushing": "A colossal tree-trunk maul smashing down, its head as wide as the field.",
+      "heavy": "A big studded mace or war-hammer at the top of a full swing.",
+      "light": "A small cudgel or rod, a quick rap."
+    }
   },
   {
     "Flavor": "crush-body",
     "Form": "crush",
     "Name": "Fist",
     "Art": "",
-    "Draw": "The body as the weapon: one huge clenched fist made of vapor punching straight out of the card toward the viewer, knuckles foremost and foreshortened, the forearm behind it dissolving into a rush of smoke."
+    "Weights": [],
+    "Draw": "The body as the weapon: one huge clenched fist made of vapor punching straight out of the card toward the viewer, knuckles foremost and foreshortened, the forearm behind it dissolving into a rush of smoke. A human hand: exactly four fingers curled tight into the palm, their four knuckles in one row, and one thumb folded across the front of the first two. Count them; a fifth finger or a missing one is the failure.",
+    "Ladder": {
+      "crushing": "Two giant fists hammering down together, the impact shoving the vapor out in a ring.",
+      "heavy": "A massive fist at full extension with the forearm braced behind it, a full punch.",
+      "light": "A small quick fist, a jab, compact and close."
+    }
   },
   {
     "Flavor": "crush-grip",
     "Form": "crush",
     "Name": "Grip",
-    "Art": "",
-    "Draw": "Holding and squeezing: a thick coil made of vapor wound twice round an empty space in the middle of the card and tightening, like a serpent's body or a closing tentacle, the coils pressing hard against each other. The end of the coil fades into smoke."
+    "Art": "crush-grip",
+    "Weights": [
+      "medium"
+    ],
+    "Draw": "Holding and squeezing: a thick coil made of vapor wound twice round an empty space in the middle of the card and tightening, like a serpent's body or a closing tentacle, the coils pressing hard against each other. The end of the coil fades into smoke.",
+    "Ladder": {
+      "crushing": "A massive coil of many turns crushing inward, the vapor bulging between the coils.",
+      "heavy": "A thick coil wound three times round, squeezing hard.",
+      "light": "A single thin loop tightening, a light hold."
+    }
   },
   {
     "Flavor": "crush-mass",
     "Form": "crush",
     "Name": "Boulder",
-    "Art": "",
-    "Draw": "A weight arriving: one great rough boulder made of dense vapor falling from the top of the card, heavy and angular, with a trail of smaller stones and smoke streaming up behind it."
+    "Art": "crush-mass",
+    "Weights": [
+      "medium"
+    ],
+    "Draw": "A weight arriving: one great rough boulder made of dense vapor falling from the top of the card, heavy and angular, with a trail of smaller stones and smoke streaming up behind it.",
+    "Ladder": {
+      "crushing": "An avalanche: a cluster of great boulders tumbling down together.",
+      "heavy": "A big boulder falling with a trail of smaller stones.",
+      "light": "A single small rock falling with a few pebbles behind it."
+    }
   }
 ]

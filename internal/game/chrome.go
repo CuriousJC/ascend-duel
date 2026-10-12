@@ -99,7 +99,7 @@ var settingsButtonColor = ui.ButtonJade
 // phase stays exactly where it stood and Back puts the player back on the screen it was drawing.
 func (g *Game) openSettings() {
 	gs := g.GlobalState
-	gs.ReturnScreen = gs.ActiveScreen
+	gs.PushReturn()
 	gs.ActiveScreen = state.Settings
 	gs.NewScreen = true
 }
@@ -251,7 +251,7 @@ func (g *Game) hoverChrome(gs *state.GlobalState) {
 // touched, because the gallery is not a station of one.
 func (g *Game) openAnimations() {
 	gs := g.GlobalState
-	gs.ReturnScreen = gs.ActiveScreen
+	gs.PushReturn()
 	gs.ActiveScreen = state.Animations
 	gs.NewScreen = true
 }

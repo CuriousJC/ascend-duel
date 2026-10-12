@@ -3,10 +3,12 @@ package screens
 // **The Compendium's catalog books: every record in a catalog, and what the player has had of it.**
 //
 // Each is a grid of the catalog's own cards — the face the shop, the pane and the review sheet draw —
-// in the catalog's own order. **A record the player has never had is drawn dark**, its picture down
-// to a silhouette, and its tooltip keeps its name and its rule to itself: a compendium that gave the
-// whole catalog away on the first launch would leave nothing to find. One that has been had carries
-// its count under it and its full tooltip.
+// in the catalog's own order. **A record the player has never had is drawn as the placeholder**, with
+// nothing of its own picture showing, and its tooltip keeps its name and its rule to itself: a
+// compendium that gave the whole catalog away on the first launch would leave nothing to find. One
+// that has been had carries its count under it and its full tooltip, and **one that has been had but
+// has no art of its own is its real card darkened**, so a found record waiting for a picture is not
+// mistaken for one still to find.
 //
 // **Which figure counts as "had" is the catalog's own verb**: a relic bought, a potion drunk, a
 // cantrip cast, a creature beaten or fallen to. See the `Stat…` families in internal/session/stats.go.
@@ -33,10 +35,13 @@ const (
 	catalogScaleNum = 3
 	catalogScaleDen = 5
 
-	catalogGapX      = 22
-	catalogGapY      = 14
-	catalogCaptionH  = 34
-	catalogDarkScale = 0.14
+	catalogGapX     = 22
+	catalogGapY     = 14
+	catalogCaptionH = 34
+
+	// catalogUndrawnScale is how far a found record with no art of its own is darkened, so the
+	// placeholder on a found card is told apart from the placeholder standing in for an unfound one.
+	catalogUndrawnScale = 0.45
 
 	// undiscoveredTitle is what a record the player has never had says when rested on.
 	undiscoveredTitle = "Undiscovered"
@@ -116,12 +121,16 @@ func (s *CompendiumScene) drawCatalog(gs *state.GlobalState, screen *ebiten.Imag
 		if !ok {
 			continue
 		}
-		img := ui.CardImage(gs, e.spec, e.style)
+		spec := e.spec
+		if !e.found {
+			spec = undiscoveredSpec(gs)
+		}
+		img := ui.CardImage(gs, spec, e.style)
 		if img != nil {
 			op := &ebiten.DrawImageOptions{}
 			op.GeoM.Translate(float64(seat.Min.X), float64(seat.Min.Y))
-			if !e.found {
-				op.ColorScale.Scale(catalogDarkScale, catalogDarkScale, catalogDarkScale, 1)
+			if e.found && ui.IsPlaceholder(gs, e.spec.Art) {
+				op.ColorScale.Scale(catalogUndrawnScale, catalogUndrawnScale, catalogUndrawnScale, 1)
 			}
 			screen.DrawImage(img, op)
 		}
@@ -134,6 +143,16 @@ func (s *CompendiumScene) drawCatalog(gs *state.GlobalState, screen *ebiten.Imag
 		cap.SecondaryAlign = text.AlignCenter
 		cap.ColorScale.ScaleWithColor(compendiumInk)
 		systems.DrawUI(screen, e.verb+" "+thousands(e.count), face, cap)
+	}
+}
+
+// undiscoveredSpec is the card an unfound record is drawn as: the placeholder and nothing of the
+// record, so neither its picture nor its outline is given away. It keeps the book's own style, which
+// says only which catalog the page is.
+func undiscoveredSpec(gs *state.GlobalState) cards.Spec {
+	return cards.Spec{
+		Form: cards.FormNone, Element: ui.ArtFor(combat.Basic),
+		Art: ui.Placeholder(gs), Enabled: true,
 	}
 }
 

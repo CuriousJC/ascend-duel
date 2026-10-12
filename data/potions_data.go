@@ -69,14 +69,8 @@ func LoadPotions() []PotionData {
 	return parse[PotionData](potionsJSON, "potions.json")
 }
 
-// DefaultPotionArt is the face a record with no Art of its own draws.
-//
-// **It is the relic catalog's default, borrowed rather than copied** *(2026-09-14)*, which is the
-// one place the potions depart from the essences and the runes: those two each took a copy of it
-// the day they earned a family of their own, and the potions have no family yet because nobody has
-// drawn one. It becomes `potion/default-potion.png` the day the first bottle is painted, and the
-// change is this constant and one //go:embed line.
-const DefaultPotionArt = DefaultRelicArt
+// DefaultPotionArt is the face a record with no Art of its own draws: the placeholder.
+const DefaultPotionArt = PlaceholderArt
 
 // ArtKey is the picture this potion actually draws: its own if it has one, the default otherwise.
 //

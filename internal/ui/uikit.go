@@ -79,11 +79,8 @@ func SlideTicks() int { return Beat(1, 2) }
 
 // runeSpec is a rune drawn as a card.
 //
-// **The picture comes off the record** *(2026-09-12)*, through `data.RuneData.ArtKey`, already
-// resolved by the time a `session.Rune` exists. It borrowed the essence's placeholder through one
-// constant until then, and the note on that constant said the day runes got art it should be a
-// `data/runes.json` field appearing rather than a fallback being unpicked — so the fallback is
-// `assets/rune/default-rune.png` now, a seat of the catalog's own.
+// **The picture comes off the record**, through `data.RuneData.ArtKey`, already resolved by the
+// time a `session.Rune` exists; a rune with no Art draws the placeholder.
 //
 // **The card says nothing at all** *(owner's call, 2026-09-16)*. It carried its authored line
 // across the lower half of its picture, and what that cost is the picture: a rune is a full-bleed

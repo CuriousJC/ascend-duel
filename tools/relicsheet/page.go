@@ -276,7 +276,7 @@ var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
           {{range .Rules}}<li>{{.}}</li>{{end}}
         </ul>
         {{if .Default}}
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
+          <p class="art missing">no art of its own — drawing the placeholder</p>
         {{else}}
           <p class="art">art: <code>{{.Art}}</code></p>
         {{end}}

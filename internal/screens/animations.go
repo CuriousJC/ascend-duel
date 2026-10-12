@@ -33,7 +33,7 @@ package screens
 // # What it is not
 //
 // It is not a station of a run, so it has no `session.Phase` and no entry in `flow.go` â€” same
-// shape as Settings, Achievements and Credits. It records `gs.ReturnScreen`, so Back works from
+// shape as Settings, Achievements and Credits. It pushes onto `gs.Returns`, so Back works from
 // wherever it was opened.
 
 import (
@@ -569,8 +569,7 @@ func animText(gs *state.GlobalState, screen *ebiten.Image, line string, x, y int
 // leave goes back to whichever screen opened this one, on the same terms Settings and Credits are
 // under: the run's phase is untouched, because this is not a station of one.
 func (s *AnimationsScene) leave(gs *state.GlobalState) {
-	gs.ActiveScreen = gs.ReturnScreen
-	gs.NewScreen = true
+	gs.PopReturn()
 }
 
 // The float comparison's shape: three columns, each a band row over a hand row, overlapping at the

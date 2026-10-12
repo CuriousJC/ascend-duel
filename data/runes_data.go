@@ -103,15 +103,8 @@ type RuneData struct {
 	Text string `json:"Text"`
 }
 
-// DefaultRuneArt is the face a record with no Art of its own draws:
-// assets/rune/default-rune.png.
-//
-// **A picture of its own rather than the essence's** *(2026-09-12)*. The two catalogs wore one
-// placeholder while neither had art, and the moment either gets some that becomes a page where a
-// drawn essence and an undrawn rune are the same picture — so the backlogs are told apart by
-// giving each its own seat. **Keys are not file paths**: LoadImageData files that picture under
-// this.
-const DefaultRuneArt = "default-rune"
+// DefaultRuneArt is the face a record with no Art of its own draws: the placeholder.
+const DefaultRuneArt = PlaceholderArt
 
 // ArtKey is the picture this rune actually draws: its own if it has one, the default otherwise.
 //

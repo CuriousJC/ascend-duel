@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/internal/achieve"
+	"github.com/curiousjc/ascend-duel/internal/actions"
 
 	"github.com/curiousjc/ascend-duel/internal/profile"
 	"github.com/curiousjc/ascend-duel/internal/state"
@@ -77,8 +78,8 @@ func TestAMissingProfileIsNothingEarned(t *testing.T) {
 }
 
 // TestTheMenuScreensGoBackWhereTheyCameFrom is the one job a screen reachable from anywhere has.
-// **Both of these can be opened from the title today and from anywhere tomorrow**, so Back reading
-// ReturnScreen rather than naming the title is what stops that being a change to two files.
+// Back pops gs.Returns rather than naming the title, so a screen opened from the shop goes back to
+// the shop.
 func TestTheMenuScreensGoBackWhereTheyCameFrom(t *testing.T) {
 	for _, tc := range []struct {
 		name  string
@@ -96,7 +97,8 @@ func TestTheMenuScreensGoBackWhereTheyCameFrom(t *testing.T) {
 		}},
 	} {
 		gs := saveState(t)
-		gs.ReturnScreen = state.Shop
+		gs.ActiveScreen = state.Shop
+		gs.PushReturn()
 		gs.ActiveScreen = tc.here
 
 		tc.leave(gs)
@@ -111,12 +113,39 @@ func TestTheMenuScreensGoBackWhereTheyCameFrom(t *testing.T) {
 		// And with nothing recorded, the zero value already means the title.
 		gs = saveState(t)
 		gs.ActiveScreen = tc.here
-		gs.ReturnScreen = tc.here
 		tc.leave(gs)
 		if gs.ActiveScreen != state.Title {
 			t.Errorf("%s: with no return recorded, Back goes to the title, got %v",
 				tc.name, gs.ActiveScreen)
 		}
+	}
+}
+
+// TestBackWalksANestedPathInReverse is why Returns is a stack: a fight, then Settings, then the
+// Compendium, then Achievements, and every Back has to land one step nearer the fight. One slot held
+// only the last step, and the fourth Back went to the title instead of the duel.
+func TestBackWalksANestedPathInReverse(t *testing.T) {
+	gs := saveState(t)
+	gs.ActiveScreen = state.Combat
+	gs.PushReturn()
+	gs.ActiveScreen = state.Settings
+	actions.OpenCompendium(gs)
+	actions.OpenAchievements(gs)
+
+	(&AchievementsScene{}).leave(gs)
+	if gs.ActiveScreen != state.Compendium {
+		t.Fatalf("Back from Achievements should reach the Compendium, got %v", gs.ActiveScreen)
+	}
+	(&CompendiumScene{}).leave(gs)
+	if gs.ActiveScreen != state.Settings {
+		t.Fatalf("Back from the Compendium should reach Settings, got %v", gs.ActiveScreen)
+	}
+	(&SettingsScene{}).leave(gs)
+	if gs.ActiveScreen != state.Combat {
+		t.Fatalf("Back from Settings should reach the fight, got %v", gs.ActiveScreen)
+	}
+	if len(gs.Returns) != 0 {
+		t.Errorf("every step should have been popped, %d left", len(gs.Returns))
 	}
 }
 

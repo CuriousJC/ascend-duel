@@ -25,7 +25,7 @@
 // **The border colors.** An essence's border carries the element it grants; the ones that grant no
 // element are basic gray. How many of each is a fact about the offer, not a detail.
 //
-// **How much art there is not.** An essence with no `Art` of its own draws `default-essence.png` and the
+// **How much art there is not.** An essence with no `Art` of its own draws the placeholder and the
 // page marks it, exactly as the relic sheet marks an undrawn relic — so a column of identical
 // faces reads as a backlog rather than as a bug. Its `Draw` is the subject paragraph an art
 // generator would be given, and a record with neither is the backlog twice over.

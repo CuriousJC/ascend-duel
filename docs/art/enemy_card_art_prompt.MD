@@ -39,8 +39,9 @@ card:
 | the card's name, centred along the bottom | 60–140 | 240–268 |
 
 **These are not reserved areas.** Do not draw a band, a panel or a blank patch at any of them.
-They are why the subject belongs in the open middle of the card, roughly **x 46 to 196, y 46 to
-236**: a tall field right of a narrow left-hand column and above a strip along the bottom.
+They are why the subject belongs in the open middle of the card, roughly **x 30 to 170, y 52 to
+230**: a tall field centred left to right, below the corner mark and above a strip along the
+bottom.
 
 ## What every one of these pictures is
 
@@ -88,13 +89,13 @@ picture of a flavor to the same size and the four weights must still be told apa
 
 ### Where the subject goes
 
-**The subject fills the open middle of the card and stays inside it**: about x 46 to 196 and y 46
-to 236 on the finished card, which on the canvas is roughly **the right 77% of the width and the
-middle 68% of the height** (x 245 to 1040, y 245 to 1250 at 1060 x 1484). Diagonals are good: a blow
+**The subject fills the open middle of the card and stays inside it, centred left to right**:
+about x 30 to 170 and y 52 to 230 on the finished card, which on the canvas is roughly **the middle
+70% of the width and the middle 64% of the height** (x 160 to 900, y 275 to 1220 at 1060 x 1484). Diagonals are good: a blow
 crossing the field from one corner toward the other reads as motion without any motion lines.
 
-**Nothing crosses into the left-hand column or the bottom strip, trailing smoke included.** The
-card's mark, its bars, its badge and its name are printed there, and vapor running under them
+**Nothing crosses into the left edge, the top-left corner or the bottom strip, trailing smoke
+included.** The card's mark, its bars, its badge and its name are printed there, and vapor running under them
 makes them unreadable. A heavy subject, a fist, a boulder, a coil, a wave, is the one most tempted
 to fill the card; draw it smaller rather than let it spill. The same applies to the top edge: the
 subject starts below the corner mark, not behind it.
@@ -216,5 +217,6 @@ loose files.
 10. **Count anything countable.** Fingers, claws, fangs, segments: if `Draw` gives a number, the
    picture has exactly that many in every element. A wrong count is the most common reason a
    picture is thrown away.
-11. **Does anything cross into the left-hand column, the bottom strip or the top-left corner?**
-   Reduce to 200 x 280 and check that x below 46, y below 46 and y above 236 are empty.
+11. **Does anything cross into the left edge, the bottom strip or the top-left corner?**
+   Reduce to 200 x 280 and check that x below 30, x above 170, y below 52 and y above 230 are
+   empty.

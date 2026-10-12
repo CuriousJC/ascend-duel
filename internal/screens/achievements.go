@@ -304,10 +304,5 @@ func achievementTally(gs *state.GlobalState) string {
 // leave goes back to whichever screen opened this one, on the same terms the settings screen's Back
 // does — including the title-screen fallback, which is what an ActiveScreen of zero already means.
 func (s *AchievementsScene) leave(gs *state.GlobalState) {
-	back := gs.ReturnScreen
-	if back == state.Achievements {
-		back = state.Title
-	}
-	gs.ActiveScreen = back
-	gs.NewScreen = true
+	gs.PopReturn()
 }

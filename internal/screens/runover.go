@@ -219,11 +219,13 @@ func (s *RunOverScene) drawSeed(gs *state.GlobalState, screen *ebiten.Image, cod
 // longer exists, and a stale one still on the state is a page that could be reached again later
 // showing numbers from two runs ago.
 //
-// **It goes to the title outright rather than reading ReturnScreen.** Every other screen that can be
-// entered from anywhere puts the player back where they were; there is nowhere to put them back to
-// here, because the screen they came from was drawing a run that has ended.
+// **It goes to the title outright rather than popping Returns, and empties it.** Every other screen
+// that can be entered from anywhere puts the player back where they were; there is nowhere to put
+// them back to here, because the screen they came from was drawing a run that has ended — and a
+// way back left on the stack is a way back into it.
 func (s *RunOverScene) leave(gs *state.GlobalState) {
 	gs.Summary = nil
+	gs.Returns = nil
 	gs.ActiveScreen = state.Title
 	gs.NewScreen = true
 }

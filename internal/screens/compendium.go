@@ -273,12 +273,7 @@ func compendiumBody(gs *state.GlobalState) image.Rectangle {
 
 // leave goes back to whichever screen opened this one, on the terms every menu screen's Back does.
 func (s *CompendiumScene) leave(gs *state.GlobalState) {
-	back := gs.ReturnScreen
-	if back == state.Compendium {
-		back = state.Title
-	}
-	gs.ActiveScreen = back
-	gs.NewScreen = true
+	gs.PopReturn()
 }
 
 // compendiumTally is what one of the profile's two records says, with the run in progress added on

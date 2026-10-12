@@ -6,348 +6,159 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/entities"
-	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
-// shieldScene is a screen with one card on the player's side of the table.
-func shieldScene(card combat.Card) *CombatScene {
+// shieldScene is a screen with defend cards on the player's side of the table, one per element
+// given, and two attacks on the opponent's.
+func shieldScene(els ...combat.Element) *CombatScene {
 	s := &CombatScene{}
-	s.Theater.resolved = []resolvedCard{{card: card}}
-	s.Theater.firingSeats = []int{0}
+	for _, el := range els {
+		s.Theater.resolved = append(s.Theater.resolved, resolvedCard{card: combat.Card{Concept: combat.Block, Element: el}})
+	}
+	s.Theater.enemyDealt = make([]dealtCard, 2)
 	s.fighter = &entities.Combatant{}
+	s.enemy = &entities.Combatant{}
 	return s
 }
 
-// raised is the event the engine emits for a shield card going up: how many this card put up, and
-// what is standing after it. **Seat 0**, which is the card shieldScene puts on the table; raisedAt
-// is the same event for a named seat.
-func raised(count, standing int) combat.Event { return raisedAt(0, count, standing) }
-
-func raisedAt(seat, count, standing int) combat.Event {
-	return combat.Event{
-		Kind: combat.KindRaised, Side: combat.SideA, Slot: seat,
-		Amount: count, Life: standing,
-	}
+// raisedAt is the event the engine emits for a card at a seat putting shields up.
+func raisedAt(seat, count int, el combat.Element) combat.Event {
+	return combat.Event{Kind: combat.KindRaised, Side: combat.SideA, Slot: seat, Amount: count, Element: el}
 }
 
-// defendAction is the announcement that sits between two raises in the defend phase, which is what
-// the bundle's walk has to step over to find the raise behind it.
-func defendAction(concept combat.ConceptID) combat.Event {
-	return combat.Event{Kind: combat.KindAction, Side: combat.SideA, Action: concept}
+// heaped is how many shields a side has standing over table seats, rings and the duelist card.
+func heaped(s *CombatScene, side combat.Side) int {
+	n := 0
+	for _, p := range s.Theater.piles {
+		if p.side == side {
+			n += len(p.shields)
+		}
+	}
+	return n
 }
 
-// A defend card's pips are what the card raises; anything else raises none. **The seat is read off
-// the table rather than the event**, so the pips and the sum's figure belong to one card.
-func TestOnlyAShieldCardRaisesPips(t *testing.T) {
-	ward, ok := combat.ConceptByKey("ward")
-	if !ok {
-		t.Skip("no ward concept in this build")
-	}
-
-	s := shieldScene(combat.Card{Concept: ward})
-	if got := s.shieldsRaisedBy(combat.SideA, 0); got != combat.Plain(ward).Amount() {
-		t.Errorf("a ward raises %d pips, want %d", got, combat.Plain(ward).Amount())
-	}
-
-	s = shieldScene(combat.Card{Concept: combat.Bash})
-	if got := s.shieldsRaisedBy(combat.SideA, 0); got != 0 {
-		t.Errorf("an attack raises %d pips, want none", got)
-	}
-
-	// A seat the table does not hold is nothing rather than a panic.
-	if got := s.shieldsRaisedBy(combat.SideA, 7); got != 0 {
-		t.Errorf("an empty seat raises %d pips", got)
-	}
+// raise forms the shields of one raise at once, as the end of a turn would.
+func raise(s *CombatScene, e combat.Event) {
+	s.noteShieldRaise(e)
+	s.formPendingShields()
 }
 
-// **A duelist holds as many shields as the turn paid for and the row draws maxShieldPips of them**,
-// so a flight that ignored the row's end would send a pip with no seat to land in. The engine's
-// count is the authority and this is only the drawing — see CLAUDE.md, where the two being separate
-// numbers is the decision.
-func TestPipsNeverFlyPastTheRow(t *testing.T) {
-	s := shieldScene(combat.Card{Concept: combat.Bash})
-
-	// One short of a full row, and a card that puts up three.
-	s.noteShieldRaise(raised(3, ui.MaxShieldPips-1+3))
-	if len(s.Theater.shields) != 1 {
-		t.Fatalf("no flight was raised")
-	}
-	if got := s.Theater.shields[0].count; got != 1 {
-		t.Errorf("the flight carries %d pips into a row with room for 1", got)
-	}
-
-	// A row already full flies nothing at all rather than a flight of zero pips.
-	s = shieldScene(combat.Card{Concept: combat.Bash})
-	if s.noteShieldRaise(raised(3, ui.MaxShieldPips+3)) {
-		t.Error("a full row still flew pips")
-	}
-	if len(s.Theater.shields) != 0 {
-		t.Errorf("a full row raised %d flights", len(s.Theater.shields))
-	}
-}
-
-// The pips are paid into the shown count when they arrive, once, and the count then follows the
-// events again — a KindRaised sets it outright, which is what corrects a wrong guess.
-func TestPipsArePaidInOnArrivalAndOnlyOnce(t *testing.T) {
-	s := shieldScene(combat.Card{Concept: combat.Bash})
-	s.noteShieldRaise(raised(2, 2))
-
-	s.landShields()
-	if got := s.shownShields(combat.SideA, 0); got != 0 {
-		t.Errorf("pips landed before they arrived: the row shows %d", got)
-	}
-
-	for i := 0; i < shieldFlyTicks(); i++ {
-		s.Theater.Tick()
-	}
-	s.landShields()
-	if got := s.shownShields(combat.SideA, 0); got != 2 {
-		t.Fatalf("the row shows %d pips after the flight arrived, want 2", got)
-	}
-
-	// Held on screen for its fade, the same flight must not pay again.
-	s.landShields()
-	s.landShields()
-	if got := s.shownShields(combat.SideA, 0); got != 2 {
-		t.Errorf("the row shows %d pips, so an arrival was paid twice", got)
-	}
-
-	// And the announcement is still the authority.
-	s.noteShields(combat.Event{Kind: combat.KindRaised, Side: combat.SideA, Amount: 2, Life: 3})
-	if got := s.shownShields(combat.SideA, 0); got != 3 {
-		t.Errorf("the row shows %d after KindRaised said 3", got)
-	}
-}
-
-// **A turn of nothing but defenses forms no hand**, so there is no sum for the pips to leave with
-// — the announcement flies them instead, and the row takes the count the announcement carries when
-// they land rather than the moment it is spoken.
-func TestAnAnnouncedRaiseFliesItsOwnPips(t *testing.T) {
-	s := shieldScene(combat.Card{Concept: combat.Bash})
-	s.Theater.firingSeats = []int{0}
-
-	raise := combat.Event{Kind: combat.KindRaised, Side: combat.SideA, Amount: 2, Life: 2}
-	if !s.noteShieldRaise(raise) {
-		t.Fatal("an announced raise did not fly its pips")
-	}
-	if got := s.shownShields(combat.SideA, 0); got != 0 {
-		t.Errorf("the row shows %d before the pips arrived, want 0", got)
-	}
-
-	for i := 0; i < shieldFlyTicks(); i++ {
-		s.Theater.Tick()
-	}
-	s.landShields()
-	if got := s.shownShields(combat.SideA, 0); got != 2 {
-		t.Errorf("the row shows %d after the pips landed, want the announced 2", got)
-	}
-}
-
-// One card's pips fly once. **The seat is what remembers**, which is why the row records it — a
-// raise announced twice for one card, or a redraw reaching this twice in a frame, is the same
-// shields being spoken about again rather than a second set going up.
-//
-// **It reports true the second time**, and that is the point rather than a wrinkle: what the answer
-// means is "the row is waiting for pips", not "pips left on this call". A false here would send the
-// raise on to noteShields, which sets the row to the absolute count — filling it while the pips that
-// fill it are still crossing the screen.
-func TestPipsAreNotFlownTwiceForOneCard(t *testing.T) {
-	s := shieldScene(combat.Card{Concept: combat.Bash})
-
-	if !s.noteShieldRaise(raised(2, 2)) {
-		t.Fatal("the first raise flew no pips")
-	}
-	if !s.noteShieldRaise(raised(2, 4)) {
-		t.Error("the second raise let the row fill behind its own pips")
-	}
-	if len(s.Theater.shields) != 1 {
-		t.Errorf("%d flights are in the air for one card", len(s.Theater.shields))
-	}
-}
-
-// **Every shield in the turn goes up as one gesture.** The first raise reached flies its own pips
-// and every raise behind it in the same defend phase, on one frame, so the cards can stay still
-// under it — see noteResolved, which lifts no defense.
-func TestTheDefendPhaseFliesItsPipsAsOneBundle(t *testing.T) {
-	s := shieldScene(combat.Card{Concept: combat.Brace})
-	s.Theater.resolved = append(s.Theater.resolved, resolvedCard{
-		card: combat.Card{Concept: combat.Block},
-	})
-
-	// Brace, Block once resolved: an announcement and a raise each, in that order.
+// **A turn's shields form once its arithmetic is done.** A raise reached forms nothing; the turn
+// over, every raise in it forms together, each heap over its own card.
+func TestTheTurnsShieldsFormWhenTheTurnIsOver(t *testing.T) {
+	s := shieldScene(combat.Fire, combat.Ice)
 	s.log = []combat.Event{
-		defendAction(combat.Brace), raisedAt(0, 1, 1),
-		defendAction(combat.Block), raisedAt(1, 2, 3),
-	}
-	s.cursor = 1
-
-	if !s.noteShieldRaise(s.log[1]) {
-		t.Fatal("the first raise flew no pips")
-	}
-	if len(s.Theater.shields) != 2 {
-		t.Fatalf("%d flights are in the air, want one per defense", len(s.Theater.shields))
+		raisedAt(0, 2, combat.Fire),
+		raisedAt(1, 1, combat.Ice),
+		{Kind: combat.KindHand, Side: combat.SideA},
+		{Kind: combat.KindAction, Side: combat.SideB},
 	}
 
-	// And the raise behind it, when its own beat arrives, has nothing left to do and still keeps
-	// the row waiting.
-	s.cursor = 3
-	if !s.noteShieldRaise(s.log[3]) {
-		t.Error("the bundled raise let the row fill behind its own pips")
-	}
-	if len(s.Theater.shields) != 2 {
-		t.Errorf("%d flights are in the air after the second beat, want the same 2",
-			len(s.Theater.shields))
-	}
-}
-
-// **The walk stops at the phase's edge.** A raise is bundled with the raises behind it in the same
-// defend phase and with nothing else — not the attacks that follow, and not the opponent's turn.
-func TestTheBundleDoesNotReachPastTheDefendPhase(t *testing.T) {
-	s := shieldScene(combat.Card{Concept: combat.Brace})
-
-	s.log = []combat.Event{
-		defendAction(combat.Brace), raisedAt(0, 1, 1),
-		// The attack phase: an announcement of a card that is not a defense ends the walk.
-		{Kind: combat.KindAction, Side: combat.SideA, Action: combat.Bash},
-		raisedAt(1, 2, 3),
-	}
-	s.cursor = 1
-
+	s.noteShieldRaise(s.log[0])
 	s.noteShieldRaise(s.log[1])
-	if len(s.Theater.shields) != 1 {
-		t.Errorf("%d flights are in the air, want only the defense's", len(s.Theater.shields))
+	if heaped(s, combat.SideA) != 0 {
+		t.Fatalf("%d shields formed before the turn's arithmetic", heaped(s, combat.SideA))
+	}
+
+	s.cursor = 2
+	if s.turnOver() {
+		t.Fatal("the turn is over while its hand is still to be reached")
+	}
+	s.cursor = 3
+	if !s.turnOver() || !s.formPendingShields() {
+		t.Fatal("the turn ended and its shields did not form")
+	}
+	if len(s.Theater.piles) != 2 || heaped(s, combat.SideA) != 3 {
+		t.Errorf("formed %d heaps of %d shields, want 2 heaps of 3", len(s.Theater.piles), heaped(s, combat.SideA))
 	}
 }
 
-// **Nothing on a duelist's turn lifts on its own announcement**, the shields least of all — so the
-// table is still while the bundle flies, and the one raise in the turn belongs to the hand being
-// named. See noteHand, and TestOnlyTheRungIsRaisedAndOnlyOnTheAnnouncement.
-func TestADefenseLiftsNothing(t *testing.T) {
-	s := shieldScene(combat.Card{Concept: combat.Brace})
-	s.fighterActions = []combat.Card{{Concept: combat.Brace}, {Concept: combat.Bash}}
-	s.log = []combat.Event{
-		defendAction(combat.Brace),
-		{Kind: combat.KindAction, Side: combat.SideA, Action: combat.Bash},
-	}
+// **A block throws a shield of the element the engine spent**, onto the seat of the attack it ate,
+// and the heap it came off is one shorter.
+func TestABlockThrowsTheShieldItSpent(t *testing.T) {
+	gs := testState()
+	s := shieldScene(combat.Fire, combat.Ice)
+	raise(s, raisedAt(0, 1, combat.Fire))
+	raise(s, raisedAt(1, 1, combat.Ice))
 
-	for i, what := range []string{"a defense", "an attack"} {
-		s.cursor = i
-		s.noteResolved(s.log[i])
-		if got := s.Theater.firingSeats; len(got) != 0 {
-			t.Errorf("%s lifted %v, want nothing raised before the hand is named", what, got)
-		}
+	s.noteBlock(gs, combat.Event{Kind: combat.KindBlocked, Side: combat.SideA, Target: combat.SideA,
+		Element: combat.Ice, Slot: 1, Surged: true})
+
+	if len(s.Theater.smothers) != 1 {
+		t.Fatalf("%d shields thrown, want 1", len(s.Theater.smothers))
+	}
+	m := s.Theater.smothers[0]
+	if m.element != cards.Ice || m.seat != 1 || !m.surged {
+		t.Errorf("threw a %s shield at seat %d (surged %v), want the ice one at seat 1, surged", m.element, m.seat, m.surged)
+	}
+	if p := s.pileAtSeat(combat.SideA, 1); p != nil {
+		t.Errorf("the ice heap still holds %d shields", len(p.shields))
+	}
+	if p := s.pileAtSeat(combat.SideA, 0); p == nil || len(p.shields) != 1 {
+		t.Error("the fire heap lost a shield it did not spend")
 	}
 }
 
-// **A pip keeps the color it flew in.** The flight is drawn in the element the raise names — its
-// card's, unless a worn relic turned it — and the row it joins has to agree, or the pip changes
-// color on landing and says the journey meant nothing.
-func TestALandedPipKeepsItsColor(t *testing.T) {
-
-	s := shieldScene(combat.Card{Concept: combat.Bash, Element: combat.Fire})
-	fire := raised(2, 2)
-	fire.Element = combat.Fire
-	s.noteShieldRaise(fire)
-	for i := 0; i < shieldFlyTicks(); i++ {
+// **The cursor waits for a thrown shield to land**, then lets go while the shield stays on the card.
+func TestAThrownShieldHoldsTheCursorUntilItLands(t *testing.T) {
+	gs := testState()
+	s := shieldScene(combat.Fire)
+	raise(s, raisedAt(0, 1, combat.Fire))
+	for s.Theater.shieldsMoving() {
 		s.Theater.Tick()
 	}
-	s.landShields()
 
-	els := s.shownShieldElements(combat.SideA)
-	if len(els) != 2 {
-		t.Fatalf("%d pips have an element, want 2", len(els))
+	s.noteBlock(gs, combat.Event{Kind: combat.KindBlocked, Target: combat.SideA, Element: combat.Fire, Slot: 0})
+	if !s.Theater.Running() {
+		t.Fatal("a shield in the air does not hold playback")
 	}
-	for i, e := range els {
-		if e != cards.Fire {
-			t.Errorf("pip %d is %v, want its card's fire", i, e)
-		}
-	}
-
-	// A shield eaten takes the oldest pip with it, so the row never keeps an element for a pip
-	// that is not there.
-	s.noteShields(combat.Event{Kind: combat.KindBlocked, Target: combat.SideA, Amount: 1})
-	if got := len(s.shownShieldElements(combat.SideA)); got != 1 {
-		t.Errorf("%d colors are left for one standing pip", got)
-	}
-
-	// An expiry says how many lapsed, not how many are left, so the row it leaves is empty.
-	s.noteShields(combat.Event{Kind: combat.KindExpired, Target: combat.SideA, Amount: 1})
-	if got := len(s.shownShieldElements(combat.SideA)); got != 0 {
-		t.Errorf("%d colors are left for an empty row", got)
-	}
-}
-
-// **No standing pip is ever drawn without a color.** A raise is cumulative and arrives a phase
-// after the pips it describes have flown, so it can name a count the color list has not got —
-// which used to draw the extra pips as the bare white mark and flicker one into the row between an
-// attack and the next. A raise pads and never trims.
-func TestARaiseNeverLeavesAPipColorless(t *testing.T) {
-	s := shieldScene(combat.Card{Concept: combat.Bash, Element: combat.Fire})
-	s.noteShieldRaise(raised(1, 1))
-	for i := 0; i < shieldFlyTicks(); i++ {
+	for i := 0; i < smotherTotalTicks(); i++ {
 		s.Theater.Tick()
 	}
-	s.landShields()
-
-	// The engine announces the second shield the same turn raised; nothing flew for it, because a
-	// seat's pips fly once and the second card's own raise is the next seat's.
-	s.noteShields(combat.Event{Kind: combat.KindRaised, Side: combat.SideA, Amount: 1, Life: 2})
-	if got, want := len(s.shownShieldElements(combat.SideA)), 2; got != want {
-		t.Fatalf("%d colors for %d standing pips: the rest draw white", got, want)
+	if s.Theater.Running() {
+		t.Error("a landed shield still holds playback")
 	}
-
-	// And a raise may not shrink the list: it says what is standing after its own, not instead of
-	// what is already there.
-	s.noteShields(combat.Event{Kind: combat.KindRaised, Side: combat.SideA, Amount: 1, Life: 1})
-	if got := len(s.shownShieldElements(combat.SideA)); got != 2 {
-		t.Errorf("a raise trimmed the colors to %d", got)
+	if !s.smotheredSeats()[0] {
+		t.Error("the shield is not lying on the card it smothered")
 	}
 }
 
-// **A raise may only ever raise the count.** Two defenses in one turn announce "1 shield up" and
-// then "2 shields up", both after the pips have flown — so a row taking the first outright drops
-// the second card's pip and puts it back a beat later.
-func TestARaiseNeverLowersTheRow(t *testing.T) {
-	s := shieldScene(combat.Card{Concept: combat.Bash, Element: combat.Fire})
-	s.noteShieldRaise(raised(2, 2))
-	for i := 0; i < shieldFlyTicks(); i++ {
-		s.Theater.Tick()
-	}
-	s.landShields()
+// **At the end of the round the heaps are squared with the model.** What lapsed goes, and what the
+// model still holds outlasts the card that raised it.
+func TestTheRoundEndKeepsWhatTheModelHolds(t *testing.T) {
+	gs := testState()
+	s := shieldScene(combat.Fire)
+	raise(s, raisedAt(0, 2, combat.Fire))
 
-	s.noteShields(combat.Event{Kind: combat.KindRaised, Side: combat.SideA, Amount: 1, Life: 1})
-	if got := s.shownShields(combat.SideA, 0); got != 2 {
-		t.Errorf("the row dropped to %d pips on the first of two raises, want 2", got)
+	var standing combat.ShieldStack
+	standing[combat.Fire] = 1
+	s.settleShields(gs, combat.SideA, standing)
+
+	if got := heaped(s, combat.SideA); got != 1 {
+		t.Fatalf("%d shields still standing, want the 1 the model holds", got)
+	}
+	if s.pileAtSeat(combat.SideA, 0) != nil {
+		t.Error("a shield is still standing over a card that has left the table")
+	}
+	if len(s.Theater.fades) == 0 {
+		t.Error("the lapsed shield vanished rather than fading")
 	}
 
-	// A block still takes one away: that is the only thing that can.
-	s.noteShields(combat.Event{Kind: combat.KindBlocked, Target: combat.SideA, Amount: 1})
-	if got := s.shownShields(combat.SideA, 0); got != 1 {
-		t.Errorf("the row shows %d after a block, want 1", got)
+	s.settleShields(gs, combat.SideA, combat.ShieldStack{})
+	if got := heaped(s, combat.SideA); got != 0 {
+		t.Errorf("%d shields standing after everything lapsed", got)
 	}
 }
 
-// **A seat is a position in one round's table.** The record of which seats have sent their pips is
-// what stops a card flying them twice, and it has to be forgotten with the round — a defense
-// landing in a seat that flew last round would otherwise never fly, and a pip that never flew has
-// no color to land in.
-func TestFlownSeatsAreForgottenEachRound(t *testing.T) {
-	s := shieldScene(combat.Card{Concept: combat.Bash, Element: combat.Fire})
-	s.enemy = &entities.Combatant{}
-	s.fighterAfter, s.enemyAfter = s.fighter.Duelist, s.enemy.Duelist
-	s.Theater.firingSeats = []int{0}
+// **An expiry leaves what a worn relic kept**, which is the event's `Life`.
+func TestAnExpiryLeavesWhatWasKept(t *testing.T) {
+	gs := testState()
+	s := shieldScene(combat.Fire)
+	raise(s, raisedAt(0, 3, combat.Fire))
 
-	s.noteShieldRaise(raised(1, 1))
-	if !s.row(combat.SideA).Flew(0) {
-		t.Fatal("a flight did not record the seat it left")
-	}
-
-	s.endOfRound()
-	if s.row(combat.SideA).Flew(0) {
-		t.Fatal("last round's seat still counts as flown")
-	}
-	if !s.noteShieldRaise(raised(2, 2)) {
-		t.Error("this round's defense in the same seat did not fly its pips")
+	s.noteExpired(gs, combat.Event{Kind: combat.KindExpired, Target: combat.SideA, Amount: 2, Life: 1})
+	if got := heaped(s, combat.SideA); got != 1 {
+		t.Errorf("%d shields standing after an expiry that kept 1", got)
 	}
 }
 

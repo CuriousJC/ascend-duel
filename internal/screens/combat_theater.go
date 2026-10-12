@@ -89,6 +89,14 @@ const (
 	// screen and the next thing that changes the *hand* rather than a duelist belongs on it.
 	anchorHandRow
 
+	// anchorShieldHeap is a shield standing over whatever raised it — a card's seat on the table, or
+	// a relic. See combat_shields.go.
+	anchorShieldHeap
+
+	// anchorAttackSeat is the seat of the attack a shield ate, in the opponent's row: on a
+	// `KindBlocked`, whose `Side` is the defender's, the card on the other side.
+	anchorAttackSeat
+
 	// anchorCount is the width of the enum and is never a place. Keep it last.
 	anchorCount
 )
@@ -113,6 +121,10 @@ func (a anchor) String() string {
 		return "the action-point figure"
 	case anchorHandRow:
 		return "the hand row"
+	case anchorShieldHeap:
+		return "a shield heap"
+	case anchorAttackSeat:
+		return "the eaten attack's seat"
 	}
 	return "?"
 }
@@ -193,16 +205,16 @@ var choreography = map[combat.EventKind]flightSpec{
 		"the card lifting in its own seat is the drawing, and tableFireLift already does it",
 	},
 	combat.KindRaised: {
-		anchorActorSeat, anchorActorCard, gestureFly,
-		"pips fly from the card to the fighter card - but on the beat the card is scored, not this one",
+		anchorNone, anchorShieldHeap, gesturePop,
+		"the shields form over the card that raised them - once the turn's arithmetic is done, not on this beat",
 	},
 	combat.KindBlocked: {
-		anchorNone, anchorTargetCard, gesturePop,
-		"nothing travels - a shield is spent where it stood, on the card whose bar did not move",
+		anchorShieldHeap, anchorAttackSeat, gestureFly,
+		"the hit it would have landed shows on the attack, and a shield leaves its heap and smothers it",
 	},
 	combat.KindExpired: {
 		anchorNone, anchorNone, gestureNone,
-		"the pip row emptying says it; a figure flying off a card nobody hit would say it twice",
+		"the lapsed shields fading say it; a figure flying off a card nobody hit would say it twice",
 	},
 	combat.KindDamage: {
 		anchorBlow, anchorTargetCard, gestureFly,
@@ -249,8 +261,8 @@ var choreography = map[combat.EventKind]flightSpec{
 		"nothing travels - the clock is not a blow, so the figure pops on the card whose bar it empties",
 	},
 	combat.KindWarded: {
-		anchorRelic, anchorActorCard, gestureFly,
-		"a helm's shield is made by the ring, so the pips leave the ring and join the row the way a defend card's leave the card",
+		anchorNone, anchorShieldHeap, gesturePop,
+		"a helm's shield is made by the ring, so it forms on the ring - with the turn's other shields, once its arithmetic is done",
 	},
 	combat.KindReflected: {
 		anchorRelic, anchorTargetCard, gestureFly,
@@ -361,40 +373,22 @@ type combatTheater struct {
 	// See combat_drain.go — the hits' rule pointing the other way.
 	drains []drainFlight
 
-	// shields are the defend cards' pips currently traveling to a fighter card. **They set off on
-	// the beat their card is scored into the hand**, which is several beats before the defend phase
-	// raises them — see combat_shields.go, where the trade that buys is written down.
-	shields []shieldFlight
+	// piles are the standing shields as playback has reached them, each heaped over whatever
+	// raised it; fades are shields going away where they stood; smothers are shields thrown onto
+	// the attacks they ate, lying there for the rest of the round. See combat_shields.go.
+	piles    []shieldPile
+	fades    []fadingShield
+	smothers []smother
 
-	// shieldRows is each side's standing shields as playback has reached them: one list of pips
-	// per side, each pip carrying the element of the card that raised it, plus the two pieces of
-	// bookkeeping that belong to the same question. **One structure rather than four** — see
-	// shield_row.go, where the bugs that bought that are written down.
-	shieldRows [2]ui.ShieldRow
+	// pendingRaises are the turn's raises and wards, reached but not yet formed: they form once
+	// the turn's arithmetic is done. See CombatScene.formPendingShields.
+	pendingRaises []combat.Event
 
 	// banner is the name of the hand the player committed, on its way from the planning seat to
 	// the hand row or resting there. **It is raised at DUEL! and lives until the round is over**,
 	// which is what makes the planned name and the fired one one word that moves rather than two
 	// that appear. See combat_mathbox.go.
 	banner handBanner
-
-	// breaks are the shields currently crossing the table to kill an attack, and the cracks
-	// opening on the cards they reach. **One beat between the two turns**, staged from the resolved
-	// round rather than from an event — see combat_shatter.go.
-	breaks []shieldBreak
-
-	// shatteredSeats is which of the opponent's seats have finished breaking, and it is what the
-	// row wears for the rest of the round. **The transition writes it and nothing else does**, so
-	// the moving version and the baked mark hand over exactly once.
-	//
-	// A map rather than a slice, because the row can be re-seated and a stale index into a shorter
-	// row would mark the wrong card rather than nothing.
-	shatteredSeats map[int]bool
-
-	// breaksStaged says this round's breaks have already been raised, so the boundary is only
-	// crossed once. Cleared with the rest of the theater at the start of a fight, and by the round
-	// that raises it — see startRound.
-	breaksStaged bool
 
 	// mathBox is the hand dialog: every hit's arithmetic acted out under its card on the beat the
 	// hand fires. See combat_mathbox.go.
@@ -442,14 +436,17 @@ func (t *combatTheater) Tick() {
 		}
 	}
 	t.drains = ui.Advance(t.drains)
-	t.shields = ui.Advance(t.shields)
-
-	// **The breaks tick and settle in one pass, and it has to be one pass.** `advance` ticks a
-	// mover and drops it in the same loop, so a break that finishes on this frame is gone by the
-	// time anything else could look at it — noting them beforehand saw nothing finished and noting
-	// them afterwards saw nothing at all, and the mark never landed. The web appeared, played, and
-	// vanished. See advanceBreaks.
-	t.breaks = t.advanceBreaks()
+	// **A heap and a smother are never dropped by their clocks**: a shield stands until an event
+	// takes it away, and a smothered card stays smothered until its row is re-seated.
+	for i := range t.piles {
+		for j := range t.piles[i].shields {
+			t.piles[i].shields[j].form.Tick()
+		}
+	}
+	for i := range t.smothers {
+		t.smothers[i].t.Tick()
+	}
+	t.fades = ui.Advance(t.fades)
 
 	// **The signals tick and land in one pass**, for the breaks' reason: a figure has to be noticed
 	// on the frame it *arrives*, which is when the figure it moved starts showing the new value.
@@ -477,8 +474,25 @@ func (t *combatTheater) Tick() {
 // holds it up; a damage figure crossing to a health bar does, because the bar must not drop before
 // the number reaches it. Adding a mover here is deciding that the round should wait for it.
 func (t *combatTheater) Running() bool {
-	return ui.Running(t.hits) || ui.Running(t.drains) || ui.Running(t.shields) ||
-		ui.Running(t.breaks) || ui.Running(t.signals)
+	return ui.Running(t.hits) || ui.Running(t.drains) || t.shieldsMoving() || ui.Running(t.signals)
+}
+
+// shieldsMoving reports a shield still forming or still being thrown, which the cursor waits for:
+// a shield appearing while the next card is already acting would read as belonging to that one.
+func (t *combatTheater) shieldsMoving() bool {
+	for _, p := range t.piles {
+		for _, sh := range p.shields {
+			if !sh.form.Done() {
+				return true
+			}
+		}
+	}
+	for _, m := range t.smothers {
+		if m.holding() {
+			return true
+		}
+	}
+	return false
 }
 
 // clear takes the whole stage down, view state included.

@@ -233,6 +233,11 @@ type Event struct {
 	// banked one action point for the defender's next turn. See Duelist.Surge.
 	Surged bool
 
+	// Would is, on a KindBlocked, the hit as it would have landed — the damage the shield stopped.
+	// **It is the figure the screen shows on the attack before the shield smothers it**, and it is
+	// the same figure a Thorned Shield's share is taken of.
+	Would int
+
 	// Element is the card's element on KindAction and KindFizzled. Basic everywhere
 	// else, which is also the zero value — an event with nothing to say about color says `basic`,
 	// exactly as a plain card does.

@@ -834,16 +834,6 @@ func TestTheFigureUnderThePortraitClearsTheBar(t *testing.T) {
 	}
 }
 
-func TestAFullBadgeRowFitsAcrossTheCard(t *testing.T) {
-	// The duelist's shield pips: a full row has to fit between the side borders.
-	st := DuelistStyle
-	span := MaxEffects*st.EffectSize + (MaxEffects-1)*st.EffectGap
-	if usable := st.Width - 2*st.BorderWidth; span > usable {
-		t.Errorf("%d badges span %dpx across a card %dpx wide inside its borders",
-			MaxEffects, span, usable)
-	}
-}
-
 // The fraction is written across the bar rather than under it, so what has to hold is that it
 // fits inside it — a figure taller than the bar it sits on is drawn over the pane above and below.
 func TestTheHitPointsFitOnTheBarTheyAreWrittenAcross(t *testing.T) {
@@ -869,47 +859,6 @@ func TestTheHitPointsFitOnTheBarTheyAreWrittenAcross(t *testing.T) {
 		if top < c.st.HealthBarTop {
 			t.Errorf("%s: the fraction starts at y=%d, above the bar at y=%d",
 				c.name, top, c.st.HealthBarTop)
-		}
-	}
-}
-
-func TestAnEffectRowIsCenteredAndClosesUpAsItEmpties(t *testing.T) {
-	// Nil entries are skipped rather than drawn as holes, so one shield pip sits in the middle of
-	// the card. What this checks is that the *drawn* row is centered for every count — the
-	// failure it guards is a row laid out against MaxEffects, which leaves a single badge
-	// hard left with three empty slots beside it.
-	st := DuelistStyle
-	f := faces(t)
-
-	solid := image.NewRGBA(image.Rect(0, 0, 8, 8))
-	for y := 0; y < 8; y++ {
-		for x := 0; x < 8; x++ {
-			solid.SetRGBA(x, y, color.RGBA{R: 255, A: 255})
-		}
-	}
-
-	for count := 1; count <= MaxEffects; count++ {
-		spec := Spec{Name: "Duelist", Element: Basic, Life: 10, MaxLife: 10, Enabled: true}
-		for i := 0; i < count; i++ {
-			spec.Effects[i] = solid
-		}
-
-		img, err := Render(spec, st, f)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		band := inkBounds(subImage(img, image.Rect(0, st.EffectTop, st.Width, st.EffectTop+st.EffectSize)))
-		if band.Empty() {
-			t.Fatalf("%d badges drew nothing in the effect band", count)
-		}
-
-		// Centered: the margin either side of the drawn row has to match within a pixel, which
-		// is all integer division can promise.
-		leftGap, rightGap := band.Min.X, st.Width-band.Max.X
-		if diff := leftGap - rightGap; diff > 1 || diff < -1 {
-			t.Errorf("%d badges sit %dpx from the left and %dpx from the right",
-				count, leftGap, rightGap)
 		}
 	}
 }
@@ -1473,11 +1422,7 @@ func TestAFigureStaysOnItsUnitsLine(t *testing.T) {
 
 // TestTheBottomBlockFitsInsideTheCard is what the fighter cards' packed lower half is held by.
 //
-// **The empty space under the fraction is reserved, not spare** *(owner's call, 2026-09-15)*. The
-// pip row draws nothing until shields are standing, so a duel that has raised none looks like fifty
-// pixels of slack — and a bar nudged down into it would leave a row of pips with nowhere to land
-// the first time a Guard goes down. So the block is measured at its *reserved* extent: bar, then
-// fraction, then the full pip row, inside the bottom border.
+// The bar and the fraction have to end inside the bottom border.
 //
 // Both fighter cards are checked, because the two carry the bar at identical offsets on purpose —
 // they face each other across the table, and a bar at a different height on each would make
@@ -1487,14 +1432,6 @@ func TestTheBottomBlockFitsInsideTheCard(t *testing.T) {
 		name string
 		st   Style
 	}{{"duelist", DuelistStyle}, {"enemy", EnemyStyle}} {
-		// The pip row, on the card that has one, is the top of the block and has to end above the
-		// bar.
-		if c.st.EffectSize > 0 {
-			if pips := c.st.EffectTop + c.st.EffectSize; pips > c.st.HealthBarTop {
-				t.Errorf("%s: the pip row ends at y=%d, %dpx into the bar at y=%d",
-					c.name, pips, pips-c.st.HealthBarTop, c.st.HealthBarTop)
-			}
-		}
 		inside := c.st.Height - c.st.BorderWidth
 		if bar := c.st.HealthBarTop + c.st.HealthBarHeight; bar > inside {
 			t.Errorf("%s: the bar ends at y=%d, %dpx past the inside of the border at y=%d",
@@ -1527,4 +1464,11 @@ func TestNoMarkPunchesAHoleInTheFace(t *testing.T) {
 			}
 		}
 	}
+}
+
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
 }

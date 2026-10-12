@@ -61,9 +61,7 @@ func (s *CombatScene) drawDuelistCard(gs *state.GlobalState, screen *ebiten.Imag
 		s.shownLife(combat.SideA, s.fighter.CurrentLife),
 		s.shownMaxLife(combat.SideA, s.fighter.MaxLife),
 		s.fighter.ActionPoints(),
-		s.fightIndex,
-		s.shownShields(combat.SideA, s.fighter.Shields.Count()),
-		s.shownShieldElements(combat.SideA)...)
+		s.fightIndex)
 
 	// **A DMG a cantrip has moved is written in the relic pink**, the ink the game already uses for
 	// "something you are carrying moved this figure" — so a Might reads on the card for the whole

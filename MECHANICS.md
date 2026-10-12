@@ -268,15 +268,15 @@ is a block and nothing else. Basic is no element and matches nothing.
 - **It is the mirror of the fizzle** — see §A creature's own element. The duelist has no element
   for a creature's hit to fizzle on, so matching a creature's element pays the player on defense
   where it costs them on offense.
-- **The screen says it twice, as placeholders**: `+1 AP` over each card a matched shield breaks,
-  and `(+N surge)` beside the budget while the player plans the turn it pays for.
+- **The screen says it twice**: SURGE written across each attack card a matched shield smothers,
+  at 45 degrees, and `(+N surge)` beside the budget while the player plans the turn it pays for.
 
 #### The turn reads: shields, then the hand, then the hits
 
 The defend phase resolves first — see `combat.Categories` — and the screen plays it as **one
-gesture**: every shield in the turn goes up together, pips out of their own cards into the row
-along the bottom of the duelist card, with **no card lifting off the table**. Only then is the
-hand announced, with the cards that formed it raised, and only then are the hits worked out — a
+gesture**: every shield in the turn forms together, heaped over the card that raised it, with
+**no card lifting off the table** — and it forms last, once the hits below have been worked out.
+The hand is announced, with the cards that formed it raised, and only then are the hits worked out — a
 line of arithmetic under every card of the turn, all of them at once. A defense's line usually
 comes to 0.
 
@@ -322,11 +322,8 @@ shields and is meant to be. Clamping the total to five would price a shield at w
 rather than at what it cost, and a player paying six AP for two Guards has bought six shields
 whether or not the next turn throws six hits.
 
-**The pip row on the duelist card holds six**, which is what fits the bottom band at the current
-pitch, and it is a *readout* limit rather than a rule — `screens.maxShieldPips`, not
-`combat.MaxShields`. A duelist standing behind ten draws a full row of six and the true count is
-on the engine. **A row that says what a big count actually is has not been designed**; a seventh
-pip is a redesign of the band rather than a bigger number.
+**The screen draws every shield.** Each stands over the card that raised it, several on one card
+heaped so they can be counted, so a big total is several heaps rather than one long row.
 
 #### Only the player raises shields
 
@@ -349,29 +346,38 @@ no shields, so their budget is the figure printed on their card.
 stronger and considerably more predictable. **Every creature deck is pure attack**, and none
 falls below three distinct concepts.
 
-#### The break on the card
+#### The smother on the card
 
-**A blocked attack is drawn as a broken window over the card that will not fire**, and the
-shield that killed it crosses the table to do it — one beat between the player's turn and the
-creature's, every blocked attack at once.
+**A shield stays over the card that raised it until it is spent or lapses.** It forms there once
+the turn's arithmetic is done *(owner's call)* — every hit's line worked out first, a defense's
+coming to 0 — over a defend card, over an attack card carrying a shield rider, or on the ring of a
+helm — and several on one card heap, each a little offset and turned, so the count is read at a
+glance.
 
-**A shield spent invisibly is a rule the player pays for on every defend card and never watches
-work** — the creature's card comes up, nothing happens, and a line in the feed says so after the
-fact. The break is also the only thing that makes the "heaviest, not first" rule above legible.
+**When a creature's attack is eaten, the hit it would have landed shows on its card, and a shield
+leaves its heap and lands on the card, smothering it** while the figure fades, on the beat the
+attack is reached. A shield spent invisibly is a rule the player
+pays for on every defend card and never watches work; watched landing on the card it stopped, it
+also makes the "heaviest, not first" rule above legible. **The shield lies on the card for the
+rest of the round**, because the table is the account of what the turn was. A matched block
+writes SURGE across the card at 45 degrees.
 
-**The break is two drawings of one thing and it stays after the animation.** The card wears the
-break for the rest of the round, because the table is the account of what the turn was and a card
-that never fired has to still say so once the turn is over.
+**The engine counts shields per element and never says which card's shield it spent**, so the
+screen picks: the newest heap holding one of the spent element gives it up. That is a choice about
+the picture, not about a rule.
 
-**It is the first of a general mechanism.** A *mark* is a picture drawn over a finished card face
-about that card's situation, as against an *upgrade*, which is what the card permanently is and
-which takes the left column rather than covering anything. See `internal/cards/mark.go`, which holds
-the split between the settled mark and the animation that puts it there, and
-`internal/screens/combat_shatter.go`.
+**At the end of the round an unspent shield fades where it stood**, as its card leaves the table.
+One the Tower Shield keeps moves onto the Tower Shield instead and stands there until a hit eats
+it. See `internal/screens/combat_shields.go`.
+
+#### Marks
+
+A *mark* is a picture drawn over a finished card face about that card's situation, as against an
+*upgrade*, which is what the card permanently is. See `internal/cards/mark.go`.
 
 **Marks are a set.** A card can be several things at once, so `cards.Mark` is a bitmask rather
 than one value, and the order they are painted in belongs to the renderer rather than to whoever
-asks. The second mark is **the tutorial's highlight**: a card the lesson is pointing at is
+asks. The mark today is **the tutorial's highlight**: a card the lesson is pointing at is
 washed in the tutorial's red rather than having a red frame drawn round it. A frame outside a
 card is a thing near the card; a tinted card is the card answering — and where a step names
 several cards, a frame each is a row of loose rectangles while a tint each is just the cards.
@@ -1958,7 +1964,7 @@ on a defend concept can never fire; these reach shields through verbs of their o
   would take away the shield it had just been handed. It is a shield like any other: it eats the
   heaviest hit of its own element first, banks the matched block's action point, and lapses with
   the rest. So a helm is a free Brace of its color every turn, and its worth depends entirely on
-  how often the realm is that color. The pips fly out of the ring rather than out of a card.
+  how often the realm is that color. Its shield forms on the ring rather than over a card.
 - **The Prismatic Shield turns every shield a defend card raises to the opponent's element**
   (`match-foe-shields`). **The shield changes and the card does not**: a defend card still carries
   its own element into the hand it forms, so what the relic buys is the matched block's action

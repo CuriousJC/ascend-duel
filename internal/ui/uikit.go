@@ -102,17 +102,6 @@ func runeSpec(gs *state.GlobalState, p session.Rune, enabled, selected bool) car
 	}
 }
 
-// ShieldPipKey is the shield drawing for one element, neutral for anything that is not one of the
-// five. Spelled here rather than exported from internal/cards because the key is a fact about the
-// asset family and both packages build it the same way off a form and an element.
-func ShieldPipKey(e cards.Element) string {
-	switch e {
-	case cards.Fire, cards.Ice, cards.Lightning, cards.Earth, cards.Arcane:
-		return "formdefend-" + e.String()
-	}
-	return "formdefend-neutral"
-}
-
 // RoomNames is what each of a realm's three fights is called, in order. Indexed by the
 // fight's position within its realm, so it must stay fightsPerRealm long — the two are checked
 // against each other by TestEveryRoomInARealmIsNamed.

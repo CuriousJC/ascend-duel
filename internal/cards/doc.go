@@ -48,19 +48,17 @@
 //
 // The distinction that keeps costing thought: an upgrade travels with the card everywhere it is
 // drawn, including onto `tools/upgradesheet`, because it is a fact about the card. A mark is a fact
-// about this card in this seat right now — a shattered attack is an ordinary card again next round —
+// about this card in this seat right now — a card the tutorial points at is an ordinary card again next step —
 // so the *state* belongs to whoever is drawing it and only the *drawing* belongs here.
 //
-// **Marks are a bitmask because they compose.** A card can be broken and pointed at at once, and
-// drawMark owns the order they are painted in so one pair of facts draws one way. Spec.Mark is a
+// **Marks are a bitmask because they compose.** A second mark joins the first rather than replacing
+// it, and drawMark owns the order they are painted in so one pair of facts draws one way. Spec.Mark is a
 // plain value for the reason Spec.Stats is a fixed array: `internal/screens` keys its face cache on
 // the whole Spec.
 //
-// **A mark has two halves and only one of them is here.** The settled picture is baked into the
-// card image and cached with it; the *arrival* — a break spreading — changes every frame and would
-// blow that cache, so this package exports the geometry (ShatterCracks, MarkSeed, CrackInk) and the
-// screen strokes the same lines on the GPU while they are moving. One geometry, two rasterizers, so
-// the animation cannot end on a picture different from the one it hands to.
+// **A mark is baked into the card image and cached with it.** Anything that changes every frame
+// would blow that cache, so a moving pattern over a card — the dissolve — is exported as geometry
+// for the screen to draw.
 //
 // # Rounded corners are rasterized here, not masked
 //

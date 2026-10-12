@@ -253,8 +253,8 @@ func ClearDefenses(d Duelist) Duelist {
 // what it stops rather than at what it cost, and the player buying a tenth is buying insurance
 // against a turn they cannot see. Overpaying for it is a poor play, not an impossible one.
 //
-// The readout is what actually pays for this, and it is a screen problem rather than a rule:
-// the pip row on the duelist card fits six at its current pitch. See screens.maxShieldPips.
+// The readout is a screen problem rather than a rule: the screen heaps each card's shields over
+// that card, so a big total is several heaps rather than one long row.
 func (d Duelist) raiseShields(e Element, n int) Duelist {
 	d.Shields[e] += n
 	return d

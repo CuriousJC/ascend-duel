@@ -5,7 +5,10 @@
     "Name": "Point",
     "Art": "stab-blade",
     "Weights": [
-      "medium"
+      "light",
+      "medium",
+      "heavy",
+      "crushing"
     ],
     "Draw": "A held point thrusting forward: a long dagger or spear-head made of vapor, driving out of the upper left toward the lower right, its tip drawn to a hard needle point. Behind the guard the grip frays into trailing smoke where a hand would be. Nothing else in the picture.",
     "Ladder": {
@@ -20,7 +23,10 @@
     "Name": "Shot",
     "Art": "stab-shot",
     "Weights": [
-      "medium"
+      "light",
+      "medium",
+      "heavy",
+      "crushing"
     ],
     "Draw": "Something flying at you: a single arrow made of vapor in hard flight, steep and diagonal, its head a sharp point and its fletching streaming back into a long smoky trail. Two fainter arrows follow behind it in the trail, smaller, to say a volley.",
     "Ladder": {
@@ -35,7 +41,10 @@
     "Name": "Sting",
     "Art": "stab-sting",
     "Weights": [
-      "medium"
+      "light",
+      "medium",
+      "heavy",
+      "crushing"
     ],
     "Draw": "A small natural point: a scorpion's tail made of vapor, a chain of four or five distinct rounded segments, each clearly separated from the next by a pinched joint, curling over from the top of the card and ending in a bulb with a thin, hooked needle stinger pointing down and forward. A single bead of venom hangs from the needle tip. The tail is slender and articulated, never a smooth cone or a horn. Where it would join a body it is only a dissolving wisp at the top edge.",
     "Ladder": {
@@ -50,7 +59,10 @@
     "Name": "Horn",
     "Art": "stab-horn",
     "Weights": [
-      "medium"
+      "light",
+      "medium",
+      "heavy",
+      "crushing"
     ],
     "Draw": "A big natural point: a heavy curved horn made of vapor, thick at the root and tapering to a blunt-sharp tip, hooking up and forward as if tossed by a head we cannot see, its surface ridged with growth rings. One solid piece, not jointed and not a tail. The root dissolves into smoke at the lower left.",
     "Ladder": {
@@ -65,7 +77,10 @@
     "Name": "Ray",
     "Art": "stab-ray",
     "Weights": [
-      "medium"
+      "light",
+      "medium",
+      "heavy",
+      "crushing"
     ],
     "Draw": "A piercing line of light: a narrow, perfectly straight beam of dense vapor crossing the card on a steep diagonal, brightest along its spine, ending in a tight starburst where it strikes. It starts from a small glowing eye-shaped knot of vapor at the upper left.",
     "Ladder": {
@@ -80,7 +95,10 @@
     "Name": "Bite",
     "Art": "stab-bite",
     "Weights": [
-      "medium"
+      "light",
+      "medium",
+      "heavy",
+      "crushing"
     ],
     "Draw": "Teeth going in: a pair of open jaws made of vapor seen from the side, upper and lower rows of long pointed fangs about to close, the two front fangs the longest. No head behind them, only the jaws, their hinge dissolving into smoke at the back.",
     "Ladder": {
@@ -95,7 +113,10 @@
     "Name": "Blade",
     "Art": "slash-blade",
     "Weights": [
-      "medium"
+      "light",
+      "medium",
+      "heavy",
+      "crushing"
     ],
     "Draw": "An edge in a hand: a broad curved blade made of vapor, sword or axe-like, caught at the end of a sweeping cut from upper right to lower left, with a crescent of trailing vapor following the arc of its edge. The grip frays into smoke where a hand would be.",
     "Ladder": {
@@ -110,7 +131,10 @@
     "Name": "Claw",
     "Art": "slash-claw",
     "Weights": [
-      "medium"
+      "light",
+      "medium",
+      "heavy",
+      "crushing"
     ],
     "Draw": "Claws raking: three long hooked talons made of vapor dragging down across the card on a diagonal, spread like the fingers of a paw, each leaving a parallel trail of vapor behind its tip. The paw they grow from is only a dissolving knot at the top.",
     "Ladder": {
@@ -125,7 +149,10 @@
     "Name": "Lash",
     "Art": "slash-lash",
     "Weights": [
-      "medium"
+      "light",
+      "medium",
+      "heavy",
+      "crushing"
     ],
     "Draw": "Something long and flexible: a single whip, vine or tail made of vapor, cracking across the card in one long S-curve from the upper left, thick at the base and thinning to a snapping tip at the lower right.",
     "Ladder": {
@@ -140,7 +167,10 @@
     "Name": "Blast",
     "Art": "slash-blast",
     "Weights": [
-      "medium"
+      "light",
+      "medium",
+      "heavy",
+      "crushing"
     ],
     "Draw": "A wall of force sweeping over you: a broad crescent-shaped wave of dense vapor rolling across the card from left to right, its leading edge a sharp curved front and its body billowing behind it, like a breath, a shockwave or a gale given a shape.",
     "Ladder": {
@@ -155,7 +185,10 @@
     "Name": "Club",
     "Art": "crush-club",
     "Weights": [
-      "medium"
+      "light",
+      "medium",
+      "heavy",
+      "crushing"
     ],
     "Draw": "A blunt thing in a hand: a heavy knotted club or hammer-head made of vapor, swung down from the upper right at the top of its arc, the head massive and squared, the haft fraying into smoke where a hand would be.",
     "Ladder": {
@@ -168,8 +201,13 @@
     "Flavor": "crush-body",
     "Form": "crush",
     "Name": "Fist",
-    "Art": "",
-    "Weights": [],
+    "Art": "crush-body",
+    "Weights": [
+      "light",
+      "medium",
+      "heavy",
+      "crushing"
+    ],
     "Draw": "The body as the weapon: one huge clenched fist made of vapor punching straight out of the card toward the viewer, knuckles foremost and foreshortened, the forearm behind it dissolving into a rush of smoke. A human hand: exactly four fingers curled tight into the palm, their four knuckles in one row, and one thumb folded across the front of the first two. Count them; a fifth finger or a missing one is the failure.",
     "Ladder": {
       "crushing": "Two giant fists hammering down together, the impact shoving the vapor out in a ring.",
@@ -183,7 +221,10 @@
     "Name": "Grip",
     "Art": "crush-grip",
     "Weights": [
-      "medium"
+      "light",
+      "medium",
+      "heavy",
+      "crushing"
     ],
     "Draw": "Holding and squeezing: a thick coil made of vapor wound twice round an empty space in the middle of the card and tightening, like a serpent's body or a closing tentacle, the coils pressing hard against each other. The end of the coil fades into smoke.",
     "Ladder": {
@@ -198,7 +239,10 @@
     "Name": "Boulder",
     "Art": "crush-mass",
     "Weights": [
-      "medium"
+      "light",
+      "medium",
+      "heavy",
+      "crushing"
     ],
     "Draw": "A weight arriving: one great rough boulder made of dense vapor falling from the top of the card, heavy and angular, with a trail of smaller stones and smoke streaming up behind it.",
     "Ladder": {

@@ -15,14 +15,20 @@ func OpenSettings(gs *state.GlobalState) {
 	gs.NewScreen = true
 }
 
-// OpenAchievements and OpenCredits go to the two menu screens, remembering where the player was so
-// each screen's Back can put them there.
+// OpenCompendium, OpenAchievements and OpenCredits go to the menu screens, remembering where the
+// player was so each screen's Back can put them there.
 //
-// **Three functions rather than one taking a destination**, matching OpenSettings. A shared
+// **One function per screen rather than one taking a destination**, matching OpenSettings. A shared
 // `openScreen(gs, dest)` would be shorter and would also be the seam through which a *run* screen
 // gets opened this way — and a run screen entered without its phase being set is a screen showing a
-// station the run is not standing on. These three are the screens that are allowed to work like
-// this, and the list being explicit is what says so.
+// station the run is not standing on. These are the screens that are allowed to work like this,
+// and the list being explicit is what says so.
+func OpenCompendium(gs *state.GlobalState) {
+	gs.ReturnScreen = gs.ActiveScreen
+	gs.ActiveScreen = state.Compendium
+	gs.NewScreen = true
+}
+
 func OpenAchievements(gs *state.GlobalState) {
 	gs.ReturnScreen = gs.ActiveScreen
 	gs.ActiveScreen = state.Achievements

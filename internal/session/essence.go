@@ -589,6 +589,7 @@ func (s *Session) ApplyToAll(w Essence, ids []int) bool {
 			s.duplicated = append(s.duplicated, s.deck[j])
 		}
 	}
+	s.count(StatEssenceUsed+w.Record, 1)
 	return true
 }
 

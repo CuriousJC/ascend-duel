@@ -17,9 +17,9 @@ package screens
 // it is or after the player has turned them to a code of their own. With a journey in progress the
 // same dialog says it will be lost and START takes the destructive red. See ui/seeddialog.go.
 //
-// **Achievements and Credits hang off here rather than off the run**, because neither is a station
+// **The Compendium and Credits hang off here rather than off the run**, because neither is a station
 // of a journey: they read the profile and a list of names respectively, and both are things a player
-// looks at between runs. They are `actions` calls for the reason Settings is — each records where
+// looks at between runs. Achievements are inside the Compendium. They are `actions` calls for the reason Settings is — each records where
 // the player came from, so Back works from anywhere.
 
 import (
@@ -52,12 +52,12 @@ const (
 
 // TitleScene is the front screen: the logo and the menu.
 type TitleScene struct {
-	newRunButton       *models.Button
-	continueButton     *models.Button
-	achievementsButton *models.Button
-	creditsButton      *models.Button
-	settingsButton     *models.Button
-	exitButton         *models.Button
+	newRunButton     *models.Button
+	continueButton   *models.Button
+	compendiumButton *models.Button
+	creditsButton    *models.Button
+	settingsButton   *models.Button
+	exitButton       *models.Button
 
 	// newRun is the dialog New Run opens: the run code the journey starts on, and the warning when
 	// there is a journey in progress to lose.
@@ -102,9 +102,9 @@ func (s *TitleScene) Init(gs *state.GlobalState) {
 		// **The two menu screens go through actions, like Settings does.** They are not stations of
 		// a run — nothing in flow.go names them — so they record where the player was and Back puts
 		// them there, which is the one thing every screen reachable from anywhere has to do.
-		s.achievementsButton = models.NewButton(titleButtonWidth, titleButtonHeight, "ACHIEVEMENTS",
-			func() { actions.OpenAchievements(gs) })
-		s.achievementsButton.TextSize = 40
+		s.compendiumButton = models.NewButton(titleButtonWidth, titleButtonHeight, "COMPENDIUM",
+			func() { actions.OpenCompendium(gs) })
+		s.compendiumButton.TextSize = 40
 
 		s.creditsButton = models.NewButton(titleButtonWidth, titleButtonHeight, "CREDITS",
 			func() { actions.OpenCredits(gs) })
@@ -194,7 +194,7 @@ func (s *TitleScene) Update(gs *state.GlobalState) error {
 func (s *TitleScene) menu() []*models.Button {
 	return []*models.Button{
 		s.newRunButton, s.continueButton,
-		s.achievementsButton, s.creditsButton,
+		s.compendiumButton, s.creditsButton,
 		s.settingsButton, s.exitButton,
 	}
 }

@@ -67,6 +67,9 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 		},
 		Deck:   make([]profile.CardSnapshot, 0, len(s.deck)),
 		Ledger: s.ledgerSnapshot(),
+		Stats:  s.Stats(),
+
+		Victorious: s.victorious,
 	}
 
 	// **Only relics actually worn.** `grown` can hold an accumulator for a relic since sold, and
@@ -321,6 +324,8 @@ func Resume(motifs map[string]data.MotifData, shape data.JourneyData, snap *prof
 		lifeBonus:  snap.LifeBonus,
 		phase:      phase,
 		seedChosen: snap.SeedChosen,
+		stats:      snap.Stats,
+		victorious: snap.Victorious,
 		roundLimit: resumeRoundLimit(snap.RoundLimit),
 		relicSlots: resumeRelicSlots(snap.RelicSlots),
 		grown:      map[string]int{},

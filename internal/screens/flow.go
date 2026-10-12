@@ -26,10 +26,11 @@ import (
 // **Absent means not built.** A phase left out of this table is walked past by advance, which is
 // how the loop stays complete while a station is still to be written.
 var phaseScreens = map[session.Phase]state.ActiveScreen{
-	session.PhaseFight:  state.Combat,
-	session.PhaseReward: state.PostBattle,
-	session.PhaseShop:   state.Shop,
-	session.PhasePortal: state.Portal,
+	session.PhaseFight:   state.Combat,
+	session.PhaseReward:  state.PostBattle,
+	session.PhaseShop:    state.Shop,
+	session.PhasePortal:  state.Portal,
+	session.PhaseVictory: state.Victory,
 }
 
 // screenFor is the scene that draws a phase, and whether one exists at all.

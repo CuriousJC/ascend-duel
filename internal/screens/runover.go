@@ -59,9 +59,15 @@ const (
 // call, 2026-09-05)*: the subtitle said the heading over again, and the numbers below are what the
 // page is for.
 var runOverWords = map[string]string{
-	session.EndedInDefeat: "DUELIST FALLS",
-	session.EndedByChoice: "RUN ABANDONED",
+	session.EndedInDefeat:  "DUELIST FALLS",
+	session.EndedByChoice:  "RUN ABANDONED",
+	session.EndedInVictory: "VICTORY",
 }
+
+// runOverWonJourney is the heading of a run that won the journey, walked on into the endless climb
+// past it, and ended there. **The victory is the headline**, because it is the run's and nothing that
+// happened after it takes it away.
+const runOverWonJourney = "JOURNEY WON"
 
 // runOverSeedFill is the seed box's face. **A cool slate against the light ground**, which is the
 // same "this is the program, not the fight" color the chrome and the sliders take — the code is a
@@ -109,6 +115,9 @@ func (s *RunOverScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// An ending this build does not have a phrase for still gets a page. **The summary is the point
 	// and the wording is decoration.**
 	title := runOverWords[sum.Ended]
+	if sum.Victorious && sum.Ended != session.EndedInVictory {
+		title = runOverWonJourney
+	}
 	if title == "" {
 		title = "RUN OVER"
 	}

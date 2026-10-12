@@ -343,3 +343,54 @@ func TestAProfileWithNothingTalliedWritesNoCounters(t *testing.T) {
 		t.Errorf("a profile with nothing tallied wrote a counters field:\n%s", raw)
 	}
 }
+
+// TestStatisticsSurviveARoundTrip holds both records and all three kinds of figure.
+func TestStatisticsSurviveARoundTrip(t *testing.T) {
+	s := At(t.TempDir())
+	p, _, _ := LoadProfile(s)
+
+	var run Tally
+	run.Add("dealt", 40)
+	run.Max("hit", 12)
+	run.Min("win:rounds", 3)
+	p.RecordRun(false, run)
+	p.RecordRun(false, run)
+	p.RecordRun(true, run)
+	if err := SaveProfile(s, p); err != nil {
+		t.Fatal(err)
+	}
+
+	back, _, err := LoadProfile(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if back.Stats.Total("dealt") != 80 || back.ChosenStats.Total("dealt") != 40 {
+		t.Errorf("totals add, and the two records stay apart: %+v / %+v", back.Stats, back.ChosenStats)
+	}
+	if back.Stats.MostOf("hit") != 12 {
+		t.Errorf("a record is kept, not added: got %d", back.Stats.MostOf("hit"))
+	}
+	if v, ok := back.Stats.LeastOf("win:rounds"); !ok || v != 3 {
+		t.Errorf("a low-water mark is kept, not added: got %d (%v)", v, ok)
+	}
+}
+
+// TestAMergeKeepsEachMarkAtItsExtreme holds the arithmetic Plus and RecordRun share.
+func TestAMergeKeepsEachMarkAtItsExtreme(t *testing.T) {
+	var a, b Tally
+	a.Max("hit", 10)
+	a.Min("win:rounds", 4)
+	b.Max("hit", 7)
+	b.Min("win:rounds", 2)
+
+	got := a.Plus(b)
+	if got.MostOf("hit") != 10 {
+		t.Errorf("the higher mark stands: got %d", got.MostOf("hit"))
+	}
+	if v, _ := got.LeastOf("win:rounds"); v != 2 {
+		t.Errorf("the lower mark stands: got %d", v)
+	}
+	if a.MostOf("hit") != 10 || b.MostOf("hit") != 7 {
+		t.Error("Plus must leave both tallies as they were")
+	}
+}

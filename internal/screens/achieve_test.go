@@ -11,6 +11,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/profile"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
+	"github.com/curiousjc/ascend-duel/internal/session"
 )
 
 // TestAChosenSeedProgressesNothing is the rule the new-run dialog's checkbox reports: a run started
@@ -63,9 +64,34 @@ func TestAChosenSeedProgressesNothing(t *testing.T) {
 	}
 }
 
+// TestAChosenSeedIsStillWrittenDown is the one write a chosen seed makes: its statistics, into a
+// record of their own, so the figures beside the achievements stay ones they could be earned against.
+func TestAChosenSeedIsStillWrittenDown(t *testing.T) {
+	gs := saveState(t)
+	seed, err := seeds.Parse("M9079R")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	NewRunOn(gs, seed, true)
+	AbandonRun(gs)
+	if got := gs.Profile.ChosenStats.Total(session.StatRunsAbandoned); got != 1 {
+		t.Errorf("a chosen-seed run given up is one abandoned run in its own record, got %d", got)
+	}
+	if !gs.Profile.Stats.Empty() {
+		t.Errorf("a chosen-seed run must not reach the rolled record: %+v", gs.Profile.Stats)
+	}
+
+	NewRunOn(gs, seed, false)
+	AbandonRun(gs)
+	if got := gs.Profile.Stats.Total(session.StatRunsAbandoned); got != 1 {
+		t.Errorf("a rolled run given up is one abandoned run, got %d", got)
+	}
+}
+
 // profileWrites are the calls that move a player's progress. A new kind of progress is a new method
 // on profile.Profile, and it belongs on this list the day it is written.
-var profileWrites = regexp.MustCompile(`\.Profile\.(Bump|Award|Unlock|Discover)\(|\.Profile\.(Counters|Achievements|Unlocks|HandsDiscovered)(\[[^\]]*\])?\s*(=[^=]|\+=|-=|\+\+|--)`)
+var profileWrites = regexp.MustCompile(`\.Profile\.(Bump|Award|Unlock|Discover|RecordRun)\(|\.Profile\.(Counters|Achievements|Unlocks|HandsDiscovered|Stats|ChosenStats)(\[[^\]]*\])?\s*(=[^=]|\+=|-=|\+\+|--)`)
 
 // TestOnlyAchieveGoWritesProgress is what makes the chosen-seed rule hold for progress nobody has
 // written yet. achieve.go asks progresses before every write, so a write anywhere else in the

@@ -175,7 +175,11 @@ func (s *Session) BuyGood(key string) bool {
 	if !ok {
 		return false
 	}
-	return s.SpendVitae(s.Price(g.Price))
+	if !s.SpendVitae(s.Price(g.Price)) {
+		return false
+	}
+	s.count(StatGoodBought+key, 1)
+	return true
 }
 
 func loadGoods() []Good {

@@ -24,10 +24,17 @@ package screens
 // that writes run progress to the profile — `TestOnlyAchieveGoWritesProgress` holds that, so a new
 // kind of progress written anywhere else fails the suite rather than leaking past the gate. See the
 // `achievements` skill.
+//
+// **Lifetime statistics are the one write a chosen seed still makes**, and they make it here so the
+// tripwire covers them like everything else. A statistic is a record of what happened rather than a
+// reward for it, so a chosen-seed run is written down — into a record of its own, so the figures
+// beside the achievements stay ones the achievements could have been earned against. See
+// recordRunStats.
 
 import (
 	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 )
 
@@ -143,4 +150,20 @@ func ReconcileUnlocks(gs *state.GlobalState) {
 	if changed {
 		saveProfile(gs)
 	}
+}
+
+// recordRunStats adds a finished run's statistics to the profile, and saves.
+//
+// **Called once, by endRun, before the run is thrown away** — a death and an abandon alike, since
+// both are a journey that is over. A run in progress is in neither record; a page wanting the whole
+// picture adds it on as it reads. See profile.Profile.Stats.
+//
+// **Not gated on progresses.** A chosen-seed run is written into ChosenStats rather than not at all;
+// see the note at the top of this file.
+func recordRunStats(gs *state.GlobalState, sum session.RunSummary) {
+	if gs == nil || gs.Profile == nil || gs.Run == nil {
+		return
+	}
+	gs.Profile.RecordRun(gs.Run.SeedChosen(), gs.Run.FinalStats(sum))
+	saveProfile(gs)
 }

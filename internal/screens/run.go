@@ -314,6 +314,10 @@ func endRun(gs *state.GlobalState, ended string) {
 		summary := gs.Run.Summarize(gs.RunSeed, ended)
 		gs.Summary = &summary
 
+		// **The run's statistics go onto the profile now, once**, while there is still a run to read
+		// them off. See achieve.go.
+		recordRunStats(gs, summary)
+
 		// **The journal is not truncated here, unlike the snapshot on disk.** A run that ended
 		// badly is the one somebody is going to ask about, so the choices that got it there stay
 		// until the next run starts and takes the file. See internal/journal.

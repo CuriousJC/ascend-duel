@@ -31,12 +31,11 @@
 //
 // # Output
 //
-// One composite PNG per record — the opponent's card followed by its deck — plus an index.html,
-// written under `docs/sheets/`. **One strip rather than one file per card** *(deliberate)*: a
-// file per card would be about five hundred binaries rewritten on every run of `tools/sheets`,
-// against the hundred and twenty-six a strip costs, for the same pixels. The sheets are committed
-// and their weight is charged to git history, so the cheaper shape wins where the page reads the
-// same either way.
+// One composite JPEG per record per colour it can be dealt as — the opponent's card followed by its
+// deck — plus an index.html, written under `docs/sheets/`. **One strip rather than one file per
+// card**: a file per card would be several times the binaries for the same pixels, and the sheets
+// are committed with their weight charged to git history. **One strip per colour rather than one
+// stacked picture**, because the element chips hide a colour by hiding its strip.
 package roster
 
 import (
@@ -45,11 +44,12 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"image/png"
+	"image/jpeg"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/curiousjc/ascend-duel/assets"
 	"github.com/curiousjc/ascend-duel/data"
@@ -115,19 +115,15 @@ type Entry struct {
 	Family string
 	Draw   string
 
-	// Portrait is the art key drawn on the card, which is the record's own picture in the element
-	// this row is showing it at.
+	// Portrait is the art key for the record's first colour.
 	Portrait string
 
-	// Portraits is that key for every colour the record can be dealt as, keyed by element. The
-	// strip draws Portrait and the expander under it draws the rest out of this, so the page never
-	// learns how a record builds its own art key.
+	// Portraits is that key for every colour the record can be dealt as, keyed by element, so the
+	// page draws a strip per colour without learning how a record builds its own art key.
 	Portraits map[string]string
 
-	// Element is the colour this row draws the record at, and Elements is every colour it could be
-	// dealt as. The strip shows one because a record has one card face per colour and nine of them
-	// in a row would be nine copies of the same reading; the list beside it is what says the
-	// record is not stuck at the one drawn.
+	// Element is the record's first colour — what its deck size is read at — and Elements is every
+	// colour it could be dealt as, each of which the page draws as a strip of its own.
 	Element  string
 	Elements []string
 
@@ -228,8 +224,6 @@ func Run(p Pool, dir string) error {
 		SpanLo:     lo,
 		SpanHi:     hi,
 		Ground:     Ground,
-		CardWidth:  cards.EnemyStyle.Width,
-		Gap:        stripGap,
 		Title:      p.Title,
 		Blurb:      p.Blurb,
 		GroupLabel: p.GroupLabel,
@@ -238,44 +232,60 @@ func Run(p Pool, dir string) error {
 		Filters:    sheetfilter.Bar(facetsFor(entries)),
 	}
 
-	var written int64
-	var colours int
-	for _, e := range entries {
-		strip, err := stripFor(faces, e)
+	// **Every picture here is this run's**, so the last run's are cleared first: a record renamed,
+	// or a colour taken off one, would otherwise leave a strip on disk that nothing links to and that
+	// is still committed.
+	var old []string
+	for _, pattern := range []string{"*.png", "*.jpg"} {
+		found, err := filepath.Glob(filepath.Join(dir, pattern))
 		if err != nil {
 			return err
 		}
-		name := "strip-" + strings.ToLower(e.Record) + ".png"
-		n, err := writePNG(filepath.Join(dir, name), strip)
-		if err != nil {
+		old = append(old, found...)
+	}
+	for _, f := range old {
+		if err := os.Remove(f); err != nil {
 			return err
 		}
-		written += n
+	}
 
+	var written int64
+	var strips int
+	for _, e := range entries {
 		pl := plate{
 			Entry:   e,
-			Cell:    cell{File: name, Width: strip.Bounds().Dx(), Height: strip.Bounds().Dy()},
 			Affixes: strings.Join(e.Elements, ", "),
-			Elems:   strings.Join(e.Elements, " "),
 			Deck:    len(decks.EnemyCards(e.Record, e.Element)),
 			Rows:    deckRows(e.Cards),
 		}
 
-		if rest := otherElements(e); anyDrawn(e, rest) {
-			row, err := elementRow(faces, e, rest)
+		// One strip per colour the record can be dealt as, every one shown: a creature's portrait
+		// and every attack's picture are drawn per element, so each colour is its own thing to
+		// review, and the element chips are how a reader narrows to the ones they care about.
+		colours := e.Elements
+		if len(colours) == 0 {
+			colours = []string{e.Element}
+		}
+		for _, el := range colours {
+			strip, err := stripFor(faces, e, el)
 			if err != nil {
 				return err
 			}
-			file := "elements-" + strings.ToLower(e.Record) + ".png"
-			n, err := writePNG(filepath.Join(dir, file), row)
+			name := "strip-" + strings.ToLower(e.Record)
+			if el != "" {
+				name += "-" + el
+			}
+			name += ".jpg"
+			n, err := writeJPEG(filepath.Join(dir, name), strip)
 			if err != nil {
 				return err
 			}
 			written += n
-			colours++
-
-			pl.Others = cell{File: file, Width: row.Bounds().Dx(), Height: row.Bounds().Dy()}
-			pl.OtherLabels = labels(rest)
+			strips++
+			pl.Strips = append(pl.Strips, elementStrip{
+				Element: el, Label: label(el),
+				Cell: cell{File: name, Width: strip.Bounds().Dx(), Height: strip.Bounds().Dy()},
+			})
 		}
 		pg.add(pl)
 	}
@@ -291,8 +301,8 @@ func Run(p Pool, dir string) error {
 		return fmt.Errorf("writing %s: %w", out, err)
 	}
 
-	fmt.Printf("wrote %s, %d strips and %d colour rows — %d %s records, %.1f MB of PNG\n",
-		out, len(entries), colours, pg.Count, p.Name, float64(written)/(1<<20))
+	fmt.Printf("wrote %s, %d strips — %d %s records in every colour each can be dealt as, %.1f MB of JPEG\n",
+		out, strips, pg.Count, p.Name, float64(written)/(1<<20))
 	for _, g := range pg.Groups {
 		plural := "s"
 		if len(g.Plates) == 1 {
@@ -305,13 +315,15 @@ func Run(p Pool, dir string) error {
 	return nil
 }
 
-// stripFor composites one opponent's card and its deck onto a single picture.
+// stripFor composites one opponent's card and its deck onto a single picture, as the record is
+// dealt in one element: its portrait in that element, and every attack wearing its flavor's
+// picture in that element.
 //
 // **One card per concept, not per copy.** A pile of six Spores is six of the same picture, and
 // the count is a number the table beside the strip prints — showing it as six cards would make a
 // swarm's row six times as wide as a brute's while saying nothing a figure does not.
-func stripFor(f *cards.Faces, e Entry) (*image.RGBA, error) {
-	art, err := artwork(e.Portrait)
+func stripFor(f *cards.Faces, e Entry, element string) (*image.RGBA, error) {
+	art, err := artwork(e.Portraits[element])
 	if err != nil {
 		return nil, err
 	}
@@ -323,7 +335,11 @@ func stripFor(f *cards.Faces, e Entry) (*image.RGBA, error) {
 
 	deck := make([]*image.RGBA, 0, len(e.Cards))
 	for _, c := range e.Cards {
-		img, err := cards.Render(cardSpec(c.CardData, e.Element), cards.Hand, f)
+		spec, err := cardSpec(c, element)
+		if err != nil {
+			return nil, fmt.Errorf("%s.%s: %w", e.Record, c.Label, err)
+		}
+		img, err := cards.Render(spec, cards.Hand, f)
 		if err != nil {
 			return nil, fmt.Errorf("rendering %s.%s: %w", e.Record, c.Label, err)
 		}
@@ -364,91 +380,14 @@ func stripFor(f *cards.Faces, e Entry) (*image.RGBA, error) {
 	return strip, nil
 }
 
-// otherElements is every colour the record can be dealt as apart from the one the strip draws.
-func otherElements(e Entry) []string {
-	out := make([]string, 0, len(e.Elements))
-	for _, el := range e.Elements {
-		if el != e.Element {
-			out = append(out, el)
-		}
-	}
-	return out
-}
-
-// anyDrawn reports whether at least one of these colours has a picture of its own, which is what
-// decides whether the expander exists at all.
-//
-// **A record's card says its colour only through its portrait** — see opponentSpec, which draws
-// every one of them basic — so for a record nobody has drawn yet the extra row is three identical
-// placeholders under a line promising other colours. The row appears as the art does, one record
-// at a time, and a record part-way through shows the gaps among the pictures rather than hiding
-// them.
-func anyDrawn(e Entry, list []string) bool {
-	for _, el := range list {
-		if len(assets.LoadImageData()[e.Portraits[el]]) > 0 {
-			return true
-		}
-	}
-	return false
-}
-
-// elementRow composites the record's remaining colours into one picture, at the strip's own pitch
-// so the names the page prints under it land on the cards without measuring anything.
-//
-// **The cards only, never the deck.** A deck is the same cards whatever colour the realm deals
-// them — the element is the realm's and the whole pile takes it — so repeating it under every
-// colour would be four copies of one reading.
-func elementRow(f *cards.Faces, e Entry, list []string) (*image.RGBA, error) {
-	drawn := make([]*image.RGBA, 0, len(list))
-	for _, el := range list {
-		art, err := artwork(e.Portraits[el])
-		if err != nil {
-			return nil, err
-		}
-		img, err := cards.Render(opponentSpec(e, art), cards.EnemyStyle, f)
-		if err != nil {
-			return nil, fmt.Errorf("rendering %s at %s: %w", e.Record, el, err)
-		}
-		drawn = append(drawn, img)
-	}
-
-	w, h := 0, 0
-	for i, img := range drawn {
-		if i > 0 {
-			w += stripGap
-		}
-		w += img.Bounds().Dx()
-		if d := img.Bounds().Dy(); d > h {
-			h = d
-		}
-	}
-
-	row := image.NewRGBA(image.Rect(0, 0, w, h))
-	draw.Draw(row, row.Bounds(), &image.Uniform{C: groundRGBA}, image.Point{}, draw.Src)
-	x := 0
-	for i, img := range drawn {
-		if i > 0 {
-			x += stripGap
-		}
-		r := image.Rect(x, 0, x+img.Bounds().Dx(), img.Bounds().Dy())
-		draw.Draw(row, r, img, img.Bounds().Min, draw.Over)
-		x = r.Max.X
-	}
-	return row, nil
-}
-
-// labels writes element keys the way a reader reads them. **Written here rather than taken from
+// label writes an element key the way a reader reads it. **Written here rather than taken from
 // internal/ui**, which holds the game's own ElementWord and links Ebitengine: the same wall every
 // sheet in this repo is on the far side of.
-func labels(list []string) []string {
-	out := make([]string, 0, len(list))
-	for _, el := range list {
-		if el == "" {
-			continue
-		}
-		out = append(out, strings.ToUpper(el[:1])+el[1:])
+func label(el string) string {
+	if el == "" {
+		return "Basic"
 	}
-	return out
+	return strings.ToUpper(el[:1]) + el[1:]
 }
 
 // opponentSpec is the opponent as the game's own card: name, portrait, and a full health bar.
@@ -471,22 +410,64 @@ func opponentSpec(e Entry, art image.Image) cards.Spec {
 	}
 }
 
-// cardSpec is one of an opponent's cards, drawn in the hand style the player's cards use.
+// cardSpec is one of an opponent's cards as the combat screen draws it when the creature plays it:
+// name, form mark, cost ticks, the multiplier badge, and the flavor's picture at the card's weight
+// in the element the realm dealt it as. **The fields `ui.CardSpec` sets, and no others** — a face carrying effect text
+// the game never prints would be a page about a card that does not exist; what a card does is the
+// table under the strip.
 //
-// **The hand style on purpose**, even though nobody ever holds one of these: it is the only style
-// that shows a cost column and an effect band, which is the whole of what there is to review about
-// an enemy card. Drawing it in the style the player's deck is drawn in is also what lets the two
-// be compared, which is the actual balance question.
-func cardSpec(c data.CardData, el string) cards.Spec {
-	return cards.Spec{
-		Name:       c.Label,
-		Form:       form(c.Form),
-		Cost:       c.Cost,
-		Element:    element([]string{el}),
-		Text:       effectText(c),
-		Highlights: cards.ElementHighlights(effectText(c)),
-		Enabled:    true,
+// **A flavor with no Art draws no picture**, as in the game. **A flavor whose Art names a file that
+// is not there is an error**, where the game would log and draw a hole: the review tool is where a
+// missing element file is meant to be caught.
+func cardSpec(c data.MotifCard, el string) (cards.Spec, error) {
+	spec := cards.Spec{
+		Name:    c.Label,
+		Form:    form(c.Form),
+		Cost:    c.Cost,
+		Element: element([]string{el}),
+		Enabled: true,
 	}
+	if verb, ok := combat.ParseVerb(c.Verb); ok && verb == combat.VerbShield {
+		spec.Shields = c.Amount
+	} else {
+		spec.Badge, spec.BadgePct = badge(c.Amount), c.Amount
+	}
+
+	key := enemyCardArt()[c.Flavor].ArtKey(data.EnemyCardWeight(c.Amount), el)
+	if key == "" {
+		return spec, nil
+	}
+	raw := assets.LoadImageData()[key]
+	if len(raw) == 0 {
+		return spec, fmt.Errorf("the flavor %s names the picture %q, which is not embedded", c.Flavor, key)
+	}
+	img, _, err := image.Decode(bytes.NewReader(raw))
+	if err != nil {
+		return spec, fmt.Errorf("decoding %s: %w", key, err)
+	}
+	spec.Art = img
+	return spec, nil
+}
+
+// enemyCardArt is the flavor catalog, read once.
+var enemyCardArt = sync.OnceValue(data.LoadEnemyCardArt)
+
+// badge writes an attack's amount the way the card's badge does: a fraction under one, a whole
+// number at or above it. A snapshot of `ui.damageMultiplier`, as tools/cardsheet's copy is, for the
+// wall every sheet is on the far side of.
+func badge(pct int) string {
+	switch pct {
+	case 25:
+		return "1/4"
+	case 50:
+		return "1/2"
+	case 75:
+		return "3/4"
+	}
+	if pct%100 == 0 {
+		return strconv.Itoa(pct / 100)
+	}
+	return strconv.FormatFloat(float64(pct)/100, 'g', -1, 64)
 }
 
 // effectText is what the card face says it does.
@@ -541,9 +522,8 @@ func multiplier(amount int) string {
 	}
 }
 
-// form maps a card's form name onto the drawing package's enum. **Every enemy card is formless
-// today** — a form is the player's deck axis and the thing a hand is counted on — so this is the
-// seat rather than a live mapping, and a record that grows one gets its corner mark for free.
+// form maps a card's form name onto the drawing package's enum. Every creature card carries stab,
+// slash or crush, so this is what puts its corner mark on.
 func form(name string) cards.Form {
 	for _, f := range cards.Forms() {
 		if f != cards.FormNone && f.String() == name {
@@ -606,14 +586,18 @@ func artwork(key string) (image.Image, error) {
 	return img, nil
 }
 
-func writePNG(path string, img image.Image) (int64, error) {
+// writeJPEG writes one strip. **JPEG rather than PNG**, unlike every other sheet: a strip is
+// mostly a photographic portrait and painted vapor, a creature is drawn once per colour it can be
+// dealt as, and the sheet is committed — so lossless strips would cost the history several times
+// what the review gains. The quality is high enough that a card's rim and its type stay crisp.
+func writeJPEG(path string, img image.Image) (int64, error) {
 	f, err := os.Create(path)
 	if err != nil {
 		return 0, fmt.Errorf("creating %s: %w", path, err)
 	}
 	defer f.Close()
 
-	if err := png.Encode(f, img); err != nil {
+	if err := jpeg.Encode(f, img, &jpeg.Options{Quality: 90}); err != nil {
 		return 0, fmt.Errorf("encoding %s: %w", path, err)
 	}
 	info, err := f.Stat()
@@ -638,8 +622,7 @@ func styleFacts(st cards.Style) map[string]int {
 
 // shieldText is what a shield card's face says, and it is shared with internal/screens through
 // nothing at all — a roster card and a played card are drawn by two packages that may not import
-// each other, so the wording is written twice on purpose and kept identical by
-// TestARosterCardSaysWhatAPlayedCardSays.
+// each other, so the wording is written twice on purpose.
 func shieldText(n int) string {
 	if n == 1 {
 		return "1 shield"

@@ -157,7 +157,7 @@ go run ./tools/relicsheet -archive   # the relics out of the game, off data/arch
 go run ./tools/essencesheet    # every essence to PNGs + a page grouped by what it changes about a card
 go run ./tools/handsheet    # every rung of the hand ladder as a real hand, by multiplier, with its odds
 go run ./tools/motifsheet   # the roster motif by motif: card, stat line, deck, coverage grid
-go run ./tools/enemycardsheet  # every creature-card flavor in five elements, every card wearing it, each motif's form lean
+go run ./tools/enemycardsheet  # every creature-card flavor at four weights in five elements, every card wearing it, each motif's form lean
 go run ./tools/motifreport  # how full each motif is: briefs still TBD, missing art, rooms with no backdrop
 go run ./tools/backdropsheet  # every room once per element, beside its brief; unpainted ones as the default
 go run ./tools/creatureprompt -record goblins-outer-bomber -element ice   # the four-layer brief
@@ -182,8 +182,9 @@ go run ./tools/relicart -kind cantrip  # the same, for data/cantrips.json and as
 go run ./tools/relicart -kind other  # the potions, the tonics and the sealed goods together, into assets/other
 go run ./tools/relicart -kind deck   # the card backs, for data/decks.json and assets/deck
 go run ./tools/relicart -kind achievement  # the achievement icons, square at Steam's 256, into assets/achievement
+go run ./tools/relicart -kind enemy-card   # the creature cards, <flavor>-<weight>-<element>.png, fitted into the card's open field
 go run ./tools/artcompare   # one catalog's art, every candidate batch side by side, as real cards
-go run ./tools/artcompare -catalog relic    # the same for relics; card, essence, rune, stone, other
+go run ./tools/artcompare -catalog relic    # the same for relics; card, essence, rune, stone, other, enemy-card
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
 go run ./tools/privateassets   # the loops: what is present, what matches, what is unrecorded
@@ -222,8 +223,8 @@ catalog's records once per **set** of pictures and puts them side by side, so a 
 batch is judged record by record rather than all at once — and it takes any number of sets,
 because a generator produces options rather than an answer. Every cell is `cards.Render` at the
 catalog's own style, so what is compared is the card as it will be dealt, type over picture;
-clicking the one to keep builds the copy list at the top of the page. Seven catalogs: `card`,
-`relic`, `essence`, `rune`, `stone`, `cantrip`, `other`.
+clicking the one to keep builds the copy list at the top of the page. Eight catalogs: `card`,
+`relic`, `essence`, `rune`, `stone`, `cantrip`, `other`, `enemy-card`.
 
 **`artreview/` is gitignored and is the whole of its working directory.** A batch dropped in
 `artreview/<catalog>-<label>/` is found as the set `<label>`, the installed `assets/` directory is
@@ -1333,12 +1334,14 @@ records, because a rune is the least readable record in `data/`: which of `Rider
 realm, and its whole personality is a deck the player only ever sees the played half of — so "do
 this motif's three rooms read as a journey" cannot be answered by playing. The page groups
 by motif, prints the motif's HP, DMG and AP spread and its tier mix in the heading, and draws every
-record as **one composite strip**: the opponent's own card as the combat screen draws it, then its
-deck, one card per concept with the copy count in the table under it.
+record as **one composite strip per colour it can be dealt as**: the opponent's own card as the
+combat screen draws it, then its deck, one card per concept wearing its attack flavor's picture in
+that element, with the copy count in the table under it. The element chips hide single strips.
 
 - **A strip rather than a file per card**, because a file per card is several hundred binaries
-  rewritten on every full run for the same pixels. This sheet is most of the committed weight; see
-  the note above about regenerating only what changed.
+  rewritten on every full run for the same pixels, and **the strips are JPEG**, the one sheet that
+  is not PNG: a creature in every colour is mostly photographic portrait. This sheet is most of the
+  committed weight; see the note above about regenerating only what changed.
 - **It carries the coverage grid**, which is the one thing about a motif that cannot be seen by
   looking at its records one at a time: a realm picks a motif and an element, so what has to hold
   is that every element can field all three rooms at least twice. It is drawn from

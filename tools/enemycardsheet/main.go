@@ -31,6 +31,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/curiousjc/ascend-duel/assets"
@@ -51,8 +52,8 @@ func main() {
 
 // use is one creature card wearing a flavor.
 type use struct {
-	Motif, Creature, Tier, Label string
-	Cost, Amount, Copies         int
+	Motif, Creature, Tier, Label, Weight string
+	Cost, Amount, Copies                 int
 }
 
 type face struct {
@@ -60,9 +61,17 @@ type face struct {
 	File    string
 }
 
+// weightRow is one weight of a flavor: its five faces, its brief, and how many cards it serves.
+type weightRow struct {
+	Weight, Brief string
+	Drawn         bool
+	Cards         int
+	Faces         []face
+}
+
 type plate struct {
 	Flavor, Form, Name, Draw, Art string
-	Faces                         []face
+	Weights                       []weightRow
 	Uses                          []use
 	Cards, Copies, MotifCount     int
 	Motifs                        string
@@ -123,7 +132,8 @@ func run(dir string) error {
 			for _, c := range r.Cards {
 				uses[c.Flavor] = append(uses[c.Flavor], use{
 					Motif: m.Name, Creature: r.FullName(), Tier: r.Tier, Label: c.Label,
-					Cost: c.Cost, Amount: c.Amount, Copies: c.Copies,
+					Weight: data.EnemyCardWeight(c.Amount),
+					Cost:   c.Cost, Amount: c.Amount, Copies: c.Copies,
 				})
 				byForm[c.Form] += c.Copies
 				byFlavor[c.Flavor] += c.Copies
@@ -145,7 +155,7 @@ func run(dir string) error {
 		}
 	}
 
-	p := page{Cards: total, Flavors: len(art), Pictures: len(art) * len(data.AffinityElements),
+	p := page{Cards: total, Flavors: len(art), Pictures: len(art) * len(data.EnemyCardWeights) * len(data.AffinityElements),
 		Forms: shares(formCopies, totalCopies), Motifs: rows}
 
 	formCount := map[string]int{}
@@ -172,26 +182,39 @@ func run(dir string) error {
 		pl.Motifs = strings.Join(tokens, " ")
 		formCount[f.Form]++
 
-		for _, el := range data.AffinityElements {
-			picture, err := picture(images, f.ArtKey(el))
-			if err != nil {
-				return fmt.Errorf("%s in %s: %w", key, el, err)
+		for _, weight := range data.EnemyCardWeights {
+			wr := weightRow{Weight: weight, Drawn: f.HasWeight(weight), Brief: f.Ladder[weight]}
+			if weight == "medium" {
+				wr.Brief = "As drawn above."
 			}
-			if picture != nil {
-				p.Drawn++
+			for _, u := range pl.Uses {
+				if u.Weight == weight {
+					wr.Cards++
+				}
 			}
-			img, err := cards.Render(cards.Spec{
-				Name: f.Name, Form: cardForm(f.Form), Cost: 2, Element: cardElement(el),
-				Enabled: true, Art: picture,
-			}, cards.Hand, faces)
-			if err != nil {
-				return fmt.Errorf("rendering %s in %s: %w", key, el, err)
+			cost, amount := weightSample(weight)
+			for _, el := range data.AffinityElements {
+				picture, err := picture(images, f.ArtKey(weight, el))
+				if err != nil {
+					return fmt.Errorf("%s %s in %s: %w", key, weight, el, err)
+				}
+				if picture != nil {
+					p.Drawn++
+				}
+				img, err := cards.Render(cards.Spec{
+					Name: f.Name, Form: cardForm(f.Form), Cost: cost, Element: cardElement(el),
+					Badge: badge(amount), BadgePct: amount, Enabled: true, Art: picture,
+				}, cards.Hand, faces)
+				if err != nil {
+					return fmt.Errorf("rendering %s %s in %s: %w", key, weight, el, err)
+				}
+				name := key + "-" + weight + "-" + el + ".png"
+				if err := writePNG(filepath.Join(dir, name), img); err != nil {
+					return err
+				}
+				wr.Faces = append(wr.Faces, face{Element: el, File: name})
 			}
-			name := key + "-" + el + ".png"
-			if err := writePNG(filepath.Join(dir, name), img); err != nil {
-				return err
-			}
-			pl.Faces = append(pl.Faces, face{Element: el, File: name})
+			pl.Weights = append(pl.Weights, wr)
 		}
 		p.Plates = append(p.Plates, pl)
 	}
@@ -334,12 +357,13 @@ th { font-size: .78rem; letter-spacing: .05em; text-transform: uppercase; color:
 .faces figure { margin: 0; text-align: center; font-size: .75rem; color: var(--muted); }
 .faces img { display: block; width: 120px; height: auto; }
 .draw { margin: 0; max-width: 90ch; }
+.weight { display: grid; gap: 4px; }
 .unwritten { color: #b03a5b; font-weight: 700; }
 .tw { overflow-x: auto; }
 details summary { cursor: pointer; color: var(--muted); }
 </style></head><body><main>
 <h1>Enemy card sheet</h1>
-<p class="lede">Every creature card wears one of {{.Flavors}} pictures from <code>data/enemy_card_art.json</code>, each drawn once per element: {{.Pictures}} pictures, {{.Drawn}} drawn so far. {{.Cards}} creature cards share them. Across the roster, weighted by copies dealt:
+<p class="lede">Every creature card wears one of {{.Flavors}} flavors from <code>data/enemy_card_art.json</code>, at the weight its damage puts it at — light, medium, heavy or crushing — each drawn once per element: {{.Pictures}} pictures, {{.Drawn}} drawn so far. {{.Cards}} creature cards share them. Across the roster, weighted by copies dealt:
 {{range .Forms}}<span class="f-{{.Form}} lead">{{.Form}} {{pct .Pct}}</span> {{end}}.
 Briefs are pasted after <code>docs/art/enemy_card_art_prompt.MD</code>; the procedure is the <code>enemy-cards</code> skill.</p>
 
@@ -357,14 +381,48 @@ Briefs are pasted after <code>docs/art/enemy_card_art_prompt.MD</code>; the proc
 <h2>By flavor</h2>
 {{.Filter}}
 {{range .Plates}}<section class="plate sheet-item f-{{.Form}}" data-form="{{.Form}}" data-motif="{{.Motifs}}">
-<h3><code>{{.Flavor}}</code> {{.Name}} <span class="meta">{{.Cards}} cards · {{.Copies}} copies · {{.MotifCount}} motifs · {{if .Art}}art <code>{{.Art}}-&lt;element&gt;</code>{{else}}no art yet{{end}}</span></h3>
-<div class="faces">{{range .Faces}}<figure><img src="{{.File}}" alt="{{.Element}}"><figcaption>{{.Element}}</figcaption></figure>{{end}}</div>
+<h3><code>{{.Flavor}}</code> {{.Name}} <span class="meta">{{.Cards}} cards · {{.Copies}} copies · {{.MotifCount}} motifs · {{if .Art}}art <code>{{.Art}}-&lt;weight&gt;-&lt;element&gt;</code>{{else}}no art yet{{end}}</span></h3>
 <p class="draw">{{if .Draw}}{{.Draw}}{{else}}<span class="unwritten">No brief written.</span>{{end}}</p>
+{{range .Weights}}<div class="weight">
+<p class="meta"><b>{{.Weight}}</b> · {{.Cards}} cards · {{if .Drawn}}drawn{{else}}<span class="unwritten">not drawn</span>{{end}} — {{.Brief}}</p>
+<div class="faces">{{range .Faces}}<figure><img src="{{.File}}" alt="{{.Element}}"><figcaption>{{.Element}}</figcaption></figure>{{end}}</div>
+</div>{{end}}
 <details><summary>Every card wearing it</summary><div class="tw"><table>
-<thead><tr><th>Motif</th><th>Creature</th><th>Card</th><th class="num">AP</th><th class="num">Amount</th><th class="num">Copies</th></tr></thead>
-<tbody>{{range .Uses}}<tr><td>{{.Motif}}</td><td>{{.Creature}} <span class="meta">{{.Tier}}</span></td><td><b>{{.Label}}</b></td><td class="num">{{.Cost}}</td><td class="num">{{.Amount}}</td><td class="num">×{{.Copies}}</td></tr>{{end}}</tbody>
+<thead><tr><th>Motif</th><th>Creature</th><th>Card</th><th>Weight</th><th class="num">AP</th><th class="num">Amount</th><th class="num">Copies</th></tr></thead>
+<tbody>{{range .Uses}}<tr><td>{{.Motif}}</td><td>{{.Creature}} <span class="meta">{{.Tier}}</span></td><td><b>{{.Label}}</b></td><td>{{.Weight}}</td><td class="num">{{.Cost}}</td><td class="num">{{.Amount}}</td><td class="num">×{{.Copies}}</td></tr>{{end}}</tbody>
 </table></div></details>
 </section>
 {{end}}
 </main></body></html>
 `))
+
+// weightSample is the cost and amount of a typical card at a weight, so a face is drawn under the
+// badge it will actually wear.
+func weightSample(weight string) (cost, amount int) {
+	switch weight {
+	case "light":
+		return 1, 50
+	case "heavy":
+		return 3, 200
+	case "crushing":
+		return 3, 300
+	}
+	return 2, 100
+}
+
+// badge writes an attack's amount the way the card's badge does — a snapshot of
+// ui.damageMultiplier, for the wall every sheet is on the far side of.
+func badge(pct int) string {
+	switch pct {
+	case 25:
+		return "1/4"
+	case 50:
+		return "1/2"
+	case 75:
+		return "3/4"
+	}
+	if pct%100 == 0 {
+		return strconv.Itoa(pct / 100)
+	}
+	return strconv.FormatFloat(float64(pct)/100, 'g', -1, 64)
+}

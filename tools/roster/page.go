@@ -37,27 +37,29 @@ type row struct {
 	Copies int
 }
 
-// plate is one opponent: the strip, and everything the file says about it.
+// plate is one opponent: a strip per colour, and everything the file says about it.
+//
+// **A plate is a filter group and each strip is an item in it**, so the element chips hide single
+// strips rather than whole creatures, and a plate left with none showing hides itself.
 type plate struct {
 	Entry   Entry
-	Cell    cell
 	Affixes string
+
+	// Strips is the record drawn once per colour it can be dealt as, in the file's order.
+	Strips []elementStrip
 
 	// Deck is the expanded pile size — every copy of every concept — read off internal/decks
 	// rather than added up here, so the figure is the pile a duel actually shuffles.
 	Deck int
 
 	Rows []row
+}
 
-	// Elems is the record's colours as the element chips match them — space-separated, where
-	// Affixes is the same list written for a reader.
-	Elems string
-
-	// Others is the record's remaining colours as one row of cards, and OtherLabels names them in
-	// the order it draws them. **Both are empty for a record whose other colours are undrawn** —
-	// see anyDrawn — so a plate either has an expander with pictures in it or no expander at all.
-	Others      cell
-	OtherLabels []string
+// elementStrip is one colour of one opponent: its card and its deck as that element deals them.
+type elementStrip struct {
+	Element string
+	Label   string
+	Cell    cell
 }
 
 // group is one realm's worth of the catalog, with the band's own spread beside it.
@@ -119,12 +121,6 @@ type page struct {
 	// SpanLo and SpanHi are the shallowest and deepest realm any motif reaches, which is what a
 	// motif written with no band is expanded against.
 	SpanLo, SpanHi int
-
-	// CardWidth and Gap are the pitch the colour row is composited at, handed to the stylesheet so
-	// the names under it sit on the cards. **Read off the style and the constant rather than typed
-	// into the template**, which is the rule styleFacts is already under: a page quoting a pitch it
-	// is not drawing at is a page with its labels one card to the left.
-	CardWidth, Gap int
 }
 
 // add files one opponent under its realm, opening the section if it is the first.
@@ -306,20 +302,15 @@ var tmpl = template.Must(template.New("roster").Parse(`<!doctype html>
   td.num { text-align: right; padding-right: 22px; font-variant-numeric: tabular-nums; }
   td.effect { color: var(--dim); }
   .affix { color: var(--dim); font-size: 12px; margin: 10px 0 0; }
-  /* The other colours are folded away, because the question they answer is asked of one record at
-     a time: a page that opened every one of them would be four cards wide everywhere and would
-     bury the deck the plate is actually about. It is a <details>, so the whole row is in the file
-     and prints and reads with scripting off. */
-  .others { margin: 8px 0 0; }
-  .others summary {
-    color: var(--dim); font-size: 12px; cursor: pointer; width: fit-content;
+  /* One strip per colour, its element named down its left edge, so the element chips can hide one
+     colour of a creature without hiding the rest of it. */
+  .colour { display: flex; gap: 10px; align-items: stretch; margin: 12px 0 0; }
+  .colour[hidden] { display: none; }
+  .colour .elabel {
+    flex: none; font-size: 12px; font-weight: 600; color: var(--dim);
+    writing-mode: vertical-rl; transform: rotate(180deg); text-align: center;
   }
-  .others summary:hover { color: var(--ink); }
-  .elabels { display: flex; gap: {{.Gap}}px; margin: 4px 0 0; }
-  .elabels span {
-    width: {{.CardWidth}}px; text-align: center;
-    font-size: 11.5px; color: var(--dim);
-  }
+  .colour .strip { margin: 0; }
   /* The family sits beside the record key, quiet and in small caps: it is what kind of thing this
      is rather than what it is called, so it reads as a label on the name rather than a second
      name. */
@@ -354,7 +345,9 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   Every card here is drawn by <code>internal/cards</code>, the same code the game blits, so this
   page cannot show a card the game would draw differently. The leftmost card on each strip is the
   opponent as it appears in the corner of the combat screen; the rest are its deck, one card per
-  concept — the <em>copies</em> column says how many of each the pile holds.
+  concept, each wearing its attack flavor's picture in that element — the <em>copies</em> column
+  says how many of each the pile holds. Every creature is drawn once per colour it can be dealt as,
+  deck and all; the element chips narrow the page to the colours you want to look at.
 </p>
 
 {{.Filters}}
@@ -384,8 +377,9 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
   </table>
   {{end}}
 
+  {{$realms := .Realms}}
   {{range .Plates}}
-    <div class="plate sheet-item" data-tier="{{.Entry.Tier}}" data-element="{{.Elems}}">
+    <div class="plate sheet-group" data-tier="{{.Entry.Tier}}" data-realm="{{$realms}}">
       <div class="head">
         <span class="named">
           <span class="name">{{.Entry.Name}}</span>
@@ -399,10 +393,16 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
         </span>
       </div>
 
-      <div class="strip">
-        <img src="{{.Cell.File}}" width="{{.Cell.Width}}" height="{{.Cell.Height}}"
-             alt="{{.Entry.Name}} and its deck">
+      {{$name := .Entry.Name}}
+      {{range .Strips}}
+      <div class="colour sheet-item" data-element="{{.Element}}">
+        <span class="elabel">{{.Label}}</span>
+        <div class="strip">
+          <img src="{{.Cell.File}}" width="{{.Cell.Width}}" height="{{.Cell.Height}}"
+               alt="{{$name}} and its deck, {{.Label}}">
+        </div>
       </div>
+      {{end}}
 
       <table>
         <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
@@ -419,20 +419,6 @@ table.cover td.short { color: #b03a3a; font-weight: 700; }
 
       {{if .Affixes}}<p class="affix">Dealt as: {{.Affixes}}</p>{{end}}
 
-      {{if .Others.File}}
-      <details class="others">
-        <summary>Show its other {{len .OtherLabels}} colours</summary>
-        <div class="strip">
-          <div>
-            <img src="{{.Others.File}}" width="{{.Others.Width}}" height="{{.Others.Height}}"
-                 alt="{{.Entry.Name}} in its other colours">
-            <div class="elabels">
-              {{range .OtherLabels}}<span>{{.}}</span>{{end}}
-            </div>
-          </div>
-        </div>
-      </details>
-      {{end}}
       {{if .Entry.Draw}}<p class="draw">{{.Entry.Draw}}</p>{{end}}
     </div>
   {{end}}

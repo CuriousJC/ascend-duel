@@ -66,13 +66,14 @@ type catalog struct {
 // once rather than as three candidate versions, and a backdrop is not a card, which is what every
 // cell here draws. Add them the day either stops being true.
 var catalogs = map[string]*catalog{
-	"card":    {Name: "card", Dir: "assets/card", File: "data/card_art.json", Subjects: cardSubjects},
-	"relic":   {Name: "relic", Dir: "assets/relic", File: "data/relics.json", Subjects: relicSubjects},
-	"essence": {Name: "essence", Dir: "assets/essence", File: "data/essences.json", Subjects: essenceSubjects},
-	"rune":    {Name: "rune", Dir: "assets/rune", File: "data/runes.json", Subjects: runeSubjects},
-	"cantrip": {Name: "cantrip", Dir: "assets/cantrip", File: "data/cantrips.json", Subjects: cantripSubjects},
-	"stone":   {Name: "stone", Dir: "assets/stone", File: "data/stones.json", Subjects: stoneSubjects},
-	"other":   {Name: "other", Dir: "assets/other", File: "data/potions.json, data/tonics.json and data/goods.json", Subjects: otherSubjects},
+	"card":       {Name: "card", Dir: "assets/card", File: "data/card_art.json", Subjects: cardSubjects},
+	"relic":      {Name: "relic", Dir: "assets/relic", File: "data/relics.json", Subjects: relicSubjects},
+	"essence":    {Name: "essence", Dir: "assets/essence", File: "data/essences.json", Subjects: essenceSubjects},
+	"rune":       {Name: "rune", Dir: "assets/rune", File: "data/runes.json", Subjects: runeSubjects},
+	"cantrip":    {Name: "cantrip", Dir: "assets/cantrip", File: "data/cantrips.json", Subjects: cantripSubjects},
+	"stone":      {Name: "stone", Dir: "assets/stone", File: "data/stones.json", Subjects: stoneSubjects},
+	"other":      {Name: "other", Dir: "assets/other", File: "data/potions.json, data/tonics.json and data/goods.json", Subjects: otherSubjects},
+	"enemy-card": {Name: "enemy-card", Dir: "assets/enemy-card", File: "data/enemy_card_art.json", Subjects: enemyCardSubjects},
 }
 
 // catalogNames is the flag's vocabulary, sorted, for the usage line and the error message.
@@ -305,6 +306,52 @@ func otherSubjects() ([]subject, error) {
 			},
 			Style: cards.EssenceStyle,
 		})
+	}
+	return out, nil
+}
+
+// enemyCardSubjects is the creature cards' flavors, one row per flavor per weight per element,
+// grouped by flavor and weight so a weight's five colors sit together — the comparison the prompt
+// holds a batch to.
+//
+// **The stem is built from the flavor's key, not its Art**, which is the one place this tool departs
+// from taking the stem off the record. The prompt names the files `<Flavor>-<weight>-<element>`
+// whether or not anything has been filed, so a batch can be judged before it is installed; a weight
+// with no file in a set draws as an empty cell, which is the backlog here.
+//
+// **Each weight is drawn at a card it would actually be**: the badge and the cost of a typical hit
+// at that weight, so a light picture is judged under a 1/2 and a crushing one under a 3.
+func enemyCardSubjects() ([]subject, error) {
+	art := data.LoadEnemyCardArt()
+	sample := map[string]struct{ cost, amount int }{
+		"light": {1, 50}, "medium": {2, 100}, "heavy": {3, 200}, "crushing": {3, 300},
+	}
+	var out []subject
+	for _, key := range data.EnemyCardArtFileOrder() {
+		rec, ok := art[key]
+		if !ok {
+			return nil, fmt.Errorf("enemy_card_art.json: %s is in the file order and not in the catalog", key)
+		}
+		for _, weight := range data.EnemyCardWeights {
+			s := sample[weight]
+			for _, name := range data.AffinityElements {
+				el, ok := cards.ParseElement(name)
+				if !ok {
+					return nil, fmt.Errorf("%s: %q is not one of the five elements", key, name)
+				}
+				stem := key + "-" + weight + "-" + name
+				out = append(out, subject{
+					Key: stem, Stem: stem,
+					Group:   fmt.Sprintf("%s %s — %s, %s", rec.Flavor, weight, rec.Name, rec.Form),
+					Caption: fmt.Sprintf("%s · %s · %s", rec.Name, weight, name),
+					Spec: cards.Spec{
+						Name: rec.Name, Form: formOf(rec.Form), Cost: s.cost, Element: el,
+						Badge: multiplier(s.amount), BadgePct: s.amount, Enabled: true,
+					},
+					Style: cards.Hand,
+				})
+			}
+		}
 	}
 	return out, nil
 }

@@ -130,24 +130,50 @@ when its picture would have to show two different things.
 
 ## The pictures
 
-**One picture per flavor per element**, the attacking part alone, made of the same colored vapor as
-the player's card art, with no creature behind it: a sting is only the stinger, a bite only the
-jaws. **One picture serves every cost**, so it is drawn at one committed, mid-sized scale rather
-than the player's small-to-huge ladder. The style will take iterations; the place to iterate is
-`docs/art/enemy_card_art_prompt.MD` for what is true of every flavor and each record's `Draw` for
-what is true of one.
+**One picture per flavor per weight per element**, the attacking part alone, made of the same
+colored vapor as the player's card art, with no creature behind it: a sting is only the stinger, a
+bite only the jaws. The place to iterate is `docs/art/enemy_card_art_prompt.MD` for what is true of
+every flavor, each record's `Draw` for the blow at medium weight, and its `Ladder` for the other
+three.
 
-- **To generate**: paste the prompt, then the record's JSON, then name the element. Files come back
-  named `<Flavor>-<element>`, like `stab-bite-fire`, at the card's 5:7.
-- **`Art` is the stem and the element is appended**: `ArtKey(element)` is `<Art>-<element>`.
-  Empty `Art` draws the card as it always looked, with no picture — never a placeholder, for
-  `data.DefaultCardArt`'s reason.
-- **Installing is not wired yet.** The first batch needs: an `assets/enemy-card/` directory with
-  an `//go:embed enemy-card/*.png` var and an `embedFamily` line in `assets/embed.go`; a
-  `-kind enemy-card` entry in `tools/relicart`, which today files one picture per record key and
-  here has to file five per flavor and write the stem rather than the filename into `Art`; and an
-  `enemy-card` catalog in `tools/artcompare` if batches are to be compared. Load the `art-batch`
-  skill before any of it.
+- **The weight is how hard the hit lands, and it is derived, never authored.**
+  `data.EnemyCardWeight` reads it off the card's multiplier: light under 0.75x, medium under 1.5x,
+  heavy under 2.75x, crushing above. So a creature's 0.5x Probe and its 3x Spine Burst wear two
+  pictures of one sting, and a card retuned across a line changes picture with nothing edited.
+  **Do not move a line without re-reading the roster**: the lines sit in the gaps between the
+  amounts the cost ladder produces, and a line through a cluster splits cards that should match.
+- **A flavor's `Weights` lists the weights drawn in all five elements**, written by the install
+  step; an unlisted weight draws its cards with no picture.
+
+- **The five elements are five drawings, not one recolored.** Same blow, size, place and
+  direction; fresh silhouette and edges, and the vapor's character changes with the element. The
+  prompt's table says how.
+- **To generate**: paste the prompt, then a batch JSON — `{"Batch": "<name>", "Records": [...]}`,
+  each record the catalog's `Flavor`, `Form`, `Name` and `Draw` plus a `Weight`, its
+  `WeightBrief` (the `Ladder` line, or `Draw` for medium), and `Elements` and `Files` lists. Four
+  records of five elements is one agent's 20 pictures; keep a flavor's weights in as few batches as
+  the packing allows, and the flavors most cards wear first. It comes back as `<Batch>.zip`
+  holding a `<Batch>/` folder of `<Flavor>-<weight>-<element>.png`, so two agents drawing one
+  flavor never collide.
+- **To review**: each batch folder goes in `artreview/enemy-card-<label>/`, then
+  `go run ./tools/artcompare -catalog enemy-card`, which draws every flavor in five elements as a
+  hand card. A raw take is the wrong size for its weight until it is installed; fit a copy with the
+  same rule as `tools/relicart` before judging size.
+- **To install**: put the picks in `.scratch/to-process-enemy-card-art/` and run
+  `go run ./tools/relicart -kind enemy-card`. It reduces each to 200x280 and **scales the figure to
+  fill its weight's box** — `data.EnemyCardFieldFor`, a share of `data.EnemyCardArtField` set by
+  `data.EnemyCardWeightShare`, cropped to what it draws, up or down, centered — so the ladder steps
+  evenly whatever size a batch was drawn at. Then it adds a
+  weight to the flavor's `Weights` (and its stem to `Art`) only once all five elements of that
+  weight are in `assets/enemy-card/` — a weight still short says which element it is waiting for
+  and keeps drawing no picture. It round-trips `data/enemy_card_art.json` through encoding/json,
+  so the file stays machine-formatted: two-space indent, keys in struct order.
+- **`Art` is the stem, and the weight and element are appended**: `ArtKey(weight, element)` is
+  `<Art>-<weight>-<element>`. Empty `Art` or an unlisted weight draws the card as it always
+  looked, with no picture — never a placeholder, for `data.DefaultCardArt`'s reason.
+- **`TestEveryEnemyCardArtIsAFigureInTheField`** fails on a listed weight missing an element, a
+  picture not at 200x280, or a pixel outside the field — the last is what catches a picture copied
+  in by hand.
 - **Then** `go run ./tools/enemycardsheet` — it errors on an `Art` stem with a missing element
   file, where the game silently draws no picture.
 
@@ -155,5 +181,3 @@ what is true of one.
 
 - **Whether `stab-horn` and `stab-bite` stay two flavors.** They are close cousins, and stab has
   the most flavors of the three forms.
-- **Whether a flavor's picture should say the cost.** Every cost wears one picture today, so a
-  creature's cheap jab and its finisher look the same apart from the ticks and the badge.

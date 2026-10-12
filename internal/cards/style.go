@@ -32,6 +32,12 @@ type Style struct {
 	// left-aligned name to line up with, and it reads as having slipped off center.
 	NameCentered bool
 
+	// NameWrapWidth is the widest a name may be drawn on one line; a wider one with a space in it
+	// breaks onto two lines at NameWrapSize. **Zero never wraps**, which is every style but the
+	// hand card's, whose name shares the bottom band with the badge.
+	NameWrapWidth int
+	NameWrapSize  float64
+
 	// The form mark, above the cost stack: the box its art is centered in.
 	//
 	// **The box is a number here rather than `systems.SizeOf`** *(2026-08-15)*. It was, while the
@@ -307,6 +313,12 @@ var Hand = Style{
 	NameTop:      240,
 	NameSize:     25,
 	NameCentered: true,
+
+	// The name is centred between the badge in the bottom-left corner and its mirror on the
+	// right, so it has the card's width less a badge's reach on each side. A wider one breaks onto
+	// two lines at NameWrapSize — see nameLines.
+	NameWrapWidth: 200 - 2*48,
+	NameWrapSize:  23,
 
 	// The mark is centered on its ink in this box, so the box is what the layout tests hold.
 	//

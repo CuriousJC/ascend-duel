@@ -18,6 +18,7 @@
 //	go run ./tools/relicart -kind upgrade  # the upgrade art an altered card wears over its face
 //	go run ./tools/relicart -kind deck     # the card backs, one per deck
 //	go run ./tools/relicart -kind achievement  # the achievement icons, square at Steam's 256
+//	go run ./tools/relicart -kind enemy-card   # the creature cards, <flavor>-<weight>-<element>.png, fitted into the field
 //	go run ./tools/relicart -n                 # say what would happen and touch nothing
 //	go run ./tools/relicart -blocky            # quantize to the block grid on the way down
 //
@@ -72,6 +73,28 @@ type catalog struct {
 	// the card's own 200x280. **Only the achievement icons set it**: they are not a card at all but
 	// Steam's 256x256 icon, and the page draws them at Steam's 64.
 	square int
+
+	// elements, when set, makes this a catalog of **one record, several pictures**: a file is
+	// `<record>-<element>.png`, it is committed under that name, and the record's Art is the stem
+	// `<record>` with the element appended at draw time. **Only the creature cards set it** — a
+	// flavor is drawn once per element. Art is written only once every element is on disk, because
+	// a stem with one missing element is a card that silently draws nothing in that realm.
+	elements []string
+
+	// weights, when set alongside elements, puts a weight between the record and the element: a
+	// file is `<record>-<weight>-<element>.png`. **Only the creature cards set it** — a flavor is
+	// drawn once per weight per element — and a weight is listed on the record's `Weights` only once
+	// its every element is on disk, for the reason above. See setWeights for how it is written.
+	weights []string
+
+	// field, when set, is the open part of the card a picture is fitted into rather than stretched
+	// across the whole of it: the figure is cropped to what it actually draws, scaled to fill its
+	// weight's box inside the field (see data.EnemyCardFieldFor), and centered. **Only the creature
+	// cards set it**, because their pictures are
+	// a figure laid over a face that prints a mark, ticks, a badge and a name around it, and a figure
+	// that strays under those makes them unreadable. docs/art/enemy_card_art_prompt.MD asks for the
+	// same box; this is what holds it when a generator does not.
+	field image.Rectangle
 }
 
 // size is what a picture in this catalog is reduced to.
@@ -155,6 +178,14 @@ var catalogs = map[string]catalog{
 			{json: "data/goods.json", key: "GoodRecord"},
 		},
 	},
+	"enemy-card": {
+		inbox:    filepath.Join(".scratch", "to-process-enemy-card-art"),
+		out:      filepath.Join("assets", "enemy-card"),
+		sources:  []source{{json: "data/enemy_card_art.json", key: "Flavor"}},
+		elements: data.AffinityElements,
+		weights:  data.EnemyCardWeights,
+		field:    data.EnemyCardArtField,
+	},
 	"achievement": {
 		inbox:   filepath.Join(".scratch", "to-process-achievement-art"),
 		out:     filepath.Join("assets", data.AchievementIconDir),
@@ -221,7 +252,7 @@ func main() {
 			continue
 		}
 		key := strings.TrimSuffix(e.Name(), filepath.Ext(e.Name()))
-		if _, ok := records[key]; !ok {
+		if _, ok := records[cat.recordOf(key)]; !ok {
 			log.Fatalf("%s names no record in %s — a key that matches nothing draws the fallback and nothing fails", e.Name(), cat.files())
 		}
 		keys = append(keys, key)
@@ -234,7 +265,11 @@ func main() {
 
 	for _, key := range keys {
 		src := filepath.Join(*in, key+".png")
-		img, size, err := reduce(src, w, h, *blocky)
+		field := cat.field
+		if _, weight := cat.split(key); weight != "" {
+			field = data.EnemyCardFieldFor(weight)
+		}
+		img, size, err := reduce(src, w, h, *blocky, field)
 		if err != nil {
 			log.Fatalf("%s: %v", key, err)
 		}
@@ -257,7 +292,15 @@ func main() {
 		fmt.Printf("\n%d %s(s) would be filed; %s untouched\n", len(keys), *kind, cat.files())
 		return
 	}
-	if err := setArt(records, keys); err != nil {
+	stems, finished, waiting := cat.complete(keys, *out)
+	for _, line := range waiting {
+		fmt.Println("  waiting: " + line)
+	}
+	if cat.weights != nil {
+		if err := setWeights(cat.sources[0].json, finished); err != nil {
+			log.Fatal(err)
+		}
+	} else if err := setArt(records, stems); err != nil {
 		log.Fatal(err)
 	}
 	left, err := undrawn(cat)
@@ -270,11 +313,128 @@ func main() {
 	fmt.Printf("\n%d %s(s) filed. %d still to draw.\n", len(keys), *kind, left)
 }
 
+// recordOf is the record a file's stem belongs to: the stem itself, or for a per-element catalog
+// the stem with its `-<element>` — and its `-<weight>`, where the catalog has weights — taken off.
+// A stem naming no element or no weight answers "", which names no record and is refused like any
+// other misspelling.
+func (c catalog) recordOf(stem string) string {
+	rec, _ := c.split(stem)
+	return rec
+}
+
+// split is recordOf plus the weight it took off, "" for a catalog without weights.
+func (c catalog) split(stem string) (record, weight string) {
+	if c.elements == nil {
+		return stem, ""
+	}
+	for _, el := range c.elements {
+		rest, ok := strings.CutSuffix(stem, "-"+el)
+		if !ok {
+			continue
+		}
+		if c.weights == nil {
+			return rest, ""
+		}
+		for _, w := range c.weights {
+			if rec, ok := strings.CutSuffix(rest, "-"+w); ok {
+				return rec, w
+			}
+		}
+		return "", ""
+	}
+	return "", ""
+}
+
+// complete is what can be written now, and a line for each set that has to wait. For an ordinary
+// catalog that is every key filed. For a per-element one it is each record — or each record's
+// weight — touched by this batch that now has **every** element on disk in out, counting pictures
+// filed by earlier runs; one still short is left out and says which elements it is missing.
+//
+// stems is the records for setArt; done is each record's newly complete weights, for setWeights.
+func (c catalog) complete(keys []string, out string) (stems []string, done map[string][]string, waiting []string) {
+	if c.elements == nil {
+		return keys, nil, nil
+	}
+	done = map[string][]string{}
+	seen := map[string]bool{}
+	for _, key := range keys {
+		rec, weight := c.split(key)
+		set := rec
+		if weight != "" {
+			set += "-" + weight
+		}
+		if seen[set] {
+			continue
+		}
+		seen[set] = true
+		var missing []string
+		for _, el := range c.elements {
+			if _, err := os.Stat(filepath.Join(out, set+"-"+el+".png")); err != nil {
+				missing = append(missing, el)
+			}
+		}
+		if len(missing) > 0 {
+			waiting = append(waiting, fmt.Sprintf("%s has no %s yet, so it draws no picture", set, strings.Join(missing, ", ")))
+			continue
+		}
+		if len(done[rec]) == 0 {
+			stems = append(stems, rec)
+		}
+		done[rec] = append(done[rec], weight)
+	}
+	return stems, done, waiting
+}
+
+// setWeights adds each record's newly complete weights to its `Weights`, in the catalog's weight
+// order, and writes its stem into `Art`.
+//
+// **A round trip through encoding/json rather than setArt's line rewrite**, because a list is the
+// one field a single-line pattern cannot rewrite safely, and data/enemy_card_art.json is
+// machine-formatted — two-space indent, keys in struct order, a Ladder's keys sorted — which is
+// exactly what MarshalIndent writes back, so an untouched record comes back byte for byte.
+func setWeights(path string, done map[string][]string) error {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	var file []data.EnemyCardArtData
+	if err := json.Unmarshal(raw, &file); err != nil {
+		return fmt.Errorf("%s: %w", path, err)
+	}
+	for i, f := range file {
+		add := done[f.Flavor]
+		if len(add) == 0 {
+			continue
+		}
+		has := map[string]bool{}
+		for _, w := range append(append([]string(nil), f.Weights...), add...) {
+			has[w] = true
+		}
+		file[i].Weights = []string{}
+		for _, w := range data.EnemyCardWeights {
+			if has[w] {
+				file[i].Weights = append(file[i].Weights, w)
+			}
+		}
+		file[i].Art = f.Flavor
+	}
+	var b strings.Builder
+	enc := json.NewEncoder(&b)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(file); err != nil {
+		return err
+	}
+	return os.WriteFile(path, []byte(b.String()), 0o644)
+}
+
 // reduce reads one generated PNG and scales it to the card's own size. The smooth path is
 // CatmullRom, which is what the committed catalog was made with. The blocky path quantizes to
 // the block grid the prompt asks for and scales back up by a whole number, so every block lands
 // on an exact square instead of being resampled across one.
-func reduce(path string, w, h int, blocky bool) (image.Image, string, error) {
+//
+// **With a field, the picture is fitted rather than stretched**: see fitField.
+func reduce(path string, w, h int, blocky bool, field image.Rectangle) (image.Image, string, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, "", err
@@ -301,6 +461,14 @@ func reduce(path string, w, h int, blocky bool) (image.Image, string, error) {
 			filepath.Base(path), size, w, h)
 	}
 
+	if !field.Empty() {
+		if blocky {
+			return nil, "", fmt.Errorf("-blocky does not apply to a catalog fitted into a field")
+		}
+		dst, scale := fitField(src, w, h, field)
+		return dst, fmt.Sprintf("%s, fitted at %.2f", size, scale), nil
+	}
+
 	if !blocky {
 		dst := image.NewRGBA(image.Rect(0, 0, w, h))
 		xdraw.CatmullRom.Scale(dst, dst.Bounds(), src, b, xdraw.Src, nil)
@@ -319,6 +487,42 @@ func reduce(path string, w, h int, blocky bool) (image.Image, string, error) {
 	dst := image.NewRGBA(image.Rect(0, 0, w, h))
 	xdraw.NearestNeighbor.Scale(dst, dst.Bounds(), small, small.Bounds(), xdraw.Src, nil)
 	return dst, size, nil
+}
+
+// fitField draws a transparent figure into a w x h card, filling field, and reports the scale it
+// was drawn at against a plain reduction to the card.
+//
+// The figure is cropped to the pixels it actually draws — alpha above a tenth, so a haze of nearly
+// invisible smoke does not stretch the box — and then **scaled until it just fills the box, up or
+// down**: one batch's light figure drawn at a quarter of the field and another's at a half both
+// come back the size a light figure is, so a weight ladder read across batches steps evenly. The
+// source is several times the card's size, so even a figure scaled up is still a reduction. It is
+// centered in the box, and drawn in one CatmullRom step from the full-size source, the same single
+// reduction every other catalog gets.
+func fitField(src image.Image, w, h int, field image.Rectangle) (*image.RGBA, float64) {
+	b := src.Bounds()
+	crop := image.Rectangle{Min: b.Max, Max: b.Min}
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			if _, _, _, a := src.At(x, y).RGBA(); a > 0x1800 {
+				crop = crop.Union(image.Rect(x, y, x+1, y+1))
+			}
+		}
+	}
+	dst := image.NewRGBA(image.Rect(0, 0, w, h))
+	if crop.Empty() {
+		return dst, 0
+	}
+
+	// The figure's size on the card if the whole canvas were simply reduced to it.
+	natW := float64(crop.Dx()) * float64(w) / float64(b.Dx())
+	natH := float64(crop.Dy()) * float64(h) / float64(b.Dy())
+	scale := min(float64(field.Dx())/natW, float64(field.Dy())/natH)
+	tw, th := int(natW*scale+0.5), int(natH*scale+0.5)
+	x := field.Min.X + (field.Dx()-tw)/2
+	y := field.Min.Y + (field.Dy()-th)/2
+	xdraw.CatmullRom.Scale(dst, image.Rect(x, y, x+tw, y+th), src, crop, xdraw.Src, nil)
+	return dst, scale
 }
 
 // keyMagenta takes a flat magenta ground out of a picture, and reports whether it found one.

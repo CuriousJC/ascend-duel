@@ -290,6 +290,14 @@ var cantripArt embed.FS
 //go:embed card
 var cardArt embed.FS
 
+// The creature cards' faces, one per flavor per element — `enemy-card/stab-bite-fire.png` is the
+// key `stab-bite-fire`, which is what `data.EnemyCardArtData.ArtKey` builds from the flavor's Art
+// stem and the element the realm dealt the card as. No default face, for the playing cards' reason,
+// and the directory is embedded whole so its README keeps the glob compiling before any art lands.
+//
+//go:embed enemy-card
+var enemyCardArt embed.FS
+
 // The damage badges, globbed the same way — `damage/damage-diamond-fire.png` is the key
 // `damage-diamond-fire`, which is what cards.BadgeFallbackArtKey builds, and every numbered one is
 // what cards.BadgeArtKey builds.
@@ -429,6 +437,7 @@ func LoadImageData() map[string][]byte {
 	embedFamily(images, runeArt, "rune")
 	embedFamily(images, cantripArt, "cantrip")
 	embedFamily(images, cardArt, "card")
+	embedFamily(images, enemyCardArt, "enemy-card")
 	embedFamily(images, damageArt, "damage")
 	embedFamily(images, stoneArtFS, "stone")
 	embedFamily(images, otherArt, "other")

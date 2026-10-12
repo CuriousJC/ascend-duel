@@ -57,9 +57,8 @@ func LoadTonics() []TonicData {
 	return parse[TonicData](tonicsJSON, "tonics.json")
 }
 
-// DefaultTonicArt is the face a record with no Art of its own draws: the potions' default, until a
-// tonic is painted.
-const DefaultTonicArt = DefaultPotionArt
+// DefaultTonicArt is the face a record with no Art of its own draws: the placeholder.
+const DefaultTonicArt = PlaceholderArt
 
 // ArtKey is the picture this tonic actually draws: its own if it has one, the default otherwise.
 func (t TonicData) ArtKey() string {

@@ -5,7 +5,7 @@ package screens
 // **It is the program's screen, not a run's.** Every other scene in this package is a station of
 // a journey — a duel, a reward, a shop — and is reached by `advance` walking the run forward. This
 // one is reached from the cog in the game's chrome, from any screen, and it puts the player back
-// exactly where they were: see `state.ReturnScreen`. The run's phase is never touched, which is
+// exactly where they were: see `state.GlobalState.Returns`. The run's phase is never touched, which is
 // what makes opening it mid-journey a look at a dialog rather than a decision.
 //
 // **Two controls today, and the third is expected.** Music and speed are the two things the game
@@ -105,6 +105,15 @@ const (
 	settingsExitGap   = 92
 )
 
+// The bottom row: the Compendium beside Back. **Beside rather than above**, because the column is
+// full down to Back and a row inserted into it would land EXIT on BACK. Both are ways off this
+// screen, so they share the row the way off a screen is on.
+const (
+	settingsCompendiumLabel = "COMPENDIUM"
+	settingsBottomWidth     = 320
+	settingsBottomGap       = 40
+)
+
 // The run code rides on the abandon button *(owner's call, 2026-09-05)*.
 //
 // **It is here because this is the screen a player can always reach**, and because it names the run
@@ -120,6 +129,9 @@ type SettingsScene struct {
 	music *models.Slider
 	speed *models.Slider
 	back  *models.Button
+
+	// compendium opens the Compendium over this screen; its Back comes back here.
+	compendium *models.Button
 
 	// abandon gives up the run, and confirm is the question in front of it. **Never one without
 	// the other**: this is the only irreversible control in the game reachable from every screen.
@@ -163,7 +175,11 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 			settingsFullscreenLabel, func() { s.toggleFullscreen(gs) })
 		s.full.TextSize = 40
 
-		s.back = models.NewButton(320, ui.ButtonLarge, "BACK", func() { s.leave(gs) })
+		s.back = models.NewButton(settingsBottomWidth, ui.ButtonLarge, "BACK", func() { s.leave(gs) })
+
+		s.compendium = models.NewButton(settingsBottomWidth, ui.ButtonLarge, settingsCompendiumLabel,
+			func() { actions.OpenCompendium(gs) })
+		s.compendium.TextSize = 40
 
 		s.abandon = models.NewButton(760, ui.ButtonLarge, settingsAbandonLabel, func() { s.askAbandon(gs) })
 
@@ -203,7 +219,9 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 	// way out of a screen is the last thing on it.
 	s.abandon.ScreenX, s.abandon.ScreenY = center, s.abandonRuleY(gs)+56
 	s.exit.ScreenX, s.exit.ScreenY = center, s.abandon.ScreenY+settingsExitGap
-	s.back.ScreenX, s.back.ScreenY = center, gs.PctY(88)
+	half := (settingsBottomWidth + settingsBottomGap) / 2
+	s.compendium.ScreenX, s.compendium.ScreenY = center-half, gs.PctY(88)
+	s.back.ScreenX, s.back.ScreenY = center+half, gs.PctY(88)
 }
 
 // settingsLayout is where every row on this screen sits, in screen pixels.
@@ -272,6 +290,7 @@ func (s *SettingsScene) Update(gs *state.GlobalState) error {
 	systems.UpdateSlider(gs, s.music)
 	systems.UpdateSlider(gs, s.speed)
 	systems.UpdateButton(gs, s.full)
+	systems.UpdateButton(gs, s.compendium)
 	systems.UpdateButton(gs, s.back)
 
 	// **Re-read every tick, not only on entry.** Nothing else in the game changes it today, but a
@@ -323,6 +342,7 @@ func (s *SettingsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	systems.DrawButton(gs, screen, s.exit)
 
+	systems.DrawButton(gs, screen, s.compendium)
 	systems.DrawButton(gs, screen, s.back)
 
 	// **The note under a dead music bar, and nothing when it is live.** A control that has gone
@@ -370,12 +390,7 @@ func (s *SettingsScene) askAbandon(gs *state.GlobalState) {
 // **The title screen is the fallback**, for the case nothing set a return: an ActiveScreen of zero
 // is Title, so this is what the zero value already means rather than a rule invented here.
 func (s *SettingsScene) leave(gs *state.GlobalState) {
-	back := gs.ReturnScreen
-	if back == state.Settings {
-		back = state.Title
-	}
-	gs.ActiveScreen = back
-	gs.NewScreen = true
+	gs.PopReturn()
 }
 
 // commit writes both settings to the profile, once, at the end of a drag.

@@ -141,9 +141,7 @@ var tmpl = template.Must(template.New("runesheet").Parse(`<!doctype html>
   style — with its body plan from <code>docs/art/rune_art_prompt.MD</code> between the two. Those
   are the only parts of a brief that are not about one record. <strong>A rune with no subject and no art is
   the backlog</strong> — both lines go pink, so the page can be scrolled for what still needs
-  writing. <code>default-rune.png</code> is the seat art goes into; it was the essence's own
-  placeholder until 2026-09-12, and the two split because one shared picture is a page where a
-  drawn essence and an undrawn rune look identical.
+  writing. Until art lands it draws the placeholder.
 </p>
 
 <h2>What the catalog does</h2>
@@ -191,7 +189,7 @@ var tmpl = template.Must(template.New("runesheet").Parse(`<!doctype html>
         <p class="rule">{{.Rule}}</p>
         <p class="cards">cards asked for: {{.Cards}}</p>
         {{if .Default}}
-          <p class="art missing">no art of its own — drawing default-rune.png</p>
+          <p class="art missing">no art of its own — drawing the placeholder</p>
         {{else}}
           <p class="art">art: <code>{{.Art}}</code></p>
         {{end}}

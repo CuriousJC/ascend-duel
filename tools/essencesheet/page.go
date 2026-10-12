@@ -125,8 +125,8 @@ var tmpl = template.Must(template.New("essencesheet").Parse(`<!doctype html>
   under the catalog's own prompt, <code>docs/art/essence_art_prompt.MD</code>, which is the only
   part of a brief that is not about one record. <strong>An essence with no subject and no art is the
   backlog</strong> — both lines go pink, so the page can be scrolled for what still needs writing
-  rather than a worklist being kept in step by hand. <code>default-essence.png</code> is the seat art
-  goes into, not a fallback that has gone wrong.
+  rather than a worklist being kept in step by hand. Until art lands it draws the placeholder,
+  which is a seat waiting rather than a fallback that has gone wrong.
 </p>
 
 <h2>What the catalog changes</h2>
@@ -174,7 +174,7 @@ var tmpl = template.Must(template.New("essencesheet").Parse(`<!doctype html>
         <p class="rule">{{.Rule}}</p>
         <p class="border">border: {{.Element}}</p>
         {{if .Default}}
-          <p class="art missing">no art of its own — drawing default-essence.png</p>
+          <p class="art missing">no art of its own — drawing the placeholder</p>
         {{else}}
           <p class="art">art: <code>{{.Art}}</code></p>
         {{end}}

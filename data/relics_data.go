@@ -218,13 +218,21 @@ type RelicEffectData struct {
 	Form string `json:"Form,omitempty"`
 }
 
-// DefaultRelicArt is the face a record with no Art of its own draws.
+// PlaceholderArt is the one face every record with no picture of its own draws, in every catalog —
+// a rainbow vapor question mark, `assets/game/placeholder.png`, from
+// docs/art/placeholder_art_prompt.MD. It is also what the Compendium shows for a record the player
+// has not found yet.
 //
-// **Most of the file has no art**, and it will stay that way: the four elemental relics were drawn
-// before the grammar existed, and every relic written since — the form multipliers, the two vitae
-// relics, the growing stat relics — is a rule with no picture. A pink border around an empty face
-// reads as a card that failed to load; this reads as one waiting for art.
-const DefaultRelicArt = "default-relic"
+// **One picture rather than one per catalog**, because what it says is the same everywhere: there
+// is something here that has not been drawn or not been found. A pink border around an empty face
+// reads as a card that failed to load; this reads as one waiting.
+//
+// **Keys are not file paths** — LoadImageData files the picture under this, which is what a lookup
+// has to spell.
+const PlaceholderArt = "placeholder"
+
+// DefaultRelicArt is the face a relic with no Art of its own draws.
+const DefaultRelicArt = PlaceholderArt
 
 // ArtKey is the picture this relic actually draws: its own if it has one, the default otherwise.
 //

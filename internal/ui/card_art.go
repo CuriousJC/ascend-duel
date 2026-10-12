@@ -484,6 +484,19 @@ func ArtworkOr(gs *state.GlobalState, key, fallback string) image.Image {
 	return Artwork(gs, fallback)
 }
 
+// Placeholder is the face a record with no picture of its own draws, and the one the Compendium
+// shows for a record not found yet.
+func Placeholder(gs *state.GlobalState) image.Image {
+	return Artwork(gs, data.PlaceholderArt)
+}
+
+// IsPlaceholder is whether a card's picture is the placeholder — whether the record behind it has
+// any art of its own. It compares the decoded image itself, which Artwork caches by key, so every
+// catalog's fallback answers the same way however its record spells it.
+func IsPlaceholder(gs *state.GlobalState, art image.Image) bool {
+	return art != nil && art == Placeholder(gs)
+}
+
 func Artwork(gs *state.GlobalState, key string) image.Image {
 	if key == "" {
 		return nil

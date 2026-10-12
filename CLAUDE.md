@@ -784,9 +784,12 @@ on a tab press, never every frame, so a drag holds until the player asks for an 
 **Settings, the Compendium, Achievements, Credits, RunOver and Goods.** None appears in
 `screens/flow.go` — which is what "not a station" means mechanically — and the chrome stands down on
 the first five. Goods keeps the reward screen's corner: the cog, the ledger and its own hands
-button. The first four are reached by an `actions.Open*` call and record `gs.ReturnScreen` so Back
-works from anywhere — Achievements is opened from inside the Compendium and comes back to it; **RunOver is the exception and goes to the title outright**, because the screen
-it came from was drawing a run that has ended and there is nowhere to put the player back to.
+button. The first four are reached by an `actions.Open*` call, which pushes the screen the player was on
+onto `gs.Returns`, and Back pops it — **a stack, because these screens open each other**: a fight,
+then Settings, then the Compendium (a button on Settings as well as the title), then Achievements,
+and every Back lands one step nearer the fight. **RunOver is the exception and goes to the title
+outright, emptying the stack**, because the screen it came from was drawing a run that has ended
+and there is nowhere to put the player back to.
 
 **Goods is the fifth and it is the one with a door of its own**. It is a sealed good, opened:
 the three to five things inside it, and the one of them the player takes. It is reached from
@@ -843,8 +846,7 @@ the widget, built the same way `models.Button` is and following the same rules �
 a bevelled face, a cached image repainted only when something visible changed.
 
 - **It is reached from the cog in the game's chrome, from any screen**, so it is the only screen
-  that cannot name its successor: `state.ReturnScreen` is where Back goes, recorded by whoever
-  opened it. **It never touches `session.Phase`** — settings is not a station of a run, so opening
+  that cannot name its successor: whoever opens it pushes onto `gs.Returns` and Back pops it. **It never touches `session.Phase`** — settings is not a station of a run, so opening
   it mid-journey is a look at a dialog rather than a decision.
 - **Adding it is the usual three edits minus one.** No `session.Phase` and no entry in
   `screens/flow.go`, because it is not part of the run loop; just the `ActiveScreen` and the
@@ -1249,16 +1251,18 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
 
 **Relic, essence and rune art is a globbed family, keyed by filename stem** — `relic/fire.png`
 is `fire`, which is what `data/relics.json` writes in
-its `Art` field. **Each has its own default face** — `default-relic`, `default-essence`,
-`default-rune`, reached through the record's `ArtKey()` rather than through a constant in a
-screen: a fallback living in `internal/screens` is a fallback the review tool does not have, which
-is how a sheet comes to disagree with the game. The runes wore the essence's placeholder until
-they split, and they split because one shared picture is a page where a drawn essence and an undrawn
-rune are the same face.
+its `Art` field. **Every catalog falls back to one placeholder** — `data.PlaceholderArt`, a rainbow
+vapor question mark at `assets/game/placeholder.png` from `docs/art/placeholder_art_prompt.MD` —
+reached through the record's `ArtKey()` rather than through a constant in a screen: a fallback
+living in `internal/screens` is a fallback the review tool does not have, which is how a sheet
+comes to disagree with the game. Each catalog keeps its own `Default…Art` constant naming it, so
+the record's own code says what it falls back to. **The Compendium draws it for a record not found
+yet**, and a found record with no art of its own as its real card darkened —
+`ui.IsPlaceholder` is the test.
 Same exception to the three-edit rule the enemy portraits take, and the same cost: a key is
 tied to its filename, so renaming a file means editing the JSON. `assets.embedFamily` is the one
 walk all four families go through. **A relic with no artwork draws
-`default-relic.png`** — `data.RelicData.ArtKey` is the fallback and `TestEveryRelicDrawsSomething`
+the placeholder** — `data.RelicData.ArtKey` is the fallback and `TestEveryRelicDrawsSomething`
 fails on a key naming no file, so a blank face means art nobody has painted rather than a name
 nobody spelled right.
 
@@ -1845,7 +1849,7 @@ a picture's key is tied to its filename**, so renaming one means editing the `Ar
 record that names it. Reach for the glob only when a *set* of files is being added; a one-off
 asset still gets its own var.
 
-**`default-enemy.png` is the whole of the creature fallback**, and **`default-background.jpg` is the
+**The placeholder is the whole of the creature fallback**, and **`default-background.jpg` is the
 backdrop's**. A record whose own picture has not been generated yet falls back to it rather than
 drawing a hole, so a blank face means art nobody has made rather than a name nobody spelled right —
 and the default backdrop carries no door, so a fight drawn on it is one with no room of its own.

@@ -39,7 +39,7 @@ costs if it does not.
 - **`Name`** — the full name, which is what a tooltip titles and what the shop says. **The card
   face never draws it**: a relic card is a full-bleed picture with no title, so a name has no width
   to fit and can be as long as it reads well.
-- **`Art`** — the assets key for the face. **Empty draws `default-relic.png`** via `RelicData.ArtKey`;
+- **`Art`** — the assets key for the face. **Empty draws the placeholder** via `RelicData.ArtKey`;
   a key naming no embedded image fails
   `TestEveryRelicDrawsSomething` rather than drawing a blank.
 - **`Text`** — the line a player reads. **It is printed**: the hover tooltip on

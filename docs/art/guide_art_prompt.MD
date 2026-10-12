@@ -1,20 +1,13 @@
 # Guide art prompt
 
-**One subject, two renders.** A faceless human-shaped figure made of luminous rainbow vapour.
+A faceless human-shaped figure made of luminous rainbow vapour, rendered once as `guide.png`:
+**256x256, transparent**. It sits inside a speech bubble as a small round-ish portrait, drawn into
+a box with other things around it, so it needs empty space behind it.
 
-It is used in two places that want two different canvases, so the artist is asked for two files of
-the same figure rather than one file cropped twice:
-
-- `guide.png` — **256x256, transparent**. It sits inside a speech bubble as a small round-ish
-  portrait, drawn into a box with other things around it, so it needs empty space behind it.
-- `default-enemy.png` — **200x280, with a ground**. It fills a whole card, edge to edge inside the
-  border, with nothing else on the card behind it. A transparent one would leave a hole.
-
-**Why vapour, and why every colour at once.** This figure is the stand-in — the guide who is not a
-creature, and the face a creature wears before its own picture has been made. Everything else in
-this set is one material in one hue; this is the one that is none of them, so it takes all of them
-and settles on nothing. It has no face for the same reason: a face is a character, and this is a
-placeholder that must not start reading as a specific someone.
+**Why vapour, and why every colour at once.** This figure is the guide, who is not a creature and
+not anybody in particular. Everything else in this set is one material in one hue; this is the one
+that is none of them, so it takes all of them and settles on nothing. It has no face for the same
+reason: a face is a character, and this figure must not start reading as a specific someone.
 
 ---
 
@@ -100,39 +93,17 @@ width is lost, so keep the wisps generous rather than hair-thin.
 
 ---
 
-### `default-enemy.png` — 200x280, with a ground
+## Before you hand it back
 
-Canvas: **exactly 200x280**, portrait orientation, fully opaque, PNG. Work as large as you like
-natively and reduce once to 200x280 on the way out.
-
-Framing: the figure is centred left to right and sits **slightly high** in the frame, filling about
-**80% of the width** and about **70% of the height**. Crop it at roughly the chest, as above. Leave
-the bottom third of the canvas comparatively empty — quiet ground with a little vapour drifting
-down into it.
-
-Ground: a **near-black background**, very slightly tinted so it is not a flat pure black — a deep
-neutral charcoal with the faintest cool cast, carrying barely perceptible noise so it is not a dead
-digital field. The whole canvas is covered: no transparency anywhere, and the ground runs right to
-all four edges. The figure's outer wisps fade into that ground rather than stopping at an edge.
-
-**Reserve nothing.** Do not leave a band, a bar, a corner or a disc clear or empty for anything to
-be placed on later, and do not draw a plaque, a title bar, a frame or a panel anywhere. The picture
-carries on underneath whatever is drawn on top of it.
-
----
-
-## Before you hand them back
-
-1. **Look for a face.** Turn each image upside down, squint at it, look at it small. If you can
+1. **Look for a face.** Turn the image upside down, squint at it, look at it small. If you can
    find eyes or a mouth anywhere in the vapour, the shading has invented one — flatten it out.
 2. **Reduce `guide.png` to 90x90 and look at it.** Is it still obviously a person? Have the wisps
    averaged into mush?
-3. **Reduce `default-enemy.png` to 100x140 and look at it.** Same question.
-4. **Count the hues.** All five should be findable in each image, and none of them should be the
+3. **Count the hues.** All five should be findable, and none of them should be the
    one you notice first.
-5. **Is `guide.png` genuinely transparent** behind the figure — not black, not white, not a dark
-   square? **Is `default-enemy.png` genuinely opaque** to all four edges?
-6. **Is there a hard line anywhere between two colours?** There should not be. If there is, the
+4. **Is `guide.png` genuinely transparent** behind the figure — not black, not white, not a dark
+   square?
+5. **Is there a hard line anywhere between two colours?** There should not be. If there is, the
    bands are too distinct.
 
-Name them `guide.png` and `default-enemy.png` and give me a single zip file of everything so I can download it all at once — never a link per file.
+Name it `guide.png`.

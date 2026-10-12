@@ -186,10 +186,5 @@ func creditsInk(k creditsKind) color.Color {
 // leave goes back to whichever screen opened this one, on the same terms the settings and
 // achievements screens do.
 func (s *CreditsScene) leave(gs *state.GlobalState) {
-	back := gs.ReturnScreen
-	if back == state.Credits {
-		back = state.Title
-	}
-	gs.ActiveScreen = back
-	gs.NewScreen = true
+	gs.PopReturn()
 }

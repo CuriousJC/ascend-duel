@@ -291,10 +291,9 @@ func (r MotifRecord) FullName() string {
 	return r.Name + " " + r.Title
 }
 
-// DefaultEnemyArt is the face a record draws when its own picture has not been generated yet.
-// One placeholder for every motif and both kinds of record: a per-motif placeholder is a picture
-// somebody has to draw before the motif can be looked at.
-const DefaultEnemyArt = "default-enemy"
+// DefaultEnemyArt is the face a record draws when its own picture has not been generated yet: the
+// placeholder, for every motif and both kinds of record.
+const DefaultEnemyArt = PlaceholderArt
 
 // Coverage is how many records can field each fight of a motif, as [tier][element].
 //

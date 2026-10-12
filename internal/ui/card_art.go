@@ -599,7 +599,7 @@ func EnemySpec(gs *state.GlobalState, c *entities.Combatant, name string, life i
 // figure in flight, a build band with no shields standing — and where the run *is* has no such
 // reading: `journeyRealm` and `journeyRoom` are the whole of it.
 func DuelistSpec(gs *state.GlobalState, c *entities.Combatant, name string,
-	dmg, vitae, life, maxLife, ap, fight, shields int, els ...cards.Element) cards.Spec {
+	dmg, vitae, life, maxLife, ap, fight int) cards.Spec {
 	spec := cards.Spec{
 		Name:    name,
 		Element: cards.Basic,
@@ -616,44 +616,7 @@ func DuelistSpec(gs *state.GlobalState, c *entities.Combatant, name string,
 	spec.Stats[3] = cards.StatLine{Label: "REALM", Value: strconv.Itoa(JourneyRealm(fight))}
 	spec.Stats[4] = cards.StatLine{Label: "ROOM", Value: JourneyRoom(fight)}
 
-	// **One pip per shield, in the fighter block's pip row.** They are drawn with
-	// the defend form's own mark, so what the player raised and what is standing are the same
-	// picture — a second drawing for the same idea is how a row of pips comes to mean something
-	// slightly different from the card that bought it.
-	//
-	// **`combat` caps a duelist at as many shields as this row holds**, so a count that would
-	// overflow cannot exist rather than being silently trimmed here — see Duelist.raiseShields.
-	// **Each pip keeps the element of the card that raised it** *(owner's call, 2026-09-02)*, which
-	// is the shield it was drawn as while it flew. The element is a rule — a shield of the hit's own
-	// element banks an action point — so a pip that changed on landing would be a wrong answer. A pip with no
-	// element — a shield standing from a round nobody watched, or one drawn outside a duel — is the
-	// neutral mark.
-	if shields > 0 {
-		for i := 0; i < shields && i < len(spec.Effects); i++ {
-			e := cards.Basic
-			if i < len(els) {
-				e = els[i]
-			}
-			if img := shieldPip(gs, e); img != nil {
-				spec.Effects[i] = img
-			}
-		}
-	}
 	return spec
-}
-
-// shieldPip is the picture one standing shield is drawn as: the defend form's corner mark in that
-// shield's own element, the same file a Brace and a Block carry.
-//
-// **It goes through `artwork` rather than `systems.ArtMark`** because a pip is scaled into a
-// twenty-pixel box, and the pip row takes an `image.Image` — `internal/cards` has no graphics
-// context, which is the whole reason the pips are bytes.
-//
-// **Nothing is tinted** *(2026-09-16)*. There were four form marks and five elements, so a pip was
-// one near-white drawing multiplied by a color; there are now twenty marks plus a neutral set, so
-// the pip is simply the drawing the card is showing. The tinted-pip cache went with it.
-func shieldPip(gs *state.GlobalState, e cards.Element) image.Image {
-	return Artwork(gs, ShieldPipKey(e))
 }
 
 // RelicSpec is an equipped relic as a card: its name and its artwork, and nothing else.

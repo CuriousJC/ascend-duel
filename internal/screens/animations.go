@@ -258,13 +258,21 @@ var animGestures = []animGesture{
 		},
 	},
 	{
-		name:  "shatter",
-		where: "drawSpreadingCracks, MarkShattered",
-		what:  "A shield eating an attack whole. The cracks travel outward, then the mark settles.",
-		ticks: shatterSpreadTicks,
+		name:  "shield heap",
+		where: "ui.HeapPose, combat_shields.go",
+		what:  "Shields forming over the card that raised them, one after another, heaped so they can be counted.",
+		ticks: heapGalleryTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
-			ui.BlitCard(gs, screen, at.Min, animFace(gs, animCardB), cards.Hand)
-			drawSpreadingCracks(screen, at, animCardB, p)
+			drawHeapGallery(gs, screen, at.Min, s.t.Age)
+		},
+	},
+	{
+		name:  "smother",
+		where: "drawSmother, drawSurge",
+		what:  "A shield thrown off its heap onto the attack it ate. A matched block writes SURGE across it.",
+		ticks: smotherGalleryTicks,
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawSmotherGallery(gs, screen, at, s.t.Age)
 		},
 	},
 	{

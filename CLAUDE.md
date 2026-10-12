@@ -283,15 +283,19 @@ hit whole**. See MECHANICS.md §Shields. Six things to know before touching any 
 - **A shield eats its own element's heaviest hit first, then the heaviest of what is left — never
   simply the first**. `combat.shieldedHits` is the whole rule,
   shared by both attack phases, and it decides the mask at the top of the turn rather than as each
-  hit arrives — which is what lets the screen show the exchange before anything swings. Ranked on
+  hit arrives. Ranked on
   each landing's own damage, deliberately: the hand's multiplier is one multiplier over the whole
   turn and cannot reorder two hits, so projecting the pipeline per hit
-  would be a second resolver agreeing with the first. **The screen draws it as a broken window** —
-  `cards.MarkShattered` for the settled mark, `internal/screens/combat_shatter.go` for the pip
-  crossing the table and the crack opening. **A mark is not an upgrade**: an upgrade is what a
-  card permanently *is* and is painted as the face itself, a mark is the card's situation and is
-  painted over the top of it. `Render` fixes that order. See MECHANICS.md §Shields and §An upgrade
-  is painted on the card, as its face.
+  would be a second resolver agreeing with the first. **The screen draws a shield as a picture
+  heaped over whatever raised it** — the defend card, an attack card with a shield rider, or a
+  helm's ring — **once the turn's arithmetic is done**, every hit's line worked out first. On the
+  beat a creature's blocked attack is reached, the hit it would have landed (`Event.Would`) shows
+  on the card, and a shield leaves its heap and lands on it, smothering it while the figure fades;
+  a matched block writes SURGE across the card at 45 degrees. `internal/screens/combat_shields.go` is the screen's half and `ui/shield_heap.go` the
+  heap's layout, which the animation gallery's `shield heap` and `smother` entries share. **The
+  engine counts shields per element and never says which card's shield it spent**, so the newest
+  heap holding one of the spent element gives one up — a choice about the picture, not a rule. See
+  MECHANICS.md §Shields.
 - **A shield's element is a rule, and so is a creature's**. `Duelist.Shields` is a
   `combat.ShieldStack` — a count per element, fixed-width so a Duelist stays a value — and a
   shield eating a hit of its own element banks one action point into `Duelist.Surge` for its
@@ -299,11 +303,11 @@ hit whole**. See MECHANICS.md §Shields. Six things to know before touching any 
   it **fizzles** (`combat.fizzles`, `KindFizzled`): it lands nothing, though the card still forms
   the hand. Wildcards never fizzle, and the duelist has no element, so the fizzle runs one way.
   See MECHANICS.md §A creature's own element.
-- **`cards.Mark` is a bitmask and marks compose**. A card can be broken *and* pointed
-  at; `internal/cards/mark.go`'s `drawMark` owns the order they are painted in, so one pair of facts
-  draws one way. **Append-only, and worse to insert into than an ordinal enum** — claiming a bit in
-  the middle changes what every existing value means, not just the ones after it. Two marks today:
-  `MarkShattered` and `MarkHighlit`. The deck panel's filter is not a mark: it darkens the cards it
+- **`cards.Mark` is a bitmask and marks compose**. `internal/cards/mark.go`'s `drawMark` owns
+  the order they are painted in, so one pair of facts draws one way. **A mark is not an upgrade**:
+  an upgrade is what a card permanently *is* and is painted as the face itself, a mark is the
+  card's situation and is painted over the top of it. One mark today: `MarkHighlit`. The deck
+  panel's filter is not a mark: it darkens the cards it
   leaves out at draw time, beside the fading that says a card has been played.
 - **Only the player raises shields**, and creatures raise nothing at all. Every creature is a solo
   attacker (`SoloAttacks`, a hit per card) and the player forms hands and lands a hit per card,
@@ -320,10 +324,10 @@ hit whole**. See MECHANICS.md §Shields. Six things to know before touching any 
 - **One card raises at most five shields; a duelist holds as many as the turn paid for.** The
   five is `combat.MaxShields` = `MaxActions`, refused at `RegisterConcept` and clamped in
   `Card.Amount`. **`Duelist.raiseShields` does not clamp the total** — five Blocks in a turn is
-  ten shields and is meant to be, because what bounds a turn is the action budget. **The pip row
-  is a separate number in a separate package**: `ui.MaxShieldPips` is `cards.MaxEffects`,
-  being what the bottom band fits — so a duelist behind ten draws a full row and the true count is
-  on the engine. A row that can say a big number has not been designed.
+  ten shields and is meant to be, because what bounds a turn is the action budget. **The screen
+  has no cap either**: each card's shields heap over that card, so a big total is several heaps.
+  A shield still standing when its card leaves the table — one the Tower Shield kept — moves onto
+  the relic that kept it.
 - **The defenses are Brace and Block**, so the deck holds 2 defend concepts × 5 elements and 55
   cards in total. Moving that is a balance change:
   **re-run `tools/handodds` and `tools/seeds` after any edit here**, and read MECHANICS.md §The
@@ -930,8 +934,8 @@ the machinery and `internal/cards/dissolve.go` is the pattern the face comes apa
 - **It is not a `cards.Mark`.** A mark is the card's situation and the card is still itself
   afterwards, so it has a settled picture `internal/cards` can bake. A morph ends as a *different
   card*, so there is nothing to bake and no second rasterizer — what that package owns is the
-  geometry, on the same terms it owns `ShatterCracks`.
-- **The pattern is derived from the card's name, never rolled**, exactly like the crack pattern and
+  geometry.
+- **The pattern is derived from the card's name, never rolled**, through `cards.MarkSeed`, and
   as the explicit exception the randomness skill records. So one card always comes apart the same
   way, through a resize, an interruption or a re-entry.
 - **It reads as patches because the delays come off a smooth lattice.** Independent per-square
@@ -1068,8 +1072,8 @@ the page it is all reviewed on.
   form and every element answers a key, with anything that is not one of the five elements
   answering the neutral drawing — so a blank corner means a missing file rather than a card with no
   element. A key naming nothing comes back nil and draws nothing, which is the honest failure.
-- **Nothing is tinted.** The hue is in the drawing. `shieldFlight` and `shieldRow` carry
-  a `cards.Element`, which is what lets a pip draw the shield its card was showing.
+- **Nothing is tinted.** The hue is in the drawing. A standing shield carries a `cards.Element`,
+  which is what picks its drawing out of `assets/shield/`.
 - **A card's corner carries a drawn form mark** — a spear, a scimitar, a club and a shield for
   stab, slash, crush and defend, from `assets/form/`. `MarkArtKey` answers `""` for `FormNone`, so
   a relic and both fighter cards leave the slot empty.
@@ -1865,8 +1869,8 @@ cost tens of megabytes of resident memory for pictures most runs never show.
 `Combatant` has no `Sprite` field and `entities` imports no Ebitengine at all. **Both duelists
 are cards**, in opposite corners, and both state their life the same way — a bar over a
 fraction, at identical offsets on the two styles so the pair can be compared across the
-screen without measuring. **The player's carries a row of shield pips** in the block above its
-bar, and the enemy's carries its DMG figure there instead.
+screen without measuring. The enemy's carries its DMG figure in the block above its bar; the
+player's has nothing there, its shields being heaped over the cards that raised them.
 
 **A creature is one still picture and there is no animation anywhere.** Animating one means
 generating frames from the same brief `tools/creatureprompt` assembles, not going back for a sprite

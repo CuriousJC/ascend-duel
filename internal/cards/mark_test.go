@@ -5,19 +5,14 @@ import (
 	"testing"
 )
 
-// **Marks are a set and the set has to stay one.** A card can be several things at once — broken
-// *and* pointed at — and the bug a bitmask exists to prevent is the caller having to rank them.
-func TestMarksCompose(t *testing.T) {
-	both := MarkShattered | MarkHighlit
-
-	if !both.Has(MarkShattered) || !both.Has(MarkHighlit) {
-		t.Error("a card carrying two marks does not report both")
-	}
-	if MarkNone.Has(MarkShattered) || MarkNone.Has(MarkHighlit) {
+// **A mark is a bit of its own**, so a second mark can join it without the caller having to rank
+// them.
+func TestMarksAreBits(t *testing.T) {
+	if MarkNone.Has(MarkHighlit) {
 		t.Error("an unmarked card reports a mark")
 	}
-	if MarkShattered.Has(MarkHighlit) || MarkHighlit.Has(MarkShattered) {
-		t.Error("two marks share a bit, so one card cannot carry them both")
+	if !MarkHighlit.Has(MarkHighlit) {
+		t.Error("a highlit card does not report it")
 	}
 }
 
@@ -36,9 +31,7 @@ func TestEveryMarkChangesTheFace(t *testing.T) {
 		name string
 		mark Mark
 	}{
-		{"shattered", MarkShattered},
 		{"highlit", MarkHighlit},
-		{"both", MarkShattered | MarkHighlit},
 	} {
 		spec := base
 		spec.Mark = c.mark

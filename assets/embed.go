@@ -243,6 +243,12 @@ var portalArt embed.FS
 //go:embed particle/*.png
 var particleArt embed.FS
 
+// THE SHIELDS: a shield standing over the card that raised it, keyed by filename stem —
+// `shield-<element>`, plus `shield-neutral`. See docs/art/shield_art_prompt.MD and ui.ShieldKey.
+//
+//go:embed shield/*.png
+var shieldArt embed.FS
+
 // The relic faces, globbed as a family and keyed by filename stem — `relic/fire.png` is
 // `fire`, which is what `data/relics.json` writes in its Art field.
 //
@@ -443,6 +449,7 @@ func LoadImageData() map[string][]byte {
 	embedFamily(images, screenArt, "screen")
 	embedFamily(images, portalArt, "portal")
 	embedFamily(images, particleArt, "particle")
+	embedFamily(images, shieldArt, "shield")
 
 	// Bob's face, for the reason the relic art is here: the tutorial draws him into a card
 	// through internal/cards, which has no graphics context.

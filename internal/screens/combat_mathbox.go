@@ -1145,7 +1145,7 @@ func mathFace(gs *state.GlobalState, size float64) *text.GoTextFace {
 // handCardCenter is where a figure sets off from: the middle of the card that paid it, **at rest**.
 //
 // **Nothing is lifted while a figure is in the air.** The cards go back down when the tally starts
-// and the shield pips fly in a phase where nothing is raised at all, so a point measured from the
+// and the shields form in a phase where nothing is raised at all, so a point measured from the
 // lifted position would sit a card's height above the card the figure comes out of.
 //
 // **It recomputes the seat rather than storing a point**, exactly as every card in flight on this

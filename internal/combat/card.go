@@ -165,9 +165,7 @@ const maxShields = baseMaxActions
 // is the attack phase — several beats before the defend phase raises them. The flight predicts what
 // one card will raise, and this is the ceiling that card is held to.
 //
-// **How many pips the row can draw is a different number and lives in the screen** —
-// screens.maxShieldPips. It was this one while a duelist was clamped here too, which is exactly
-// how a layout measurement came to be enforced as a rule.
+// **It caps one card, never a duelist**: a layout measurement is not a rule.
 const MaxShields = maxShields
 
 // Category is which phase this card resolves in, and it falls out of the verb: an attack resolves

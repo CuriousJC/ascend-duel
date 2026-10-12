@@ -343,6 +343,7 @@ func blockedByShield(events []Event, side Side, actor, target Duelist, card Card
 		Slot:    slot,
 		Hit:     hit,
 		Surged:  surged,
+		Would:   would,
 		Round:   round,
 	})
 
@@ -495,7 +496,7 @@ func playRiders(events []Event, side Side, actor Duelist, turn []Slot, held []Ca
 		// defend card — it is on a Jab, and the Jab is about to swing — so this cannot wait for
 		// the defend phase without a shielding attack being the only card in the game whose two
 		// halves happen in different phases. It goes through raiseShields, so the five-shield cap
-		// and the pip row hold exactly as they do for a Block.
+		// holds exactly as it does for a Block.
 		if up := slot.Card.ShieldOnPlay(); up > 0 {
 			actor = actor.raiseShields(slot.Card.Element, up)
 			events = append(events, Event{

@@ -774,7 +774,7 @@ func TestADefenseThatAlreadyFlewDoesNotRiseAgain(t *testing.T) {
 	// The ward was scored into the hand and its pips left with its figure: the attack set stays up
 	// and the ward does not climb on its own beat.
 	s := newScene()
-	s.row(combat.SideA).NoteFlight(1)
+	s.Theater.piles = append(s.Theater.piles, shieldPile{side: combat.SideA, seat: 1})
 	s.cursor = 1
 	s.noteResolved(s.log[1])
 	if !sameSeats(s.Theater.firingSeats, []int{0}) {

@@ -36,7 +36,8 @@
 //     deckpanel_view.go, deckfilter.go, handspanel.go. The three dialog shapes are the near-full
 //     screen panel, the small centered question, and the tutorial's bubble, which is a scene's.
 //   - Rows of cards — carddrag.go is the press-and-drag lifecycle every reorderable row shares,
-//     handsort.go the half of sorting that belongs to no screen, shield_row.go the pips.
+//     handsort.go the half of sorting that belongs to no screen, shield_heap.go the shields
+//     heaped over what raised them.
 //   - Words — prose.go and prose_terms.go turn an event the engine has already decided into a
 //     sentence, elementink.go says which colored word takes which ink, tips.go builds the
 //     tooltips. They compute nothing, which is what makes it impossible for a panel to disagree

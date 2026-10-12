@@ -5,8 +5,7 @@ import (
 	"image/color"
 )
 
-// The block along the bottom of a fighter card: the pip row, the figure under it, and the
-// health bar.
+// The block along the bottom of a fighter card: the opponent's figure and the health bar.
 //
 // **A ground is painted for type and for nothing else.** The card that writes a figure under its
 // portrait gets a scrim from just above that figure to the bottom edge, because light type on a
@@ -17,15 +16,15 @@ import (
 //
 // **The two cards share the bar and nothing else.** That is the row read *across* the table
 // against each other, so a bar at a different height on each would turn a
-// comparison into an act of measurement. What sits between them is each card's own business: the
+// comparison into an act of measurement. What sits above it is each card's own business: the
 // opponent writes its DMG there because it has nowhere else to put a figure, and the duelist
-// carries its shield pips there.
+// leaves it empty.
 //
 // The offsets exist once, here, which is what stops an edit to one card moving only that one —
 // see TestTheTwoFighterCardsShareTheirHealthGeometry, which holds the property from the other
 // side.
 //
-//	200  the pip row         200..220  the duelist's shield pips; bare portrait on the opponent's
+//	200  the block's top               bare portrait above the scrim on the opponent's
 //	216  the scrim's top edge          on the opponent's card only, six above the figure
 //	222  the DMG row         222..247  the opponent's only figure; the duelist writes none here
 //	250  the health bar      250..274  with the fraction written across it
@@ -36,10 +35,6 @@ import (
 // scrim covers most of the strip, so nothing the creature is recognized by may live down there.
 const (
 	FighterBlockTop = 200
-
-	fighterPipTop  = 200
-	fighterPipSize = 20
-	fighterPipGap  = 8
 
 	// **The figure is bigger than a stat row.** It is the only number on the opponent's card and
 	// it is read across the table against the duelist's own DMG, so it is set above the size the

@@ -119,6 +119,34 @@ func TestLeftoverShieldsEatTheHeaviestOfWhatIsLeft(t *testing.T) {
 	}
 }
 
+// TestEachBlockNamesTheShieldThatMatchedItsHit. A fire and an ice shield against a fire and an ice
+// hit: each block names the shield of its own hit's element, which is the shield the screen throws,
+// and carries the damage it stopped.
+func TestEachBlockNamesTheShieldThatMatchedItsHit(t *testing.T) {
+	a := duelist(10, 6, 5000)
+	goblin := creature(Earth, 10, 6, 5000)
+	hits := []Card{Of(Bash, Fire), Of(Bash, Ice)}
+
+	events, _, _ := resolve(a, goblin, []Card{Of(Brace, Ice), Of(Brace, Fire)}, hits, 1)
+	blocks := 0
+	for _, e := range events {
+		if e.Kind != KindBlocked {
+			continue
+		}
+		blocks++
+		if want := hits[e.Slot].Element; e.Element != want || !e.Surged {
+			t.Errorf("the %s hit at slot %d was blocked by a %s shield (surged %v), want %s",
+				hits[e.Slot].Element, e.Slot, e.Element, e.Surged, want)
+		}
+		if e.Would <= 0 {
+			t.Errorf("the block at slot %d carries no damage stopped", e.Slot)
+		}
+	}
+	if blocks != 2 {
+		t.Errorf("%d blocks, want 2", blocks)
+	}
+}
+
 // TestAMatchedBlockBanksAnActionPointForTheNextTurnOnly. Three ice shields eat three of an ice
 // creature's hits and buy three points; the turn after spends them and they are gone.
 func TestAMatchedBlockBanksAnActionPointForTheNextTurnOnly(t *testing.T) {

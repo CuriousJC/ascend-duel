@@ -72,9 +72,11 @@ const defeatButtonLabel = "END RUN"
 // drawn; these decide only how long the player looks at each part of it. Same constraint as the
 // debug flags and every card in flight.
 var eventDwells = map[combat.EventKind]float64{
-	combat.KindRoundStart:  1,
-	combat.KindAction:      1,
-	combat.KindRaised:      1,
+	combat.KindRoundStart: 1,
+	combat.KindAction:     1,
+	// **A quarter beat, because nothing is drawn on a raise's own beat**: its shields form once the
+	// turn's arithmetic is done. A full beat here is a pause over a still table.
+	combat.KindRaised:      0.25,
 	combat.KindBlocked:     1,
 	combat.KindExpired:     1,
 	combat.KindDamage:      1,
@@ -85,9 +87,10 @@ var eventDwells = map[combat.EventKind]float64{
 	combat.KindDrained:     1,
 	combat.KindRegenerated: 1,
 	combat.KindVitae:       1,
-	combat.KindWarded:      1,
-	combat.KindReflected:   1,
-	combat.KindTithed:      1,
+	// The same, for a helm's shield.
+	combat.KindWarded:    0.25,
+	combat.KindReflected: 1,
+	combat.KindTithed:    1,
 	// **Two beats, because a permanent bonus is the rarest thing that happens on this screen.**
 	// Everything else in a round is spent by the end of it; this one follows the player up the
 	// journey, and a grant that went past on the same beat as a shield pip would be the least
@@ -900,12 +903,6 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	s.tut.update(gs, s)
 
 	s.Theater.Tick()
-
-	// **Pips are paid in as they arrive, wherever the round is.** A flight raised inside the hand
-	// dialog can outlive it — the box stops holding the cursor the moment its script ends — so the
-	// arrival is checked on the frame clock rather than only inside playback. Paying twice is
-	// impossible: a landed flight says so. See combat_shields.go.
-	s.landShields()
 	// **Every opener is inert while any dialog is up, and the X on the panel is the exit**
 	// *(owner's call, 2026-08-24)*. It used to be the other way round — each control survived its
 	// own overlay because it was the only thing that closed one — and that stopped working when a
@@ -1246,11 +1243,6 @@ func (s *CombatScene) startRound() {
 	// adopted — so this is the last frame the screen can name what the player built. From here it
 	// is the banner's, and it flies down into the hand row as the cards fly up to the table. See
 	// handBanner.
-	// **The staging flag is this round's and nothing else is.** The marks themselves are dropped by
-	// seatEnemyCards, which is the line that actually invalidates them — see there. A settled duel
-	// never reaches either and freezes with its breaks on screen, which is the picture the player
-	// is looking at when the fight ended.
-	s.Theater.breaksStaged = false
 
 	// **The turn is written down before it is resolved**, which is the journal's whole posture: a
 	// line records what the player committed to, and what came of it is the ledger's. See
@@ -1467,11 +1459,6 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 			s.throwColumn(c)
 		}
 
-		// **The pips are not a hit's** *(owner's call)*. A defend card raises
-		// its shields in the defend phase, which runs *before* the attack phase — so the raise
-		// has a beat of its own, in front of the hand, and noteShieldRaise is the one place pips fly
-		// from. See combat.Categories.
-		s.landShields()
 		// **The banner goes when its own figure sets off** *(owner's call)*. The multiplier flies
 		// out of the second line under the hand's name and into every hit's line, so from the first
 		// of those frames the number is in the lines and the banner is a copy of something that has
@@ -1480,20 +1467,6 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 			s.Theater.banner.Clear()
 		}
 		return
-	}
-
-	// **The shield breaks are staged on the frame the creature's turn is about to start**, which is
-	// the last frame before anything of theirs resolves. Before the dwell below, so the beat that
-	// follows is the break's own rather than the tail of the player's last event; and before the
-	// `running` check, since the breaks are exactly what that will then wait on.
-	//
-	// **It reads ahead in the resolved log**, which nothing else on this screen does — see
-	// stageShieldBreaks, where that is argued and confined.
-	if !s.Theater.breaksStaged && s.cursor < len(s.log) && s.log[s.cursor].Side == combat.SideB {
-		s.Theater.breaksStaged = true
-		if s.stageShieldBreaks(gs) {
-			return
-		}
 	}
 
 	// **A tutorial step waiting for NEXT holds the round where it is** *(owner's call, 2026-09-08)*.
@@ -1552,12 +1525,20 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	for s.cursor < len(s.log) && s.Theater.walked[s.cursor] {
 		s.cursor++
 	}
-	if s.cursor >= len(s.log) {
-		s.endOfRound()
+
+	// **The turn's shields form once its arithmetic is done** *(owner's call)*: the hits are worked
+	// out first, a defense's line coming to 0, and only then do the shields go up — on the boundary
+	// out of the turn, before anything of the next one is reached. See formPendingShields.
+	if s.turnOver() && s.formPendingShields() {
 		return
 	}
 
-	s.applyEvent(s.log[s.cursor])
+	if s.cursor >= len(s.log) {
+		s.endOfRound(gs)
+		return
+	}
+
+	s.applyEvent(gs, s.log[s.cursor])
 	s.startHandMath(gs, s.log[s.cursor], s.cursor)
 	s.cursor++
 
@@ -1571,7 +1552,7 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	// Playback has caught up with the resolver: hand control back to the player, or freeze
 	// the screen if there is nobody left to play against. See endOfRound.
 	if s.cursor >= len(s.log) {
-		s.endOfRound()
+		s.endOfRound(gs)
 	}
 }
 
@@ -1592,7 +1573,7 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 // It is a branch here rather than a rule inside `drawHand`, because what has to stop is not the
 // *drawing*, it is the whole end-of-round movement. A hand that was spent but not refilled still
 // reflows.
-func (s *CombatScene) endOfRound() {
+func (s *CombatScene) endOfRound(gs *state.GlobalState) {
 	s.fighter.Duelist = s.fighterAfter
 	s.enemy.Duelist = s.enemyAfter
 
@@ -1603,12 +1584,12 @@ func (s *CombatScene) endOfRound() {
 
 	// Before the early return below: a settled duel adopts its end state like any other.
 	//
-	// **The shield rows hand authority back to the model and forget this round's seats.** The pips
-	// themselves stay: the shields survive the round, and their colors are the only account of what
-	// raised them. See shield_row.go.
-	for i := range s.Theater.shieldRows {
-		s.Theater.shieldRows[i].EndRound()
-	}
+	s.formPendingShields()
+
+	// **The heaps are squared with the model as the played cards leave the table.** What lapsed
+	// fades where it stood, and what the model still holds goes onto the relic that kept it. See
+	// settleShields.
+	s.settleShields(gs, combat.SideA, s.fighter.Shields)
 
 	if s.duelSettled() {
 		return
@@ -1673,7 +1654,7 @@ func (s *CombatScene) planEnemyRound() {
 // **None of this decides anything.** ResolveRound settled the whole round before playback
 // began, so these are three ways of showing the same log and the screen could stop calling
 // any of them without changing a result.
-func (s *CombatScene) applyEvent(e combat.Event) {
+func (s *CombatScene) applyEvent(gs *state.GlobalState, e combat.Event) {
 	// **A turn that never scored throws its signals here.** The hand dialog is what normally sequences
 	// them, and a turn of nothing but defenses forms no hand — so the fallback is the boundary:
 	// the moment the acting side changes, or the round ends. Before anything else, so the parked
@@ -1692,9 +1673,9 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 		return
 	}
 
-	// The shield row on the duelist card, moved on the beat rather than at adoption — the same
-	// division noteHit makes between the model and the drawing. See noteShields.
-	// **A helm's shields leave its ring**, so they fly from there rather than from a seat.
+	// The shields on the table, moved on the beat rather than at adoption — the same division
+	// noteHit makes between the model and the drawing. See combat_shields.go.
+	// **A helm's shields form on its ring**, since nothing on the table raised them.
 	if e.Kind == combat.KindWarded {
 		s.noteWard(e)
 		return
@@ -1706,15 +1687,15 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 		return
 	}
 
-	if e.Kind == combat.KindRaised || e.Kind == combat.KindBlocked || e.Kind == combat.KindExpired {
-		// **A raise whose pips have not flown flies them now, and the row waits for them.** A turn
-		// of nothing but defenses forms no hand, so there is no sum to leave with — see
-		// noteShieldRaise. When it does fly, the count arrives with the pips rather than here, or
-		// the row would fill before the thing filling it had crossed the screen.
-		if s.noteShieldRaise(e) {
-			return
-		}
-		s.noteShields(e)
+	switch e.Kind {
+	case combat.KindRaised:
+		s.noteShieldRaise(e)
+		return
+	case combat.KindBlocked:
+		s.noteBlock(gs, e)
+		return
+	case combat.KindExpired:
+		s.noteExpired(gs, e)
 		return
 	}
 
@@ -1884,13 +1865,9 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// hand dialog has finished and its figures have landed, so the order here is about reading the
 	// file rather than about overlap. See combat_drain.go.
 	s.drawDrains(gs, screen)
-	// The pips, over the cards they are crossing and under the dialogs. See combat_shields.go.
-	s.drawShields(gs, screen)
-
-	// **The breaks, over the opponent's row.** A crack drawn under the card it is breaking would be
-	// invisible, and the pip crossing to it has to ride over everything it passes, exactly as the
-	// other pips do. See combat_shatter.go.
-	s.drawShieldBreaks(gs, screen)
+	// The shields, over both rows and the relics they stand on and under the dialogs. See
+	// combat_shields.go.
+	s.drawShieldPiles(gs, screen)
 
 	// **The signals, over everything on the table and under the panels.** A burst thrown out of a
 	// card has to ride over the card and its neighbors, and the figure that leaves with it is the

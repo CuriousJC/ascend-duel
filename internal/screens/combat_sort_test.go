@@ -420,7 +420,7 @@ func TestASettledDuelFreezesTheScreenAsItStands(t *testing.T) {
 			s := settledScene(tc.fighterLife, tc.enemyLife)
 			hand, deck, queue := len(s.hand), len(s.deck), len(s.fighterActions)
 
-			s.endOfRound()
+			s.endOfRound(testState())
 
 			if len(s.hand) != hand {
 				t.Errorf("the hand went from %d cards to %d, want it frozen", hand, len(s.hand))

@@ -145,10 +145,8 @@ func drawBuildCard(gs *state.GlobalState, screen *ebiten.Image, vitae int) {
 		// every relic — see Session.Equip.
 		life := gs.Run.LifeAtFightStart(fighter.MaxLife)
 
-		// No shields: this is the build band between fights, where nothing has been raised and
-		// nothing is standing.
 		spec := ui.DuelistSpec(gs, fighter, name, fighter.DMG, vitae, life, fighter.MaxLife,
-			fighter.ActionPoints(), fightIndex(gs.Run), 0)
+			fighter.ActionPoints(), fightIndex(gs.Run))
 		if img := ui.CardImage(gs, spec, cards.DuelistStyle); img != nil {
 			r := buildCardRect(gs)
 			op := &ebiten.DrawImageOptions{}

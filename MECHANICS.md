@@ -846,7 +846,8 @@ DUELIST  →  CARD  →  CARD RELICS  →  HAND  →  HAND RELICS
 
 1. **DUELIST** — the DMG every hit of the turn is swung at: the duelist's own DMG, plus what the
    turn's **duelist upgrades** raise it by — the riders on the cards kept back, a rung relic's
-   `add-hand-dmg`, the jars, the purse.
+   `add-hand-dmg`, the jars, the purse. An **Awakening** adds its 10 here too, but to the DMG of
+   each card it raises rather than the whole turn's — see §The Awakenings.
 2. **CARD** — that DMG times the card's own multiplier, then the card's **card upgrades**: its own
    played riders, a flat `+N` first and then a percentage. They touch this card's hit and nothing
    else.
@@ -1616,6 +1617,15 @@ What the original is still reachable from is the card's **identity** — every c
 carries an ID, so the deck panel can show either face of a card wherever it is sitting. **No
 rule may read that ID**; it is a handle for the screens.
 
+**A rune or an essence spent on a held card is not a draw** *(owner's call, 2026-10-13)*. It
+changes what it names on the card the player is holding and nothing else, and the orbs are not
+walked over it again: an earth card painted ice under the Burning Frozen Orb is held ice until it is
+drawn again, and a card the orb already made fire keeps its fire under a rune that only gave it a
+rider. **A copy is the card the player picked, as they see it** — a card painted lightning copies
+as lightning, and a card the orb flipped copies in its flipped color. The run's own cards still
+hold what they were, so the next draw deals each of them through the orbs as usual.
+`session.HeldAs` is the rule and `CombatScene.seatCopies` the copy.
+
 - **A flip is what makes a color relic worth wearing**, which is the whole point of the pair:
   the Fire relic doubles fire cards and there are only so many, so the orbs dealing other colors as
   fire are how a
@@ -1935,10 +1945,11 @@ are the same predicate and a record setting both is refused at load.
 
 ### The Awakenings — a first card that raises the turn behind it
 
-**If the turn's first card matches, every attack queued after it gains +10 on its card — after the
-card's own multiplier and riders, before the relics that price the card** *(owner's call,
-2026-10-10)*, so a Club, a Swarm and the hand all multiply the 10. One per element and one per
-attack form, all common.
+**If the turn's first card matches, every attack queued after it is swung at +10 DMG — added to
+the DMG that card is swung at, before the card's own multiplier** *(owner's call, 2026-10-13)*, so
+a 3x card gains 30, and its riders, a Club, a Swarm and the hand all multiply what that came to.
+It raises those cards' DMG and not the turn's: the opener and every defense are swung at the plain
+figure. One per element and one per attack form, all common.
 
 - **First as queued, whatever it is.** A Brace queued first is the opener even though the defend
   phase resolves first, and a fire Brace opener wakes the fire Awakening. `First` is the predicate,
@@ -1948,8 +1959,8 @@ attack form, all common.
   the 10, an echo's or a repeat's included; two Awakenings that both wake add.
 - **It is shown before a card is counted**: on the announcement's beat the Awakening and its opener
   toast together, then every attack it raised rattles, and only then do the lines run — each
-  carrying its `+ 10` flying out of the relic inside the card's working. The fight log writes it
-  inside the card's bracket, before the relics' factors. `Event.HandAwaken`, `Awaken`, `AwakenSeats` and `AwakenOpener` carry it.
+  carrying its `+ 10` flying out of the relic beside the duelist's DMG, with the card's multiplier
+  on the row under the pair. The fight log brackets the two, `((12 + 10) x 3 ...)`. `Event.HandAwaken`, `Awaken`, `AwakenSeats` and `AwakenOpener` carry it.
 
 ### The Eternity Pearl — the mythic
 

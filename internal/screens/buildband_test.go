@@ -10,6 +10,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
 // The build band's relic row, which needs no window — nothing here creates an ebiten.Image.
@@ -57,6 +58,25 @@ func TestHoveringAWornRelicExplainsIt(t *testing.T) {
 	}
 	if !tip.Pointed() {
 		t.Error("a relic was found and the tooltip was not pointed at it")
+	}
+}
+
+// **A relic the run wears weightless says so between fights**, not only once a fighter has been built
+// from the run: the band reads the run's own flag.
+func TestAWeightlessWornRelicSaysSoInTheBand(t *testing.T) {
+	gs := bandState(t)
+
+	worn := gs.Run.Worn()
+	gs.Run.SetWeightless(worn[0], true)
+	seat := relicSlotRect(buildRelicRect(gs), 0, len(worn))
+	at := image.Pt((seat.Min.X+seat.Max.X)/2, (seat.Min.Y+seat.Max.Y)/2)
+
+	var tip models.Tooltip
+	if !hoverBuildRelics(gs, at, &tip) {
+		t.Fatalf("the cursor at %v found no relic", at)
+	}
+	if n := len(tip.Lines); n == 0 || tip.Lines[n-1].Text() != ui.WeightlessTipLine {
+		t.Errorf("a weightless relic's tooltip does not end on %q", ui.WeightlessTipLine)
 	}
 }
 

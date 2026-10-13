@@ -562,6 +562,40 @@ func (s *Session) DrawnAs(c combat.Card) combat.Card {
 	return combat.DealtAs(s.WornRelics(), c)
 }
 
+// HeldAs is a card already in the hand after something has changed the run's card under it — a rune
+// or an essence spent mid-fight. face is the card as the hand holds it and before is the run's card
+// as it stood before the change.
+//
+// **Only what changed is carried over, and the worn rings are not walked again** *(owner's call,
+// 2026-10-13)*: a flip or a demotion fires as a card is drawn and at no other time. So a card painted
+// ice under an ice-to-fire orb is held ice until it is drawn again, and a card the orb already made
+// fire keeps its fire under a rune that only gave it a rider. Every other field the hand holds is
+// left as the deal left it.
+//
+// A card the run no longer owns comes back false.
+func (s *Session) HeldAs(face, before combat.Card) (combat.Card, bool) {
+	after, ok := s.CardByID(face.ID)
+	if !ok {
+		return combat.Card{}, false
+	}
+	if after.Concept != before.Concept {
+		face.Concept = after.Concept
+	}
+	if after.Element != before.Element {
+		face.Element = after.Element
+	}
+	if after.CostDelta != before.CostDelta {
+		face.CostDelta = after.CostDelta
+	}
+	if after.AmountPct != before.AmountPct {
+		face.AmountPct = after.AmountPct
+	}
+	if after.Riders != before.Riders {
+		face.Riders = after.Riders
+	}
+	return face, true
+}
+
 // DealStepsFor is the cascade a card goes through on its way into the hand: one entry per worn ring
 // that changes it, in worn order.
 //

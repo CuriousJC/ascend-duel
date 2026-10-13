@@ -309,7 +309,7 @@
     "Family": "Elemental flips",
     "Art": "flip-arcane-to-earth",
     "Draw": "a purple sphere dipped into muddy earth",
-    "Text": "Every arcane card is dealt as a earth card.",
+    "Text": "Every arcane card is dealt as an earth card.",
     "Rarity": "common",
     "Rules": [
       {
@@ -577,7 +577,7 @@
     "Family": "Weapons",
     "Art": "old-dagger",
     "Draw": "a rusty dagger",
-    "Text": "Every Jab (1 AP stab) deals 4x DMG.",
+    "Text": "Jab cards (1 AP stab) deal 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -593,7 +593,7 @@
     "Family": "Weapons",
     "Art": "epee",
     "Draw": "an epee with an oversized guard to differentiate from a foil",
-    "Text": "Every Thrust (2 AP stab) deals 4x DMG.",
+    "Text": "Thrust cards (2 AP stab) deal 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -609,7 +609,7 @@
     "Family": "Weapons",
     "Art": "skewer-spear",
     "Draw": "a wood spear with a copper tip that is longer like a sword tip",
-    "Text": "Every Skewer (3 AP stab) deals 4x DMG.",
+    "Text": "Skewer cards (3 AP stab) deal 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -625,7 +625,7 @@
     "Family": "Weapons",
     "Art": "hunting-knife",
     "Draw": "an extra large hunting knife",
-    "Text": "Every Cut (1 AP slash) deals 4x DMG.",
+    "Text": "Cut cards (1 AP slash) deal 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -641,7 +641,7 @@
     "Family": "Weapons",
     "Art": "katana-blade",
     "Draw": "a silver edge katana with wavy damascus steel pattern",
-    "Text": "Every Slice (2 AP slash) deals 4x DMG.",
+    "Text": "Slice cards (2 AP slash) deal 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -657,7 +657,7 @@
     "Family": "Weapons",
     "Art": "cleaver",
     "Draw": "large cleaver with a silver blade and a copper handle",
-    "Text": "Every Cleave (3 AP slash) deals 4x DMG.",
+    "Text": "Cleave cards (3 AP slash) deal 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -673,7 +673,7 @@
     "Family": "Weapons",
     "Art": "brass-knuckles",
     "Draw": "a set of solid brass knuckles with four finger holes, scrollwork and a small star engraved along the front bar",
-    "Text": "Every Thump (1 AP crush) deals 4x DMG.",
+    "Text": "Thump cards (1 AP crush) deal 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -689,7 +689,7 @@
     "Family": "Weapons",
     "Art": "basher",
     "Draw": "a mechanic hammer with a copper handle and a silver head",
-    "Text": "Every Bash (2 AP crush) deals 4x DMG.",
+    "Text": "Bash cards (2 AP crush) deal 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -705,7 +705,7 @@
     "Family": "Weapons",
     "Art": "warhammer",
     "Draw": "A silver warhammer with a black steel handle",
-    "Text": "Every Smash (3 AP crush) deals 4x DMG.",
+    "Text": "Smash cards (3 AP crush) deal 4x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -797,7 +797,7 @@
   },
   {
     "RelicRecord": "dmgx-fire",
-    "Name": "Fire",
+    "Name": "Fire Ring",
     "Family": "Elemental damage",
     "Art": "dmgx-fire",
     "Draw": "angled ring made of red flames with a thick band",
@@ -813,7 +813,7 @@
   },
   {
     "RelicRecord": "dmgx-ice",
-    "Name": "Ice",
+    "Name": "Ice Ring",
     "Family": "Elemental damage",
     "Art": "dmgx-ice",
     "Draw": "angled ring made of woven blue ice with a thick band",
@@ -829,7 +829,7 @@
   },
   {
     "RelicRecord": "dmgx-lightning",
-    "Name": "Lightning",
+    "Name": "Lightning Ring",
     "Family": "Elemental damage",
     "Art": "dmgx-lightning",
     "Draw": "angled ring made of woven yellow lightning with a thick band",
@@ -845,7 +845,7 @@
   },
   {
     "RelicRecord": "dmgx-earth",
-    "Name": "Earth",
+    "Name": "Earth Ring",
     "Family": "Elemental damage",
     "Art": "dmgx-earth",
     "Draw": "angled ring made of woven gray rock with a thick band",
@@ -861,7 +861,7 @@
   },
   {
     "RelicRecord": "dmgx-arcane",
-    "Name": "Arcane",
+    "Name": "Arcane Ring",
     "Family": "Elemental damage",
     "Art": "dmgx-arcane",
     "Draw": "angled ring made of etheral purple flames with a thick band",
@@ -1021,7 +1021,7 @@
     "Family": "Elemental growth",
     "Art": "growth-ice",
     "Draw": "silver amulet of a scale witha blue gem weighing down one side and a silver chain from the top",
-    "Text": "Ice cards gain 0.1x DMG every time a ice attack lands. Grows while worn.",
+    "Text": "Ice cards gain 0.1x DMG every time an ice attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
       {
@@ -1063,7 +1063,7 @@
     "Family": "Elemental growth",
     "Art": "growth-earth",
     "Draw": "silver amulet of a scale witha green gem weighing down one side and a silver chain from the top",
-    "Text": "Earth cards gain 0.1x DMG every time a earth attack lands. Grows while worn.",
+    "Text": "Earth cards gain 0.1x DMG every time an earth attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
       {
@@ -1185,7 +1185,7 @@
     "Family": "Hand multipliers",
     "Art": "handmult-pair",
     "Draw": "an amulet with with 2 pearl interlocked rings on a platinum chain",
-    "Text": "Every pair deals 2x DMG.",
+    "Text": "Cards in a Pair deal 2x DMG.",
     "Rarity": "uncommon",
     "Rules": [
       {
@@ -1201,7 +1201,7 @@
     "Family": "Hand multipliers",
     "Art": "handmult-triplicate",
     "Draw": "an amulet with with 3 pearl interlocked rings in a triangle pattern on a platinum chain",
-    "Text": "Every Three of a Kind\ndeals 3x DMG.",
+    "Text": "Cards in a Three of a Kind\ndeal 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
       {
@@ -1223,7 +1223,7 @@
     "Family": "Hand multipliers",
     "Art": "handmult-full",
     "Draw": "an amulet on a platinum chain with 3 pearl interlocked rings in a row and 2 interlocked hematite rings under 3",
-    "Text": "Every Full House\ndeals 3x DMG.",
+    "Text": "Cards in a Full House\ndeal 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
       {
@@ -1245,7 +1245,7 @@
     "Family": "Hand multipliers",
     "Art": "handmult-two-pair",
     "Draw": "an amulet on a platinum chain with 2 pearl interlocked rings on top of 2 hematite interlocked rings in a square pattern",
-    "Text": "Every Two Pair\ndeals 2x DMG.",
+    "Text": "Cards in a Two Pair\ndeal 2x DMG.",
     "Rarity": "uncommon",
     "Rules": [
       {
@@ -1263,7 +1263,7 @@
     "Family": "Hand multipliers",
     "Art": "handmult-four",
     "Draw": "an amulet on a platinum chain with 4 pearl interlocked rings in a square pattern",
-    "Text": "Every Four of a Kind\ndeals 4x DMG.",
+    "Text": "Cards in a Four of a Kind\ndeal 4x DMG.",
     "Rarity": "rare",
     "Unlock": "card-four-relics",
     "Rules": [
@@ -1286,7 +1286,7 @@
     "Family": "Hand multipliers",
     "Art": "handmult-five",
     "Draw": "an amulet on a platinum chain with 3 pearl interlocked rings in a row and 2 interlocked pearl rings under 3",
-    "Text": "Every Five of a Kind\ndeals 5x DMG.",
+    "Text": "Cards in a Five of a Kind\ndeal 5x DMG.",
     "Rarity": "rare",
     "Unlock": "card-five-relics",
     "Rules": [
@@ -1357,7 +1357,7 @@
     "Family": "Form weapons",
     "Art": "dmg-all-slash",
     "Draw": "a steel sickle with a leather hilt and a jade pommell",
-    "Text": "Every slash card deals double DMG.",
+    "Text": "Slash cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -1373,7 +1373,7 @@
     "Family": "Form weapons",
     "Art": "dmg-all-crush",
     "Draw": "a heavy granite club with a leather strap and a jade pommell",
-    "Text": "Every crush card deals double DMG.",
+    "Text": "Crush cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -1389,7 +1389,7 @@
     "Family": "Form weapons",
     "Art": "dmg-all-stab",
     "Draw": "an ivory fencing foil with a sharp tip, leather hilt, and jade pommell",
-    "Text": "Every stab card deals double DMG.",
+    "Text": "Stab cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -1599,7 +1599,7 @@
     "Family": "Element and form",
     "Art": "dmg-earth-crush",
     "Draw": "a hammer made all of green gemstone",
-    "Text": "Every earth crush card\ndeals 3x DMG.",
+    "Text": "Earth crush cards\ndeal 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
       {
@@ -1615,7 +1615,7 @@
     "Family": "Element and form",
     "Art": "dmg-lightning-stab",
     "Draw": "a fencing foil made entirely of yellow gemstone",
-    "Text": "Every lightning stab card\ndeals 3x DMG.",
+    "Text": "Lightning stab cards\ndeal 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
       {
@@ -1631,7 +1631,7 @@
     "Family": "Element and form",
     "Art": "dmg-ice-slash",
     "Draw": "a cutlass made entirely of blue gemstone",
-    "Text": "Every ice slash card\ndeals 3x DMG.",
+    "Text": "Ice slash cards\ndeal 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
       {
@@ -1647,7 +1647,7 @@
     "Family": "Tier damage",
     "Art": "dmgx-one-ap",
     "Draw": "amulet of silver locusts in a tangled bundle with a jade chain",
-    "Text": "Every 1 AP card deals 3x DMG.",
+    "Text": "1 AP cards deal 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
       {
@@ -1663,7 +1663,7 @@
     "Family": "Tier damage",
     "Art": "dmg-cost-three",
     "Draw": "a circlet made of platinum with rainbow gem embedded in the center",
-    "Text": "Every 3 AP card deals 2.5x DMG.",
+    "Text": "3 AP cards deal 2.5x DMG.",
     "Rarity": "uncommon",
     "Rules": [
       {
@@ -1892,7 +1892,7 @@
     "Family": "Mixed hands",
     "Art": "dmg-two-forms",
     "Draw": "a scimitar and a battle axe crossed over each other",
-    "Text": "A pair built from two\ndifferent forms deals 3x DMG.",
+    "Text": "Cards in a Pair of two\ndifferent forms deal 3x DMG.",
     "Rarity": "uncommon",
     "Rules": [
       {
@@ -2294,7 +2294,7 @@
     "Family": "Elemental awakenings",
     "Art": "awaken-fire",
     "Draw": "a lapis chain with a bone carved eye pendant, swirling with orange fire swirls",
-    "Text": "If your first card is a fire card, every attack after it deals +10 damage.",
+    "Text": "If your first card is a fire card, every attack after it gains +10 DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -2310,7 +2310,7 @@
     "Family": "Elemental awakenings",
     "Art": "awaken-ice",
     "Draw": "a lapis chain with a bone carved eye pendant, swirling with blue ice swirls",
-    "Text": "If your first card is an ice card, every attack after it deals +10 damage.",
+    "Text": "If your first card is an ice card, every attack after it gains +10 DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -2326,7 +2326,7 @@
     "Family": "Elemental awakenings",
     "Art": "awaken-lightning",
     "Draw": "a lapis chain with a bone carved eye pendant, swirling with yellow lightning swirls",
-    "Text": "If your first card is a lightning card, every attack after it deals +10 damage.",
+    "Text": "If your first card is a lightning card, every attack after it gains +10 DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -2342,7 +2342,7 @@
     "Family": "Elemental awakenings",
     "Art": "awaken-earth",
     "Draw": "a lapis chain with a bone carved eye pendant, swirling with green earth swirls",
-    "Text": "If your first card is an earth card, every attack after it deals +10 damage.",
+    "Text": "If your first card is an earth card, every attack after it gains +10 DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -2358,7 +2358,7 @@
     "Family": "Elemental awakenings",
     "Art": "awaken-arcane",
     "Draw": "a lapis chain with a bone carved eye pendant, swirling with purple arcane swirls",
-    "Text": "If your first card is an arcane card, every attack after it deals +10 damage.",
+    "Text": "If your first card is an arcane card, every attack after it gains +10 DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -2374,7 +2374,7 @@
     "Family": "Form awakenings",
     "Art": "awaken-stab",
     "Draw": "a lapis chain with a bone carved eye pendant whose iris is ivory, swirling with rainbow swirls",
-    "Text": "If your first card is a stabbing card, every attack after it deals +10 damage.",
+    "Text": "If your first card is a stabbing card, every attack after it gains +10 DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -2390,7 +2390,7 @@
     "Family": "Form awakenings",
     "Art": "awaken-slash",
     "Draw": "a lapis chain with a bone carved eye pendant whose iris is steel, swirling with rainbow swirls",
-    "Text": "If your first card is a slashing card, every attack after it deals +10 damage.",
+    "Text": "If your first card is a slashing card, every attack after it gains +10 DMG.",
     "Rarity": "common",
     "Rules": [
       {
@@ -2406,7 +2406,7 @@
     "Family": "Form awakenings",
     "Art": "awaken-crush",
     "Draw": "a lapis chain with a bone carved eye pendant whose iris is granite, swirling with rainbow swirls",
-    "Text": "If your first card is a crushing card, every attack after it deals +10 damage.",
+    "Text": "If your first card is a crushing card, every attack after it gains +10 DMG.",
     "Rarity": "common",
     "Rules": [
       {

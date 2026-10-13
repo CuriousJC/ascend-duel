@@ -41,7 +41,7 @@ import (
 // notice that grew with the screen would be a page again.
 const (
 	toastWidth  = 820
-	toastHeight = 308 + toastIconSize + toastIconGap
+	toastHeight = 348 + toastIconSize + toastIconGap
 
 	// The icon, over the name: the achieved picture, the one the Achievements page shows on an
 	// earned row. **It is what says what kind of box this is**, so there is no word above it doing
@@ -55,10 +55,16 @@ const (
 	toastNameSize = 38
 	toastNameTop  = 60 + toastIconSize + toastIconGap
 
+	// What earned it, under the name: the record's Description, the same sentence the Achievements
+	// page and Steam show. The commentary under it is the game's remark on the deed, and a remark
+	// read without the deed is a joke with no setup.
+	toastDescSize = systems.TextMedium
+	toastDescTop  = 112 + toastIconSize + toastIconGap
+
 	// The commentary. **Every line at once**, so this is a stack rather than one string — see
 	// data.AchievementData.Said for why there is no picking.
 	toastSaidSize = systems.TextMedium
-	toastSaidTop  = 124 + toastIconSize + toastIconGap
+	toastSaidTop  = 164 + toastIconSize + toastIconGap
 	toastSaidStep = 30
 
 	toastButtonWidth  = 300
@@ -70,11 +76,13 @@ const (
 	toastButtonLabel = "GOT IT"
 )
 
-// toastSaidInk is the commentary under the name, pulled toward the panel rather than given a hue:
-// the color wheel belongs to the elements, and this box has nothing elemental to say.
+// toastDescInk is what earned it and toastSaidInk the commentary under that, both pulled toward the
+// panel rather than given a hue: the color wheel belongs to the elements, and this box has nothing
+// elemental to say. The description is the brighter of the two because it is the fact.
 var (
 	toastPanelFill = color.RGBA{R: 30, G: 30, B: 38, A: 255}
-	toastSaidInk   = color.RGBA{R: 198, G: 198, B: 208, A: 255}
+	toastDescInk   = color.RGBA{R: 236, G: 236, B: 242, A: 255}
+	toastSaidInk   = color.RGBA{R: 168, G: 168, B: 180, A: 255}
 )
 
 // AchievementToast is the frame's notice. **It holds no queue of its own** — the queue is
@@ -174,6 +182,16 @@ func (t *AchievementToast) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	name.SecondaryAlign = text.AlignCenter
 	systems.DrawText(screen, a.DisplayName,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: toastNameSize}, name)
+
+	if a.Description != "" {
+		desc := &text.DrawOptions{}
+		desc.GeoM.Translate(center, float64(box.Min.Y+toastDescTop))
+		desc.PrimaryAlign = text.AlignCenter
+		desc.SecondaryAlign = text.AlignCenter
+		desc.ColorScale.ScaleWithColor(toastDescInk)
+		systems.DrawText(screen, a.Description,
+			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: toastDescSize}, desc)
+	}
 
 	for i, line := range a.Said {
 		said := &text.DrawOptions{}

@@ -89,6 +89,14 @@ var buttonArt embed.FS
 //go:embed game/guide.png
 var guide_png []byte
 
+// The same figure rendered for a card — 200x280 and opaque, because a bleeding card has nothing
+// behind it — keyed `guide-card`. It is The Prismatic in the opponent's corner on every screen
+// that is not a fight, and it is not the placeholder: the guide is somebody, where the question
+// mark is a picture nobody has made.
+//
+//go:embed game/guide-card.png
+var guide_card_png []byte
+
 // THE PLACEHOLDER
 //
 // The one face every record with no picture of its own draws, in every catalog and on the roster —
@@ -454,6 +462,7 @@ func LoadImageData() map[string][]byte {
 	// Bob's face, for the reason the relic art is here: the tutorial draws him into a card
 	// through internal/cards, which has no graphics context.
 	images["guide_png"] = guide_png
+	images["guide-card"] = guide_card_png
 
 	// The placeholder, for the same reason: every catalog's card draws it through internal/cards.
 	images["placeholder"] = placeholder_png

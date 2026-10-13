@@ -24,6 +24,7 @@ import (
 	"image"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
+	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/ui"
@@ -176,11 +177,27 @@ func drawBuildRelics(gs *state.GlobalState, screen *ebiten.Image, drag *ui.CardD
 			continue
 		}
 		at := relicSlotAt(row, i, len(worn))
-		ui.DrawFloatingCard(gs, screen, at, i,
-			ui.RelicSpec(gs, record, counters[record.RelicRecord], true, false), cards.RelicStyle)
+		drawRunRelic(gs, screen, at, i,
+			ui.RelicSpec(gs, record, counters[record.RelicRecord], true, false), record.RelicRecord)
 	}
 	// The relic riding the cursor is the band's overlay, drawn over everything — see
 	// drawBandOverlay.
+}
+
+// drawRunRelic draws one of the run's worn relics resting in its seat between fights: floating, or
+// weightless when the run wears it so.
+//
+// **Read off the run**, which is the only copy of the row there is between fights — the combat
+// screen reads its fighter instead, which is built from the same flag. A screen drawing the run's
+// relics without asking is a relic bought weightless that sits flat until the next fight.
+func drawRunRelic(gs *state.GlobalState, screen *ebiten.Image, at image.Point, seat int,
+	spec cards.Spec, key string) {
+	if gs.Run != nil && gs.Run.IsWeightless(key) {
+		ui.DrawWeightless(screen, ui.CardImage(gs, spec, cards.RelicStyle), at, 1,
+			float64(gs.Count), float64(seat)*2.1)
+		return
+	}
+	ui.DrawFloatingCard(gs, screen, at, seat, spec, cards.RelicStyle)
 }
 
 // buildRelicRow is the band's row, addressed by the shared drag: the reward screen's and the shop's.
@@ -241,7 +258,7 @@ func hoverBuildRelics(gs *state.GlobalState, at image.Point, tip *models.Tooltip
 		return false
 	}
 	seat := relicSlotRect(row, i, len(worn))
-	title, lines := ui.RelicTip(record)
+	title, lines := ui.WornRelicTip(record, combat.WornRelic{Weightless: gs.Run.IsWeightless(worn[i])})
 	// **To the left of the card, never under it** *(owner's call)*: a panel under the top row
 	// covers the pane's count and the tab a click hangs there. PointLeft flips right at the
 	// screen's edge.

@@ -70,6 +70,8 @@ const (
 var credits = []creditsLine{
 	{"MADE BY", creditsHeading},
 	{"Ambivalent Systems", creditsBody},
+	{"·  CuriousJC (the dad)", creditsBody},
+	{"·  KingSherman1820 (the kid)", creditsBody},
 	{"", creditsGap},
 
 	{"BUILT WITH", creditsHeading},

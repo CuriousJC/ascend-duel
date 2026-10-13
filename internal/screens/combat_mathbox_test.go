@@ -566,17 +566,27 @@ func TestALineIsSetInThreeLevelsOfAir(t *testing.T) {
 	}
 }
 
-// **An Awakening is a term inside the card's own working**, after its multiplier and before the
-// relics that price it, and the line still ends on the hit's own figure.
+// **An Awakening joins the DMG inside the card's own working**, before the card's multiplier, and
+// the line still ends on the hit's own figure.
 func TestAnAwakeningIsATermInsideTheCard(t *testing.T) {
-	e := handEvent("pair", []int{20, 30}, 150, 75)
+	e := handEvent("pair", []int{20, 40}, 150, 90)
 	e.HandDMG = 10
-	e.HandCardPct[1], e.HandCardBase[1] = 200, 20
+	e.HandCardPct[1], e.HandCardBase[1] = 200, 40
 	e.HandAwaken[1] = 10
 	e.Awaken, e.AwakenSeats = 10, []bool{true}
 
 	sameLines(t, "a Pair behind a fire opener", linesOf(e),
-		[]string{"20 x 1.5 = 30", "+ 10 x 2 + 10 x 1.5 = 45"})
+		[]string{"20 x 1.5 = 30", "+ 10 + 10 x 2 x 1.5 = 60"})
+
+	// The card's multiplier starts a row of its own under the DMG and the woken 10, since it
+	// multiplies both.
+	var rows []string
+	for _, row := range mathRows(hitScript(e, 1, false)) {
+		rows = append(rows, scriptText(row))
+	}
+	if len(rows) < 2 || rows[0] != "+ 10 + 10" || rows[1] != "x 2" {
+		t.Errorf("the rows read %q, want the DMG and the woken 10 together, then the card's x 2", rows)
+	}
 	if got := awakenedSeats(e); len(got) != 1 || got[0] != e.HandCards[1] {
 		t.Errorf("the Awakening raised seats %v, want only the second card's", got)
 	}

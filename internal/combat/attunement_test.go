@@ -80,8 +80,9 @@ func awakening(t *testing.T, key string, cond RelicCondition) RelicID {
 	})
 }
 
-// TestAnAwakeningRaisesEveryAttackAfterTheFirstCard. A fire opener: the cards behind it each gain
-// 10 before the hand multiplies, the opener gains nothing, and a defense gains nothing.
+// TestAnAwakeningRaisesEveryAttackAfterTheFirstCard. A fire opener: the cards behind it are each
+// swung at 10 more DMG, which their own multiplier then scales, the opener gains nothing, and a
+// defense gains nothing.
 func TestAnAwakeningRaisesEveryAttackAfterTheFirstCard(t *testing.T) {
 	flame := awakening(t, "awaken-fire", RelicCondition{Element: Fire, HasElement: true})
 	turn := []Card{Of(Bash, Fire), Of(Jab, Ice), Of(Brace, Ice), Of(Cut, Earth)}
@@ -105,8 +106,9 @@ func TestAnAwakeningRaisesEveryAttackAfterTheFirstCard(t *testing.T) {
 		if w.HandAwaken[n] != want {
 			t.Errorf("term %d (queued %d) woke %d, want %d", n, queued, w.HandAwaken[n], want)
 		}
-		if w.HandAmounts[n] != b.HandAmounts[n]+want {
-			t.Errorf("term %d came to %d, want the bare %d plus %d", n, w.HandAmounts[n], b.HandAmounts[n], want)
+		card := turn[queued]
+		if got, wantTerm := w.HandAmounts[n], card.Damage(b.HandDMG+want); got != wantTerm {
+			t.Errorf("term %d came to %d, want the card at DMG %d + %d: %d", n, got, b.HandDMG, want, wantTerm)
 		}
 		if got := scaleDamage(w.HandAmounts[n], w.Multiplier); w.HitAmounts[n] != got {
 			t.Errorf("term %d's hit is %d, want the hand's multiplier over its term: %d", n, w.HitAmounts[n], got)
@@ -154,8 +156,8 @@ func TestFirstIsOnlyAnAwakeningsPredicate(t *testing.T) {
 	}
 }
 
-// TestARelicPricingTheCardMultipliesTheAwakening. The 10 joins the card before its relics, so a
-// 2x on the card doubles it too.
+// TestARelicPricingTheCardMultipliesTheAwakening. The 10 joins the DMG before the card and its
+// relics, so the card's multiplier and a 2x on the card both scale it.
 func TestARelicPricingTheCardMultipliesTheAwakening(t *testing.T) {
 	flame := awakening(t, "awaken-fire-priced", RelicCondition{Element: Fire, HasElement: true})
 	club := relic(t, "club-earth", RelicRule{
@@ -169,7 +171,9 @@ func TestARelicPricingTheCardMultipliesTheAwakening(t *testing.T) {
 	woke, _, _ := resolve(duelist(10, 9, 5000).Wearing(WornRelic{Relic: flame}).Wearing(WornRelic{Relic: club}),
 		duelist(10, 6, 5000), turn, nil, 1)
 	b, w := handEventOf(t, bare, SideA), handEventOf(t, woke, SideA)
-	if w.HandAmounts[1] != b.HandAmounts[1]+20 {
-		t.Errorf("the earth Jab came to %d, want the bare %d plus the 10 doubled", w.HandAmounts[1], b.HandAmounts[1])
+	jab := Of(Jab, Earth)
+	if want := jab.Damage(b.HandDMG+10) * 2; w.HandAmounts[1] != want {
+		t.Errorf("the earth Jab came to %d, want the Jab at DMG %d + 10, doubled: %d",
+			w.HandAmounts[1], b.HandDMG, want)
 	}
 }

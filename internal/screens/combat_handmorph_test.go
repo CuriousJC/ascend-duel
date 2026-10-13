@@ -32,13 +32,12 @@ func spend(t *testing.T, gs *state.GlobalState, s *CombatScene, key string) {
 		t.Skipf("no %s in the catalog", key)
 	}
 	was, seats := s.handFaces(gs)
+	held := s.heldRunCards(gs)
 	if !gs.Run.ApplyRuneRolling(p, s.selectedCardIDs(), nil) {
 		t.Fatalf("%s refused the selection", key)
 	}
-	s.resyncHandFromRun(gs)
-	for _, copied := range gs.Run.Duplicated() {
-		s.hand = append(s.hand, paletteCard{Card: copied})
-	}
+	s.resyncHandFromRun(gs, held)
+	s.seatCopies(gs, held)
 	s.raiseHandMorphs(gs, was, seats)
 }
 

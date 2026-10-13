@@ -91,7 +91,7 @@ func hitRecord(e combat.Event, i int, card combat.Card, relics []combat.WornReli
 }
 
 // hitFactors is everything that touched one hit, in the order the arithmetic applied it: the
-// landings relics bought, the card's own riders, what the opener woke, then the relics' prices.
+// landings relics bought, what the opener woke, the card's own riders, then the relics' prices.
 func hitFactors(e combat.Event, i int, relics []combat.WornRelic) []session.LedgerFactor {
 	var landed, priced []session.LedgerFactor
 	for _, f := range termFactors(e, i, relics) {
@@ -101,8 +101,8 @@ func hitFactors(e combat.Event, i int, relics []combat.WornRelic) []session.Ledg
 			priced = append(priced, f)
 		}
 	}
-	out := append(landed, playRiderFactors(e, i)...)
-	out = append(out, awakenFactors(e, i, relics)...)
+	out := append(landed, awakenFactors(e, i, relics)...)
+	out = append(out, playRiderFactors(e, i)...)
 	return append(out, priced...)
 }
 

@@ -289,10 +289,13 @@ hit whole**. See MECHANICS.md §Shields. Six things to know before touching any 
   would be a second resolver agreeing with the first. **The screen draws a shield as a picture
   heaped over whatever raised it** — the defend card, an attack card with a shield rider, or a
   helm's ring — **once the turn's arithmetic is done**, every hit's line worked out first. On the
-  beat a creature's blocked attack is reached, the hit it would have landed (`Event.Would`) shows
-  on the card, and a shield leaves its heap and lands on it, smothering it while the figure fades;
-  a matched block writes SURGE across the card at 45 degrees. `internal/screens/combat_shields.go` is the screen's half and `ui/shield_heap.go` the
-  heap's layout, which the animation gallery's `shield heap` and `smother` entries share. **The
+  beat a creature's blocked attack is reached, the hit it would have landed (`Event.Would`) sets
+  off on its real path and a shield leaves its heap to meet it on the way — where the path crosses
+  the screen's horizontal middle — and the two break apart there, and
+  a matched block writes SURGE over the break — a fizzle is the same picture with a shield of the
+  creature's element and FIZZLE. `internal/screens/combat_shields.go` and `combat_intercept.go` are
+  the screen's half and `ui/shield_heap.go` the heap's layout, which the animation gallery's
+  `shield heap` and `intercept` entries share. **The
   engine counts shields per element and never says which card's shield it spent**, so the newest
   heap holding one of the spent element gives one up — a choice about the picture, not a rule. See
   MECHANICS.md §Shields.

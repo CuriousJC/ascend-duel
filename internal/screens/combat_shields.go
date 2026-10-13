@@ -1,6 +1,6 @@
 package screens
 
-// The shields on the table: heaped over whatever raised them, and thrown onto the attacks they eat.
+// The shields on the table: heaped over whatever raised them, and thrown to meet the attacks they eat.
 //
 // **A shield forms over the card that made it and stays there** — a defend card, an attack card
 // with a shield rider, or the ring of a relic that raises one. Several on one card heap, which is
@@ -8,10 +8,9 @@ package screens
 // *(owner's call)*: every hit's line is worked out first, a defense's coming to 0, and the turn's
 // shields go up together on the way out of it.
 //
-// **When the creature swings at a shield, the hit it would have landed shows on its card, and a
-// shield leaves its heap and lands on the card, smothering it** while the figure fades — on the
-// beat that attack is reached, so what stops a hit is watched stopping it. A matched block writes
-// SURGE across the card it smothered, since that block banked an action point for the next turn.
+// **When the creature swings at a shield, the hit sets off and a shield leaves its heap to meet it**,
+// and the two break apart where they meet on its path — on the beat that attack is reached, so what
+// stops a hit is watched stopping it. See combat_intercept.go.
 //
 // **It is a view over the resolved log and cannot change an outcome.** `combat.Duelist.Shields` is
 // not written until the round's end state is adopted, so the heaps are moved on the beat each event
@@ -24,15 +23,12 @@ package screens
 
 import (
 	"image"
-	"strconv"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
-	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
 // shieldPile is the heap over one thing that raised shields.
@@ -73,53 +69,8 @@ type fadingShield struct {
 func (f *fadingShield) Tick()     { f.t.Tick() }
 func (f fadingShield) Done() bool { return f.t.Done() }
 
-// smother is a shield thrown onto the attack it ate, and then lying on it for the rest of the round.
-type smother struct {
-	// seat is the attack's seat in the opponent's row.
-	seat int
-
-	element cards.Element
-
-	// from is where the shield was when it left its heap.
-	from ui.ShieldPose
-
-	// surged says the block banked an action point, which writes SURGE across the card.
-	surged bool
-
-	// would is the hit the shield stopped, shown on the card until the shield lands on it, in the
-	// attack card's own element.
-	would int
-	ink   cards.Element
-
-	t ui.Travel
-}
-
-// The clocks, in the game's own beats so they slow down and speed up with the round.
-// smotherLeadTicks is the blocked hit's figure on its card before the shield sets off.
-func smotherLeadTicks() int  { return ui.Beat(1, 2) }
-func smotherFlyTicks() int   { return ui.Beat(4, 5) }
-func smotherHoldTicks() int  { return ui.Beat(3, 5) }
-func smotherTotalTicks() int { return smotherLeadTicks() + smotherFlyTicks() + smotherHoldTicks() }
-func shieldFadeTicks() int   { return ui.Beat(1, 2) }
-
-// flying is how far the shield is through its flight, 0 while the figure is still being read.
-func (m smother) flying() float64 {
-	return ui.Clamp01(float64(m.t.Age-smotherLeadTicks()) / float64(smotherFlyTicks()))
-}
-
-// landed reports that the shield has reached the attack card.
-func (m smother) landed() bool { return m.t.Age >= smotherLeadTicks()+smotherFlyTicks() }
-
-// sinceLanding is how many ticks the shield has been lying on the card.
-func (m smother) sinceLanding() int { return m.t.Age - smotherLeadTicks() - smotherFlyTicks() }
-
-// holding reports that the cursor should still wait on this one: the figure being read, the shield
-// in the air, or the beat after it lands that lets the player see which card was stopped.
-func (m smother) holding() bool { return m.t.Age < smotherTotalTicks() }
-
-// smotherDeg is the turn a shield lies at on the card it smothered: a little off true, so it reads
-// as thrown down on the card rather than printed on it.
-const smotherDeg = -8
+// shieldFadeTicks is a shield going away where it stood.
+func shieldFadeTicks() int { return ui.Beat(1, 2) }
 
 // ---- the events ----
 
@@ -155,9 +106,17 @@ func (s *CombatScene) turnOver() bool {
 // formPendingShields forms every shield the turn raised, all on one frame — **the turn's shields
 // go up as one gesture**, each heap over its own card or ring — and reports whether it formed any.
 // The cursor then waits for them: see combatTheater.shieldsMoving.
+//
+// **A fight that has just been won or lost forms nothing** *(owner's call)*. Once a fighter is down
+// there is no turn left to defend, so shields going up over the body would be the defend phase
+// carrying on after the duel ended: they are dropped. The life is read off the screen's own model,
+// which a killing line has already written.
 func (s *CombatScene) formPendingShields() bool {
 	pending := s.Theater.pendingRaises
 	s.Theater.pendingRaises = nil
+	if s.fightDecided() {
+		return false
+	}
 	formed := false
 	for _, e := range pending {
 		if e.Amount <= 0 {
@@ -177,31 +136,6 @@ func (s *CombatScene) formPendingShields() bool {
 		formed = true
 	}
 	return formed
-}
-
-// noteBlock throws a shield onto the attack it ate. `Target` is whose shield was spent and the
-// attack is the other side's, at `Slot` in its row.
-func (s *CombatScene) noteBlock(gs *state.GlobalState, e combat.Event) {
-	el := ui.ArtFor(e.Element)
-	from, ok := s.takeShield(gs, e.Target, el)
-	if e.Target != combat.SideA || e.Slot < 0 || e.Slot >= len(s.Theater.enemyDealt) {
-		// Only the player raises shields and only a creature swings at them, so an attack on the
-		// player's own row has no seat to land on. The shield goes where it stood.
-		if ok {
-			s.fadeShield(el, from)
-		}
-		return
-	}
-	if !ok {
-		// A block with no heap to come out of — a shield nothing on screen raised. It leaves the
-		// duelist card, which is whose it was.
-		from = s.duelistShieldPose(gs, 0, 1)
-	}
-	s.Theater.smothers = append(s.Theater.smothers, smother{
-		seat: e.Slot, element: el, from: from, surged: e.Surged,
-		would: e.Would, ink: ui.ArtFor(s.Theater.enemyDealt[e.Slot].card.Element),
-		t: ui.NewTravel(0, smotherTotalTicks()),
-	})
 }
 
 // noteExpired squares a side's heaps with what an expiry leaves standing: `Life`, which is what a
@@ -404,6 +338,11 @@ func (s *CombatScene) settleShields(gs *state.GlobalState, side combat.Side, sta
 	}
 }
 
+// fightDecided reports that a fighter on screen is down, which is the end of anything defensive.
+func (s *CombatScene) fightDecided() bool {
+	return (s.fighter != nil && !s.fighter.Alive()) || (s.enemy != nil && !s.enemy.Alive())
+}
+
 // keeperRelic is the worn relic that keeps shields past their lapse — the Tower Shield — if any.
 func (s *CombatScene) keeperRelic(side combat.Side) (combat.RelicID, bool) {
 	c := s.fighter
@@ -419,17 +358,6 @@ func (s *CombatScene) keeperRelic(side combat.Side) (combat.RelicID, bool) {
 		}
 	}
 	return 0, false
-}
-
-// smotheredSeats is which of the opponent's seats a shield has landed on this round.
-func (s *CombatScene) smotheredSeats() map[int]bool {
-	out := map[int]bool{}
-	for _, m := range s.Theater.smothers {
-		if m.landed() {
-			out[m.seat] = true
-		}
-	}
-	return out
 }
 
 // ---- the drawing ----
@@ -479,7 +407,7 @@ func (s *CombatScene) seatRect(gs *state.GlobalState, side combat.Side, seat int
 	if seat < 0 || seat >= n {
 		seat = 0
 	}
-	at := s.Theater.resolved[seat].at(gs, seat, n, s.playedSplit(), lit(s.Theater.firingSeats, seat))
+	at := s.Theater.resolved[seat].at(gs, n)
 	return image.Rect(at.X, at.Y, at.X+cardWidth, at.Y+cardHeight), true
 }
 
@@ -490,12 +418,12 @@ func (s *CombatScene) enemySeatRect(gs *state.GlobalState, seat int) (image.Rect
 		return image.Rectangle{}, false
 	}
 	d := s.Theater.enemyDealt[seat]
-	at := s.enemyCardAt(gs, d, seat, len(s.Theater.enemyDealt), s.enemySplit(),
-		lit(s.Theater.enemyFiringSeats, seat))
+	at := s.enemyCardAt(gs, d, len(s.Theater.enemyDealt))
 	return image.Rect(at.X, at.Y, at.X+cardWidth, at.Y+cardHeight), true
 }
 
-// drawShieldPiles draws every heap, every shield fading, and every shield thrown onto an attack.
+// drawShieldPiles draws every heap and every shield fading. A shield thrown at a hit is the
+// intercept's to draw — see drawIntercepts.
 func (s *CombatScene) drawShieldPiles(gs *state.GlobalState, screen *ebiten.Image) {
 	for _, p := range s.Theater.piles {
 		for i, sh := range p.shields {
@@ -511,58 +439,4 @@ func (s *CombatScene) drawShieldPiles(gs *state.GlobalState, screen *ebiten.Imag
 		pose.Alpha *= float32(1 - f.t.Progress())
 		ui.DrawShield(screen, f.element, pose)
 	}
-	for _, m := range s.Theater.smothers {
-		r, ok := s.enemySeatRect(gs, m.seat)
-		if !ok {
-			continue
-		}
-		drawSmother(gs, screen, m, r)
-	}
-}
-
-// drawSmother draws one blocked attack: the hit it would have landed on its card, a shield on its
-// way to the card or lying on it, the figure fading as the shield lands, and SURGE across the card
-// once a matched block has landed.
-//
-// **The shield grows a little as it lands**, where a damage figure shrinks into a card: a shield is
-// not going into the card, it is coming down over it. **The figure is drawn over the shield**, so
-// it is seen going rather than simply covered.
-func drawSmother(gs *state.GlobalState, screen *ebiten.Image, m smother, card image.Rectangle) {
-	mid := image.Pt((card.Min.X+card.Max.X)/2, (card.Min.Y+card.Max.Y)/2)
-	if m.t.Age >= smotherLeadTicks() {
-		to := ui.ShieldPose{X: float64(mid.X), Y: float64(mid.Y), Deg: smotherDeg, Scale: 1.08, Alpha: 1}
-		ui.DrawShield(screen, m.element, ui.LerpPose(m.from, to, ui.EaseOut(m.flying())))
-	}
-	if m.would > 0 {
-		alpha := float32(1)
-		if m.landed() {
-			alpha = float32(1 - ui.Clamp01(float64(m.sinceLanding())/float64(smotherHoldTicks())))
-		}
-		if alpha > 0 {
-			drawMathText(gs, screen, "-"+strconv.Itoa(m.would), hitFigureSize, hitInkFor(m.ink),
-				mid, hitToScale, alpha, false)
-		}
-	}
-	if m.surged && m.landed() {
-		drawSurge(gs, screen, card, m.sinceLanding())
-	}
-}
-
-// surgeSize is SURGE's type size: as big as fits corner to corner across a card.
-const surgeSize = 64
-
-// drawSurge writes SURGE across a card at 45 degrees, rising left to right, popping in as it
-// arrives. It is in the action-point bar's own amber, because what a surge banked is budget.
-func drawSurge(gs *state.GlobalState, screen *ebiten.Image, card image.Rectangle, age int) {
-	pop := ui.Clamp01(float64(age) / float64(ui.Beat(1, 4)))
-	scale := 1.35 - 0.35*ui.EaseOut(pop)
-
-	op := &text.DrawOptions{}
-	op.PrimaryAlign, op.SecondaryAlign = text.AlignCenter, text.AlignCenter
-	op.GeoM.Scale(scale, scale)
-	op.GeoM.Rotate(-45 * 3.141592653589793 / 180)
-	op.GeoM.Translate(float64(card.Min.X+card.Max.X)/2, float64(card.Min.Y+card.Max.Y)/2)
-	op.ColorScale.ScaleWithColor(apSpentColor)
-	op.ColorScale.ScaleAlpha(float32(pop))
-	systems.DrawUI(screen, "SURGE", &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: surgeSize}, op)
 }

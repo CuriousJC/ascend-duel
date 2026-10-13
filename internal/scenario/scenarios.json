@@ -72,7 +72,7 @@
   },
   {
     "ScenarioRecord": "shields",
-    "Note": "The shields, on their own: what a defend card raises, what one eats, and how the smother is drawn. No relics at all, so nothing on the screen is multiplying or recoloring anything and the only thing moving is the defence. The deck is mostly defend cards across all five colors - Brace at 1 AP and Block at 2 - with a thin seam of attacks so a turn can still form a hand and the shields can be watched going up beside the hits rather than instead of them. 15 AP, so a turn is a choice of which five cards rather than which five are affordable; remember combat.MaxActions still caps the turn at five cards however cheap they are, and one card raises at most five shields while a duelist holds as many as the turn paid for. The opponent is a Giant Bat because its deck has three clearly different blows - Nip at 50, Swoop at 100 and Drain at 200 - which is what makes the rule visible: a shield eats the creature's HEAVIEST blow, not its first, and it decides that at the top of the creature's turn. Watch each defend card's shields heap up over it, then, as the creature swings, a shield leave its heap and land on each attack it eats - with SURGE across the card when the shield matched the attack's element. Against a dummy, so it can be watched as many times as it takes rather than survived.",
+    "Note": "The shields, on their own: what a defend card raises, what one eats, and how a stopped hit is drawn. No relics at all, so nothing on the screen is multiplying or recoloring anything and the only thing moving is the defence. The deck is mostly defend cards across all five colors - Brace at 1 AP and Block at 2 - with a thin seam of attacks so a turn can still form a hand and the shields can be watched going up beside the hits rather than instead of them. 15 AP, so a turn is a choice of which five cards rather than which five are affordable; remember combat.MaxActions still caps the turn at five cards however cheap they are, and one card raises at most five shields while a duelist holds as many as the turn paid for. The opponent is a Giant Bat because its deck has three clearly different blows - Nip at 50, Swoop at 100 and Drain at 200 - which is what makes the rule visible: a shield eats the creature's HEAVIEST blow, not its first, and it decides that at the top of the creature's turn. Watch each defend card's shields heap up over it, then, as the creature swings, each blow it eats set off and a shield leave its heap to meet it in the middle of the screen, the two breaking apart there - with SURGE over the break when the shield matched the attack's element. Against a dummy, so it can be watched as many times as it takes rather than survived.",
     "Relics": [],
     "Enemy": "animals-outer-bat",
     "Hand": [
@@ -1783,6 +1783,41 @@
     "Enemy": "goblins-inner-brute",
     "EnemyElement": "earth",
     "Dummy": true
+  },
+  {
+    "ScenarioRecord": "killing-blow-shields",
+    "Note": "A killing blow with shields standing everywhere a shield can stand, to see what the table does with them when the duel settles instead of moving on. Two helms raise a fire and an earth shield on their rings at the top of the turn, the Tower Shield is worn so a kept shield has a relic to move onto, the Block raises two fire shields over its own card, and one Smash carries a shield-on-play rider so a heap forms over an attack card too. Three fire Smashes and the Block are an elemental hand against the weakest creature in the game, with a budget that pays for all five cards - press DUEL! once and the bat dies with every heap still up.",
+    "Relics": [
+      "burning-helm",
+      "green-helm",
+      "tower-shield"
+    ],
+    "Hand": [
+      {
+        "Card": "Block",
+        "Element": "fire"
+      },
+      {
+        "Card": "Smash",
+        "Element": "fire",
+        "Riders": ["shield-on-play:2"]
+      },
+      {
+        "Card": "Smash",
+        "Element": "fire"
+      },
+      {
+        "Card": "Smash",
+        "Element": "fire"
+      },
+      {
+        "Card": "Brace",
+        "Element": "ice"
+      }
+    ],
+    "Enemy": "animals-outer-bat",
+    "Screen": "combat",
+    "Actions": 30
   },
   {
     "ScenarioRecord": "new-card-art",

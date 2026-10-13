@@ -124,7 +124,7 @@ const (
 	// talk about time would point at the wrong sentence.
 	AnchorRoundTimer
 
-	// AnchorShatteredCards is the opponent's queued attacks that a shield smothered this round, as
+	// AnchorShatteredCards is the opponent's queued attacks that a shield stopped this round, as
 	// one rectangle over the seats they sit in.
 	//
 	// **It is the second anchor computed from what happened rather than from a layout**, after
@@ -617,7 +617,7 @@ type Facts struct {
 	// Resolving is whether a round is playing back rather than being planned.
 	Resolving bool
 
-	// ShieldBreaks is how many of the opponent's attacks a shield has smothered this round.
+	// ShieldBreaks is how many of the opponent's attacks a shield has stopped this round.
 	//
 	// **A running count, not a flag**, so a step can ask for a break of its own against a baseline
 	// — the same shape RoundsPlayed and LedgerOpens have, and for the same reason: a duel has

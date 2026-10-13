@@ -399,12 +399,12 @@ func stubCombat() *CombatScene {
 		Duelist: combat.Duelist{RoundLimit: combat.DefaultRoundLimit},
 	}
 
-	// **With one of the opponent's cards smothered**, for the hand's reason and the clock's: a round
+	// **With one of the opponent's attacks stopped**, for the hand's reason and the clock's: a round
 	// with no block reports no rectangle for `shattered-cards`, which is honest and would read here
 	// as a missing case. The row has to hold the seat as well as the shield — the anchor is the
 	// card's own rectangle, and a shield on a seat the row does not have is nothing to point at.
 	s.Theater.enemyDealt = make([]dealtCard, 3)
-	s.Theater.smothers = []smother{{seat: 1, t: ui.Travel{Age: smotherLeadTicks() + smotherFlyTicks()}}}
+	s.Theater.intercepts = []intercept{{stopped: 1, meetTicks: 1, t: ui.Travel{Age: 1, Ticks: 100}}}
 	return s
 }
 

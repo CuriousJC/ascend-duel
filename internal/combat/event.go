@@ -234,7 +234,7 @@ type Event struct {
 	Surged bool
 
 	// Would is, on a KindBlocked, the hit as it would have landed — the damage the shield stopped.
-	// **It is the figure the screen shows on the attack before the shield smothers it**, and it is
+	// **It is the figure the screen throws at the shield that stops it**, and it is
 	// the same figure a Thorned Shield's share is taken of.
 	Would int
 
@@ -308,6 +308,11 @@ type Event struct {
 	// A fixed array for HandCards' reason, and sized the same way.
 	RungCards     [maxHandTerms]int
 	RungCardCount int
+
+	// RungGroup is, parallel to RungCards, which of the hand's groups each of those cards is in —
+	// 0 for the first, 1 for the second. **It is what lets a screen mark a Two Pair as two pairs**
+	// rather than one set of four. Fixed for RungCards' reason.
+	RungGroup [maxHandTerms]int
 
 	// HandAmounts is what each hit's card deals, in the same order and to the same count — the
 	// card's own term, before the flat bonuses and the multipliers.

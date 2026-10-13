@@ -179,8 +179,8 @@ func (s *CombatScene) noteHit(e combat.Event, held int) {
 //     life moves here, when the figure sets off, rather than when playback reaches the event — the
 //     lines finish in whatever order their arithmetic allows, so the event is reached later and is
 //     walked past. `shownLife` holds the bar until the figure arrives.
-//   - **A fizzle says FIZZLE and a block says BLOCKED** over the line. A fizzle is walked past like
-//     a landing; a block is left for playback, because the shield row is moved by it.
+//   - **A fizzle or a block still flies**, and is met halfway by the shield that stops it. See
+//     combat_intercept.go.
 //   - **A hit that was never thrown fades where it stands**: the target fell to an earlier one.
 //
 // **It decides nothing.** Every figure and every verdict is the resolver's.
@@ -202,7 +202,7 @@ func (s *CombatScene) noteReflect(e combat.Event, held int) {
 	})
 }
 
-func (s *CombatScene) throwColumn(c int) {
+func (s *CombatScene) throwColumn(gs *state.GlobalState, c int) {
 	box := &s.Theater.mathBox
 	col := &box.columns[c]
 	col.thrown = true
@@ -216,14 +216,13 @@ func (s *CombatScene) throwColumn(c int) {
 	e := s.log[col.logAt]
 
 	switch e.Kind {
-	case combat.KindFizzled:
-		col.verdict = "FIZZLE"
-		col.verdictT = ui.NewTravel(0, mathSymbolTicks())
+	case combat.KindFizzled, combat.KindBlocked:
+		// **A stopped hit still sets off**, and is met on its way in by the shield that
+		// stops it — the opponent's own element, for a fizzle. See combat_intercept.go. The event is
+		// walked past like a landing: the intercept is its picture.
+		col.intercepted = true
+		s.interceptLine(gs, col, e)
 		s.markShown(col.logAt)
-
-	case combat.KindBlocked:
-		col.verdict = "BLOCKED"
-		col.verdictT = ui.NewTravel(0, mathSymbolTicks())
 
 	case combat.KindDamage:
 		// **A hit of nothing flies nothing**: a defense's hit moves no bar, so
@@ -371,12 +370,12 @@ func (s *CombatScene) hitOrigin(gs *state.GlobalState, h hitFlight) (image.Point
 		if h.seat >= len(s.Theater.resolved) {
 			return image.Point{}, false
 		}
-		at = playedSeatAt(gs, h.seat, len(s.Theater.resolved), s.playedSplit())
+		at = s.playedPoint(gs, h.seat)
 	} else {
 		if h.seat >= len(s.Theater.enemyDealt) {
 			return image.Point{}, false
 		}
-		at = enemySeatAt(gs, h.seat, len(s.Theater.enemyDealt), s.enemySplit())
+		at = s.enemyPoint(gs, h.seat)
 	}
 	return image.Pt(at.X+cardWidth/2, at.Y+cardHeight/2), true
 }

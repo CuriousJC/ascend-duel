@@ -177,12 +177,12 @@ var animGestures = []animGesture{
 	},
 	{
 		name:  "lift",
-		where: "selectedLift, tableFireLift",
-		what:  "Vertical, and it means picked: selected in the hand, or acting on the table.",
+		where: "selectedNudge",
+		what:  "Vertical, and it means picked: selected in the hand. Nothing on the table lifts.",
 		ticks: ui.SlideTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
 			up := at
-			up.Min.Y -= int(float64(tableFireLift) * ui.EaseOut(animThereAndBack(p)))
+			up.Min.Y -= int(float64(selectedNudge) * ui.EaseOut(animThereAndBack(p)))
 			ui.BlitCard(gs, screen, up.Min, animFace(gs, animCardA), cards.Hand)
 		},
 	},
@@ -267,12 +267,12 @@ var animGestures = []animGesture{
 		},
 	},
 	{
-		name:  "smother",
-		where: "drawSmother, drawSurge",
-		what:  "A shield thrown off its heap onto the attack it ate. A matched block writes SURGE across it.",
-		ticks: smotherGalleryTicks,
+		name:  "intercept",
+		where: "drawIntercept, combat_intercept.go",
+		what:  "A hit and the shield that stops it meeting in the middle and breaking apart. A matched block writes SURGE over the break; a fizzle writes FIZZLE.",
+		ticks: interceptGalleryTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
-			drawSmotherGallery(gs, screen, at, s.t.Age)
+			drawInterceptGallery(gs, screen, at, s.t.Age)
 		},
 	},
 	{

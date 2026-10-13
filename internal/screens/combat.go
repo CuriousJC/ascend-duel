@@ -328,6 +328,10 @@ type CombatScene struct {
 	relicShake []ui.Travel
 	cardShake  []ui.Travel
 
+	// enemyShake is each of the opponent's seats' shake: a creature's card rattles on the beat it
+	// swings, which is the whole of how the table says which card is hitting.
+	enemyShake []ui.Travel
+
 	// DeckView is how the deck overlay is being read — the alterations and FULL/PLAYED toggles
 	// along its bottom edge. **Not reset by Init**, exactly like sortMode: a reading preference is
 	// not a fact about a duel, and snapping back every fight would make it something the player
@@ -633,7 +637,7 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	s.fighterActions = nil
 	s.drag = ui.CardDrag{}
 	s.band.init()
-	s.relicShake, s.cardShake = nil, nil
+	s.relicShake, s.cardShake, s.enemyShake = nil, nil, nil
 
 	// **A pearl that copied something toasts as the screen opens** *(owner's call)*, so the copy
 	// floating in the pane has a relic that said it made it.
@@ -1436,16 +1440,8 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 		}
 
 		s.Theater.mathBox.Tick()
-		// A total that has started landing gets its particles. See combat_particles.go.
-		s.raiseWraps()
-
-		// **The lines need no card raised** *(owner's call)*. The blow's cards are lifted by
-		// noteHand on the `KindHand` beat, which is the announcement — what the hand is made of,
-		// said once — and they go back down the moment the lines start. Idempotent, so it needs no
-		// flag: nothing else writes these while the box holds the cursor.
-		if s.Theater.mathBox.counting() {
-			s.Theater.firingSeats, s.Theater.enemyFiringSeats = nil, nil
-		}
+		// A line that has started gets its particles, round the whole of it. See combat_particles.go.
+		s.raiseWraps(gs)
 
 		// **A played card's riders fire on the beat its own figure sets off.** See
 		// combat_signal.go, where the deferral is argued: these events were reached several beats
@@ -1456,7 +1452,7 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 
 		// **A finished line is thrown at once**, whatever the others are doing. See throwColumn.
 		for _, c := range s.Theater.mathBox.finished() {
-			s.throwColumn(c)
+			s.throwColumn(gs, c)
 		}
 
 		// **The banner goes when its own figure sets off** *(owner's call)*. The multiplier flies
@@ -1501,8 +1497,8 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	}
 	s.ticks = 0
 
-	// **The finished lines stay on screen until the event after them is reached**, so a FIZZLE or a
-	// BLOCKED is still being read while the flights that did land finish.
+	// **The finished lines stay on screen until the event after them is reached**, so a stopped
+	// hit's dimmed line is still being read while the flights that did land finish.
 	if s.Theater.mathBox.active && !s.Theater.mathBox.Running() {
 		s.closeWraps()
 		s.Theater.mathBox.Clear()
@@ -1586,14 +1582,17 @@ func (s *CombatScene) endOfRound(gs *state.GlobalState) {
 	//
 	s.formPendingShields()
 
+	// **A settled duel freezes its shields with everything else** *(owner's call)*: the fight is
+	// over, so nothing defensive moves after the last blow — no heap lapses and none moves onto a
+	// keeper.
+	if s.duelSettled() {
+		return
+	}
+
 	// **The heaps are squared with the model as the played cards leave the table.** What lapsed
 	// fades where it stood, and what the model still holds goes onto the relic that kept it. See
 	// settleShields.
 	s.settleShields(gs, combat.SideA, s.fighter.Shields)
-
-	if s.duelSettled() {
-		return
-	}
 
 	// **The banner is usually gone by now**, cleared on the frame its multiplier flew into a line
 	// — see advancePlayback. This is the round that scored no hand at all: nothing took the name
@@ -1822,9 +1821,10 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawDraggedCard(gs, screen)
 
 	// The table: the round as a confrontation. The opponent's queued cards right-aligned, the
-	// player's played cards left-aligned facing them, and whichever of them is firing lifted
-	// out of its row. Over the hand, which is inert during playback, and under the overlay like
+	// player's played cards left-aligned facing them, and the cards that made the hand standing
+	// on a plate. Over the hand, which is inert during playback, and under the overlay like
 	// everything else. See combat_table.go.
+	s.drawRungPlates(gs, screen)
 	s.drawEnemyQueue(gs, screen)
 	s.drawPlayedCards(gs, screen)
 
@@ -1868,6 +1868,8 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// The shields, over both rows and the relics they stand on and under the dialogs. See
 	// combat_shields.go.
 	s.drawShieldPiles(gs, screen)
+	// The hits stopped on their way in, over the heaps their shields left.
+	s.drawIntercepts(gs, screen)
 
 	// **The signals, over everything on the table and under the panels.** A burst thrown out of a
 	// card has to ride over the card and its neighbors, and the figure that leaves with it is the

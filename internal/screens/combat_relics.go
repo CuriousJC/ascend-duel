@@ -790,6 +790,9 @@ func (s *CombatScene) tickShakes(gs *state.GlobalState) {
 	for i := range s.cardShake {
 		s.cardShake[i].Tick()
 	}
+	for i := range s.enemyShake {
+		s.enemyShake[i].Tick()
+	}
 
 	relics, cards := s.Theater.mathBox.takeShakes(combat.SideA)
 	for seat, shaking := range relics {
@@ -823,6 +826,25 @@ func (s *CombatScene) playedCardShake(seat int) int {
 		return 0
 	}
 	return shakeOffset(s.cardShake[seat])
+}
+
+// shakeEnemyCard starts one of the opponent's table cards rattling: the card that is swinging.
+func (s *CombatScene) shakeEnemyCard(seat int) {
+	if seat < 0 {
+		return
+	}
+	for len(s.enemyShake) <= seat {
+		s.enemyShake = append(s.enemyShake, ui.Travel{})
+	}
+	s.enemyShake[seat] = ui.NewTravel(0, relicShakeTicks())
+}
+
+// enemyCardShake is how far sideways the opponent's card in one seat sits this frame.
+func (s *CombatScene) enemyCardShake(seat int) int {
+	if seat < 0 || seat >= len(s.enemyShake) {
+		return 0
+	}
+	return shakeOffset(s.enemyShake[seat])
 }
 
 // wornWeightless is whether the relic in one seat of the row is worn weightless. **Read off the

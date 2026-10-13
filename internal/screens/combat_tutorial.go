@@ -54,11 +54,11 @@ func (s *CombatScene) tutorialFacts(gs *state.GlobalState) tutorial.Facts {
 		// while it is open at all.
 		LedgerOpens: gs.LedgerOpens,
 
-		// **Counted off the shields lying on attack cards, which is what is actually on screen.** A
-		// shield that has landed is a card the player can see was stopped; one still crossing the
-		// table is not yet anything. Reading the resolved log instead would let a step fire on a
-		// block that had not been drawn.
-		ShieldBreaks: len(s.smotheredSeats()),
+		// **Counted off the shields that have met their attacks, which is what is actually on
+		// screen.** A shield that has met its hit is an attack the player can see was stopped; one
+		// still in the air is not yet anything. Reading the resolved log instead would let a step
+		// fire on a block that had not been drawn.
+		ShieldBreaks: len(s.stoppedSeats()),
 	}
 	match := s.matchingCards(gs)
 	f.Matching = len(match)
@@ -171,7 +171,7 @@ func (s *CombatScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([
 		return left, true
 
 	case tutorial.AnchorShatteredCards:
-		// **One rectangle per smothered seat.** They need not be adjacent — a shield picks the
+		// **One rectangle per stopped seat.** They need not be adjacent — a shield picks the
 		// heaviest blows and a creature does not queue them in order — so the box round them would
 		// light the cards that *did* land, which is the opposite of what the step is saying.
 		//
@@ -181,10 +181,10 @@ func (s *CombatScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([
 		//
 		// **It reads the same layout the row draws with**, through enemySeatRect, so a card still
 		// flying to its seat is lit where it actually is.
-		smothered := s.smotheredSeats()
+		stopped := s.stoppedSeats()
 		var broken []image.Rectangle
 		for seat := range s.Theater.enemyDealt {
-			if !smothered[seat] {
+			if !stopped[seat] {
 				continue
 			}
 			at, ok := s.enemySeatRect(gs, seat)

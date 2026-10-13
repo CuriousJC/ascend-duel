@@ -598,10 +598,12 @@ const (
 	// the first card matches the rule — the Awakenings. It needs the `First` predicate, and the
 	// rule's card predicates are read against that first card.
 	//
-	// **Added after the card's own multiplier and before the relics that price the card** *(owner's
-	// call, 2026-10-10)*: a 0.5x card and a 2x card behind a fire opener both gain the same 10, and
-	// a Club, a Swarm and the hand all multiply it. The first card gains nothing, and neither does a defense, which deals
-	// nothing for the 10 to join. Two Awakenings that both fire add. See AwakenBonus.
+	// **Added to the DMG the card is swung at, before the card's own multiplier** *(owner's call,
+	// 2026-10-13)*: a 2x card behind a fire opener gains 20 and a 0.5x card 5, and the card's
+	// riders, a Club, a Swarm and the hand all multiply what that came to. It raises that one card's
+	// DMG and no other's, so it is not HandDMG. The first card gains nothing, and neither does a
+	// defense, which deals nothing for the 10 to join. Two Awakenings that both fire add. See
+	// AwakenBonus.
 	//
 	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
 	DoAwaken
@@ -1400,19 +1402,19 @@ func (d Duelist) CostOf(cards []Card) int {
 // attack.
 func (d Duelist) CardDamage(c Card) int { return d.cardDamageWoken(c, 0) }
 
-// cardDamageWoken is CardDamage with an Awakening's figure added to the card before its relics
-// price it — so a Swarm or a Club multiplies the 10 as it multiplies the card. See DoAwaken.
+// cardDamageWoken is CardDamage with an Awakening's figure added to the DMG this card is swung at,
+// before the card's own multiplier — so a 3x card triples the 10, and a Swarm or a Club multiplies
+// what that came to. See DoAwaken.
 func (d Duelist) cardDamageWoken(c Card, woke int) int {
-	// **DUELIST, then CARD, then AWAKENING, then CARD RELICS** — and the hand and the hand's relics
-	// after all of them, in the resolver. The duelist's DMG is already the turn's; the card's own
-	// multiplier and its played riders come next, on this card alone; then what the opener woke;
-	// then the relics price what the card came to. See MECHANICS.md §Damage: a hit per card, one
-	// multiplier.
-	dmg := playRidden(c.Damage(d.DMG), c.DamageOnPlay(), c.ScaleOnPlay())
+	// **DUELIST and AWAKENING, then CARD, then CARD RELICS** — and the hand and the hand's relics
+	// after all of them, in the resolver. The duelist's DMG is already the turn's and what the
+	// opener woke joins it for this card alone; the card's own multiplier and its played riders
+	// come next; then the relics price what the card came to. See MECHANICS.md §Damage: a hit per
+	// card, one multiplier.
+	dmg := playRidden(c.Damage(d.DMG+woke), c.DamageOnPlay(), c.ScaleOnPlay())
 	if dmg == 0 {
 		return 0
 	}
-	dmg += woke
 	for _, e := range d.relicEffects(MomentCardDamage, c) {
 		dmg = dmg * e.DamagePct(d.Vitae) / 100
 	}

@@ -324,8 +324,9 @@ type Event struct {
 	// A fixed array for the reason HandCards is one: Event has to stay comparable.
 	HandAmounts [maxHandTerms]int
 
-	// HandCardBase is what each landing was worth **before any worn relic touched it** — the card's
-	// own damage at the wielder's DMG, with an echo's fraction already taken off.
+	// HandCardBase is what each landing was worth **before any worn relic priced it** — the card's
+	// own damage at the wielder's DMG plus what an Awakening woke (HandAwaken), with an echo's
+	// fraction already taken off.
 	//
 	// **It is here so a hit can be written the way it is worked out** *(owner's call)*:
 	// `(10 x 2) x 2.5 = 50` rather than `20 x 2.5 = 50`, with the relic's figure beside the term it
@@ -370,10 +371,10 @@ type Event struct {
 	HandPlayAdd [maxHandTerms]int
 	HandPlayPct [maxHandTerms]int
 
-	// HandAwaken[i] is the damage an Awakening added to hit i's card: after the card's own multiplier
-	// and played riders, before the relics that price the card. Zero on the turn's first card, on a
-	// defense and on every hit of a turn whose first card woke nothing. HandAmounts already has it
-	// inside it, relic-priced.
+	// HandAwaken[i] is the DMG an Awakening added to hit i's card: to HandDMG, for this card alone,
+	// before the card's own multiplier. Zero on the turn's first card, on a defense and on every hit
+	// of a turn whose first card woke nothing. HandCardBase and HandAmounts already have it inside
+	// them, multiplied.
 	HandAwaken [maxHandTerms]int
 
 	// Awaken is what every attack after the turn's first card gains from the Awakenings the first
@@ -536,8 +537,9 @@ func (e Event) GrownAt(term, seat int) int {
 }
 
 // TermSplit is one hit's card term written the way the game worked it out: the DMG the hand was
-// swung at, and the percentage this card applied to it. It reports false when the two do not come
-// to the term's own figure, and a caller that gets false writes the flat figure instead.
+// swung at, and the percentage this card applied to it — to that DMG plus whatever HandAwaken[term]
+// added, which a caller writes between the two. It reports false when they do not come to the
+// term's own figure, and a caller that gets false writes the flat figure instead.
 //
 // **It exists so that no screen divides one field of this event by another.** Every reading of a
 // term's working goes through here — the hand dialog and the run's account are two drawings of one
@@ -555,7 +557,7 @@ func (e Event) TermSplit(term int) (dmg, pct int, ok bool) {
 	if dmg <= 0 || pct <= 0 {
 		return 0, 0, false
 	}
-	if scaleDamage(dmg, pct) != e.HandCardBase[term] {
+	if scaleDamage(dmg+e.HandAwaken[term], pct) != e.HandCardBase[term] {
 		return 0, 0, false
 	}
 	return dmg, pct, true

@@ -262,6 +262,45 @@ func TestAFlipRecolorsTheDrawnCardAndNotWhatIsOwned(t *testing.T) {
 	}
 }
 
+// **A flip fires as a card is drawn and at no other time.** A rune spent on a card already in the
+// hand changes that card and nothing else: painted ice under an ice-to-fire orb, it is ice until it
+// is drawn again. And a card the orb already flipped keeps its flipped color under a rune that did
+// not touch color.
+func TestARuneOnAHeldCardIsNotWalkedPastTheFlips(t *testing.T) {
+	run := runWith(
+		combat.Card{Concept: combat.Bash, Element: combat.Earth},
+		combat.Card{Concept: combat.Jab, Element: combat.Ice},
+	)
+	if !run.Wear("flip-ice-to-fire") {
+		t.Fatal("the orb would not go on")
+	}
+	held := ids(run)
+	earth, _ := run.CardByID(held[0])
+	ice, _ := run.CardByID(held[1])
+	earthFace, iceFace := run.DrawnAs(earth), run.DrawnAs(ice)
+	if iceFace.Element != combat.Fire {
+		t.Fatalf("the ice card was dealt %v, want fire", iceFace.Element)
+	}
+
+	paint := Rune{Target: RuneElement, Element: combat.Ice, Count: 1}
+	if !run.ApplyRune(paint, []int{held[0]}) {
+		t.Fatal("the paint was refused")
+	}
+	if got, _ := run.HeldAs(earthFace, earth); got.Element != combat.Ice {
+		t.Errorf("an earth card painted ice is held as %v, want ice", got.Element)
+	}
+
+	ride := Rune{Rider: combat.RiderHealOnPlay, Number: 3, Count: 1}
+	if !run.ApplyRune(ride, []int{held[1]}) {
+		t.Fatal("the rider was refused")
+	}
+	got, _ := run.HeldAs(iceFace, ice)
+	if got.Element != combat.Fire || got.HealOnPlay() != 3 {
+		t.Errorf("the flipped card under a rider is held as %v healing %d, want fire healing 3",
+			got.Element, got.HealOnPlay())
+	}
+}
+
 func TestARedrawnCardDoesNotTakeTheCascadeTwice(t *testing.T) {
 	// **The flips chain within one draw and must not chain across two** *(owner's call,
 	// 2026-09-15)*. Lightning-to-ice worn beside ice-to-fire deals a lightning card as fire, in one

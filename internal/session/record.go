@@ -254,7 +254,8 @@ type LedgerSum struct {
 	PlayAdd int `json:"playAdd,omitempty"`
 	PlayPct int `json:"playPct,omitempty"`
 
-	// Awaken is what an Awakening added to the card, after its riders and before its relics.
+	// Awaken is what an Awakening added to the DMG the card was swung at, before the card's own
+	// multiplier.
 	Awaken int `json:"awaken,omitempty"`
 
 	// Scales is what the relics priced it at, in worn order.

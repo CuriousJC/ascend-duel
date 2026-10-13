@@ -158,8 +158,8 @@ func strike(
 	// after it on every hit — the HAND RELICS step.
 	e.HandScale, e.HandScaleSeats = HandScale(worn, blow.Satisfied, scoringCards(blow, turn))
 
-	// **The turn's first card wakes the Awakenings**, and every attack after it gains their figure
-	// on its card — after the card's own multiplier, before the relics that price the card.
+	// **The turn's first card wakes the Awakenings**, and every attack after it is swung at their
+	// figure on top of the turn's DMG — before the card's own multiplier, so the card multiplies it.
 	//
 	// **First as the player queued it**, not as the turn resolves: the defend phase goes first, so
 	// a Brace queued third is turn[0] here. A slot's Index is its place in the queue.
@@ -208,8 +208,8 @@ func strike(
 	for h, l := range landings {
 		card := turn[l.seat].Card
 
-		// **DUELIST, CARD, AWAKENING, CARD RELICS, HAND, HAND RELICS** — `cardDamageWoken` is the
-		// first four; then the hand's multiplier, then the relics that multiply the hand.
+		// **DUELIST and AWAKENING, CARD, CARD RELICS, HAND, HAND RELICS** — `cardDamageWoken` is the
+		// first three; then the hand's multiplier, then the relics that multiply the hand.
 		woke := awaken(l)
 		d := l.shape.Amount(l.nth, actor.cardDamageWoken(card, woke))
 		figure := scaleDamage(d, blow.Multiplier)
@@ -225,7 +225,7 @@ func strike(
 			at := e.HandCardCount
 			e.HandCards[at] = l.seat
 			e.HandAmounts[at] = d
-			e.HandCardBase[at] = l.shape.Amount(l.nth, card.Damage(actor.DMG))
+			e.HandCardBase[at] = l.shape.Amount(l.nth, card.Damage(actor.DMG+woke))
 			// **Only an attack applies a percentage to the DMG.** A defense's Amount is how many
 			// shields it raises, and recorded here it would print as a multiplier of 0.01 per shield;
 			// zero sends its term to the flat figure, which is the 0 it deals.

@@ -753,8 +753,7 @@ func (s *ShopScene) drawWorn(gs *state.GlobalState, screen *ebiten.Image) {
 			ui.DrawRelicCard(gs, screen, ui.FlyingTo(was, seat, s.move), record, counters[key], true, false)
 			continue
 		}
-		ui.DrawFloatingCard(gs, screen, seat.Min, i,
-			ui.RelicSpec(gs, record, counters[key], true, false), cards.RelicStyle)
+		drawRunRelic(gs, screen, seat.Min, i, ui.RelicSpec(gs, record, counters[key], true, false), key)
 	}
 }
 

@@ -757,8 +757,8 @@ func termItems(e combat.Event, i int) []mathItem {
 			cardTerm: true,
 			t:        ui.NewTravel(0, mathTermTicks()),
 		}}
+		// The flat figure already has what the opener woke inside it, multiplied by the card.
 		out = append(out, playRiderItems(e, i)...)
-		out = append(out, awakenItems(e, i)...)
 		return append(out, relicFactorItems(e, i)...)
 	}
 
@@ -774,32 +774,35 @@ func termItems(e combat.Event, i int) []mathItem {
 		t:         ui.NewTravel(0, mathTermTicks()),
 	}
 
-	out := []mathItem{
-		{
-			// **The duelist's figure, flying off the duelist's card.** It is the same number in
-			// every hit of the turn, which is the fact the line is being rewritten to show: one
-			// DMG, several cards taking their own multiple of it.
-			text:        strconv.Itoa(dmg),
-			size:        mathTermSize,
-			tint:        ui.GroundInk,
-			fly:         true,
-			fromDuelist: true,
-			t:           ui.NewTravel(0, mathTermTicks()),
-		},
-		innerOperator("x"),
-		mult,
+	out := []mathItem{{
+		// **The duelist's figure, flying off the duelist's card.** It is the same number in
+		// every hit of the turn, which is the fact the line is being rewritten to show: one
+		// DMG, several cards taking their own multiple of it.
+		text:        strconv.Itoa(dmg),
+		size:        mathTermSize,
+		tint:        ui.GroundInk,
+		fly:         true,
+		fromDuelist: true,
+		t:           ui.NewTravel(0, mathTermTicks()),
+	}}
+
+	// **DUELIST and AWAKENING, CARD, CARD RELICS**: what the opener woke joins the duelist's DMG on
+	// the first row, and the card's own multiplier then takes a row of its own under the pair, since
+	// every factor on a row below multiplies everything above it. With nothing woken the card's
+	// multiplier sits tight on the DMG's row, as one product.
+	if woke := awakenItems(e, i); woke != nil {
+		out = append(out, woke...)
+		out = append(out, wide(mathOperator("x")), mult)
+	} else {
+		out = append(out, innerOperator("x"), mult)
 	}
-	// **DUELIST, CARD, AWAKENING, CARD RELICS**: the duelist's DMG times the card's own multiplier,
-	// then the card's own riders, then what the opener woke, then the relics that priced what the
-	// card came to.
 	out = append(out, playRiderItems(e, i)...)
-	out = append(out, awakenItems(e, i)...)
 	return append(out, relicFactorItems(e, i)...)
 }
 
 // awakenItems is what the opener woke on this hit's card: a `+` and the figure, flying out of the
-// Awakening that paid it, in the relic pink — after the card's riders and before the relics that
-// multiply it.
+// Awakening that paid it, in the relic pink — beside the duelist's DMG, before the card multiplies
+// the two.
 func awakenItems(e combat.Event, i int) []mathItem {
 	add := e.HandAwaken[i]
 	if add == 0 {
@@ -810,7 +813,7 @@ func awakenItems(e combat.Event, i int) []mathItem {
 		return nil
 	}
 	it.text = strconv.Itoa(add)
-	return []mathItem{wide(mathOperator("+")), *it}
+	return []mathItem{innerOperator("+"), *it}
 }
 
 // playRiderItems is what the hit's own card's riders did to its term, each a row of its own after

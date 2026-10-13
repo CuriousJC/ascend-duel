@@ -163,11 +163,11 @@ func TestNoCreditsLineIsBlankByAccident(t *testing.T) {
 	}
 }
 
-// TestTheCreditsNameTheMakerAndTheLicense is the correctness half of the page: who made the game,
-// credited as the studio rather than as its two people *(owner's call)*, and the terms the source
-// is available under. Either one dropped is the kind of mistake nobody notices until it has shipped.
+// TestTheCreditsNameTheMakerAndTheLicense is the correctness half of the page: who made the game —
+// the studio and its two people *(owner's call)* — and the terms the source is available under.
+// Any one dropped is the kind of mistake nobody notices until it has shipped.
 func TestTheCreditsNameTheMakerAndTheLicense(t *testing.T) {
-	for _, want := range []string{"Ambivalent Systems", "PolyForm Noncommercial"} {
+	for _, want := range []string{"Ambivalent Systems", "CuriousJC", "KingSherman1820", "PolyForm Noncommercial"} {
 		if !creditsMention(want) {
 			t.Errorf("the credits do not mention %q", want)
 		}

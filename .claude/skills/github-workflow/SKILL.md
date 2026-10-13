@@ -41,6 +41,8 @@ the branch name never reaches `main`'s history at all** — the PR title becomes
 ## Committing
 
 - `git commit -s` — sign-off is required by `CONTRIBUTING.md`.
+- **Write the message to a file and pass `-F <file>`** — never inline it in PowerShell. See the
+  gotcha below; the same goes for a PR body, through `gh pr create --body-file <file>`.
 - Commits use the **GitHub noreply identity**, not a personal address. Already configured;
   check with `git log -1 --format='%an <%ae>'` if a commit looks wrong.
 - Interactive flags do not work in this environment: no `git rebase -i`, no `git add -i`.
@@ -154,6 +156,15 @@ stops and asks.** `combat-rework` looked like that and turned out to be `rev-lis
 already contained — so it went with the rest.
 
 ## Gotchas that have cost time
+
+- **A commit message inlined in PowerShell is split into pathspecs.** Windows PowerShell 5.1 does
+  not pipe a here-string into `git commit -F -`, and it re-splits a native argument on every
+  embedded double quote, so a message containing `"` comes apart into a dozen words git reads as
+  file paths — `error: pathspec '+10' did not match any file(s)` — and **nothing is committed**.
+  Worse, a `;`-chained `git push` after it runs anyway and pushes the branch with no new commit.
+  The fix that always works: write the message with the Write tool to a file in the scratchpad and
+  run `git commit -s -F <that file>`; `gh pr create --body-file <file>` for the PR body. And gate
+  the push on the commit — `git commit ...; if ($?) { git push }` — or run them as separate calls.
 
 - **`.gitignore` patterns without a leading slash match at any depth.** `trace/` silently
   ignored `internal/trace/` — the *source package* — as well as the intended output

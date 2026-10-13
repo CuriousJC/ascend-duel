@@ -373,7 +373,15 @@ func sumSpans(r session.LedgerRecord) []session.LedgerSpan {
 		// **The term is the product the game worked out, not its answer**: the DMG the hand was
 		// swung at, times this card's own multiplier, times whatever a relic priced it at.
 		if t.Split {
-			spans = append(spans, session.LedgerSpan{Text: "(" + strconv.Itoa(t.DMG)})
+			// **What the opener woke joins the DMG before the card multiplies it**, so the two are
+			// bracketed together and written in the relic pink.
+			if t.Awaken != 0 {
+				spans = append(spans, session.LedgerSpan{Text: "((" + strconv.Itoa(t.DMG)})
+				spans = append(spans, session.LedgerSpan{Text: " + " + strconv.Itoa(t.Awaken), Ink: session.InkRelic})
+				spans = append(spans, session.LedgerSpan{Text: ")"})
+			} else {
+				spans = append(spans, session.LedgerSpan{Text: "(" + strconv.Itoa(t.DMG)})
+			}
 			spans = append(spans, session.LedgerSpan{
 				Text: " x " + HandMultiplierText(t.Weight), Ink: t.Element,
 			})
@@ -384,8 +392,8 @@ func sumSpans(r session.LedgerRecord) []session.LedgerSpan {
 		}
 
 		// **The flat form is for the term the split cannot describe** — an echo's rounding, or a
-		// card that hit the damage floor.
-		if len(t.Scales) == 0 && t.PlayAdd == 0 && t.PlayPct == 0 && t.Awaken == 0 {
+		// card that hit the damage floor. Its base already holds what the opener woke.
+		if len(t.Scales) == 0 && t.PlayAdd == 0 && t.PlayPct == 0 {
 			spans = append(spans, session.LedgerSpan{Text: strconv.Itoa(t.Base), Ink: t.Element})
 			continue
 		}
@@ -441,11 +449,6 @@ func playSpans(t session.LedgerSum) []session.LedgerSpan {
 	}
 	if t.PlayPct != 0 {
 		out = append(out, session.LedgerSpan{Text: " x " + HandMultiplierText(t.PlayPct), Ink: t.Element})
-	}
-	// **What the opener woke comes next**, in the relic pink, so the relics after it are seen to
-	// multiply it.
-	if t.Awaken != 0 {
-		out = append(out, session.LedgerSpan{Text: " + " + strconv.Itoa(t.Awaken), Ink: session.InkRelic})
 	}
 	return out
 }

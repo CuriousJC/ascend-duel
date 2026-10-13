@@ -93,9 +93,9 @@ const (
 	// a relic. See combat_shields.go.
 	anchorShieldHeap
 
-	// anchorAttackSeat is the seat of the attack a shield ate, in the opponent's row: on a
-	// `KindBlocked`, whose `Side` is the defender's, the card on the other side.
-	anchorAttackSeat
+	// anchorMeetPoint is the point on a stopped hit's own path where the shield stopping it
+	// meet and break apart. See combat_intercept.go.
+	anchorMeetPoint
 
 	// anchorCount is the width of the enum and is never a place. Keep it last.
 	anchorCount
@@ -123,8 +123,8 @@ func (a anchor) String() string {
 		return "the hand row"
 	case anchorShieldHeap:
 		return "a shield heap"
-	case anchorAttackSeat:
-		return "the eaten attack's seat"
+	case anchorMeetPoint:
+		return "where the hit is met on its way in"
 	}
 	return "?"
 }
@@ -202,15 +202,15 @@ var choreography = map[combat.EventKind]flightSpec{
 	},
 	combat.KindAction: {
 		anchorNone, anchorNone, gestureNone,
-		"the card lifting in its own seat is the drawing, and tableFireLift already does it",
+		"a creature's card rattles in its own seat as it swings; a duelist's cards are set on a plate by the hand instead",
 	},
 	combat.KindRaised: {
 		anchorNone, anchorShieldHeap, gesturePop,
 		"the shields form over the card that raised them - once the turn's arithmetic is done, not on this beat",
 	},
 	combat.KindBlocked: {
-		anchorShieldHeap, anchorAttackSeat, gestureFly,
-		"the hit it would have landed shows on the attack, and a shield leaves its heap and smothers it",
+		anchorBlow, anchorMeetPoint, gestureFly,
+		"the hit sets off on its real path and a shield leaves its heap to meet it on the way, and the two break apart there",
 	},
 	combat.KindExpired: {
 		anchorNone, anchorNone, gestureNone,
@@ -229,8 +229,8 @@ var choreography = map[combat.EventKind]flightSpec{
 		"each card's own figure flies out of that card into its hit's line - the dialog that started this",
 	},
 	combat.KindFizzled: {
-		anchorNone, anchorHitLine, gestureStrike,
-		"a fizzle wastes one hit, so what is struck out is that hit's line and nothing else - the word says why",
+		anchorHitLine, anchorMeetPoint, gestureFly,
+		"the creature shields itself in its own element: the hit sets off, a shield of that element leaves the creature to meet it, and FIZZLE is written over the break",
 	},
 	combat.KindHealed: {
 		anchorActorSeat, anchorActorCard, gestureFly,
@@ -349,6 +349,14 @@ type combatTheater struct {
 	firingSeats      []int
 	enemyFiringSeats []int
 
+	// rungPlate is the clock the plates behind a hand's cards fade up on, started on the beat the
+	// hand is announced. See combat_rung.go.
+	rungPlate ui.Travel
+
+	// rungGroups is which of the announced hand's groups each marked seat is in, so each group is
+	// plated on its own.
+	rungGroups map[int]int
+
 	// Riders firing: the burst on the card that fired and the figure traveling into the figure it
 	// moved. **pending is the half that is not on stage yet** — a played card's signal waits for the
 	// beat that card scores, and a held card's waits for the sum to start — and shown is what the
@@ -374,11 +382,15 @@ type combatTheater struct {
 	drains []drainFlight
 
 	// piles are the standing shields as playback has reached them, each heaped over whatever
-	// raised it; fades are shields going away where they stood; smothers are shields thrown onto
-	// the attacks they ate, lying there for the rest of the round. See combat_shields.go.
-	piles    []shieldPile
-	fades    []fadingShield
-	smothers []smother
+	// raised it, and fades are shields going away where they stood. See combat_shields.go.
+	piles []shieldPile
+	fades []fadingShield
+
+	// intercepts are stopped hits: a figure and the shield that stops it meeting in the middle of
+	// the screen and breaking apart there. **Kept until the opponent's row is re-seated**, for the
+	// tutorial's count of attacks stopped this round, and drawn only while their clocks run. See
+	// combat_intercept.go.
+	intercepts []intercept
 
 	// pendingRaises are the turn's raises and wards, reached but not yet formed: they form once
 	// the turn's arithmetic is done. See CombatScene.formPendingShields.
@@ -436,15 +448,14 @@ func (t *combatTheater) Tick() {
 		}
 	}
 	t.drains = ui.Advance(t.drains)
-	// **A heap and a smother are never dropped by their clocks**: a shield stands until an event
-	// takes it away, and a smothered card stays smothered until its row is re-seated.
+	// **A heap is never dropped by its clock**: a shield stands until an event takes it away.
 	for i := range t.piles {
 		for j := range t.piles[i].shields {
 			t.piles[i].shields[j].form.Tick()
 		}
 	}
-	for i := range t.smothers {
-		t.smothers[i].t.Tick()
+	for i := range t.intercepts {
+		t.intercepts[i].Tick()
 	}
 	t.fades = ui.Advance(t.fades)
 
@@ -466,6 +477,7 @@ func (t *combatTheater) Tick() {
 	// not be held up by the dialog that stops the cursor — which is why it ticks here with
 	// everything else rather than inside playback. See handBanner.
 	t.banner.Tick()
+	t.rungPlate.Tick()
 }
 
 // running reports whether anything the playback cursor waits on is still going.
@@ -477,8 +489,9 @@ func (t *combatTheater) Running() bool {
 	return ui.Running(t.hits) || ui.Running(t.drains) || t.shieldsMoving() || ui.Running(t.signals)
 }
 
-// shieldsMoving reports a shield still forming or still being thrown, which the cursor waits for:
-// a shield appearing while the next card is already acting would read as belonging to that one.
+// shieldsMoving reports a shield still forming or a stopped hit still meeting its shield, which the
+// cursor waits for: a shield appearing while the next card is already acting would read as
+// belonging to that one.
 func (t *combatTheater) shieldsMoving() bool {
 	for _, p := range t.piles {
 		for _, sh := range p.shields {
@@ -487,8 +500,8 @@ func (t *combatTheater) shieldsMoving() bool {
 			}
 		}
 	}
-	for _, m := range t.smothers {
-		if m.holding() {
+	for _, ic := range t.intercepts {
+		if !ic.Done() {
 			return true
 		}
 	}

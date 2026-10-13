@@ -163,8 +163,7 @@ func (s *CombatScene) spendSelected() {
 				index:    i, count: leaving,
 			}
 			if p, ok := s.playedSeatOf(i); ok {
-				flight.index, flight.count, flight.fromTable = p, len(s.Theater.resolved), true
-				flight.split = s.playedSplit()
+				flight.index, flight.count, flight.fromTable = s.playedPlace(p), len(s.Theater.resolved), true
 			}
 			s.addFlight(flight)
 			continue

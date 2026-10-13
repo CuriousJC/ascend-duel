@@ -1,7 +1,7 @@
 package screens
 
-// animations_shields.go — the gallery's two shield gestures: a heap forming over the card that
-// raised it, one to five in every element, and a shield thrown onto an attack it ate.
+// animations_shields.go — the gallery's shield gestures: a heap forming over the card that raised
+// it, one to five in every element, and a hit stopped in the middle by a shield.
 
 import (
 	"fmt"
@@ -48,21 +48,38 @@ func drawHeapGallery(gs *state.GlobalState, screen *ebiten.Image, origin image.P
 	}
 }
 
-// smotherGalleryTicks is one blocked hit shown, a shield thrown onto it, and a beat on its card.
-func smotherGalleryTicks() int { return smotherTotalTicks() + ui.Beat(1, 1) }
+// galleryInterceptFigure is the gallery's one stopped figure, drawn onto its image once.
+var galleryInterceptFigure *ebiten.Image
 
-// drawSmotherGallery shows a fire attack's blocked hit, then throws a fire shield off a heap of two
-// onto it, so the block is matched and SURGE is written across the card.
-func drawSmotherGallery(gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, age int) {
+// interceptGalleryTicks is one stopped hit, meeting, breaking and read, and a beat after.
+func interceptGalleryTicks() int {
+	return interceptFlyTicks() + interceptBreakTicks() + interceptHoldTicks() + ui.Beat(1, 1)
+}
+
+// drawInterceptGallery throws an attack's hit out of its card on the right at the Block card on the
+// left, standing in for the duelist, and a fire shield off that card's heap of two meets it halfway,
+// so the block is matched and SURGE is written over the break.
+func drawInterceptGallery(gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, age int) {
 	from := image.Pt(at.Min.X-460, at.Min.Y+40)
+	attack := image.Pt(at.Min.X+460, at.Min.Y)
 	ui.BlitCard(gs, screen, from, animFace(gs, combat.Card{Concept: combat.Block, Element: combat.Fire}), cards.Hand)
-	ui.BlitCard(gs, screen, at.Min, animFace(gs, animCardA), cards.Hand)
+	ui.BlitCard(gs, screen, attack, animFace(gs, animCardA), cards.Hand)
 
 	cx, cy := float64(from.X)+cardWidth/2, float64(from.Y)+cardHeight/2
 	ui.DrawShield(screen, cards.Fire, ui.HeapPose(cx, cy, 0, 2, 1))
 
-	m := smother{element: cards.Fire, from: ui.HeapPose(cx, cy, 1, 2, 1), surged: true,
-		would: 20, ink: ui.ArtFor(animCardA.Element), t: ui.NewTravel(0, smotherTotalTicks())}
-	m.t.Age = min(age, smotherTotalTicks())
-	drawSmother(gs, screen, m, at)
+	ic := intercept{figure: "-20", ink: ui.ArtFor(animCardA.Element), shield: cards.Fire,
+		shieldFrom: ui.HeapPose(cx, cy, 1, 2, 1), label: "SURGE"}
+	ic.aim(0.5)
+	ic.t.Age = min(age, ic.t.Ticks)
+	// **The figure's image is built once for the page**, rather than on every frame of the break.
+	if galleryInterceptFigure == nil {
+		galleryInterceptFigure = figureImage(gs, ic.figure, hitInkFor(ic.ink))
+	}
+	ic.figureImg = galleryInterceptFigure
+	if ic.Done() {
+		return
+	}
+	drawIntercept(gs, screen, &ic, image.Pt(attack.X+cardWidth/2, attack.Y+cardHeight/2),
+		image.Pt(int(cx), int(cy)))
 }

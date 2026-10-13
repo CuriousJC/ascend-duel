@@ -268,38 +268,39 @@ is a block and nothing else. Basic is no element and matches nothing.
 - **It is the mirror of the fizzle** — see §A creature's own element. The duelist has no element
   for a creature's hit to fizzle on, so matching a creature's element pays the player on defense
   where it costs them on offense.
-- **The screen says it twice**: SURGE written across each attack card a matched shield smothers,
-  at 45 degrees, and `(+N surge)` beside the budget while the player plans the turn it pays for.
+- **The screen says it twice**: SURGE written over the break where a matched shield meets the hit
+  it eats, and `(+N surge)` beside the budget while the player plans the turn it pays for.
 
 #### The turn reads: shields, then the hand, then the hits
 
 The defend phase resolves first — see `combat.Categories` — and the screen plays it as **one
 gesture**: every shield in the turn forms together, heaped over the card that raised it, with
-**no card lifting off the table** — and it forms last, once the hits below have been worked out.
-The hand is announced, with the cards that formed it raised, and only then are the hits worked out — a
-line of arithmetic under every card of the turn, all of them at once. A defense's line usually
-comes to 0.
+**no card on the table ever lifts** — and it forms last, once the hits below have been worked out.
+The hand is announced, with the cards that formed it set on a highlight plate, and only then are the hits
+worked out — a line of arithmetic under every card of the turn, all of them at once, each wrapped in
+its card's element. A defense's line usually comes to 0.
 
-**A lift says "this card is acting now", so exactly one thing in the turn may use it.** The defend
-phase is one gesture for the whole set — the shield break's rule and the deal cascade's — because
-three pauses over one phase say three things about cards where the phase says one thing about the
-turn. Nothing lifts on a card's own announcement; the raise belongs to the hand's, and it ends
-there.
+**A chosen card goes to the table and nothing more happens to it there**, because every card's line
+shows what it did. The defend phase is one gesture for the whole set — the deal cascade's rule —
+because three pauses over one phase say three things about cards where the phase says one thing
+about the turn. Nothing is marked on a card's own announcement; the plate belongs to the hand's.
 
-**The rung is raised and the hits are thrown, and they are different sets.** On a turn of two
-shields and one attack the Pair is the two shields, so they are what stands up; every card throws
-a hit, and the attack's is the one that hurts while being in no part of the hand, so it stays down. `Blow.Rung` against `Blow.Cards` is
-the distinction in the rules and `Event.RungCards` against `Event.HandCards` is how it reaches the
-screen. **A row held up through the arithmetic is the announcement still being made while the thing
-it announced is being read out**, so the cards go back down when the hits start.
+**The rung is highlighted and the hits are thrown, and they are different sets.** On a turn of
+two shields and one attack the Pair is the two shields, so they are what stands on the plate; every
+card throws a hit, and the attack's is the one that hurts while being in no part of the hand, so it
+stands off it. **One plate per group of the hand**, split again wherever a card that is no part of
+it sits between: a Two Pair is two plates even with its pairs side by side, and a Four of a Kind
+with a dead card in the middle is two plates of two. `Blow.Rung` against `Blow.Cards` is the distinction in the rules and `Event.RungCards` against
+`Event.HandCards` is how it reaches the screen. **The plates stay through the arithmetic**, because a
+plate moves nothing and can be read beside the lines; they go when the other side acts.
 
-**The No Hand is announced and raises nothing.** It is a rung and the word says what happened, but
+**The No Hand is announced and highlights nothing.** It is a rung and the word says what happened, but
 it is the turn that made no hand — its `Blow.Rung` is a single card picked by damage rather than by
-counting, and standing that card up says it did something while every other attack in the turn
-lands beside it unraised. `Blow.BuiltAHand` is the predicate and it gates the lift alone.
+counting, and highlighting that card says it did something while every other attack in the turn lands
+beside it unmarked. `Blow.BuiltAHand` is the predicate and it gates the plate alone.
 
-**The creature's turn is the exception to all of it.** It names no hand, so its card lifting one at
-a time is the only thing saying which hit is landing.
+**The creature's turn is the exception to all of it.** It names no hand, so its card rattling
+sideways one at a time, as it swings, is the only thing saying which hit is landing.
 
 **None of it reaches the rules.** The order the events resolve in is unchanged, `ResolveRound`
 decided the whole round before a frame was drawn, and the bundle is the screen reading forward in a
@@ -346,7 +347,7 @@ no shields, so their budget is the figure printed on their card.
 stronger and considerably more predictable. **Every creature deck is pure attack**, and none
 falls below three distinct concepts.
 
-#### The smother on the card
+#### Stopped in the middle
 
 **A shield stays over the card that raised it until it is spent or lapses.** It forms there once
 the turn's arithmetic is done *(owner's call)* — every hit's line worked out first, a defense's
@@ -354,13 +355,20 @@ coming to 0 — over a defend card, over an attack card carrying a shield rider,
 helm — and several on one card heap, each a little offset and turned, so the count is read at a
 glance.
 
-**When a creature's attack is eaten, the hit it would have landed shows on its card, and a shield
-leaves its heap and lands on the card, smothering it** while the figure fades, on the beat the
-attack is reached. A shield spent invisibly is a rule the player
-pays for on every defend card and never watches work; watched landing on the card it stopped, it
-also makes the "heaviest, not first" rule above legible. **The shield lies on the card for the
-rest of the round**, because the table is the account of what the turn was. A matched block
-writes SURGE across the card at 45 degrees.
+**When a creature's attack is eaten, the hit it would have landed sets off toward the duelist, and
+a shield leaves its heap to meet it** *(owner's call)*: the hit flies the path and the pace a
+landed one would, and is stopped where that path crosses the screen's horizontal middle; the shield
+arrives at that point as the hit does, and the two break apart there, on the beat the attack is reached. A shield spent invisibly is a
+rule the player pays for on every defend card and never watches work; watched meeting the hit it
+stopped, it also makes the "heaviest, not first" rule above legible. **Nothing lands on the attack
+card.** A matched block writes SURGE over the break.
+
+**Once a fighter is down, the defend phase is over** *(owner's call)*: shields a killing turn raised,
+a helm's included, never form, and nothing standing moves after the last blow.
+
+**A fizzle is drawn the same way from the other side**: the duelist's hit sets off out of its line,
+and a shield of the creature's own element leaves the creature's card to meet it, with FIZZLE
+written over the break.
 
 **The engine counts shields per element and never says which card's shield it spent**, so the
 screen picks: the newest heap holding one of the spent element gives it up. That is a choice about
@@ -616,8 +624,9 @@ damage ice hit is 0 — while the fire Bash beside it lands as it always did.
   banks an action point when it eats one of its hits. See §A shield of the hit's own element banks
   an action point.
 
-The fight log says `fizzles - its own element` on the hit's line and the hit's arithmetic line
-takes `FIZZLE`. `combat.fizzles` is the rule and `KindFizzled` the event.
+The fight log says `fizzles - its own element` on the hit's line, and on the table the hit is met
+in the middle by a shield of the creature's element with `FIZZLE` written over the break — see
+§Stopped in the middle. `combat.fizzles` is the rule and `KindFizzled` the event.
 
 ### Elements and relics
 

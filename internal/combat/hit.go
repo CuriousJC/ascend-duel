@@ -178,6 +178,7 @@ func strike(
 			break
 		}
 		e.RungCards[e.RungCardCount] = i
+		e.RungGroup[e.RungCardCount] = groupOf(blow.RungGroups, i)
 		e.RungCardCount++
 	}
 
@@ -416,4 +417,16 @@ func scoringCards(blow Blow, turn []Slot) []Card {
 		}
 	}
 	return out
+}
+
+// groupOf is which of a hand's groups holds turn index i, 0 when none does.
+func groupOf(groups [][]int, i int) int {
+	for g, members := range groups {
+		for _, m := range members {
+			if m == i {
+				return g
+			}
+		}
+	}
+	return 0
 }

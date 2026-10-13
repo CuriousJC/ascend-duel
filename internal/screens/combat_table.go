@@ -18,6 +18,7 @@ package screens
 
 import (
 	"image"
+	"sort"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -37,32 +38,6 @@ const (
 	// Mini; a smaller card is a different drawing, not a scaled one.
 	tableInset = 24
 	tableGap   = 48
-
-	// tableGroupGap is the clear air a row leaves between its two buckets.
-	//
-	// **The round has two phases and the row now says so** *(2026-08-15)*. Every card in a row
-	// resolves in `combat.ResolutionOrder`, which groups a turn by category — so the boundary is
-	// already there and was invisible, and a row of five cards read as one undifferentiated
-	// sequence when it is really "this is what I do about theirs, and then this is what I swing".
-	// (The order was attacks-then-plans until 2026-09-15; see `combat.Categories`.)
-	//
-	// **It went 26 → 44 on 2026-09-15** *(owner's call)*, with the phases. The two groups now
-	// *happen* separately — the defenses go up, the shields land, and only then does the hand
-	// score — so the break has more to carry than it did when the whole row resolved as one run.
-	// It is still well under `cardWidth`: enough to read as a break, not enough to read as two
-	// separate rows. And it is spent out of the same half-width the cards have, so a full row
-	// overlaps by a little more rather than running past the middle.
-	tableGroupGap = 44
-
-	// tableFireLift is how far the card currently resolving rises out of its row.
-	//
-	// **The one thing the row cannot say by itself.** A card used to fly to the middle of the
-	// screen, hold there to be read, and then drop into the pile — which was the reading
-	// moment, and it cannot survive here: the middle of the screen is now where the opponent's
-	// hand is, so a card crossing it would pass over the cards it is being played against.
-	// Lifting in place says the same thing in the space the row already owns, and it borrows
-	// the gesture selection already uses in the hand — see selectedNudge.
-	tableFireLift = 22
 )
 
 // tableRowTop is the y both rows sit at: as low as it can go without reaching the hand.
@@ -104,56 +79,31 @@ func tableHalfWidth(gs *state.GlobalState) int {
 // the derived form matters for the same reason: the cap on how many actions a round holds is
 // a rule that a relic or a tonic is expected to raise, so a pitch that only worked for five
 // would put a rendering bug behind a balance change.
-//
-// **The group gap is taken out of the room before the pitch is worked out**, which is what makes
-// the split cost overlap rather than width: a row that spent the gap on top of a full-width
-// layout would run past the middle of the screen and into the other hand.
-func tablePitch(gs *state.GlobalState, n, split int) int {
+func tablePitch(gs *state.GlobalState, n int) int {
 	full := cardWidth + cardGap
 	if n < 2 {
 		return full
 	}
-	room := tableHalfWidth(gs) - groupGapFor(n, split)
+	room := tableHalfWidth(gs)
 	if (n-1)*full+cardWidth <= room {
 		return full
 	}
 	return (room - cardWidth) / (n - 1)
 }
 
-// groupGapFor is the extra space a row spends on its attack/plan break: one gap, or none if the
-// row is all one kind.
-//
-// `split` is the index the plans start at, which `combat.ResolutionOrder` has already decided —
-// see playedSplit and enemySplit. A split of 0 or of n means every card in the row is on the same
-// side of the boundary, so there is nothing to separate.
-func groupGapFor(n, split int) int {
-	if split <= 0 || split >= n {
-		return 0
-	}
-	return tableGroupGap
-}
-
-// groupShiftFor is how far the nth card is pushed along by the break: the whole gap once the row
-// has crossed into its plans, nothing before that.
-func groupShiftFor(n, split, i int) int {
-	if i < split {
-		return 0
-	}
-	return groupGapFor(n, split)
-}
-
 // playedSeatAt is where the nth of the player's played cards sits: **left-aligned**, the whole
-// row placed at once from the screen's left inset.
+// row placed at once from the screen's left inset. `n` is a *place* — the card's position in the
+// turn as the player picked it — never a seat in the resolved turn; see playedPoint.
 //
 // **The pitch is a function of the round's total, never of how many have landed so far.** Both
 // hands are dealt to the table the moment DUEL! is pressed, so the total is known — and a pitch
 // that grew with the row would shuffle every card already sitting there sideways each time
 // another arrived, which reads as the layout twitching rather than as a card being played.
-func playedSeatAt(gs *state.GlobalState, n, total, split int) image.Point {
+func playedSeatAt(gs *state.GlobalState, n, total int) image.Point {
 	if total < 1 {
 		total = 1
 	}
-	x := tableInset + n*tablePitch(gs, total, split) + groupShiftFor(total, split, n)
+	x := tableInset + n*tablePitch(gs, total)
 	return image.Pt(x, tableRowTop(gs))
 }
 
@@ -164,74 +114,58 @@ func playedSeatAt(gs *state.GlobalState, n, total, split int) image.Point {
 // the moment the round starts, so it is laid out as a finished hand against its own edge; the
 // player's is revealed a card at a time. Pinning both to the outside edges is what makes them
 // face each other rather than drift toward the middle as they fill.
-func enemySeatAt(gs *state.GlobalState, n, total, split int) image.Point {
+func enemySeatAt(gs *state.GlobalState, n, total int) image.Point {
 	if total < 1 {
 		total = 1
 	}
-	pitch := tablePitch(gs, total, split)
-	width := (total-1)*pitch + cardWidth + groupGapFor(total, split)
+	pitch := tablePitch(gs, total)
+	width := (total-1)*pitch + cardWidth
 	left := gs.ScreenWidth - tableInset - width
 
-	return image.Pt(left+n*pitch+groupShiftFor(total, split, n), tableRowTop(gs))
+	return image.Pt(left+n*pitch, tableRowTop(gs))
 }
 
-// splitOf is where a row laid out in resolution order changes category — the boundary between its
-// two buckets, which is where `groupGapFor` opens the air.
-//
-// **It is the first card unlike the first card, not the first defense** *(2026-09-15)*. It named
-// the category until then, and named the wrong one the moment `combat.Categories` flipped: with
-// defenses leading, "the first defend" is index 0 and the gap opened in front of the whole row.
-// Asking where the category *changes* is the same answer under either order and needs no edit the
-// next time one is argued about.
-//
-// **It is found by scanning rather than counted while the row is built**, because the row is
-// built from `combat.ResolutionOrder` and that is the authority on the boundary — a screen
-// keeping its own tally would be a second answer to the same question. It returns the row's length
-// for a row of one category, which `groupGapFor` reads as "no break".
-func splitOf(cards []combat.Card) int {
-	return splitAt(len(cards), func(i int) combat.Category { return cards[i].Category() })
-}
+// **A row on the table is the turn as it was picked, one hand, in one run** *(owner's call)*. The
+// engine still plays a turn defenses first — `combat.ResolutionOrder` — and every event names its
+// card by its seat in that resolved turn, which is what `resolved`, `enemyDealt`, `firingSeats` and
+// every mover hold. **Only where a card is drawn is its place in the queue**, so the row reads left
+// to right exactly as the cards were chosen, and nothing regroups between the hand and the table.
+// The cards that made the multiplier are the ones on a plate.
 
-// splitAt is splitOf over anything that can name the category in seat i, which is what lets the
-// two rows share the rule while holding different things.
-func splitAt(n int, categoryOf func(int) combat.Category) int {
-	if n == 0 {
-		return 0
+// playedPlace is where the card in one seat of the resolved turn sits along the player's row.
+func (s *CombatScene) playedPlace(seat int) int {
+	if seat >= 0 && seat < len(s.Theater.resolved) {
+		return s.Theater.resolved[seat].place
 	}
-	lead := categoryOf(0)
-	for i := 1; i < n; i++ {
-		if categoryOf(i) != lead {
-			return i
-		}
+	return seat
+}
+
+// enemyPlace is the same for the opponent's row.
+func (s *CombatScene) enemyPlace(seat int) int {
+	if seat >= 0 && seat < len(s.Theater.enemyDealt) {
+		return s.Theater.enemyDealt[seat].place
 	}
-	return n
+	return seat
 }
 
-// playedSplit and enemySplit are splitAt over the two rows' own lists.
-func (s *CombatScene) playedSplit() int {
-	return splitAt(len(s.Theater.resolved), func(i int) combat.Category {
-		return s.Theater.resolved[i].card.Category()
-	})
+// playedPoint and enemyPoint are the resting top-left of the card in one seat of the resolved turn.
+func (s *CombatScene) playedPoint(gs *state.GlobalState, seat int) image.Point {
+	return playedSeatAt(gs, s.playedPlace(seat), len(s.Theater.resolved))
 }
 
-func (s *CombatScene) enemySplit() int {
-	return splitAt(len(s.Theater.enemyDealt), func(i int) combat.Category {
-		return s.Theater.enemyDealt[i].card.Category()
-	})
+func (s *CombatScene) enemyPoint(gs *state.GlobalState, seat int) image.Point {
+	return enemySeatAt(gs, s.enemyPlace(seat), len(s.Theater.enemyDealt))
 }
 
-// lift raises a seat by tableFireLift, which is how either row says "this is the card
-// resolving right now".
-//
-// **One function so the two sides cannot drift apart** *(2026-08-12)*. The lift arrived on the
-// player's row alone and the opponent's cards sat still through their whole turn, which read as
-// the enemy's hand being scenery rather than the other half of the round. The gesture has to be
-// the same on both sides or it stops meaning "this one" and starts meaning "yours".
-func lift(at image.Point, firing bool) image.Point {
-	if firing {
-		at.Y -= tableFireLift
+// byPlace is a row's seats in the order they sit left to right, so a later card overlaps the one
+// before it on screen rather than in the resolver's order.
+func byPlace(n int, place func(int) int) []int {
+	seats := make([]int, n)
+	for i := range seats {
+		seats[i] = i
 	}
-	return at
+	sort.SliceStable(seats, func(a, b int) bool { return place(seats[a]) < place(seats[b]) })
+	return seats
 }
 
 // enemyQueueOrder is the opponent's queued actions **in the order they will resolve**, which is
@@ -263,6 +197,9 @@ type dealtCard struct {
 	ui.Travel
 
 	card combat.Card
+
+	// place is where the card sits along the row: its position in the opponent's queue.
+	place int
 }
 
 // seatEnemyCards lays the opponent's whole queue out and sets it flying in.
@@ -271,33 +208,45 @@ type dealtCard struct {
 // the moment DUEL! is pressed — see startRound and Init. That is the whole point of the change:
 // the player picks their round against a hand they can see.
 func (s *CombatScene) seatEnemyCards() {
+	var places []int
+	for _, slot := range combat.ResolutionOrder(s.fighterActions, s.enemyActions) {
+		if slot.Side == combat.SideB && slot.Index < len(s.enemyActions) {
+			places = append(places, slot.Index)
+		}
+	}
 	queue := s.enemyQueueOrder()
 
-	// **A smother belongs to the row it happened in.** It is a seat number, and this is where the
-	// seats stop meaning what they meant — so a shield left lying here would sit on whichever card
-	// the planner has just put in that seat. It goes with the card it lay on.
-	s.Theater.smothers = nil
+	// **A stopped attack belongs to the row it happened in.** Its seat is a number, and this is
+	// where the seats stop meaning what they meant, so the round's intercepts go with the row.
+	s.Theater.intercepts = nil
+	s.enemyShake = nil
 
 	s.Theater.enemyDealt = make([]dealtCard, 0, len(queue))
 	for i, c := range queue {
+		place := i
+		if i < len(places) {
+			place = places[i]
+		}
 		s.Theater.enemyDealt = append(s.Theater.enemyDealt, dealtCard{
-			Travel: ui.NewTravel(i*flightStaggerPer(), riseTicks()),
+			Travel: ui.NewTravel(place*flightStaggerPer(), riseTicks()),
 			card:   c,
+			place:  place,
 		})
 	}
 }
 
 // at is where one of the opponent's cards is drawn right now: waiting to set off, flying in
-// from the enemy's own card, sitting in its seat, or lifted out of it because it is resolving.
+// from the enemy's own card, or sitting in its seat. **A card on the table never lifts** — the one
+// swinging rattles sideways instead, which the row adds; see enemyCardShake.
 //
 // **They fly in from the enemy card in the top-right corner**, which is the opponent itself —
 // the mirror of the player's cards coming out of their hand. There is no enemy draw pile on
 // screen to deal from and inventing one would be a second thing to explain; the fighter card is
 // already the thing on screen that *is* the opponent, so cards coming out of it read as theirs
 // without a caption.
-func (s *CombatScene) enemyCardAt(gs *state.GlobalState, d dealtCard, seat, total, split int, firing bool) image.Point {
+func (s *CombatScene) enemyCardAt(gs *state.GlobalState, d dealtCard, total int) image.Point {
 	from := ui.EnemyCardRect(gs).Min
-	to := enemySeatAt(gs, seat, total, split)
+	to := enemySeatAt(gs, d.place, total)
 
 	switch {
 	case d.Waiting():
@@ -305,10 +254,7 @@ func (s *CombatScene) enemyCardAt(gs *state.GlobalState, d dealtCard, seat, tota
 	case !d.Done():
 		return ui.LerpPoint(from, to, ui.EaseOut(d.Progress()))
 	}
-
-	// The lift only after landing, exactly as the player's row does it — a card still arriving
-	// is already the most moving thing on screen and lifting it too would blur the two beats.
-	return lift(to, firing)
+	return to
 }
 
 // drawEnemyQueue draws the opponent's hand for this round, right-aligned in the table band.
@@ -331,9 +277,10 @@ func (s *CombatScene) enemyCardAt(gs *state.GlobalState, d dealtCard, seat, tota
 // and none of that exists yet. So they draw with the neutral mid-gray border, which is the truth
 // rather than a placeholder.
 func (s *CombatScene) drawEnemyQueue(gs *state.GlobalState, screen *ebiten.Image) {
-	split := s.enemySplit()
-	for i, d := range s.Theater.enemyDealt {
-		at := s.enemyCardAt(gs, d, i, len(s.Theater.enemyDealt), split, lit(s.Theater.enemyFiringSeats, i))
+	for _, i := range byPlace(len(s.Theater.enemyDealt), s.enemyPlace) {
+		d := s.Theater.enemyDealt[i]
+		at := s.enemyCardAt(gs, d, len(s.Theater.enemyDealt))
+		at.X += s.enemyCardShake(i)
 		// **The opponent's own cost, not the player's** — a discount relic is the player's and a
 		// queued enemy card printing a discounted price would be the screen telling a lie about
 		// whose relic it is.

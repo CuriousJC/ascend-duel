@@ -40,7 +40,8 @@ const mathBandGapAboveCards = 5
 //
 // **What became of each hit is read ahead in the log.** The hand event is followed by one outcome
 // per thrown hit, and a finished line looks its own up — see hitOutcomes — so a hit that landed
-// flies, a fizzle says FIZZLE, a block says BLOCKED, and a hit after a death fades where it stands. The
+// flies, a fizzle or a block flies to be met by the shield that stops it — see combat_intercept.go —
+// and a hit after a death fades where it stands. The
 // damage that line throws is applied to the target's bar as it lands, and the log's own event for
 // it is walked past without a second flight: see CombatScene.throwColumn.
 //
@@ -123,8 +124,8 @@ const (
 	mathRowShare = 1.15
 
 	// mathUnthrownAlpha is how solid a line stays once it is known its hit was never thrown — the
-	// target fell to an earlier hit — and mathVerdictDim how solid the arithmetic under a FIZZLE or a
-	// BLOCKED is.
+	// target fell to an earlier hit — and mathVerdictDim how solid the arithmetic of a hit stopped
+	// on its way stays.
 	mathUnthrownAlpha = 0.35
 	mathVerdictDim    = 0.45
 
@@ -334,19 +335,18 @@ type mathColumn struct {
 	thrown bool
 	spent  bool
 
-	// verdict is the word drawn over a line whose hit did not land: FIZZLE, BLOCKED, or "" for a hit
-	// that landed. unthrown dims a line whose hit never happened.
-	verdict  string
-	verdictT ui.Travel
-	unthrown bool
+	// intercepted dims a line whose hit was stopped on its way — the word is written where it was
+	// stopped, see combat_intercept.go — and unthrown one whose hit never happened.
+	intercepted bool
+	unthrown    bool
 
 	// begun says the line has started running. **A card's second and third hits wait for the one
 	// above them** — see Tick — so a line can sit unbegun, and draws nothing, while another is
 	// being worked out.
 	begun bool
 
-	// wrapped says the total's particles have been raised, so they are raised once. See
-	// combat_particles.go.
+	// wrapped says this line's card has had its particles raised, so a card's stack is wrapped once.
+	// See combat_particles.go.
 	wrapped bool
 }
 
@@ -1142,22 +1142,18 @@ func mathFace(gs *state.GlobalState, size float64) *text.GoTextFace {
 	return &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: size}
 }
 
-// handCardCenter is where a figure sets off from: the middle of the card that paid it, **at rest**.
-//
-// **Nothing is lifted while a figure is in the air.** The cards go back down when the tally starts
-// and the shields form in a phase where nothing is raised at all, so a point measured from the
-// lifted position would sit a card's height above the card the figure comes out of.
+// handCardCenter is where a figure sets off from: the middle of the card that paid it. Nothing on
+// the table lifts, so its seat is where it is.
 //
 // **It recomputes the seat rather than storing a point**, exactly as every card in flight on this
 // screen does — the row re-lays out under a moving thing, and a cached coordinate goes stale.
 func (s *CombatScene) handCardCenter(gs *state.GlobalState, side combat.Side, seat int) image.Point {
 	var at image.Point
 	if side == combat.SideB {
-		at = enemySeatAt(gs, seat, len(s.Theater.enemyDealt), s.enemySplit())
+		at = s.enemyPoint(gs, seat)
 	} else {
-		at = playedSeatAt(gs, seat, len(s.Theater.resolved), s.playedSplit())
+		at = s.playedPoint(gs, seat)
 	}
-	at = lift(at, false)
 	return image.Pt(at.X+cardWidth/2, at.Y+cardHeight/2)
 }
 
@@ -1307,7 +1303,6 @@ func (b *handMathBox) Tick() {
 	all := true
 	for c := range b.columns {
 		col := &b.columns[c]
-		col.verdictT.Tick()
 		if col.done() {
 			continue
 		}
@@ -1359,11 +1354,6 @@ func (b *handMathBox) started(col, item int) {
 	b.freshShakes = append(b.freshShakes, ref)
 	b.freshSignals = append(b.freshSignals, ref)
 }
-
-// counting reports whether the box has moved past the announcement into the lines. **It is what
-// puts the hand's cards back down**: they are raised to say which cards the announcement is about,
-// and the lines that follow need no card raised — the figures fly out of the cards where they stand.
-func (b *handMathBox) counting() bool { return b.active && b.shoutT.Done() }
 
 // multStarted reports whether any line's multiplier has set off, which is when the banner — whose
 // second line that figure is — is taken down.
@@ -1557,7 +1547,7 @@ func (s *CombatScene) drawHandMath(gs *state.GlobalState, screen *ebiten.Image) 
 		switch {
 		case col.unthrown:
 			alpha = mathUnthrownAlpha
-		case col.verdict != "":
+		case col.intercepted:
 			alpha = mathVerdictDim
 		}
 		for i := range col.items {
@@ -1573,11 +1563,6 @@ func (s *CombatScene) drawHandMath(gs *state.GlobalState, screen *ebiten.Image) 
 			case i == col.at:
 				drawArrivingMathItem(gs, screen, it)
 			}
-		}
-		if col.verdict != "" {
-			at := col.total().at
-			drawMathText(gs, screen, col.verdict, mathTermSize, ui.VerbInkFor(combat.CategoryAttack), at,
-				popScale(mathPopFromScale, col.verdictT), alphaOf(col.verdictT), true)
 		}
 	}
 }

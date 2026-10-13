@@ -18,7 +18,26 @@ func shieldScene(els ...combat.Element) *CombatScene {
 	s.Theater.enemyDealt = make([]dealtCard, 2)
 	s.fighter = &entities.Combatant{}
 	s.enemy = &entities.Combatant{}
+	// **Both standing**: a fight with a fighter down forms no shields at all.
+	s.fighter.CurrentLife, s.enemy.CurrentLife = 100, 100
 	return s
+}
+
+// **Once a fighter is down the defend phase is over**: the turn's shields, a helm's included, are
+// dropped rather than formed over a duel that has ended.
+func TestAKillingBlowFormsNoShields(t *testing.T) {
+	s := shieldScene(combat.Fire)
+	s.noteShieldRaise(raisedAt(0, 2, combat.Fire))
+	s.noteWard(combat.Event{Kind: combat.KindWarded, Side: combat.SideA, Amount: 1, Element: combat.Earth})
+	s.enemy.CurrentLife = 0
+
+	if s.formPendingShields() {
+		t.Error("shields formed after the killing blow")
+	}
+	if heaped(s, combat.SideA) != 0 || len(s.Theater.pendingRaises) != 0 {
+		t.Errorf("%d shields standing and %d still pending after the duel ended",
+			heaped(s, combat.SideA), len(s.Theater.pendingRaises))
+	}
 }
 
 // raisedAt is the event the engine emits for a card at a seat putting shields up.
@@ -73,8 +92,8 @@ func TestTheTurnsShieldsFormWhenTheTurnIsOver(t *testing.T) {
 	}
 }
 
-// **A block throws a shield of the element the engine spent**, onto the seat of the attack it ate,
-// and the heap it came off is one shorter.
+// **A block throws a shield of the element the engine spent** to meet the attack it ate, and the
+// heap it came off is one shorter.
 func TestABlockThrowsTheShieldItSpent(t *testing.T) {
 	gs := testState()
 	s := shieldScene(combat.Fire, combat.Ice)
@@ -84,12 +103,12 @@ func TestABlockThrowsTheShieldItSpent(t *testing.T) {
 	s.noteBlock(gs, combat.Event{Kind: combat.KindBlocked, Side: combat.SideA, Target: combat.SideA,
 		Element: combat.Ice, Slot: 1, Surged: true})
 
-	if len(s.Theater.smothers) != 1 {
-		t.Fatalf("%d shields thrown, want 1", len(s.Theater.smothers))
+	if len(s.Theater.intercepts) != 1 {
+		t.Fatalf("%d shields thrown, want 1", len(s.Theater.intercepts))
 	}
-	m := s.Theater.smothers[0]
-	if m.element != cards.Ice || m.seat != 1 || !m.surged {
-		t.Errorf("threw a %s shield at seat %d (surged %v), want the ice one at seat 1, surged", m.element, m.seat, m.surged)
+	m := s.Theater.intercepts[0]
+	if m.shield != cards.Ice || m.stopped != 1 || m.label != "SURGE" {
+		t.Errorf("threw a %s shield at seat %d (label %q), want the ice one at seat 1, SURGE", m.shield, m.stopped, m.label)
 	}
 	if p := s.pileAtSeat(combat.SideA, 1); p != nil {
 		t.Errorf("the ice heap still holds %d shields", len(p.shields))
@@ -99,7 +118,8 @@ func TestABlockThrowsTheShieldItSpent(t *testing.T) {
 	}
 }
 
-// **The cursor waits for a thrown shield to land**, then lets go while the shield stays on the card.
+// **The cursor waits for a thrown shield to meet its hit and break**, then lets go, and the attack it
+// stopped is counted for the tutorial.
 func TestAThrownShieldHoldsTheCursorUntilItLands(t *testing.T) {
 	gs := testState()
 	s := shieldScene(combat.Fire)
@@ -112,14 +132,14 @@ func TestAThrownShieldHoldsTheCursorUntilItLands(t *testing.T) {
 	if !s.Theater.Running() {
 		t.Fatal("a shield in the air does not hold playback")
 	}
-	for i := 0; i < smotherTotalTicks(); i++ {
+	for i := 0; i < s.Theater.intercepts[0].t.Ticks; i++ {
 		s.Theater.Tick()
 	}
 	if s.Theater.Running() {
-		t.Error("a landed shield still holds playback")
+		t.Error("a finished intercept still holds playback")
 	}
-	if !s.smotheredSeats()[0] {
-		t.Error("the shield is not lying on the card it smothered")
+	if !s.stoppedSeats()[0] {
+		t.Error("the stopped attack is not counted")
 	}
 }
 

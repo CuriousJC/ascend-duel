@@ -326,6 +326,12 @@ type Blow struct {
 	// **Nothing else reads it.** Damage and every relic read `Cards`: what landed is what counts.
 	Rung []int
 
+	// RungGroups is Rung cut into the hand's own groups, each a list of turn indices in turn order:
+	// a Two Pair is two lists of two, a Full House a list of three and a list of two, the No Hand one
+	// list of one. **For the screen**, which marks each group of a hand on its own; nothing that
+	// decides an outcome reads it.
+	RungGroups [][]int
+
 	// Lead is the turn index of the card the hand is named after: the first card of its first
 	// group, or the No Hand itself. It is what the hand event reports as the card the blow
 	// led with.
@@ -385,10 +391,16 @@ func BlowFor(turn []Slot) Blow {
 
 func blowFor(turn []Slot, hands []Hand) Blow {
 	made, hand, lead, satisfied, formed := matchHand(turn, hands)
-	if !formed {
+	var groups [][]int
+	if formed {
+		// **The same reading matchHand picked, read again for its groups**, so they cannot disagree:
+		// `hand` is the rung on the axis it matched on, and the matcher is deterministic.
+		groups, _, _ = matchGroupsOf(turn, hand)
+	} else {
 		made, hand = biggestAttack(turn), noHand(hands)
 		if len(made) > 0 {
 			lead = made[0]
+			groups = [][]int{append([]int(nil), made...)}
 		}
 		satisfied = []HandID{hand.ID}
 	}
@@ -403,6 +415,7 @@ func blowFor(turn []Slot, hands []Hand) Blow {
 	return Blow{
 		Cards:      cards,
 		Rung:       made,
+		RungGroups: groups,
 		Lead:       lead,
 		Hand:       hand,
 		Multiplier: hand.Multiplier,
@@ -578,6 +591,23 @@ func RungsOf(turn []Slot, satisfied []HandID) [][]HandID {
 // The second return is the turn index of the first card of the *first* group — the concept the
 // hand is named after, and what the hand event reports as the card the blow led with.
 func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
+	groups, lead, ok := matchGroupsOf(turn, h)
+	if !ok {
+		return nil, -1, false
+	}
+	var out []int
+	for _, g := range groups {
+		out = append(out, g...)
+	}
+	// The cards are collected group by group, so a full house arrives as its three and then its
+	// two. Sorting puts them back into the order they resolve, which is what a bracket wants.
+	sort.Ints(out)
+	return out, lead, true
+}
+
+// matchGroupsOf is matchCountOf before the groups are flattened: one list of turn indices per group
+// of the hand, in the hand's own group order, each in turn order.
+func matchGroupsOf(turn []Slot, h Hand) ([][]int, int, bool) {
 	type tally struct {
 		value   int
 		members []int
@@ -621,7 +651,7 @@ func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
 		wilds = nil
 	}
 
-	var out []int
+	var out [][]int
 	lead := -1
 	for _, g := range h.Groups {
 		best, bestCount := -1, 0
@@ -653,12 +683,10 @@ func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
 		if lead < 0 {
 			lead = bestTake[0]
 		}
-		out = append(out, bestTake...)
+		take := append([]int(nil), bestTake...)
+		sort.Ints(take)
+		out = append(out, take)
 	}
-
-	// The cards are collected group by group, so a full house arrives as its three and then its
-	// two. Sorting puts them back into the order they resolve, which is what a bracket wants.
-	sort.Ints(out)
 	return out, lead, true
 }
 

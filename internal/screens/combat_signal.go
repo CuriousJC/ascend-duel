@@ -658,12 +658,12 @@ func (s *CombatScene) signalOrigin(gs *state.GlobalState, c cardSignal) (image.P
 		if c.seat < 0 || c.seat >= len(s.Theater.resolved) {
 			return image.Point{}, false
 		}
-		at = playedSeatAt(gs, c.seat, len(s.Theater.resolved), s.playedSplit())
+		at = s.playedPoint(gs, c.seat)
 	} else {
 		if c.seat < 0 || c.seat >= len(s.Theater.enemyDealt) {
 			return image.Point{}, false
 		}
-		at = enemySeatAt(gs, c.seat, len(s.Theater.enemyDealt), s.enemySplit())
+		at = s.enemyPoint(gs, c.seat)
 	}
 	return image.Pt(at.X+cardWidth/2, at.Y+cardHeight/2), true
 }

@@ -2417,6 +2417,57 @@
     ]
   },
   {
+    "RelicRecord": "stagger-slash",
+    "Name": "Concussive Saber",
+    "Family": "Form staggers",
+    "Art": "",
+    "Draw": "a curved steel saber with a heavy blunted spine, a leather hilt and a jade pommel, a ring of shockwave rippling off the blade",
+    "Text": "Every slashing card you play raises a shield of its element.",
+    "Rarity": "uncommon",
+    "Unlock": "slash-stagger",
+    "Rules": [
+      {
+        "When": "turn-taken",
+        "If": { "Form": "slash" },
+        "Then": [{ "Do": "shield-per-card", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "stagger-crush",
+    "Name": "Stunning Club",
+    "Family": "Form staggers",
+    "Art": "",
+    "Draw": "a heavy granite club with a leather strap and a jade pommel, little stars of a daze circling its head",
+    "Text": "Every crushing card you play raises a shield of its element.",
+    "Rarity": "uncommon",
+    "Unlock": "crush-stagger",
+    "Rules": [
+      {
+        "When": "turn-taken",
+        "If": { "Form": "crush" },
+        "Then": [{ "Do": "shield-per-card", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "stagger-stab",
+    "Name": "Surgical Spear",
+    "Family": "Form staggers",
+    "Art": "",
+    "Draw": "a slender ivory spear with a fine needle point, a leather-wrapped shaft and a jade pommel, a single precise glint at its tip",
+    "Text": "Every stabbing card you play raises a shield of its element.",
+    "Rarity": "uncommon",
+    "Unlock": "stab-stagger",
+    "Rules": [
+      {
+        "When": "turn-taken",
+        "If": { "Form": "stab" },
+        "Then": [{ "Do": "shield-per-card", "Amount": 1 }]
+      }
+    ]
+  },
+  {
     "RelicRecord": "eternity-pearl",
     "Name": "Eternity Pearl",
     "Family": "Mythics",

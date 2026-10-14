@@ -208,6 +208,9 @@ func (s *CombatScene) throwColumn(gs *state.GlobalState, c int) {
 	col.thrown = true
 	// Whatever became of the hit, the total is no longer resting: its wrap stops here.
 	s.closeWrap(c)
+	// **A stagger's shields leave their ring as the card's hit sets off**, whatever the hit then
+	// does — a card that fizzles or is blocked still earned them. See flyStaggers.
+	s.flyStaggers(gs, box.side, col.seat)
 
 	if col.logAt < 0 || col.logAt >= len(s.log) {
 		col.unthrown = true

@@ -353,6 +353,36 @@ var animGestures = []animGesture{
 		draw:  drawAnimConsume,
 	},
 	{
+		name:        "pane: tans",
+		definedOnly: true,
+		where:       "drawScrollPane, scrollRect, scrollTans",
+		what:        "The pane under a card's working, unrolling and taking a sum, in five steps of tan from the shipped ground.",
+		ticks:       func() int { return ui.Beat(5, 1) },
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawScrollOptions(gs, screen, at, p)
+		},
+	},
+	{
+		name:        "pane: scroll",
+		definedOnly: true,
+		where:       "ui.DrawScroll, drawScrollArtOptions",
+		what:        "The scroll art in tans 2, 3 and 4: top roll, stretched paper, bottom roll unrolling down.",
+		ticks:       func() int { return ui.Beat(5, 1) },
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawScrollArtOptions(gs, screen, at, p, true)
+		},
+	},
+	{
+		name:        "pane: scroll, no top",
+		definedOnly: true,
+		where:       "ui.DrawScroll, drawScrollArtOptions",
+		what:        "The same without the top roll: the paper runs out from under the card and only the bottom roll moves.",
+		ticks:       func() int { return ui.Beat(5, 1) },
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawScrollArtOptions(gs, screen, at, p, false)
+		},
+	},
+	{
 		name:  "wrap: elemental",
 		where: "ui.DrawParticleWrap, MotionElemental",
 		what:  "Particles round a resting total, each element its own physics. Rows: shards, sparks, mixed.",

@@ -264,6 +264,10 @@ var choreography = map[combat.EventKind]flightSpec{
 		anchorNone, anchorShieldHeap, gesturePop,
 		"a helm's shield is made by the ring, so it forms on the ring - with the turn's other shields, once its arithmetic is done",
 	},
+	combat.KindStaggered: {
+		anchorRelic, anchorShieldHeap, gestureFly,
+		"the shield is the ring's, earned by one card, so it leaves the ring and flies to that card as its hit sets off",
+	},
 	combat.KindReflected: {
 		anchorRelic, anchorTargetCard, gestureFly,
 		"the thorns are the ring's, so the figure leaves the ring and lands in the thrower's bar like any blow",
@@ -376,6 +380,10 @@ type combatTheater struct {
 	// Running**: nothing waits on decoration. See combat_particles.go.
 	particles []particleField
 
+	// scrolls are the panes each card's working is written on. **Not in Running** either. See
+	// combat_scrolls.go.
+	scrolls []mathScroll
+
 	// drains are the shares of a blow currently traveling back out of the body they were taken
 	// from, and the reason the drainer's health bar can lag the life it has already been given.
 	// See combat_drain.go — the hits' rule pointing the other way.
@@ -438,6 +446,7 @@ func (t *combatTheater) Tick() {
 
 	t.hits = ui.Advance(t.hits)
 	t.particles = ui.Advance(t.particles)
+	t.scrolls = ui.Advance(t.scrolls)
 	// **A tithe is paid into the VITAE row as it lands**, the signals' rule: the row is the drawing
 	// and the purse the model, and the two meet at the arrival.
 	for i := range t.drains {

@@ -315,7 +315,9 @@ func relicEffect(key string, in data.RelicEffectData) (combat.RelicEffect, error
 }
 
 // Wear puts a relic on, at the right-hand end of the row. It reports false for a record the catalog
-// does not hold, for one already worn, and for the sixth relic.
+// does not hold and for the sixth relic. **A second copy of a worn relic goes on**, and both fire;
+// see canWearAs. Two copies share what is kept by record — the accumulator and the weightless
+// flag — and Sell takes the leftmost.
 //
 // **Worn order is the order relics fire in**, so appending is what makes the row on screen the rule:
 // a relic bought later applies later, and the player can see which.
@@ -482,6 +484,10 @@ func (s *Session) EquipWorn(d combat.Duelist, worn []combat.WornRelic) combat.Du
 	d.MaxLife = s.raiseLifeForBosses(d.MaxLife)
 	d.CurrentLife = s.raiseLifeForBosses(d.CurrentLife)
 
+	// **The finger count goes on before any relic does.** `Wearing` refuses a relic past the
+	// duelist's own count, and a fighter not yet handed the run's carries zero, which reads as the
+	// default — so a run wearing more than the default would be dealt a fighter missing the rest.
+	d.RelicSlots = s.RelicSlots()
 	for _, w := range worn {
 		d = d.Wearing(w)
 	}
@@ -528,11 +534,6 @@ func (s *Session) EquipWorn(d combat.Duelist, worn []combat.WornRelic) combat.Du
 	// that called SetRoundLimit would leave the clock moved for the rest of the journey. Same shape
 	// as AddedHP and HPScale above. See combat.DoAdjustRoundLimit.
 	d.RoundLimit = combat.RoundLimitFor(worn, s.RoundLimit())
-
-	// **The finger count goes over with it, and for the same reason.** A fighter equipped without
-	// it carries a zero, which the rules read as the default — so this is not load-bearing today
-	// and becomes load-bearing the moment anything moves it. See RelicSlots below.
-	d.RelicSlots = s.RelicSlots()
 
 	// **The tonics that bend the rules inside a fight go over with the rest.** A cost cut comes off
 	// every card after the relics have had their say, and a vitae multiple scales every vitae the

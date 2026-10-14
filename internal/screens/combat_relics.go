@@ -339,6 +339,11 @@ func wornRelics(gs *state.GlobalState) []data.RelicData {
 type rowSeat struct {
 	key  string
 	cast int
+
+	// copy is which copy of key this seat holds, counting from 0 in the run's worn order. **A run
+	// may wear a relic more than once**, and each copy is its own seat and its own relic on the
+	// fighter: a seat keyed by the record alone would fold every copy into one.
+	copy int
 }
 
 // runRelic is whether this seat holds one of the run's relics rather than a cantrip-relic.
@@ -359,26 +364,29 @@ func (s *CombatScene) relicRowSeats(gs *state.GlobalState) []rowSeat {
 	if gs.Run != nil {
 		worn = gs.Run.Worn()
 	}
-	isWorn := make(map[string]bool, len(worn))
+	// **One seat per worn copy**: the n-th time a key appears in the worn list is that key's copy n.
+	copies := make(map[string]int, len(worn))
+	wornSeats := make([]rowSeat, 0, len(worn))
 	for _, k := range worn {
-		isWorn[k] = true
+		wornSeats = append(wornSeats, rowSeat{key: k, cast: -1, copy: copies[k]})
+		copies[k]++
 	}
 
 	out := make([]rowSeat, 0, len(worn)+len(s.cast))
-	seenKey, seenCast := map[string]bool{}, map[int]bool{}
+	seenRun, seenCast := map[rowSeat]bool{}, map[int]bool{}
 	for _, r := range s.rowOrder {
 		switch {
-		case r.runRelic() && isWorn[r.key] && !seenKey[r.key]:
-			seenKey[r.key] = true
+		case r.runRelic() && r.copy < copies[r.key] && !seenRun[r]:
+			seenRun[r] = true
 			out = append(out, r)
 		case !r.runRelic() && r.cast < len(s.cast) && !seenCast[r.cast]:
 			seenCast[r.cast] = true
 			out = append(out, r)
 		}
 	}
-	for _, k := range worn {
-		if !seenKey[k] {
-			out = append(out, rowSeat{key: k, cast: -1})
+	for _, r := range wornSeats {
+		if !seenRun[r] {
+			out = append(out, r)
 		}
 	}
 	for i := range s.cast {

@@ -24,6 +24,15 @@ type Scene interface {
 	Draw(gs *state.GlobalState, screen *ebiten.Image)
 }
 
+// OverChrome is a scene with a layer drawn over the game's frame — the cog and the ledger button —
+// rather than under it. **Optional**, like Reporter: the frame calls it after drawing itself and
+// before the ledger panel, so a panel the frame opens still covers it. The combat screen's working
+// is the one user: a line of arithmetic long enough to reach the bottom of the screen runs over the
+// buttons there rather than under them.
+type OverChrome interface {
+	DrawOverChrome(gs *state.GlobalState, screen *ebiten.Image)
+}
+
 // Reporter is a scene that can describe itself for a crash report. **Optional**: a screen that does
 // not implement it is left out of the report's scene tier rather than broken by not having one, so
 // a new screen owes this nothing.

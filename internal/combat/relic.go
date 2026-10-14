@@ -615,6 +615,18 @@ const (
 	//
 	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
 	DoCopyConsumable
+
+	// DoShieldPerCard raises Amount shields **for every card of the turn the rule matches**, each in
+	// that card's own element — the staggers. The shields go up at the close of the turn, after the
+	// hits, and stand through the opponent's like a Brace's. Each is announced as a KindStaggered
+	// naming the card that earned it. See staggerAtTurnEnd.
+	//
+	// **Every matching card counts, whatever its hit did**, the reading DoSurgePerCard takes: a card
+	// that fizzled or was blocked was still played. Refused with no `If`, since there would be
+	// nothing to count, and bounded per card at MaxShields like DoRaiseShield.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoShieldPerCard
 )
 
 // RelicVerbs is every verb in a fixed order.
@@ -626,7 +638,7 @@ func RelicVerbs() []RelicVerb {
 		DoScaleHandDamage, DoScaleDamagePerVitae, DoDrainDamage, DoHealShare, DoScaleRolls,
 		DoAdjustRoundLimit, DoAdjustEssenceTargets, DoRaiseShield, DoMatchFoeShields,
 		DoKeepShields, DoReflectDamage, DoHealOnBlock, DoVitaeOnBlock, DoSetForm,
-		DoPierceElement, DoSurgePerCard, DoAwaken, DoCopyConsumable}
+		DoPierceElement, DoSurgePerCard, DoAwaken, DoCopyConsumable, DoShieldPerCard}
 }
 
 func (v RelicVerb) String() string {
@@ -705,6 +717,8 @@ func (v RelicVerb) String() string {
 		return "awaken"
 	case DoCopyConsumable:
 		return "copy-consumable"
+	case DoShieldPerCard:
+		return "shield-per-card"
 	default:
 		return "adjust-cost"
 	}
@@ -733,7 +747,7 @@ func verbMoment(v RelicVerb) Moment {
 		return MomentAttackLands
 	case DoHealShare, DoRaiseShield:
 		return MomentTurnStart
-	case DoGrowOnTurn, DoResetGrowth, DoGrowPerCard, DoSurgePerCard:
+	case DoGrowOnTurn, DoResetGrowth, DoGrowPerCard, DoSurgePerCard, DoShieldPerCard:
 		return MomentTurnTaken
 	case DoSetElement:
 		return MomentCardDrawn
@@ -1034,6 +1048,9 @@ func CheckRelic(key string, rules []RelicRule) error {
 			if e.Do == DoSurgePerCard && !rule.If.Any() {
 				return fmt.Errorf("%s surges per card and names no card to count", key)
 			}
+			if e.Do == DoShieldPerCard && !rule.If.Any() {
+				return fmt.Errorf("%s shields per card and names no card to count", key)
+			}
 			// **The first card is what an awakening is about**, so a rule that does not name it
 			// would be adding to every card but one for no reason a player could see.
 			if e.Do == DoAwaken && !rule.If.First {
@@ -1080,7 +1097,7 @@ func checkEffect(key string, e RelicEffect) error {
 		if e.Element == Basic {
 			return fmt.Errorf("%s pierces basic, and a basic card never fizzles", key)
 		}
-	case DoRaiseShield:
+	case DoRaiseShield, DoShieldPerCard:
 		// **Bounded like a card**: one relic raising more shields than one card may would be a
 		// defend card with no cost and a bigger number.
 		if e.Amount <= 0 || e.Amount > MaxShields {

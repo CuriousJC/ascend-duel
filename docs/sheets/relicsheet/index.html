@@ -88,7 +88,7 @@
 <h1>Relic sheet</h1>
 
 <p class="facts">
-  145 relics, 0 of them drawing the default face,
+  148 relics, 3 of them drawing the default face,
   0 with no subject paragraph written.
   Relic card <code>200&times;280</code>,
   corner radius <code>15</code>,
@@ -154,7 +154,7 @@
   <strong>Two shelves, because a relic can be locked.</strong> A relic carrying an
   <code>Unlock</code> is offered only to a run started by a player whose profile holds that key,
   and an achievement's <code>Unlocks</code> is what grants it. The first list is a player holding
-  every unlock; the second is a new player's shelf, with the 22 locked relics out of the
+  every unlock; the second is a new player's shelf, with the 25 locked relics out of the
   draw &mdash; and the shares move, since every tier's tickets are over a smaller catalog. The
   <em>pool</em> chips below narrow the catalog the same way.
 </p>
@@ -163,11 +163,11 @@
 
   <li class="tier common"><strong>common</strong>
     74 relics &middot; 3 vitae, sells for 1 &middot;
-    weight 10 each &middot; 77.1% of a shelf draw</li>
+    weight 10 each &middot; 76.1% of a shelf draw</li>
 
   <li class="tier uncommon"><strong>uncommon</strong>
-    50 relics &middot; 5 vitae, sells for 2 &middot;
-    weight 4 each &middot; 20.8% of a shelf draw</li>
+    53 relics &middot; 5 vitae, sells for 2 &middot;
+    weight 4 each &middot; 21.8% of a shelf draw</li>
 
   <li class="tier rare"><strong>rare</strong>
     20 relics &middot; 7 vitae, sells for 3 &middot;
@@ -249,6 +249,7 @@
     <button type="button" data-facet="pool" data-value="card-four-relics" aria-pressed="false">behind card-four-relics<i>1</i></button>
     <button type="button" data-facet="pool" data-value="crush-attunement" aria-pressed="false">behind crush-attunement<i>1</i></button>
     <button type="button" data-facet="pool" data-value="crush-repeat-relics" aria-pressed="false">behind crush-repeat-relics<i>1</i></button>
+    <button type="button" data-facet="pool" data-value="crush-stagger" aria-pressed="false">behind crush-stagger<i>1</i></button>
     <button type="button" data-facet="pool" data-value="earth-attunement" aria-pressed="false">behind earth-attunement<i>1</i></button>
     <button type="button" data-facet="pool" data-value="earth-repeat-relics" aria-pressed="false">behind earth-repeat-relics<i>1</i></button>
     <button type="button" data-facet="pool" data-value="element-five-relics" aria-pressed="false">behind element-five-relics<i>1</i></button>
@@ -263,12 +264,14 @@
     <button type="button" data-facet="pool" data-value="no-hand-relics" aria-pressed="false">behind no-hand-relics<i>1</i></button>
     <button type="button" data-facet="pool" data-value="slash-attunement" aria-pressed="false">behind slash-attunement<i>1</i></button>
     <button type="button" data-facet="pool" data-value="slash-repeat-relics" aria-pressed="false">behind slash-repeat-relics<i>1</i></button>
+    <button type="button" data-facet="pool" data-value="slash-stagger" aria-pressed="false">behind slash-stagger<i>1</i></button>
     <button type="button" data-facet="pool" data-value="stab-attunement" aria-pressed="false">behind stab-attunement<i>1</i></button>
     <button type="button" data-facet="pool" data-value="stab-repeat-relics" aria-pressed="false">behind stab-repeat-relics<i>1</i></button>
+    <button type="button" data-facet="pool" data-value="stab-stagger" aria-pressed="false">behind stab-stagger<i>1</i></button>
   </div>
   <div class="sheet-facet"><span class="sheet-facet-label">rarity</span>
     <button type="button" data-facet="rarity" data-value="common" aria-pressed="false">common<i>74</i></button>
-    <button type="button" data-facet="rarity" data-value="uncommon" aria-pressed="false">uncommon<i>50</i></button>
+    <button type="button" data-facet="rarity" data-value="uncommon" aria-pressed="false">uncommon<i>53</i></button>
     <button type="button" data-facet="rarity" data-value="rare" aria-pressed="false">rare<i>20</i></button>
     <button type="button" data-facet="rarity" data-value="mythic" aria-pressed="false">mythic<i>1</i></button>
   </div>
@@ -308,6 +311,7 @@
     <button type="button" data-facet="family" data-value="form-attunements" aria-pressed="false">Form attunements<i>3</i></button>
     <button type="button" data-facet="family" data-value="elemental-awakenings" aria-pressed="false">Elemental awakenings<i>5</i></button>
     <button type="button" data-facet="family" data-value="form-awakenings" aria-pressed="false">Form awakenings<i>3</i></button>
+    <button type="button" data-facet="family" data-value="form-staggers" aria-pressed="false">Form staggers<i>3</i></button>
     <button type="button" data-facet="family" data-value="mythics" aria-pressed="false">Mythics<i>1</i></button>
   </div>
   <div class="sheet-filters-end">
@@ -4098,7 +4102,7 @@ different forms deal 3x DMG.</p>
         
           <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
         
-        <p class="locked">locked behind <code>stab-attunement</code> &mdash; THREE HUNDRED THRUSTS — Play 300 stabbing cards.</p>
+        <p class="locked">locked behind <code>stab-attunement</code> &mdash; A THOUSAND THRUSTS — Play 1000 stabbing cards.</p>
         
         <p class="text">Every stabbing card you play banks &#43;1 AP for your next turn.</p>
         
@@ -4123,7 +4127,7 @@ different forms deal 3x DMG.</p>
         
           <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
         
-        <p class="locked">locked behind <code>slash-attunement</code> &mdash; THREE HUNDRED CUTS — Play 300 slashing cards.</p>
+        <p class="locked">locked behind <code>slash-attunement</code> &mdash; A THOUSAND CUTS — Play 1000 slashing cards.</p>
         
         <p class="text">Every slashing card you play banks &#43;1 AP for your next turn.</p>
         
@@ -4148,7 +4152,7 @@ different forms deal 3x DMG.</p>
         
           <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
         
-        <p class="locked">locked behind <code>crush-attunement</code> &mdash; THREE HUNDRED BLOWS — Play 300 crushing cards.</p>
+        <p class="locked">locked behind <code>crush-attunement</code> &mdash; A THOUSAND BLOWS — Play 1000 crushing cards.</p>
         
         <p class="text">Every crushing card you play banks &#43;1 AP for your next turn.</p>
         
@@ -4380,6 +4384,91 @@ different forms deal 3x DMG.</p>
         </ul>
         
           <p class="art">art: <code>awaken-crush</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+</section>
+
+<section class="sheet-group" data-family="form-staggers">
+<h3 class="family">
+  Form staggers
+  <span>3 relics &middot; all uncommon</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate sheet-item" data-rarity="uncommon" data-pool="slash-stagger">
+      <img src="relic-stagger-slash.png" width="228" height="308"
+           alt="Concussive Saber">
+      <div class="about">
+        <p class="name">Concussive Saber</p>
+        <div class="record">stagger-slash</div>
+        
+          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+        
+        <p class="locked">locked behind <code>slash-stagger</code> &mdash; THREE HUNDRED CUTS — Play 300 slashing cards.</p>
+        
+        <p class="text">Every slashing card you play raises a shield of its element.</p>
+        
+          <p class="draw">a curved steel saber with a heavy blunted spine, a leather hilt and a jade pommel, a ring of shockwave rippling off the blade</p>
+        
+        
+        <ul class="rules">
+          <li>when turn-taken, if slash → shield-per-card &#43;1</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing the placeholder</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="uncommon" data-pool="crush-stagger">
+      <img src="relic-stagger-crush.png" width="228" height="308"
+           alt="Stunning Club">
+      <div class="about">
+        <p class="name">Stunning Club</p>
+        <div class="record">stagger-crush</div>
+        
+          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+        
+        <p class="locked">locked behind <code>crush-stagger</code> &mdash; THREE HUNDRED BLOWS — Play 300 crushing cards.</p>
+        
+        <p class="text">Every crushing card you play raises a shield of its element.</p>
+        
+          <p class="draw">a heavy granite club with a leather strap and a jade pommel, little stars of a daze circling its head</p>
+        
+        
+        <ul class="rules">
+          <li>when turn-taken, if crush → shield-per-card &#43;1</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing the placeholder</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate sheet-item" data-rarity="uncommon" data-pool="stab-stagger">
+      <img src="relic-stagger-stab.png" width="228" height="308"
+           alt="Surgical Spear">
+      <div class="about">
+        <p class="name">Surgical Spear</p>
+        <div class="record">stagger-stab</div>
+        
+          <p class="price"><span class="rarity uncommon">uncommon</span>5 vitae, sells back for 2</p>
+        
+        <p class="locked">locked behind <code>stab-stagger</code> &mdash; THREE HUNDRED THRUSTS — Play 300 stabbing cards.</p>
+        
+        <p class="text">Every stabbing card you play raises a shield of its element.</p>
+        
+          <p class="draw">a slender ivory spear with a fine needle point, a leather-wrapped shaft and a jade pommel, a single precise glint at its tip</p>
+        
+        
+        <ul class="rules">
+          <li>when turn-taken, if stab → shield-per-card &#43;1</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing the placeholder</p>
         
       </div>
     </div>

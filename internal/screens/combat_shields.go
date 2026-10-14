@@ -55,6 +55,68 @@ type shieldPile struct {
 type heapShield struct {
 	element cards.Element
 	form    ui.Travel
+
+	// from is where a shield flying in set off — a stagger's ring — and flies says to draw the
+	// forming as that journey rather than as a drop into place. See flyStaggers.
+	from  ui.ShieldPose
+	flies bool
+}
+
+// shieldFlyTicks is a stagger's shield crossing from its ring to its card: the hit's own flight, so
+// the shield and the figure leave together and the card has its shield by the time the blow lands.
+func shieldFlyTicks() int { return hitFlyTicks() }
+
+// flyStaggers sends every shield a stagger raised over one card out of its ring and onto that card,
+// on the beat the card's hit sets off. **It reads ahead in the log** — the staggers are announced as
+// the turn closes, after every hit — which is the hand dialog's licence and stays inside the turn:
+// the walk stops at the first event of the other side's. A stagger flown here is walked past, so
+// the turn's bundle does not form it a second time; one this does not reach (a card whose line was
+// never thrown) still forms over its card with the rest.
+func (s *CombatScene) flyStaggers(gs *state.GlobalState, side combat.Side, seat int) {
+	for at := s.cursor; at < len(s.log); at++ {
+		e := s.log[at]
+		if e.Kind == combat.KindRoundEnd || e.Side != side {
+			break
+		}
+		if e.Kind != combat.KindStaggered || e.Slot != seat || e.Amount <= 0 || s.Theater.walked[at] {
+			continue
+		}
+		s.markShown(at)
+		from, ok := s.relicShieldPose(gs, e.Relic)
+		if !ok {
+			// No ring on screen to leave from: the shield forms where it lands, like a raise.
+			s.Theater.pendingRaises = append(s.Theater.pendingRaises, e)
+			continue
+		}
+		if i, ok := s.wornSeatOf(gs, e.Relic); ok {
+			s.shakeRelicAt(i)
+		}
+		p := s.pileAtSeat(e.Side, e.Slot)
+		if p == nil {
+			s.Theater.piles = append(s.Theater.piles, shieldPile{side: e.Side, seat: e.Slot})
+			p = &s.Theater.piles[len(s.Theater.piles)-1]
+		}
+		for i := 0; i < e.Amount; i++ {
+			p.shields = append(p.shields, heapShield{
+				element: ui.ArtFor(e.Element),
+				form:    ui.NewTravel(i*ui.ShieldStaggerTicks(), shieldFlyTicks()),
+				from:    from,
+				flies:   true,
+			})
+		}
+	}
+}
+
+// relicShieldPose is a shield sitting on a worn ring, at the ring's own scale: where a stagger's
+// shield sets off from.
+func (s *CombatScene) relicShieldPose(gs *state.GlobalState, id combat.RelicID) (ui.ShieldPose, bool) {
+	seat, ok := s.wornSeatOf(gs, id)
+	if !ok {
+		return ui.ShieldPose{}, false
+	}
+	r := s.relicRow(gs).RowSlot(gs, seat)
+	scale := float64(r.Dy()) / cardHeight
+	return ui.HeapPose(float64(r.Min.X+r.Max.X)/2, float64(r.Min.Y+r.Max.Y)/2, 0, 1, scale), true
 }
 
 // fadingShield is a shield going away where it stood: lapsing unspent as its card leaves the
@@ -78,7 +140,7 @@ func shieldFadeTicks() int { return ui.Beat(1, 2) }
 // **Each heap stands over its own card, named by `Event.Slot`** — nothing is lit during the defend
 // phase, so there is no lit card to read a seat off.
 func (s *CombatScene) noteShieldRaise(e combat.Event) bool {
-	if e.Kind != combat.KindRaised {
+	if e.Kind != combat.KindRaised && e.Kind != combat.KindStaggered {
 		return false
 	}
 	s.Theater.pendingRaises = append(s.Theater.pendingRaises, e)
@@ -429,6 +491,10 @@ func (s *CombatScene) drawShieldPiles(gs *state.GlobalState, screen *ebiten.Imag
 		for i, sh := range p.shields {
 			pose, ok := s.shieldPose(gs, p, i)
 			if !ok || sh.form.Waiting() {
+				continue
+			}
+			if sh.flies {
+				ui.DrawShield(screen, sh.element, ui.LerpPose(sh.from, pose, ui.EaseOut(sh.form.Progress())))
 				continue
 			}
 			ui.DrawShield(screen, sh.element, pose.Forming(sh.form.Progress()))

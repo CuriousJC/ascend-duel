@@ -2032,5 +2032,33 @@
     "Seed": "CGPBSC",
     "Fight": 7,
     "Vitae": 20
+  },
+  {
+    "ScenarioRecord": "staggers",
+    "Note": "The three staggers worn together, to watch a shield leave its ring and fly to each attack of its form as that card's hit sets off. The hand holds two slashes (a Cut and a Slice), a crush (a Bash) and a stab (a Jab), so playing all four sends four shields out of three rings; a Brace is there to show a defense's shields still forming in place beside them. Giant Bat, so the fight lasts.",
+    "Relics": ["stagger-slash", "stagger-crush", "stagger-stab"],
+    "Enemy": "animals-outer-bat",
+    "Hand": [
+      { "Card": "Cut", "Element": "fire" },
+      { "Card": "Slice", "Element": "ice" },
+      { "Card": "Bash", "Element": "earth" },
+      { "Card": "Jab", "Element": "lightning" },
+      { "Card": "Brace", "Element": "arcane" }
+    ],
+    "Screen": "combat"
+  },
+  {
+    "ScenarioRecord": "math-overflow",
+    "Note": "More working than the screen is tall: nine relics that all multiply an ice Cut, each worn three times over - its knife, the ice ring, the Sickle, the ice-slash blade, the 1 AP relic, both growths and both shield streaks - so each line runs to a dozen rows; and the two repeats and the lead echo make the Cut land again and again, every landing another whole line stacked under the last. The lower rows land on the floor, heaped over each other, with each total square on top of the pile before it flies. Play the two ice Cuts together for two overflowing stacks side by side; the Jab and the Brace are there to show a short line beside a long one. Giant Bat, so the fight lasts. RelicSlots is 30, over the shipped five.",
+    "RelicSlots": 30,
+    "Relics": ["hunting-knife", "dmgx-ice", "dmg-all-slash", "dmg-ice-slash", "dmgx-one-ap", "growth-ice", "growth-slash", "dmg-no-shield", "dmg-shield-use", "hunting-knife", "dmgx-ice", "dmg-all-slash", "dmg-ice-slash", "dmgx-one-ap", "growth-ice", "growth-slash", "dmg-no-shield", "dmg-shield-use", "hunting-knife", "dmgx-ice", "dmg-all-slash", "dmg-ice-slash", "dmgx-one-ap", "growth-ice", "growth-slash", "dmg-no-shield", "dmg-shield-use", "repeat-ice", "repeat-slash", "lead-three-times"],
+    "Enemy": "animals-outer-bat",
+    "Hand": [
+      { "Card": "Cut", "Element": "ice" },
+      { "Card": "Cut", "Element": "ice" },
+      { "Card": "Jab", "Element": "fire" },
+      { "Card": "Brace", "Element": "earth" }
+    ],
+    "Screen": "combat"
   }
 ]

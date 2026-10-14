@@ -257,6 +257,13 @@ var particleArt embed.FS
 //go:embed shield/*.png
 var shieldArt embed.FS
 
+// THE SCROLLS: the papyrus a card's working is written on, keyed by filename stem —
+// `scroll-light`, `scroll-mid`, `scroll-deep`. A top roll, a middle that stretches, a bottom roll.
+// See docs/art/scroll_art_prompt.MD and ui.DrawScroll.
+//
+//go:embed scroll/*.png
+var scrollArt embed.FS
+
 // The relic faces, globbed as a family and keyed by filename stem — `relic/fire.png` is
 // `fire`, which is what `data/relics.json` writes in its Art field.
 //
@@ -458,6 +465,7 @@ func LoadImageData() map[string][]byte {
 	embedFamily(images, portalArt, "portal")
 	embedFamily(images, particleArt, "particle")
 	embedFamily(images, shieldArt, "shield")
+	embedFamily(images, scrollArt, "scroll")
 
 	// Bob's face, for the reason the relic art is here: the tutorial draws him into a card
 	// through internal/cards, which has no graphics context.

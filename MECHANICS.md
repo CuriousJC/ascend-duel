@@ -1850,7 +1850,8 @@ and a proposal landing in a full one is a sibling.
 | **element repeats** | uncommon | the color half of the Twisted form repeats |
 | **held-card relics** | common | DMG per matching card **kept back**, one per color and one per form |
 | **orbs** | common | every flip, element and form — see the tier rule below |
-| **attunements** | uncommon, locked | a pierce per element, a surge per form; each behind the 300-card achievement for its element or form |
+| **attunements** | uncommon, locked | a pierce per element behind the 500-card achievement for its element, a surge per form behind the 1000-card achievement for its form |
+| **staggers** | uncommon, locked | a shield per attack card of one form, behind the 300-card achievement for that form |
 | **awakenings** | common | a first card of one element or form raises every attack after it by 10 |
 | **mythics** | mythic | the Eternity Pearl |
 
@@ -1995,6 +1996,11 @@ on a defend concept can never fire; these reach shields through verbs of their o
   attacker's turn that swung at them ending, and the owner's next turn arriving (`keep-shields`).
   A kept shield stands until a hit eats it. Which ones stay is a function of the stack alone,
   taken in element order, so nothing about when a shield went up decides whether it survives.
+- **A stagger raises a shield for every attack of its form the turn played** — the Concussive
+  Saber for slash, the Stunning Club for crush, the Surgical Spear for stab (`shield-per-card` at
+  `turn-taken`). Each shield is the element of the card that earned it, and every card of the form
+  counts whatever its hit did. They go up as the turn closes and stand through the opponent's turn
+  like any other; on screen each leaves its ring and flies to its card as that card's hit sets off.
 
 **Three more pay out on a block, at their own moment.** `hit-blocked` fires once for every
 incoming hit one of the wearer's shields eats, in `combat.blockedByShield` — the one place a shield

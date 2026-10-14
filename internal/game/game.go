@@ -317,6 +317,9 @@ func (g *Game) draw(screen *ebiten.Image) {
 	// The frame, over the screen it frames. See chrome.go for why the mute button lives here
 	// rather than on four scenes, and why it stands down over a dialog.
 	g.drawChrome(g.GlobalState, screen)
+	if over, ok := g.scene().(ui.OverChrome); ok {
+		over.DrawOverChrome(g.GlobalState, screen)
+	}
 
 	// **Over the chrome as well as the screen**, because it covers both: the cog stands down under
 	// it the way it does under any dialog, and the panel's own X is the way out.

@@ -579,3 +579,40 @@ func TestMomentumCarriesBetweenFights(t *testing.T) {
 		t.Errorf("a fight ending on a wiped streak left the run at %d, want 0", got)
 	}
 }
+
+// TestASecondCopyOfARelicGoesOnAndBothFire. Two Fire Rings are two relics in the row, and a fire
+// card under them is scaled twice — while the shop still refuses to sell a second.
+func TestASecondCopyOfARelicGoesOnAndBothFire(t *testing.T) {
+	run := wearing(t, "dmgx-fire", "dmgx-fire")
+	if got := len(run.WornRelics()); got != 2 {
+		t.Fatalf("two Fire Rings wore as %d relics", got)
+	}
+	bash := combat.Of(combat.Bash, combat.Fire)
+	plain := combat.Duelist{DMG: 10, MaxLife: 10, CurrentLife: 10}
+	one := wearing(t, "dmgx-fire").Equip(plain).CardDamage(bash)
+	two := run.Equip(plain).CardDamage(bash)
+	if two != one*2 {
+		t.Errorf("a second Fire Ring took a fire Bash from %d to %d, want %d", one, two, one*2)
+	}
+
+	run.vitae = 1000
+	if run.CanBuy("dmgx-fire") || run.Buy("dmgx-fire") {
+		t.Error("the shop sold a relic the run is already wearing")
+	}
+}
+
+// TestAFighterWearsEveryRelicTheRunDoes. A run with seven fingers wearing seven relics is dealt a
+// fighter wearing seven, not the default five.
+func TestAFighterWearsEveryRelicTheRunDoes(t *testing.T) {
+	run := bare(t)
+	run.SetRelicSlots(7)
+	for _, key := range []string{"dmgx-fire", "dmgx-ice", "dmgx-lightning", "dmgx-earth", "dmgx-arcane", "dmg-all-slash", "dmg-all-crush"} {
+		if !run.Wear(key) {
+			t.Fatalf("%s would not go on", key)
+		}
+	}
+	d := run.Equip(combat.Duelist{DMG: 10, MaxLife: 10, CurrentLife: 10})
+	if got := len(d.WornRelics()); got != 7 {
+		t.Errorf("a run wearing 7 relics was dealt a fighter wearing %d", got)
+	}
+}

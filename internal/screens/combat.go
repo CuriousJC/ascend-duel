@@ -88,7 +88,9 @@ var eventDwells = map[combat.EventKind]float64{
 	combat.KindRegenerated: 1,
 	combat.KindVitae:       1,
 	// The same, for a helm's shield.
-	combat.KindWarded:    0.25,
+	combat.KindWarded: 0.25,
+	// The same, for a stagger's: its picture is the flight out of the ring, on the card's hit.
+	combat.KindStaggered: 0.25,
 	combat.KindReflected: 1,
 	combat.KindTithed:    1,
 	// **Two beats, because a permanent bonus is the rarest thing that happens on this screen.**
@@ -1341,6 +1343,7 @@ func (s *CombatScene) startRound() {
 	// above is already resolved. See combat_table.go.
 	s.Theater.firingSeats, s.Theater.enemyFiringSeats = nil, nil
 	s.closeWraps()
+	s.closeScrolls()
 	s.Theater.mathBox.Clear()
 	// **What the dialog showed was a position in last round's log**, and this round's log starts
 	// again from nothing.
@@ -1398,6 +1401,9 @@ func eventLabel(e combat.Event) string {
 	case combat.KindWarded:
 		return fmt.Sprintf("warded      %v raises %d %v from %v, standing at %d",
 			e.Side, e.Amount, e.Element, combat.RelicOf(e.Relic).Name, e.Life)
+	case combat.KindStaggered:
+		return fmt.Sprintf("staggered   %v raises %d %v over %v from %v, standing at %d",
+			e.Side, e.Amount, e.Element, combat.ConceptOf(e.Action).Label, combat.RelicOf(e.Relic).Name, e.Life)
 	case combat.KindReflected:
 		return fmt.Sprintf("reflected   %v's %v returns %d to %v, leaving %d",
 			e.Side, combat.RelicOf(e.Relic).Name, e.Amount, e.Target, e.Life)
@@ -1442,6 +1448,8 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 		s.Theater.mathBox.Tick()
 		// A line that has started gets its particles, round the whole of it. See combat_particles.go.
 		s.raiseWraps(gs)
+		// And the pane it is written on. See combat_scrolls.go.
+		s.raiseScrolls(gs)
 
 		// **A played card's riders fire on the beat its own figure sets off.** See
 		// combat_signal.go, where the deferral is argued: these events were reached several beats
@@ -1501,6 +1509,7 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	// hit's dimmed line is still being read while the flights that did land finish.
 	if s.Theater.mathBox.active && !s.Theater.mathBox.Running() {
 		s.closeWraps()
+		s.closeScrolls()
 		s.Theater.mathBox.Clear()
 		// **The turn-length raise comes down with the lines that used it.** See signalRaise.
 		s.Theater.clearRaise()
@@ -1687,7 +1696,7 @@ func (s *CombatScene) applyEvent(gs *state.GlobalState, e combat.Event) {
 	}
 
 	switch e.Kind {
-	case combat.KindRaised:
+	case combat.KindRaised, combat.KindStaggered:
 		s.noteShieldRaise(e)
 		return
 	case combat.KindBlocked:
@@ -1824,6 +1833,9 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// player's played cards left-aligned facing them, and the cards that made the hand standing
 	// on a plate. Over the hand, which is inert during playback, and under the overlay like
 	// everything else. See combat_table.go.
+	// **The scrolls the working is written on, under the cards they hang from** and over the hand row,
+	// which they run down across. See combat_scrolls.go.
+	s.drawScrolls(screen)
 	s.drawRungPlates(gs, screen)
 	s.drawEnemyQueue(gs, screen)
 	s.drawPlayedCards(gs, screen)
@@ -1845,21 +1857,16 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// screen for the few seconds it is up, and it is deliberately over both rows of cards: the
 	// shout is written across the hand row, which is inert while it is up, and every hit's line
 	// under its card. See combat_mathbox.go.
-	// **The wraps under the lines**, so the total reads over its own particles.
-	s.drawParticles(gs, screen, false)
-	s.drawHandMath(gs, screen)
-
 	// **The planned hand's name, in the middle of the half of the table its cards are about to
-	// land in.** It and the shout above can never both be up: this one is gated on `planning()`
-	// and that one only runs during playback. See drawPlannedHand.
+	// land in.** It and the hand dialog's shout can never both be up: this one is gated on
+	// `planning()` and that one only runs during playback. See drawPlannedHand.
 	s.drawPlannedHand(gs, screen)
 
-	// **The damage figures, over the lines they came out of and the card they are flying into.**
-	// They are drawn after the dialog because a figure leaving a line has to be on top of it —
-	// underneath, the first frames of the flight would be hidden by the number it left. **Their trails
-	// go under them**, for the wraps' reason.
-	s.drawParticles(gs, screen, true)
-	s.drawHits(gs, screen)
+	// The working, here only while something of the scene's own is covering the screen; otherwise
+	// it goes over the frame's buttons. See DrawOverChrome.
+	if !s.workingOverChrome(gs) {
+		s.drawWorking(gs, screen)
+	}
 
 	// **After the hits, because a drain is a share of one.** A drain's event is reached after the
 	// hand dialog has finished and its figures have landed, so the order here is about reading the
@@ -1913,6 +1920,38 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// Last of all, so a capture holds the finished frame rather than a half-drawn one.
 	s.demoDraw(gs, screen)
+}
+
+// drawWorking is the hand dialog and what flies out of it: the panes, the wraps, the lines, the
+// trails and the damage figures, in that order.
+//
+// **The scrolls are here only below their cards**: each goes under the card it hangs from, which
+// the table draws, and is drawn again here from the card's bottom edge down — see
+// drawScrollsBelowCards. **The wraps under the lines**, so the total reads over its own particles. **The damage figures
+// over the lines they came out of**, because a figure leaving a line has to be on top of it —
+// underneath, the first frames of the flight would be hidden by the number it left — and their
+// trails under them, for the wraps' reason.
+func (s *CombatScene) drawWorking(gs *state.GlobalState, screen *ebiten.Image) {
+	s.drawScrollsBelowCards(screen)
+	s.drawParticles(gs, screen, false)
+	s.drawHandMath(gs, screen)
+	s.drawParticles(gs, screen, true)
+	s.drawHits(gs, screen)
+}
+
+// workingOverChrome says the working goes over the frame's buttons this frame: **only with nothing
+// of the scene's own up** — the deck, the hands panel, the tutorial — since each of those is
+// drawn over the table and the working is part of the table.
+func (s *CombatScene) workingOverChrome(gs *state.GlobalState) bool {
+	return !s.modalUp() && !runOf(gs).Active()
+}
+
+// DrawOverChrome is the working, over the game's frame: a line of arithmetic long enough to reach
+// the bottom of the screen runs over the buttons there rather than under them. See ui.OverChrome.
+func (s *CombatScene) DrawOverChrome(gs *state.GlobalState, screen *ebiten.Image) {
+	if s.workingOverChrome(gs) {
+		s.drawWorking(gs, screen)
+	}
 }
 
 // currentSlot reports how far into the round's resolution order playback has got: the

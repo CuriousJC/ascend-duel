@@ -177,3 +177,39 @@ func TestARelicPricingTheCardMultipliesTheAwakening(t *testing.T) {
 			w.HandAmounts[1], b.HandDMG, want)
 	}
 }
+
+// TestAStaggerRaisesAShieldPerCardOfItsForm. Two slashes and a Bash raise two shields, each in its
+// own card's element and from its own seat, whatever the hits did — the ice Cut fizzles.
+func TestAStaggerRaisesAShieldPerCardOfItsForm(t *testing.T) {
+	saber := relic(t, "stagger-slash", RelicRule{
+		When: MomentTurnTaken,
+		If:   RelicCondition{Form: FormSlash, HasForm: true},
+		Then: []RelicEffect{{Do: DoShieldPerCard, Amount: 1}},
+	})
+	a := duelist(10, 8, 5000).Wearing(WornRelic{Relic: saber})
+
+	events, a1, _ := resolve(a, creature(Ice, 10, 6, 5000),
+		[]Card{Of(Cut, Ice), Of(Bash, Fire), Of(Slice, Fire)}, nil, 1)
+	if a1.Shields[Ice] != 1 || a1.Shields[Fire] != 1 || a1.Shields.Count() != 2 {
+		t.Errorf("two slashes left %v standing, want one ice and one fire", a1.Shields)
+	}
+	var seats []int
+	for _, e := range events {
+		if e.Kind == KindStaggered && e.Relic == saber {
+			seats = append(seats, e.Slot)
+		}
+	}
+	if len(seats) != 2 || seats[0] != 0 || seats[1] != 2 {
+		t.Errorf("the stagger raised from seats %v, want [0 2]", seats)
+	}
+}
+
+// TestAShieldPerCardNamesSomethingToCount. With no `If` there is nothing to count.
+func TestAShieldPerCardNamesSomethingToCount(t *testing.T) {
+	if _, err := RegisterRelic("relictest.stagger-bare", "x", []RelicRule{{
+		When: MomentTurnTaken,
+		Then: []RelicEffect{{Do: DoShieldPerCard, Amount: 1}},
+	}}); err == nil {
+		t.Error("a shield per card with no If registered")
+	}
+}

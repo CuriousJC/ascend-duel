@@ -163,6 +163,15 @@ const (
 	// KindVitae is: the rules step Duelist.Vitae and the run is paid the difference.
 	KindTithed
 
+	// KindStaggered is a worn relic raising shields over an attack card of its form as the turn
+	// closes — a stagger. Side is the wearer, Relic which ring, Slot the card that earned them,
+	// Action that card, Element the shields' (the card's), Amount how many and Life the count
+	// standing afterwards, KindRaised's split.
+	//
+	// **Its own kind rather than a KindRaised with a relic on it**, for KindWarded's reason: these
+	// shields leave the ring and fly to the card, where a raise's form over the card that made them.
+	KindStaggered
+
 	KindRoundEnd
 )
 
@@ -244,7 +253,7 @@ type Event struct {
 	Element Element
 
 	// Relic is the worn relic behind the event, on KindDrained, KindRegenerated, KindWarded,
-	// KindReflected and KindTithed.
+	// KindReflected, KindTithed and KindStaggered.
 	//
 	// **It is here because the cause is something the player can see.** The screen flies the
 	// figure out of the relic that caused it, and there is no other honest way for it to know which

@@ -100,9 +100,9 @@ func (s *CombatScene) ledgerRecords(events []combat.Event) []session.LedgerRecor
 				Amount: e.Amount, Relic: combat.RelicOf(e.Relic).Name,
 			})
 
-		case combat.KindWarded:
-			// **An entry of its own**, like a regeneration: it happens at the top of a turn with
-			// nothing before it to attach to.
+		case combat.KindWarded, combat.KindStaggered:
+			// **An entry of its own**, like a regeneration: a ward happens at the top of a turn with
+			// nothing before it to attach to, and a stagger at its close, after the hits' lines.
 			add(session.LedgerRecord{
 				Kind: session.KindWarded, Side: sideWord(e.Side), Name: s.sideName(e.Side),
 				Amount: e.Amount, Relic: combat.RelicOf(e.Relic).Name, Element: ui.ElementName(e.Element),

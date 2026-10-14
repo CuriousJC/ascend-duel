@@ -412,7 +412,7 @@ func ledgerRows(gs *state.GlobalState, expanded map[int]bool) []ledgerRow {
 			head.Band = ground
 			rows = append(rows, ledgerRow{row: head})
 
-			for _, l := range ui.PaneRowsFor(ui.LedgerLines(round.Records)) {
+			for _, l := range ledgerWrap(gs, ui.PaneRowsFor(ui.LedgerLines(round.Records))) {
 				l.Band = ground
 				rows = append(rows, ledgerRow{row: l})
 			}
@@ -426,13 +426,19 @@ func ledgerRows(gs *state.GlobalState, expanded map[int]bool) []ledgerRow {
 			head.Band = ground
 			rows = append(rows, ledgerRow{row: head})
 
-			for _, l := range ui.PaneRowsFor(ui.LedgerLines(f.After)) {
+			for _, l := range ledgerWrap(gs, ui.PaneRowsFor(ui.LedgerLines(f.After))) {
 				l.Band = ground
 				rows = append(rows, ledgerRow{row: l})
 			}
 		}
 	}
 	return rows
+}
+
+// ledgerWrap breaks the account's rows to the panel's width, so a hit priced by a long row of
+// relics carries on under itself rather than running off the right edge.
+func ledgerWrap(gs *state.GlobalState, rows []ui.PaneRow) []ui.PaneRow {
+	return ui.WrapPaneRows(gs, ledgerPane, ledgerPanelRect(gs).Dx(), rows)
 }
 
 // ledgerAfterHeading names the block between one fight and the next. **"After" rather than

@@ -114,11 +114,10 @@ const (
 	// mathItemGap is the air between one item of a line and the next.
 	mathItemGap = 16
 
-	// mathLineGap is the air between the card's bottom edge and the first row of its first hit,
-	// mathRowGap the air between two rows of one hit, and mathHitGap the extra air between one hit
-	// and the next under the same card, so an echoed card's hits read as separate sums.
+	// mathRowGap is the air between two rows of one hit, and mathHitGap the extra air between one
+	// hit and the next under the same card, so an echoed card's hits read as separate sums. The air
+	// between the card and the first row is the scroll's own margin, scrollPadY.
 	// mathRowShare is a row's height against its digits', leaving room for the drop shadow.
-	mathLineGap  = 4
 	mathRowGap   = 6
 	mathHitGap   = 24
 	mathRowShare = 1.15
@@ -348,6 +347,9 @@ type mathColumn struct {
 	// wrapped says this line's card has had its particles raised, so a card's stack is wrapped once.
 	// See combat_particles.go.
 	wrapped bool
+
+	// scrolled says this line's card has had its pane unrolled. See combat_scrolls.go.
+	scrolled bool
 }
 
 // done reports whether every item of the line is up.
@@ -1054,22 +1056,81 @@ func (s *CombatScene) mathLinesRect(gs *state.GlobalState) (image.Rectangle, boo
 // the last row of the one before. **Nothing is shrunk** — see the file comment.
 func (s *CombatScene) layOutMath(gs *state.GlobalState, box *handMathBox) {
 	below := map[int]float64{}
+	spilled := map[int]int{}
 	for c := range box.columns {
 		col := &box.columns[c]
 		card := s.handCardCenter(gs, box.side, col.seat)
 		y, ok := below[col.seat]
 		if !ok {
-			y = float64(card.Y + cardHeight/2 + mathLineGap)
+			y = float64(card.Y + cardHeight/2 + scrollPadY)
 		} else {
 			y += mathHitGap
 		}
-		for _, row := range mathRows(col.items) {
+		rows := mathRows(col.items)
+		for r, row := range rows {
 			h := mathRowHeight(row)
+			// **A row that would run off the bottom lands on the floor instead**, heaped on the
+			// ones already there — see mathOverflow.
+			if floor := mathFloor(gs); y+h > floor {
+				k := spilled[col.seat]
+				spilled[col.seat]++
+				dx, dy := mathOverflow(k, r == len(rows)-1)
+				layOutLine(gs, row, card.X+dx, int(floor-h/2)+dy)
+				// **The total keeps its own pace**: it is the figure the pile was for, and it has
+				// to be seen arriving before it flies.
+				if r < len(rows)-1 {
+					hurry(row, k)
+				}
+				continue
+			}
 			layOutLine(gs, row, card.X, int(y+h/2))
 			y += h + mathRowGap
 		}
 		below[col.seat] = y - mathRowGap
 	}
+}
+
+// mathFloorInset is how far above the bottom of the screen the working stops descending.
+const mathFloorInset = 12
+
+// mathFloor is the lowest a row of working may reach: past it, rows pile up rather than leaving
+// the screen. **It stops above the scroll's bottom roll**, so the roll stays on screen and the pile
+// lands on paper.
+func mathFloor(gs *state.GlobalState) float64 {
+	return float64(gs.ScreenHeight - mathFloorInset - scrollPadY - ui.ScrollBottomHeight(cardWidth))
+}
+
+// mathSpill is where each row landing on the floor lies off the floor's centre: a nudge across and
+// a nudge up, so a stack of them is a mess of overlapping figures rather than one row redrawn.
+// **Written out, never rolled** — the shield heap's rule: the same working spills the same way.
+var mathSpill = [...]struct{ dx, dy int }{
+	{-34, -6}, {28, -22}, {-12, -40}, {40, -14}, {-46, -28}, {10, -10}, {-22, -52}, {52, -36},
+}
+
+// mathSpillPace is how much quicker each row landing on the floor is written than the one before
+// it: a tenth, compounding, so a pile that runs on reads as the working running away.
+const mathSpillPace = 0.9
+
+// hurry shortens every item of the k-th row to reach the floor to mathSpillPace^(k+1) of its
+// length. **It changes pacing and nothing else**: the figures are the event's, and only how long
+// each takes to arrive moves.
+func hurry(row []mathItem, k int) {
+	f := math.Pow(mathSpillPace, float64(k+1))
+	for i := range row {
+		row[i].t.Ticks = max(1, int(math.Round(float64(row[i].t.Ticks)*f)))
+	}
+}
+
+// mathOverflow is where the k-th row to reach the floor under one card lies. **The total does
+// not join the mess**: it sits square on the floor, on top of everything under it — the rows are
+// drawn in order and it is the last — so the figure that flies up out of the pile can be read
+// before it goes.
+func mathOverflow(k int, total bool) (dx, dy int) {
+	if total {
+		return 0, 0
+	}
+	m := mathSpill[k%len(mathSpill)]
+	return m.dx, m.dy - (k/len(mathSpill))*8
 }
 
 // mathRows cuts one hit's items into the rows they are stacked in: a new row before every `wide`

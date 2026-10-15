@@ -123,6 +123,23 @@ type paneSpan struct {
 
 	// Mark draws it bold and underlined: the verb, and nothing else.
 	Mark bool
+
+	// Col starts the run at a column, in digit widths from where the row's text begins, rather than
+	// straight after the run before it. Zero flows on. See session.LedgerSpan.Col.
+	Col int
+}
+
+// colX is where a run starting at column col sits, given where the row's text began and where the
+// run before it ended: the column, or just past what is already written if that reaches further.
+func colX(textX, cursorX float64, col int, face *text.GoTextFace) float64 {
+	if col <= 0 {
+		return cursorX
+	}
+	at := textX + float64(col)*systems.MeasureText("0", face)
+	if gap := cursorX + systems.MeasureText(" ", face); cursorX > textX && at < gap {
+		return gap
+	}
+	return at
 }
 
 // PaneRow is one line in a pane: some spans of text, optionally preceded by a color swatch saying
@@ -299,6 +316,7 @@ func DrawPane(gs *state.GlobalState, screen *ebiten.Image, p PanePlacement, r im
 			if span.Text == "" {
 				continue
 			}
+			cursorX = colX(float64(textX), cursorX, span.Col, face)
 			tint := span.Ink
 			if tint.A == 0 || row.Highlighted {
 				tint = ink
@@ -380,6 +398,12 @@ func WrapPaneRows(gs *state.GlobalState, p PanePlacement, w int, rows []PaneRow)
 		line.Spans = nil
 		used := 0.0
 		for _, span := range row.Spans {
+			// A run on a column starts there on the row it began on, so the width it uses is
+			// measured from the column rather than from the end of the run before it.
+			if span.Col > 0 && len(line.Spans) > 0 {
+				used = max(used, float64(span.Col)*systems.MeasureText("0", face))
+			}
+			first := true
 			for _, word := range strings.SplitAfter(span.Text, " ") {
 				if word == "" {
 					continue
@@ -397,8 +421,14 @@ func WrapPaneRows(gs *state.GlobalState, p PanePlacement, w int, rows []PaneRow)
 					word = strings.TrimLeft(word, " ")
 					ww = systems.MeasureText(word, face) + 1
 				}
-				line.Spans = appendWord(line.Spans, span, word)
+				// The column belongs to the run's first word, and only on the row it began on.
+				col := 0
+				if first && len(line.Spans) > 0 {
+					col = span.Col
+				}
+				line.Spans = appendWord(line.Spans, span, word, col)
 				used += ww
+				first = false
 			}
 		}
 		out = append(out, line)
@@ -407,11 +437,12 @@ func WrapPaneRows(gs *state.GlobalState, p PanePlacement, w int, rows []PaneRow)
 }
 
 // appendWord puts one word on a line, joining it to the run before it when the two are written
-// the same way, so a wrapped line is as few runs as the row it came from.
-func appendWord(spans []paneSpan, from paneSpan, word string) []paneSpan {
-	if n := len(spans); n > 0 && spans[n-1].Ink == from.Ink && spans[n-1].Mark == from.Mark {
+// the same way and the word starts no column, so a wrapped line is as few runs as the row it came
+// from.
+func appendWord(spans []paneSpan, from paneSpan, word string, col int) []paneSpan {
+	if n := len(spans); n > 0 && col == 0 && spans[n-1].Ink == from.Ink && spans[n-1].Mark == from.Mark {
 		spans[n-1].Text += word
 		return spans
 	}
-	return append(spans, paneSpan{Text: word, Ink: from.Ink, Mark: from.Mark})
+	return append(spans, paneSpan{Text: word, Ink: from.Ink, Mark: from.Mark, Col: col})
 }

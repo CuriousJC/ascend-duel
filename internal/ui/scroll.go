@@ -53,6 +53,14 @@ func ScrollBottomHeight(w int) int {
 // together at the top of r. `top` says whether the top roll is drawn. Reports false when the art is
 // not filed, so the caller can draw its stand-in.
 func DrawScroll(dst *ebiten.Image, key string, r image.Rectangle, open float64, top bool) bool {
+	return DrawScrollGeo(dst, key, r, open, top, ebiten.GeoM{})
+}
+
+// DrawScrollGeo is DrawScroll with `post` applied after the scroll is laid out in r — the turn of
+// a card it hangs from, so it rocks with the card rather than standing square under it.
+func DrawScrollGeo(dst *ebiten.Image, key string, r image.Rectangle, open float64, top bool,
+	post ebiten.GeoM) bool {
+
 	src := systems.ArtMarkImage(key, scrollArtW, scrollArtH)
 	if src == nil {
 		return false
@@ -76,6 +84,7 @@ func DrawScroll(dst *ebiten.Image, key string, r image.Rectangle, open float64, 
 		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterLinear}
 		op.GeoM.Scale(s, h/float64(sy1-sy0))
 		op.GeoM.Translate(x, y)
+		op.GeoM.Concat(post)
 		dst.DrawImage(sub, op)
 	}
 	y := float64(r.Min.Y)

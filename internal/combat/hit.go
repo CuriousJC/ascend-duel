@@ -147,16 +147,23 @@ func strike(
 	// card pays again every turn it is held, and vitae moves inside a fight — a card kept in hand
 	// pays one, and riders fire before the attack phase.
 	baseDMG := actor.DMG
-	e.HandBonus, e.HandBonusSeats = HandBonus(worn, blow.Satisfied)
-	e.HeldDMG, e.HeldDMGCards, e.HeldDMGSeats = HeldDMG(worn, held)
+	var bonusBy, heldBy []int
+	e.HandBonus, e.HandBonusSeats, bonusBy = HandBonus(worn, blow.Satisfied)
+	e.HeldDMG, e.HeldDMGCards, e.HeldDMGSeats, heldBy = HeldDMG(worn, held)
 	e.VitaeDMG, e.VitaeDMGSeats = DMGPerVitae(worn)*actor.Vitae, seatsDoing(worn, DoAddDMGPerVitae)
+	e.DMGRaiseBy = make([]int, len(worn))
+	for seat, rate := range DMGPerVitaeBySeat(worn) {
+		e.DMGRaiseBy[seat] = bonusBy[seat] + heldBy[seat] + rate*actor.Vitae
+	}
 	actor.DMG = blowDMG(baseDMG+e.HandBonus+e.HeldDMG+e.VitaeDMG, held)
 	e.HandDMG, e.HandDMGBare = actor.DMG, blowDMG(baseDMG, held)
+	e.HandDMGBase = baseDMG
+	e.HeldRiderAdd, e.HeldRiderPct = HeldRiders(held)
 
 	// **A rung relic is a second multiplier, never a bigger hand.** `Multiplier` stays the ladder's
 	// own figure, so the banner and the hand row show the rung the player built; this is applied
 	// after it on every hit — the HAND RELICS step.
-	e.HandScale, e.HandScaleSeats = HandScale(worn, blow.Satisfied, scoringCards(blow, turn))
+	e.HandScale, e.HandScaleSeats, e.HandScaleBy = HandScale(worn, blow.Satisfied, scoringCards(blow, turn))
 
 	// **The turn's first card wakes the Awakenings**, and every attack after it is swung at their
 	// figure on top of the turn's DMG — before the card's own multiplier, so the card multiplies it.

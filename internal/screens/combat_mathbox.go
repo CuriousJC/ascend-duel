@@ -667,6 +667,28 @@ func (s *CombatScene) raiseDMGSignal(e combat.Event) {
 			}
 		}
 	}
+
+	// **One figure out of each relic**, each its own share, when those shares are what the DMG
+	// grew by — that is, when no held card's rider scaled the sum. Under a scaling the shares do not
+	// add up to the raise, so the raise flies as one figure out of the first relic that paid.
+	// The held cards' own riders are not in the raise: they fly out of their own cards.
+	if e.HeldRiderPct == 0 || e.HeldRiderPct == 100 {
+		sum := 0
+		for _, add := range e.DMGRaiseBy {
+			sum += add
+		}
+		if sum == raise {
+			for i, add := range e.DMGRaiseBy {
+				if add > 0 {
+					s.Theater.signals = append(s.Theater.signals, cardSignal{
+						dest: signalRaise, amount: add, side: e.Side, relic: i + 1,
+						t: ui.NewTravel(0, signalFlyTicks()+signalHoldTicks()),
+					})
+				}
+			}
+			return
+		}
+	}
 	s.Theater.signals = append(s.Theater.signals, cardSignal{
 		dest:   signalRaise,
 		amount: raise,

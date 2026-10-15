@@ -142,17 +142,70 @@ func TestAHitsOutcomeAttachesToThatHitsLine(t *testing.T) {
 		{Kind: session.KindFizzled, Side: session.SideYou, Hit: 1},
 		{Kind: session.KindDamage, Side: session.SideYou, Amount: 5, Hit: 2},
 	})
-	if len(lines) != 4 {
-		t.Fatalf("want a heading, two hits and a total, got %q", lineText(lines))
+	// **A hit's outcome sits on its `=` step**, beside what the hit came to.
+	var sums []string
+	for _, l := range lines {
+		if strings.HasPrefix(l.Text(), "= ") {
+			sums = append(sums, l.Text())
+		}
 	}
-	if got := lines[1].Text(); !strings.Contains(got, "fizzles") || strings.Contains(got, "damage") {
-		t.Errorf("the first hit reads %q, want its fizzle and nothing else", got)
+	if len(sums) != 2 {
+		t.Fatalf("want two hits each ending on its sum, got %q", lineText(lines))
 	}
-	if got := lines[2].Text(); !strings.Contains(got, "5 damage") || strings.Contains(got, "fizzles") {
-		t.Errorf("the second hit reads %q, want its damage and nothing else", got)
+	if got := sums[0]; !strings.Contains(got, "= 10") || !strings.Contains(got, "fizzles, no damage applied") ||
+		strings.Contains(got, "Damage Applied") {
+		t.Errorf("the first hit's sum reads %q, want its fizzle and nothing else", got)
 	}
-	if got := lines[3].Text(); strings.Contains(got, "damage") || strings.Contains(got, "fizzles") {
-		t.Errorf("the total reads %q, and no outcome belongs to it", got)
+	if got := sums[1]; !strings.Contains(got, "= 5 Damage Applied") || strings.Contains(got, "fizzles") {
+		t.Errorf("the second hit's sum reads %q, want it applied and nothing else", got)
+	}
+	if got := lines[0].Text(); !strings.Contains(got, "Grand Total 15") {
+		t.Errorf("the hand's heading reads %q, want every hit's 15 as its grand total", got)
+	}
+}
+
+// **A hit that landed what it came to says so on its sum, underlined**: `= 288 Arcane Damage
+// Applied`, with the fall it caused beside it. A hit that landed nothing because the target was
+// already down is over damage — which is how the two read apart, and why the fall is not a line
+// of its own.
+func TestALandedHitsSumIsAppliedAndUnderlined(t *testing.T) {
+	lines := LedgerLines([]session.LedgerRecord{
+		{Kind: session.KindBlow, Side: session.SideYou, Hand: "Pair"},
+		{Kind: session.KindTerm, Role: session.RoleHit, Hit: 1, Card: "Jab", Element: "arcane", Total: 288, Multiplier: 100},
+		{Kind: session.KindTerm, Role: session.RoleHit, Hit: 2, Card: "Jab", Element: "arcane", Total: 288, Multiplier: 100},
+		{Kind: session.KindTerm, Role: session.RoleTotal, Total: 576},
+		{Kind: session.KindDamage, Side: session.SideYou, Amount: 288, Hit: 1},
+		{Kind: session.KindDefeated, Target: session.SideFoe, Name: "Giant Rat"},
+	})
+	for _, l := range lines {
+		if l.Text() == "Giant Rat falls" {
+			t.Errorf("the fall is a line of its own, want it on the hit that landed it: %q", lineText(lines))
+		}
+	}
+	var sums []session.LedgerLine
+	for _, l := range lines {
+		if strings.HasPrefix(l.Text(), "= ") {
+			sums = append(sums, l)
+		}
+	}
+	if len(sums) != 2 {
+		t.Fatalf("want two sums, got %q", lineText(lines))
+	}
+	if got, want := sums[0].Text(), "= 288 Arcane Damage Applied - Giant Rat falls"; got != want {
+		t.Errorf("the landed hit's sum reads %q, want %q", got, want)
+	}
+	for _, s := range sums[0].Spans[1:3] {
+		if !s.Mark {
+			t.Errorf("%q in the applied total is not underlined", s.Text)
+		}
+	}
+	if got, want := sums[1].Text(), "= 288 Over Damage"; got != want {
+		t.Errorf("the hit that landed nothing reads %q, want %q", got, want)
+	}
+	for _, s := range sums[1].Spans {
+		if s.Mark {
+			t.Errorf("%q in a sum that landed nothing is underlined", s.Text)
+		}
 	}
 }
 

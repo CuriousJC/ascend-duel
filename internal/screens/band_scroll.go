@@ -89,6 +89,22 @@ func (s *sellTab) scrollRect(gs *state.GlobalState) (image.Rectangle, image.Rect
 	return r, seat, true
 }
 
+// scrollTurn is the transform that rocks the scroll and its tabs with the card they hang from:
+// the card's own turn, about the card's own middle, so the scroll stays square to a weightless
+// relic as it tilts. Identity for a card that does not turn.
+func (s *sellTab) scrollTurn(gs *state.GlobalState) ebiten.GeoM {
+	var g ebiten.GeoM
+	seat, turn, ok := s.hangOf(gs, s.scroll.under)
+	if !ok || turn == 0 {
+		return g
+	}
+	cx, cy := float64(seat.Min.X+seat.Max.X)/2, float64(seat.Min.Y+seat.Max.Y)/2
+	g.Translate(-cx, -cy)
+	g.Rotate(turn)
+	g.Translate(cx, cy)
+	return g
+}
+
 // paperBottom is how far down the scroll's paper reaches at its current unroll: the tabs are drawn
 // above this line and no further.
 func (s *sellTab) paperBottom(r image.Rectangle) int {
@@ -104,7 +120,7 @@ func (s *sellTab) drawScrollBehind(gs *state.GlobalState, screen *ebiten.Image, 
 		return
 	}
 	if r, _, ok := s.scrollRect(gs); ok {
-		ui.DrawScroll(screen, scrollKey, r, s.scrollOpen(), false)
+		ui.DrawScrollGeo(screen, scrollKey, r, s.scrollOpen(), false, s.scrollTurn(gs))
 	}
 }
 
@@ -117,7 +133,8 @@ func (s *sellTab) drawScrollOver(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 	b := screen.Bounds()
 	below := image.Rect(b.Min.X, seat.Max.Y, b.Max.X, b.Max.Y)
-	ui.DrawScroll(screen.SubImage(below).(*ebiten.Image), scrollKey, r, s.scrollOpen(), false)
+	ui.DrawScrollGeo(screen.SubImage(below).(*ebiten.Image), scrollKey, r, s.scrollOpen(), false,
+		s.scrollTurn(gs))
 }
 
 // tabsShowing is the part of the screen the tabs may be drawn in: above the paper's current edge.

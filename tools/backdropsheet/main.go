@@ -16,7 +16,7 @@
 // actually shows — a blank cell would be a page disagreeing with the game.
 //
 // Every room and every picture is taken off `data.LoadMotifs` and off the files under
-// `assets/motifs/`, found by stem exactly as `assets.embedTree` keys them.
+// `assets/motifs/`, found by stem exactly as `assets.EmbedTree` keys them.
 package main
 
 import (

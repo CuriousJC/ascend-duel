@@ -348,16 +348,8 @@ func (c Card) SilverOdds() int { return c.riderTotal(RiderSilver) }
 // kinds compose rather than race; percentages compound with each other for the reason
 // `Card.riderScale` gives.
 func blowDMG(base int, held []Card) int {
-	dmg := base
-	for _, c := range held {
-		dmg += c.DamageInHand()
-	}
-
-	pct := 100
-	for _, c := range held {
-		pct = pct * c.ScaleInHand() / 100
-	}
-	dmg = dmg * pct / 100
+	add, pct := HeldRiders(held)
+	dmg := (base + add) * pct / 100
 
 	// A duelist cannot be argued below the floor `Card.Damage` already keeps. Nothing today
 	// reduces DMG, but the clamp is what makes that still true the first time something does.
@@ -365,6 +357,18 @@ func blowDMG(base int, held []Card) int {
 		dmg = 0
 	}
 	return dmg
+}
+
+// HeldRiders is what the cards kept back do to the DMG a blow is swung at: the DMG their riders add,
+// then the percentage their riders scale the whole by, 100 for none. **One walk**, read by blowDMG
+// and by the hand event that says how its DMG was built.
+func HeldRiders(held []Card) (add, pct int) {
+	pct = 100
+	for _, c := range held {
+		add += c.DamageInHand()
+		pct = pct * c.ScaleInHand() / 100
+	}
+	return add, pct
 }
 
 // CarriesAmount reports whether this kind's Amount means anything.

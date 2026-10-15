@@ -31,7 +31,7 @@
   "outcome": {
     "first": " - ",
     "next": ", ",
-    "fizzled": "fizzles - its own element",
+    "fizzled": "{what} fizzles, no damage applied.",
     "drained": "{relic} drains {n}",
     "raised": "{shields} up",
     "held": "unplayed for {n} vitae",
@@ -48,7 +48,8 @@
     "regenerated": "{who} restores {n} - {relic}",
     "warded": "{who} raises {shields} - {relic}",
     "time-up": "{who} is out of time - the duel takes {n}",
-    "defeated": "{who} falls"
+    "defeated": "{who} falls",
+    "dmg": "{who} DMG grows for the attack"
   },
 
   "after": {
@@ -65,8 +66,13 @@
 
   "term": {
     "dmg": "+{n} DMG",
-    "total": "every hit",
-    "lands": "  + {relic} lands it again",
+    "grand": " - Grand Total {n}",
+    "applied": "Damage Applied",
+    "over": "Over Damage",
+    "again": "Repeats",
+    "base": "Duelist DMG",
+    "dmg-total": "Total DMG",
+    "flat": "added",
     "grown": " (grown {n})"
   }
 }

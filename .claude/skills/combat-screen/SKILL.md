@@ -68,12 +68,14 @@ a `KindAction`, then one `KindHand` names the hand they formed and carries every
 then each hit lands as its own `KindFizzled`, `KindBlocked` or `KindDamage`, carrying `Slot` (the
 card) and `Hit` (its term on the hand event). Five Bashes are five hits under one Four of a Kind.
 
-**The run's account writes the hand once and a line per hit under it.** The `KindAction`s still
-play — each is a beat — but they write no record. Each hit's
-line carries its own working, the identity multiplier included *(owner's call)*, because hands are
+**The run's account writes the hand once and each hit under it.** The `KindAction`s still
+play — each is a beat — but they write no record. Each hit is its card's line and then its own
+working down a column, **one step per figure, each labelled with what produced it**
+(`ui.hitLines`), the identity multiplier included *(owner's call)*, because hands are
 going to be upgradable and a term that appeared only once the multiplier stopped being 1 would
-make an upgrade read as a new rule; the hit's outcome attaches to that line by its `Hit`, whatever
-was written after it. **Every card the turn played throws a hit** *(owner's call)*, whether
+make an upgrade read as a new rule; the hit's outcome attaches to its `=` step by its `Hit`,
+whatever was written after it. A label lines up because a run can start on a column
+(`session.LedgerSpan.Col`, in digit widths). **Every card the turn played throws a hit** *(owner's call)*, whether
 or not it made the rung. See MECHANICS.md §Damage: a hit per card, one multiplier.
 
 **None of the paragraphs above describes an enemy's turn.** `Duelist.SoloAttacks` makes attack

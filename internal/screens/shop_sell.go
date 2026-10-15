@@ -78,7 +78,7 @@ type sellTab struct {
 
 	// relicMotion is the screen's answer to how far a worn relic is displaced from its seat right
 	// now, set by the band every frame; nil is the run's own row. See bandHooks.relicMotion.
-	relicMotion func(key string) (dx, dy float64)
+	relicMotion func(key string) (dx, dy, turn float64)
 
 	// scroll is the papyrus the tabs are written on. See band_scroll.go.
 	scroll tabScroll
@@ -150,10 +150,17 @@ func (s *sellTab) armedSeat(gs *state.GlobalState) (image.Rectangle, bool) {
 // moved by the card's own float or weightless drift, **so the tabs and their scroll move with the
 // card** rather than standing at the seat while the card drifts off it.
 func (s *sellTab) seatOf(gs *state.GlobalState, a shopSale) (image.Rectangle, bool) {
+	seat, _, ok := s.hangOf(gs, a)
+	return seat, ok
+}
+
+// hangOf is seatOf with the card's turn beside it, in radians about the seat's middle: what the
+// scroll and its tabs are turned by so they hang square to a card that rocks.
+func (s *sellTab) hangOf(gs *state.GlobalState, a shopSale) (image.Rectangle, float64, bool) {
 	var (
-		seat   image.Rectangle
-		ok     bool
-		dx, dy float64
+		seat         image.Rectangle
+		ok           bool
+		dx, dy, turn float64
 	)
 	switch a.kind {
 	case saleRelic:
@@ -163,49 +170,49 @@ func (s *sellTab) seatOf(gs *state.GlobalState, a shopSale) (image.Rectangle, bo
 			seat, ok = wornSeat(gs, a.key)
 		}
 		if s.relicMotion != nil {
-			dx, dy = s.relicMotion(a.key)
+			dx, dy, turn = s.relicMotion(a.key)
 		} else {
-			dx, dy = runRelicMotion(gs, a.key)
+			dx, dy, turn = runRelicMotion(gs, a.key)
 		}
 	case saleHeld:
 		held := heldConsumables(gs)
 		if a.seat < 0 || a.seat >= len(held) {
-			return image.Rectangle{}, false
+			return image.Rectangle{}, 0, false
 		}
 		seat, ok = heldSeat(gs, a.seat), true
-		dx, dy = bandMotion(gs, a.seat, held[a.seat].Weightless)
+		dx, dy, turn = bandMotion(gs, a.seat, held[a.seat].Weightless)
 	}
 	if !ok {
-		return image.Rectangle{}, false
+		return image.Rectangle{}, 0, false
 	}
-	return seat.Add(image.Pt(int(math.Round(dx)), int(math.Round(dy)))), true
+	return seat.Add(image.Pt(int(math.Round(dx)), int(math.Round(dy)))), turn, true
 }
 
-// bandMotion is how far the card in one seat of the band is displaced from it right now: the idle
-// float every card in the band has, or a weightless card's lift and sway. **The same two functions
-// the cards are drawn with**, ui.IdleFloat and ui.WeightlessLift, at the same seat phase, so what
-// hangs from a card cannot fall out of step with it.
-func bandMotion(gs *state.GlobalState, seat int, weightless bool) (dx, dy float64) {
+// bandMotion is how far the card in one seat of the band is displaced from it right now, and how
+// far it is turned: the idle float every card in the band has, or a weightless card's lift, sway
+// and turn. **The same two functions the cards are drawn with**, ui.IdleFloat and
+// ui.WeightlessLift, at the same seat phase, so what hangs from a card cannot fall out of step
+// with it.
+func bandMotion(gs *state.GlobalState, seat int, weightless bool) (dx, dy, turn float64) {
 	if weightless {
-		lift, sway, _ := ui.WeightlessLift(float64(gs.Count), float64(seat)*2.1)
-		return sway, -lift
+		lift, sway, angle := ui.WeightlessLift(float64(gs.Count), float64(seat)*2.1)
+		return sway, -lift, angle
 	}
-	dx, dy, _ = ui.IdleFloat.Offset(gs.Count, seat)
-	return dx, dy
+	return ui.IdleFloat.Offset(gs.Count, seat)
 }
 
 // runRelicMotion is bandMotion for one of the run's relics in the run's own row: its seat is its
 // place among the run's worn relics.
-func runRelicMotion(gs *state.GlobalState, key string) (float64, float64) {
+func runRelicMotion(gs *state.GlobalState, key string) (float64, float64, float64) {
 	if gs.Run == nil {
-		return 0, 0
+		return 0, 0, 0
 	}
 	for i, k := range gs.Run.Worn() {
 		if k == key {
 			return bandMotion(gs, i, gs.Run.IsWeightless(key))
 		}
 	}
-	return 0, 0
+	return 0, 0, 0
 }
 
 // salePrice is what selling the armed thing pays. **Asked of the run's rules**, never worked out
@@ -303,10 +310,11 @@ func (s *sellTab) drawTab(gs *state.GlobalState, screen *ebiten.Image) {
 		return
 	}
 	shown := screen.SubImage(s.tabsShowing(gs, screen.Bounds())).(*ebiten.Image)
+	turn := s.scrollTurn(gs)
 	if s.showsUse() {
-		systems.DrawButton(gs, shown, s.useButton)
+		systems.DrawButtonGeo(gs, shown, s.useButton, turn)
 	}
-	systems.DrawButton(gs, shown, s.sellButton)
+	systems.DrawButtonGeo(gs, shown, s.sellButton, turn)
 }
 
 // sellCarried sells the carried card at one seat of the consumables pane, journals it, and reports

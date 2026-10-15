@@ -10,7 +10,7 @@
 //
 // Every count is taken off `data.LoadMotifs` and off the files actually under `assets/motifs/`, so
 // the page cannot disagree with the game about what exists. **A picture is found by its stem**,
-// exactly as `assets.embedTree` keys it, so where under the tree a file was filed does not matter.
+// exactly as `assets.EmbedTree` keys it, so where under the tree a file was filed does not matter.
 //
 // It also prints one line per motif to stdout, for a look without opening the page.
 package main

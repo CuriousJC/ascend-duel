@@ -1755,19 +1755,29 @@ func LandingSeats(worn []WornRelic, card Card, lead bool, rungs []HandID) []bool
 // once at equipped was the first version of this and it was wrong.
 func DMGPerVitae(worn []WornRelic) int {
 	total := 0
-	for _, w := range worn {
+	for _, rate := range DMGPerVitaeBySeat(worn) {
+		total += rate
+	}
+	return total
+}
+
+// DMGPerVitaeBySeat is DMGPerVitae seat by seat, so each relic's share of the purse's DMG can be
+// named beside its own figure.
+func DMGPerVitaeBySeat(worn []WornRelic) []int {
+	by := make([]int, len(worn))
+	for seat, w := range worn {
 		for _, rule := range RelicOf(w.Relic).Rules {
 			if rule.When != MomentEquipped {
 				continue
 			}
 			for _, e := range rule.Then {
 				if e.Do == DoAddDMGPerVitae {
-					total += e.Amount
+					by[seat] += e.Amount
 				}
 			}
 		}
 	}
-	return total
+	return by
 }
 
 // seatsDoing is which worn seats carry a verb at all — the attribution a flat equipped term
@@ -1787,7 +1797,8 @@ func seatsDoing(worn []WornRelic, do RelicVerb) []bool {
 }
 
 // HandScale is what the worn relics multiply a blow by **after its hand multiplier has been
-// applied**, in percent, and which seats paid for it. 100 is the identity.
+// applied**, in percent, which seats paid for it, and what each seat multiplied by on its own — 0
+// for a seat that paid nothing — so an account can name each relic's share. 100 is the identity.
 //
 // **It is deliberately not folded into the hand's own multiplier.** That figure belongs to the
 // ladder and is what the banner and the hand row say; see DoScaleHandDamage.
@@ -1798,12 +1809,13 @@ func seatsDoing(worn []WornRelic, do RelicVerb) []bool {
 //
 // **`cards` is the scoring set, not the turn** — it is what `MinForms` counts, so a card the turn
 // played that paid nothing into the hand is not a second form.
-func HandScale(worn []WornRelic, satisfied []HandID, cards []Card) (int, []bool) {
+func HandScale(worn []WornRelic, satisfied []HandID, cards []Card) (int, []bool, []int) {
 	seats := make([]bool, len(worn))
+	by := make([]int, len(worn))
 	pct := 100
 
 	if len(satisfied) == 0 {
-		return pct, seats
+		return pct, seats, by
 	}
 	for seat, w := range worn {
 		for _, rule := range RelicOf(w.Relic).Rules {
@@ -1821,11 +1833,15 @@ func HandScale(worn []WornRelic, satisfied []HandID, cards []Card) (int, []bool)
 					continue
 				}
 				pct = pct * e.Amount / 100
+				if !seats[seat] {
+					by[seat] = 100
+				}
+				by[seat] = by[seat] * e.Amount / 100
 				seats[seat] = true
 			}
 		}
 	}
-	return pct, seats
+	return pct, seats, by
 }
 
 // distinctForms is how many different forms a set of cards covers. **Defend counts like any other**
@@ -1869,12 +1885,13 @@ func AwakenBonus(worn []WornRelic, first Card) (int, []bool) {
 	return total, seats
 }
 
-func HandBonus(worn []WornRelic, satisfied []HandID) (int, []bool) {
+func HandBonus(worn []WornRelic, satisfied []HandID) (int, []bool, []int) {
 	seats := make([]bool, len(worn))
+	by := make([]int, len(worn))
 	total := 0
 
 	if len(satisfied) == 0 {
-		return 0, seats
+		return 0, seats, by
 	}
 	for seat, w := range worn {
 		for _, rule := range RelicOf(w.Relic).Rules {
@@ -1886,11 +1903,12 @@ func HandBonus(worn []WornRelic, satisfied []HandID) (int, []bool) {
 					continue
 				}
 				total += e.Amount
+				by[seat] += e.Amount
 				seats[seat] = true
 			}
 		}
 	}
-	return total, seats
+	return total, seats, by
 }
 
 // HeldDMG is the DMG a worn set adds to the duelist for a blow, for the cards the turn **kept
@@ -1908,10 +1926,13 @@ func HandBonus(worn []WornRelic, satisfied []HandID) (int, []bool) {
 // the raise as `Jar of Ice (4 cards kept back)  +20 DMG` — a figure with no count beside it is one
 // the player cannot check against the hand they were holding. It is the tally across every seat:
 // two jars paying for six cards between them is one raise of six.
-func HeldDMG(worn []WornRelic, held []Card) (total, cards int, seats []bool) {
+//
+// `by` is what each seat paid on its own, so two jars are two figures.
+func HeldDMG(worn []WornRelic, held []Card) (total, cards int, seats []bool, by []int) {
 	// A named return, so it needs building like every other seat row here: one entry per worn
 	// relic, all false until one of them pays.
 	seats = make([]bool, len(worn))
+	by = make([]int, len(worn))
 
 	for seat, w := range worn {
 		for _, rule := range RelicOf(w.Relic).Rules {
@@ -1925,6 +1946,7 @@ func HeldDMG(worn []WornRelic, held []Card) (total, cards int, seats []bool) {
 				for _, c := range held {
 					if rule.If.Matches(c) {
 						total += e.Amount
+						by[seat] += e.Amount
 						cards++
 						seats[seat] = true
 					}
@@ -1932,7 +1954,7 @@ func HeldDMG(worn []WornRelic, held []Card) (total, cards int, seats []bool) {
 			}
 		}
 	}
-	return total, cards, seats
+	return total, cards, seats, by
 }
 
 // LandingsOf is how many times a card lands, and how, given what its wearer has on.

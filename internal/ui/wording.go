@@ -66,7 +66,7 @@ var (
 var (
 	SayOutcomeFirst = word("outcome.first")
 	SayOutcomeNext  = word("outcome.next")
-	SayFizzled      = word("outcome.fizzled")
+	SayFizzled      = word("outcome.fizzled", "what")
 	SayDrained      = word("outcome.drained", "relic", "n")
 	SayRaised       = word("outcome.raised", "shields")
 	SayHeld         = word("outcome.held", "n")
@@ -85,6 +85,7 @@ var (
 	SayWarded      = word("announce.warded", "who", "shields", "relic")
 	SayTimeUp      = word("announce.time-up", "who", "n")
 	SayDefeated    = word("announce.defeated", "who")
+	SayDMGBuilt    = word("announce.dmg", "who")
 )
 
 // What the player did between two fights.
@@ -100,12 +101,17 @@ var (
 	SayAfterPaid    = word("after.paid", "n")
 )
 
-// The words inside a blow's working. The name column is padded in code, so these are only the
-// words around the figures.
+// The words inside a blow's working. A hit is written down a column — a figure, then what produced
+// it — so most labels are a name the record already carries; these are the rest.
 var (
 	SayTermDMG     = word("term.dmg", "n")
-	SayTermTotal   = word("term.total")
-	SayFactorLands = word("term.lands", "relic")
+	SayTermGrand   = word("term.grand", "n")
+	SayTermApplied = word("term.applied")
+	SayTermOver    = word("term.over")
+	SayHitAgain    = word("term.again")
+	SayStepBase    = word("term.base")
+	SayStepDMG     = word("term.dmg-total")
+	SayStepFlat    = word("term.flat")
 	SayFactorGrown = word("term.grown", "n")
 )
 

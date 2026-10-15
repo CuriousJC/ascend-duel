@@ -36,6 +36,7 @@ func (s *CombatScene) updateBand(gs *state.GlobalState) {
 		extraRelics: len(s.cast),
 		relicKeyAt:  func(seat int) (string, bool) { return s.runRelicAt(gs, seat) },
 		relicSeat:   func(key string) (image.Rectangle, bool) { return s.runRelicSeat(gs, key) },
+		relicMotion: func(key string) (float64, float64) { return s.runRelicMotion(gs, key) },
 	})
 }
 

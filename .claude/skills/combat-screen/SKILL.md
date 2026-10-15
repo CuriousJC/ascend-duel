@@ -86,7 +86,7 @@ for it and two things read it:
   them. `logRows` suppresses an attack's `KindAction` only when a hand *is* coming.
 - **The table marks one card at a time, and a creature is the only thing that marks one at all.**
   `noteResolved` seats `[]int{seat}` for a solo attacker and nothing for anybody else, and that card
-  **rattles sideways** (`shakeEnemyCard`) — a duelist's cards are set on a plate by the hand's announcement,
+  **rattles sideways** (`shakeEnemyCard`) — a duelist's cards are named by the hand's announcement,
   which a creature never gets. Highlighting a set says "these cards made the hand", which an enemy's turn
   has none of: three cards swing three times, and the card that rattles is the card that is hitting.
   **Nothing on the table ever lifts**; only a selected card in the hand does.
@@ -126,8 +126,7 @@ action to lead, and nothing buys priority.
   `resolved` and `enemyDealt` stay in resolution order, because that is how every event names a
   card, but each card carries its `place` — `Slot.Index`, its position in the queue — and is
   drawn there (`playedPoint`, `enemyPoint`, `byPlace`). There is no break between defenses and
-  attacks, so nothing regroups between the hand and the table; the cards that made the
-  multiplier are the ones on a plate. **Geometry takes a place, everything else a seat**: a new
+  attacks, so nothing regroups between the hand and the table. **Geometry takes a place, everything else a seat**: a new
   caller of `playedSeatAt` converts through `playedPlace` first.
 - **The category is deliberately not concealed** on enemy rows.
 - **The card shows its form as a corner mark** — a spear, a scimitar, a club, a shield — in
@@ -169,13 +168,8 @@ in `MECHANICS.md`; these are what matter to the screen.
   not contiguous — Two Pair is two cards, a card that earned nothing, and two more — which is why
   the event carries a list rather than a start and a length. `noteHand` sets the highlighted set on
   whichever row it belongs to, so the opponent's hand says it the same way.
-  **A highlight plate behind them is what says which cards earned the hand** *(owner's call)* —
-  `drawRungPlates`, one plate per group of the hand (`Event.RungGroup`, off `Blow.RungGroups`)
-  and per run of neighbours within it (`rungPlates`), with a seam where two plates meet — so a Two
-  Pair is two plates even side by side, and never one round the whole set, and drawn before the rows so the cards stand on it. The plate is one authored picture with
-  stretching middle, `ui.DrawHandHighlight` and `docs/art/hand_highlight_art_prompt.MD`, with a
-  flat stand-in until the file is filed — and in the hand row nothing says it at
-  all: the name is the whole of the feedback while planning.
+  **Nothing is drawn to mark them** *(owner's call)*: the shout names the rung and every card's line
+  shows what it did. The marked seats are what a stopped hit's shield is aimed from.
 - **`combat.BlowFor` previews the hand while the player plans**. It is the same
   function the resolver uses, so a previewed hand is the hand that fires by construction rather
   than by two pieces of code agreeing. `previewAttack` calls it on `ResolutionOrder(queue, nil)`
@@ -238,9 +232,8 @@ exist.
   them on different schedules and several lines start on one frame.
 - **Every rung the engine names is shouted, `NO HAND!` included.** The bottom of the ladder is a
   rung like any other — a multiplier, a stone that raises it, a relic that names it — and the word
-  says what the turn was. **What the No Hand does not get is the plate**: the announcement highlights the
-  cards that *made* the rung and that turn made none, so `builtARung` gates the plate and nothing
-  else. A card highlighted for having done nothing is worse than a still table.
+  says what the turn was. **What the No Hand does not get is a marked set**: the turn made no rung, so
+  `builtARung` leaves `firingSeats` empty for it.
   An event naming *no* hand is silent; nothing emits one.
 - **The hand's name is one word with two homes, and it travels between them** *(2026-08-19,
   owner's call)*. `handBanner` holds it: the planning seat is the middle of **the whole table**,
@@ -337,11 +330,11 @@ to mark because the whole queue is seated at DUEL! rather than a card at a time.
 **The rung is highlighted by the hand's announcement and by nothing else.** `noteHand` marks
 `Event.RungCards` — the cards that *made the hand* — rather than `HandCards`, which is every hit the
 turn throws and would mark a card that is in no part of the rung. `firingSeats` is a list rather
-than one seat because a counted hand is not contiguous. The plates stay through the lines and go when
-the other side acts, and the lines walk `HandCards`: **the rung is highlighted, the hits are thrown.**
+than one seat because a counted hand is not contiguous. Nothing draws it; the lines walk `HandCards`:
+**the rung is named, the hits are thrown.**
 
 **A duelist's turn is three moments and each has exactly one gesture: the shields form as a bundle,
-the hand is announced with its cards on a plate, and the lines run with each card shaking as it pays.**
+the hand is announced by name, and the lines run with each card shaking as it pays.**
 Nothing on the table lifts; a chosen card goes to the middle row and its line says the rest.
 
 And **the hand is announced even if every hit then lands nothing** — a fizzle or a block is decided
@@ -771,8 +764,7 @@ The active one latches darker than the other two.
   no figure on the line. Each line runs its items one at a time, so putting the relic figures *in*
   the script is the whole of the sequencing within a hit. `mathItem`'s `relicSeat` / `cardSeat` /
   `shakeRelics` are the marks, and `handMathBox.takeShakes` is what the screen drains each tick.
-- **Sideways, never a jump.** Vertical is spoken for — a selected card lifts in the hand — and a
-  card that built the hand stands on a plate on the table. The shake says "this one is paying *now*", so it
+- **Sideways, never a jump.** Vertical is spoken for — a selected card lifts in the hand. The shake says "this one is paying *now*", so it
   needed a gesture nothing else uses.
 - **The drag runs on the shared controller in `carddrag.go`**, which the worn relic
   row also uses on all three screens that draw it. The hand's adapter is `handRow`; it really does

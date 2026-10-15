@@ -233,8 +233,12 @@ func drawPaneCount(gs *state.GlobalState, screen *ebiten.Image, back image.Recta
 // the run's relics are counted**: a cantrip-relic is weightless and takes none of the slots, and the
 // denominator is the run's relicSlots rather than any width the row is willing to draw. **It is drawn
 // with nothing worn too**, since `0/5` says the row exists and is empty.
-func drawRelicPaneFrame(gs *state.GlobalState, screen *ebiten.Image, row image.Rectangle) {
+//
+// **An armed relic's tab scroll goes on the backing, under the cards** — see band_scroll.go — so
+// `sale` is the band's, or nil on a screen with none.
+func drawRelicPaneFrame(gs *state.GlobalState, screen *ebiten.Image, row image.Rectangle, sale *sellTab) {
 	drawRelicPaneBack(screen, row)
+	sale.drawScrollBehind(gs, screen, saleRelic)
 	if gs.Run == nil {
 		return
 	}
@@ -469,6 +473,17 @@ func (s *CombatScene) runRelicSeat(gs *state.GlobalState, key string) (image.Rec
 		}
 	}
 	return image.Rectangle{}, false
+}
+
+// runRelicMotion is how far one of the run's relics is displaced from its seat in the fight's row
+// right now, for the sale tab to move with it.
+func (s *CombatScene) runRelicMotion(gs *state.GlobalState, key string) (float64, float64) {
+	for i, r := range s.relicRowSeats(gs) {
+		if r.runRelic() && r.key == key {
+			return bandMotion(gs, i, s.wornWeightless(i))
+		}
+	}
+	return 0, 0
 }
 
 // cantripRelicRecord is a cantrip-relic as the row draws a relic.
@@ -908,7 +923,7 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 	// showing the band draws. Flat, where the deck panel and the fight log are bevelled: those two
 	// are overlays and a lit edge says they are in front of the game, where this backing covers
 	// nothing and the bevelled cards on it are what is meant to be read.
-	drawRelicPaneFrame(gs, screen, r)
+	drawRelicPaneFrame(gs, screen, r, &s.band.sale)
 
 	worn := s.paneRelics(gs)
 	counters := s.countersNow()

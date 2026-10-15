@@ -80,6 +80,11 @@ type bandHooks struct {
 	// relicSeat is where one of the run's relics stands in the row, for the sale tab to hang under.
 	// Nil means the run's own seat.
 	relicSeat func(key string) (image.Rectangle, bool)
+
+	// relicMotion is how far one of the run's relics is displaced from its seat right now — its
+	// float, or its weightless drift — so the sale tab moves with it. Nil means the run's own row,
+	// seat for seat. See bandMotion.
+	relicMotion func(key string) (dx, dy float64)
 }
 
 // init puts the band at rest: no drag in progress and nothing armed.
@@ -97,6 +102,7 @@ func (b *bandControls) busy() bool { return b.relicDrag.Dragging() || b.heldDrag
 func (b *bandControls) update(gs *state.GlobalState, h bandHooks) bool {
 	relics := b.relicRow(gs, h)
 	held := b.heldRow(gs, h)
+	defer b.sale.tickScroll()
 
 	if gs.Run == nil || !h.live || !gs.CursorAllowed() {
 		b.relicDrag.Cancel(relics)
@@ -110,6 +116,7 @@ func (b *bandControls) update(gs *state.GlobalState, h bandHooks) bool {
 	}
 	b.sale.canUse = h.canUse
 	b.sale.relicSeat = h.relicSeat
+	b.sale.relicMotion = h.relicMotion
 	if seat, ok := b.sale.takeUse(); ok {
 		if h.use != nil {
 			h.use(seat)

@@ -684,6 +684,30 @@
     "Life": 30
   },
   {
+    "ScenarioRecord": "shop-weightless",
+    "Note": "The shop with a mixed owned row: two relics worn the ordinary way and three worn weightless, drifting off the row, plus a rune in the sack. For looking at the sell tab's scroll hanging under a weightless relic as well as a resting one, over the shop's selling panes, and at what selling a weightless relic pays. Money to spend and a wound to heal, as the shop-shelf fixture has.",
+    "Relics": [
+      "hp-scale",
+      "dmg-all-slash",
+      "dmg-pair-hand",
+      "drain-blow",
+      "jar-fire"
+    ],
+    "Weightless": [
+      "dmg-pair-hand",
+      "drain-blow",
+      "jar-fire"
+    ],
+    "Hand": [],
+    "Runes": [
+      "left-to-right"
+    ],
+    "Screen": "shop",
+    "Fight": 3,
+    "Vitae": 40,
+    "Life": 30
+  },
+  {
     "ScenarioRecord": "weightless-relics",
     "Note": "Five relics with real art: three worn the ordinary way - an orb, a weapon and a jar - and two worn weightless, which nothing but a cantrip's cast does in a shipped game. The two are lifted off the row, drifting, a little see-through, with light passing down them, beside the three resting on it; hover one and its tooltip ends on the Weightless line.",
     "Relics": [

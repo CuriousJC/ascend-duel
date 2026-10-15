@@ -59,8 +59,9 @@ const (
 	shopFigureSize  = 30
 
 	// The confirm tab that hangs under an armed relic or carried card. **Narrower than the card it
-	// hangs off**, so it reads as attached to that card rather than as a row of its own.
-	sellTabWidth    = 200
+	// hangs off** — well inside the card's 200 — so it sits on the paper hanging from that card
+	// rather than reading as a row of its own. Its height is the smallest button tier.
+	sellTabWidth    = 160
 	sellTabHeight   = ui.ButtonTiny
 	sellTabTextSize = 26
 )
@@ -647,15 +648,15 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	drawBuildCard(gs, screen, gs.Run.Vitae())
 	drawGuideCard(gs, screen)
 	// **The pane every screen draws, fraction and all** — see drawRelicPaneFrame.
-	drawRelicPaneFrame(gs, screen, buildRelicRect(gs))
+	drawRelicPaneFrame(gs, screen, buildRelicRect(gs), &s.band.sale)
 	s.drawWorn(gs, screen)
 
 	// **The runes the run is carrying, in the pane the fight draws them in** *(2026-09-06)*.
 	// The shop draws the band's two halves itself, because a relic here can be sold — and the
 	// consumables pane went missing in the split, so a run walked into a shop and its sack
 	// vanished. nil: a rune is carried on this screen, not spent. See buildband.go.
-	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil, s.band.heldSkip, s.tip.Showing())
-	drawBandOverlay(gs, screen, &s.band)
+	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil, s.band.heldSkip, s.tip.Showing(),
+		&s.band.sale)
 
 	// **The four panes, left to right.** Each paints its own surface first and its cards on top;
 	// see shop_panes.go, which owns where they stand.
@@ -667,6 +668,9 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	drawDeckPile(gs, screen)
 
 	systems.DrawButton(gs, screen, s.leaveButton)
+	// **The band's overlay after the shop's own panes**, as on every screen that shows the band: the
+	// tabs' scroll hangs down over the selling panes, and a dragged relic rides over them.
+	drawBandOverlay(gs, screen, &s.band)
 	systems.DrawTooltip(gs, screen, &s.tip)
 
 	// Last, and over everything: the panel covers the screen, so nothing of this one may be drawn

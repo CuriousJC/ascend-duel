@@ -202,7 +202,7 @@ var choreography = map[combat.EventKind]flightSpec{
 	},
 	combat.KindAction: {
 		anchorNone, anchorNone, gestureNone,
-		"a creature's card rattles in its own seat as it swings; a duelist's cards are set on a plate by the hand instead",
+		"a creature's card rattles in its own seat as it swings; a duelist's cards are named by the hand's shout instead",
 	},
 	combat.KindRaised: {
 		anchorNone, anchorShieldHeap, gesturePop,
@@ -353,14 +353,6 @@ type combatTheater struct {
 	firingSeats      []int
 	enemyFiringSeats []int
 
-	// rungPlate is the clock the plates behind a hand's cards fade up on, started on the beat the
-	// hand is announced. See combat_rung.go.
-	rungPlate ui.Travel
-
-	// rungGroups is which of the announced hand's groups each marked seat is in, so each group is
-	// plated on its own.
-	rungGroups map[int]int
-
 	// Riders firing: the burst on the card that fired and the figure traveling into the figure it
 	// moved. **pending is the half that is not on stage yet** — a played card's signal waits for the
 	// beat that card scores, and a held card's waits for the sum to start — and shown is what the
@@ -486,7 +478,6 @@ func (t *combatTheater) Tick() {
 	// not be held up by the dialog that stops the cursor — which is why it ticks here with
 	// everything else rather than inside playback. See handBanner.
 	t.banner.Tick()
-	t.rungPlate.Tick()
 }
 
 // running reports whether anything the playback cursor waits on is still going.

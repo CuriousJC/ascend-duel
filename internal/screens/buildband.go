@@ -88,10 +88,10 @@ func buildBandBottom(gs *state.GlobalState) int {
 // more. No shields either: nothing is standing between fights.
 func drawBuildBand(gs *state.GlobalState, screen *ebiten.Image, vitae int, band *bandControls, raise bool) {
 	drawBuildCard(gs, screen, vitae)
-	drawBuildRelics(gs, screen, &band.relicDrag)
+	drawBuildRelics(gs, screen, band)
 	// **nil: a rune is carried on these screens, not spent.** The pane draws the same two seats
 	// and the same cards, dim, and the tooltip still explains them. See canSpend.
-	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil, band.heldSkip, raise)
+	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil, band.heldSkip, raise, &band.sale)
 	drawGuideCard(gs, screen)
 }
 
@@ -162,13 +162,14 @@ func drawBuildCard(gs *state.GlobalState, screen *ebiten.Image, vitae int) {
 // **`drag` is the press in progress over it**, and it may be nil for a caller that does not let the
 // row be reordered. Nothing passes nil today; the parameter is there so that a screen putting the
 // band up to be *read* does not have to invent a controller nobody drives.
-func drawBuildRelics(gs *state.GlobalState, screen *ebiten.Image, drag *ui.CardDrag) {
+func drawBuildRelics(gs *state.GlobalState, screen *ebiten.Image, band *bandControls) {
 	if gs.Run == nil {
 		return
 	}
+	drag := &band.relicDrag
 
 	row := buildRelicRect(gs)
-	drawRelicPaneFrame(gs, screen, row)
+	drawRelicPaneFrame(gs, screen, row, &band.sale)
 	worn := wornRelics(gs)
 	counters := runCounters(gs)
 	for i, record := range worn {

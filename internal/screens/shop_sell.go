@@ -15,6 +15,7 @@ package screens
 
 import (
 	"image"
+	"math"
 
 	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/models"
@@ -74,6 +75,13 @@ type sellTab struct {
 	// relicSeat is the screen's answer to where a worn relic stands, set by the band every frame;
 	// nil is the run's own seat. See bandHooks.relicSeat.
 	relicSeat func(key string) (image.Rectangle, bool)
+
+	// relicMotion is the screen's answer to how far a worn relic is displaced from its seat right
+	// now, set by the band every frame; nil is the run's own row. See bandHooks.relicMotion.
+	relicMotion func(key string) (dx, dy float64)
+
+	// scroll is the papyrus the tabs are written on. See band_scroll.go.
+	scroll tabScroll
 }
 
 // initSellTab builds the tabs the first time and puts any question away.
@@ -91,6 +99,7 @@ func (s *sellTab) initSellTab() {
 		s.useButton.TextSize = sellTabTextSize
 	}
 	s.armed, s.selling, s.using = shopSale{}, false, false
+	s.scroll = tabScroll{}
 }
 
 // arm puts the question under one thing, or takes it away again if that thing is already asking
@@ -134,19 +143,69 @@ func (s *sellTab) showsUse() bool { return s.armed.kind == saleHeld && s.canUse 
 
 // armedSeat is where the armed thing is sitting, and whether it is still there.
 func (s *sellTab) armedSeat(gs *state.GlobalState) (image.Rectangle, bool) {
-	switch s.armed.kind {
+	return s.seatOf(gs, s.armed)
+}
+
+// seatOf is where one sale's thing is drawn right now, and whether it is still there: its seat,
+// moved by the card's own float or weightless drift, **so the tabs and their scroll move with the
+// card** rather than standing at the seat while the card drifts off it.
+func (s *sellTab) seatOf(gs *state.GlobalState, a shopSale) (image.Rectangle, bool) {
+	var (
+		seat   image.Rectangle
+		ok     bool
+		dx, dy float64
+	)
+	switch a.kind {
 	case saleRelic:
 		if s.relicSeat != nil {
-			return s.relicSeat(s.armed.key)
+			seat, ok = s.relicSeat(a.key)
+		} else {
+			seat, ok = wornSeat(gs, a.key)
 		}
-		return wornSeat(gs, s.armed.key)
+		if s.relicMotion != nil {
+			dx, dy = s.relicMotion(a.key)
+		} else {
+			dx, dy = runRelicMotion(gs, a.key)
+		}
 	case saleHeld:
-		if s.armed.seat < 0 || s.armed.seat >= len(heldConsumables(gs)) {
+		held := heldConsumables(gs)
+		if a.seat < 0 || a.seat >= len(held) {
 			return image.Rectangle{}, false
 		}
-		return heldSeat(gs, s.armed.seat), true
+		seat, ok = heldSeat(gs, a.seat), true
+		dx, dy = bandMotion(gs, a.seat, held[a.seat].Weightless)
 	}
-	return image.Rectangle{}, false
+	if !ok {
+		return image.Rectangle{}, false
+	}
+	return seat.Add(image.Pt(int(math.Round(dx)), int(math.Round(dy)))), true
+}
+
+// bandMotion is how far the card in one seat of the band is displaced from it right now: the idle
+// float every card in the band has, or a weightless card's lift and sway. **The same two functions
+// the cards are drawn with**, ui.IdleFloat and ui.WeightlessLift, at the same seat phase, so what
+// hangs from a card cannot fall out of step with it.
+func bandMotion(gs *state.GlobalState, seat int, weightless bool) (dx, dy float64) {
+	if weightless {
+		lift, sway, _ := ui.WeightlessLift(float64(gs.Count), float64(seat)*2.1)
+		return sway, -lift
+	}
+	dx, dy, _ = ui.IdleFloat.Offset(gs.Count, seat)
+	return dx, dy
+}
+
+// runRelicMotion is bandMotion for one of the run's relics in the run's own row: its seat is its
+// place among the run's worn relics.
+func runRelicMotion(gs *state.GlobalState, key string) (float64, float64) {
+	if gs.Run == nil {
+		return 0, 0
+	}
+	for i, k := range gs.Run.Worn() {
+		if k == key {
+			return bandMotion(gs, i, gs.Run.IsWeightless(key))
+		}
+	}
+	return 0, 0
 }
 
 // salePrice is what selling the armed thing pays. **Asked of the run's rules**, never worked out
@@ -173,11 +232,18 @@ func (s *sellTab) updateSellTab(gs *state.GlobalState) {
 
 	s.sellButton.Text = "SELL " + priceLabel(s.salePrice())
 	place(s.sellButton, s.sellTabRect(gs))
-	systems.UpdateButton(gs, s.sellButton)
-
 	if s.showsUse() {
 		place(s.useButton, s.useTabRect(gs))
 		ui.SetEnabled(s.useButton, s.canUse(s.armed.seat))
+	}
+
+	// **A tab answers only once the paper has reached it**, so nothing is sold by a click on a tab
+	// the scroll has not unrolled to show yet. See band_scroll.go.
+	shown := s.tabsShowing(gs, image.Rect(0, 0, gs.ScreenWidth, gs.ScreenHeight))
+	if s.sellTabRect(gs).Max.Y <= shown.Max.Y {
+		systems.UpdateButton(gs, s.sellButton)
+	}
+	if s.showsUse() && s.useTabRect(gs).Max.Y <= shown.Max.Y {
 		systems.UpdateButton(gs, s.useButton)
 	}
 }
@@ -229,14 +295,18 @@ func (s *sellTab) onTabs(gs *state.GlobalState, at image.Point) bool {
 }
 
 // drawTab draws the tabs under whatever is armed.
+//
+// **On the scroll, and only as far down as it has unrolled** — see band_scroll.go.
 func (s *sellTab) drawTab(gs *state.GlobalState, screen *ebiten.Image) {
+	s.drawScrollOver(gs, screen)
 	if _, ok := s.armedSeat(gs); !ok {
 		return
 	}
+	shown := screen.SubImage(s.tabsShowing(gs, screen.Bounds())).(*ebiten.Image)
 	if s.showsUse() {
-		systems.DrawButton(gs, screen, s.useButton)
+		systems.DrawButton(gs, shown, s.useButton)
 	}
-	systems.DrawButton(gs, screen, s.sellButton)
+	systems.DrawButton(gs, shown, s.sellButton)
 }
 
 // sellCarried sells the carried card at one seat of the consumables pane, journals it, and reports

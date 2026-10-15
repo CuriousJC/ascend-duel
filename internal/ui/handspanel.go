@@ -213,15 +213,25 @@ func handsRows(c HandsContents) []handsRow {
 // in the catalog's own axis order. `Hand.On` is what narrows the rung to one reading, and it is
 // the matcher's own function — so each set really is a hand that rung would score, rather than
 // three examples this panel invented.
+//
+// **The examples are the deck's cards without their upgrades.** An upgrade is what one card in the
+// run became, and an example is a picture of the rung: a gold face in the Elementalist's row would
+// say the rung wants gold. So the deck is read as plain cards before anything is picked from it.
 func handsExamples(c HandsContents, h combat.Hand) [][]combat.Card {
+	deck := make([]combat.Card, len(c.Deck))
+	for i, card := range c.Deck {
+		card.Riders = [combat.MaxCardRiders]combat.Rider{}
+		deck[i] = card
+	}
+
 	if len(h.Axes) < 2 {
-		hand, _ := decks.Example(c.Deck, h)
+		hand, _ := decks.Example(deck, h)
 		return [][]combat.Card{hand}
 	}
 
 	sets := make([][]combat.Card, 0, len(h.Axes))
 	for _, a := range h.Axes {
-		hand, _ := decks.Example(c.Deck, h.On(a))
+		hand, _ := decks.Example(deck, h.On(a))
 		sets = append(sets, hand)
 	}
 	return sets

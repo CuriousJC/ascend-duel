@@ -276,28 +276,24 @@ is a block and nothing else. Basic is no element and matches nothing.
 The defend phase resolves first — see `combat.Categories` — and the screen plays it as **one
 gesture**: every shield in the turn forms together, heaped over the card that raised it, with
 **no card on the table ever lifts** — and it forms last, once the hits below have been worked out.
-The hand is announced, with the cards that formed it set on a highlight plate, and only then are the hits
+The hand is announced and only then are the hits
 worked out — a line of arithmetic under every card of the turn, all of them at once, each wrapped in
 its card's element. A defense's line usually comes to 0.
 
 **A chosen card goes to the table and nothing more happens to it there**, because every card's line
 shows what it did. The defend phase is one gesture for the whole set — the deal cascade's rule —
 because three pauses over one phase say three things about cards where the phase says one thing
-about the turn. Nothing is marked on a card's own announcement; the plate belongs to the hand's.
+about the turn. **Nothing on the table marks the cards that formed the hand** *(owner's call)*: the
+shout names the rung and every card's line shows what it did.
 
-**The rung is highlighted and the hits are thrown, and they are different sets.** On a turn of
-two shields and one attack the Pair is the two shields, so they are what stands on the plate; every
-card throws a hit, and the attack's is the one that hurts while being in no part of the hand, so it
-stands off it. **One plate per group of the hand**, split again wherever a card that is no part of
-it sits between: a Two Pair is two plates even with its pairs side by side, and a Four of a Kind
-with a dead card in the middle is two plates of two. `Blow.Rung` against `Blow.Cards` is the distinction in the rules and `Event.RungCards` against
-`Event.HandCards` is how it reaches the screen. **The plates stay through the arithmetic**, because a
-plate moves nothing and can be read beside the lines; they go when the other side acts.
+**The rung and the hits are different sets.** On a turn of two shields and one attack the Pair is the
+two shields, and every card throws a hit — the attack's is the one that hurts while being in no part
+of the hand. `Blow.Rung` against `Blow.Cards` is the distinction in the rules and `Event.RungCards`
+against `Event.HandCards` is how it reaches the screen.
 
-**The No Hand is announced and highlights nothing.** It is a rung and the word says what happened, but
-it is the turn that made no hand — its `Blow.Rung` is a single card picked by damage rather than by
-counting, and highlighting that card says it did something while every other attack in the turn lands
-beside it unmarked. `Blow.BuiltAHand` is the predicate and it gates the plate alone.
+**The No Hand is announced like any other rung.** It is the turn that made no hand — its `Blow.Rung`
+is a single card picked by damage rather than by counting — so nothing treats that card as having
+formed anything.
 
 **The creature's turn is the exception to all of it.** It names no hand, so its card rattling
 sideways one at a time, as it swings, is the only thing saying which hit is landing.

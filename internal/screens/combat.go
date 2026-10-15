@@ -1790,7 +1790,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// combat_relics.go.
 	s.drawRelicPane(gs, screen)
 	drawConsumablePane(gs, screen, s.consumablePaneRect(gs), s.consumableSpendable(gs),
-		s.band.heldSkip, s.tip.Showing())
+		s.band.heldSkip, s.tip.Showing(), &s.band.sale)
 	s.band.drawHeldGhost(gs, screen, s.consumableSpendable(gs))
 
 	s.drawEnemyCard(gs, screen)
@@ -1830,13 +1830,11 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawDraggedCard(gs, screen)
 
 	// The table: the round as a confrontation. The opponent's queued cards right-aligned, the
-	// player's played cards left-aligned facing them, and the cards that made the hand standing
-	// on a plate. Over the hand, which is inert during playback, and under the overlay like
+	// player's played cards left-aligned facing them. Over the hand, which is inert during playback, and under the overlay like
 	// everything else. See combat_table.go.
 	// **The scrolls the working is written on, under the cards they hang from** and over the hand row,
 	// which they run down across. See combat_scrolls.go.
 	s.drawScrolls(screen)
-	s.drawRungPlates(gs, screen)
 	s.drawEnemyQueue(gs, screen)
 	s.drawPlayedCards(gs, screen)
 

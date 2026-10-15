@@ -462,8 +462,8 @@ func (s *CombatScene) noteResolved(e combat.Event) {
 	}
 
 	// **Nothing on a duelist's turn is marked on a card's own announcement.** A duelist's turn has
-	// exactly one moment entitled to say "these cards": the hand's announcement, which sets the
-	// cards that made the rung on a plate — see noteHand. **The turn reads shields, then the announcement,
+	// exactly one moment entitled to say "these cards": the hand's announcement, which names the
+	// rung in its shout and marks nothing on the table — see noteHand. **The turn reads shields, then the announcement,
 	// then the hits.** The defend phase says what it has to say as heaps forming over their own
 	// cards — see noteShieldRaise — so a defense has nothing to add by moving.
 	//
@@ -502,17 +502,10 @@ func lit(seats []int, seat int) bool {
 //
 // **The rung, not the blow.** `HandCards` is every attack the turn played, so on a Pair formed by
 // two shields beside one attack it holds the attack too — and marking it would highlight a card
-// that made no part of the hand being announced. `RungCards` is the narrower list and is what the
-// plate means.
+// that made no part of the hand being announced. `RungCards` is the narrower list.
 //
-// **The cards need not be adjacent.** A counted hand like Two Pair is two cards, a card that
-// earned nothing, and two more, so the plates are cut into runs of neighbours rather than one
-// round the span.
-//
-// **The plate is the whole of what says which cards earned it**: the shout names the hand and the
-// plates show which cards made it. **They stay through the arithmetic** — a plate moves nothing,
-// so it can be read beside the lines rather than taken down before them — and go when the other
-// side acts or the round ends. See drawRungPlates.
+// **Nothing is drawn to mark them** *(owner's call)*: the shout names the hand and each card's line
+// shows what it did. The marked seats are still what a fizzle's shield sets off toward.
 func (s *CombatScene) noteHand(e combat.Event) {
 	if e.Kind != combat.KindHand {
 		return
@@ -524,18 +517,11 @@ func (s *CombatScene) noteHand(e combat.Event) {
 	// than by counting, and marking that says the card did something while every other attack in
 	// the turn lands beside it unmarked. See builtARung.
 	var seats []int
-	s.Theater.rungGroups = map[int]int{}
 	if builtARung(e) {
 		seats = make([]int, 0, e.RungCardCount)
 		seats = append(seats, e.RungCards[:e.RungCardCount]...)
-		// **Which group each card is in**, so a Two Pair is two plates rather than one under four
-		// cards. The engine says; see Event.RungGroup.
-		for i, seat := range seats {
-			s.Theater.rungGroups[seat] = e.RungGroup[i]
-		}
 	}
 
-	s.Theater.rungPlate = ui.NewTravel(0, rungPlateTicks())
 	if e.Side == combat.SideB {
 		s.Theater.enemyFiringSeats = seats
 		return
@@ -592,8 +578,8 @@ func (s *CombatScene) playedSeatOf(handIndex int) (int, bool) {
 }
 
 // at is where a played card is drawn right now: waiting its turn to set off, flying to its
-// seat, or sitting in it. **A card on the table never lifts**: the cards that made the hand are
-// set on a plate where they sit — see drawRungPlates — and every card's line shows what it did.
+// seat, or sitting in it. **A card on the table never lifts**, and nothing marks the cards that made
+// the hand: the shout names it and every card's line shows what it did.
 func (r resolvedCard) at(gs *state.GlobalState, total int) image.Point {
 	from := slotAt(gs, r.handIndex, r.handCount)
 	to := playedSeatAt(gs, r.place, total)

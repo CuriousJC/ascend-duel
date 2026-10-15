@@ -1644,6 +1644,7 @@ go list -f '{{.Name}}: {{join .Imports " "}}' ./... | grep curiousjc
 | Package | imports, of ours |
 |---|---|
 | `seeds` `models` `assets` `idle` `trace` `music` | *nothing* |
+| `assets/motifs` | assets *(imported blank, by `main` and `tools/roster` only)* |
 | `data` `profile` `privateassets` | *nothing* |
 | `journal` | profile |
 | `scenario` | data, combat *(compiled out unless `-tags scenario`)* |
@@ -1663,7 +1664,7 @@ go list -f '{{.Name}}: {{join .Imports " "}}' ./... | grep curiousjc
 | `ui` | data, achieve, carddesc, cards, combat, crashlog, decks, entities, models, journey, session, state, systems |
 | `screens` | all of the above, plus `ui` and `scenario` |
 | `game` | screens, ui, state, systems, models, profile, crashlog, journal, music, idle, trace |
-| `main` | game, session, assets, data, music, profile, crashlog, journal, scenario, screens, seeds, state |
+| `main` | game, session, assets, assets/motifs, data, music, profile, crashlog, journal, scenario, screens, seeds, state |
 
 Six facts about it that are load-bearing:
 
@@ -1845,7 +1846,12 @@ file was refiled. A named asset is three edits: the file, an `//go:embed` var, a
 **The motif pictures are the exception, and they are a *tree* rather than named assets.**
 `assets/motifs/` mirrors `data/motifs/`: `assets/motifs/<motif>/creature/` holds the creatures and
 `assets/motifs/<motif>/backdrop/` the rooms, with the two placeholders at the top of the tree.
-`//go:embed motifs` pulls the whole tree in and `assets.embedTree` walks it, **keying each file by
+**The tree is its own package, `assets/motifs`**, because it is most of the embedded weight: only
+the game (`main.go`) and `tools/roster` import it, blank, and its `init` files the tree into
+`assets.LoadImageData` through `assets.RegisterImages`. **Everything else — every test binary, every
+other sheet — carries none of it**, so a new program that draws a creature or a room has to import
+it or it draws the placeholder. A tool that only needs to know which pictures exist reads the files
+off disk, as `tools/motifreport` does. `assets.EmbedTree` walks it, **keying each file by
 its filename stem with the folders left out** — so where a file is filed never reaches a record, and
 two files sharing a stem anywhere in the tree fail the launch. **There is one picture per record
 per element** — `goblins-serf-fire.png` is `goblins-serf-fire`, which is what

@@ -672,8 +672,14 @@ hand they form is announced, and then every card of the turn lands its own hit. 
 their own, each doing something to its own duelist.
 
 **The run's account writes the hand once and the hits under it.** The hand's line names the rung;
-under it is a line per hit — the card that threw it, its arithmetic, what became of it — and the
-total of every hit. **A turn that forms no rung still takes that same heading**: the No Hand is a
+under it is each hit — the card that threw it, then its arithmetic down a column, one step per
+figure labelled with what produced it (the DMG, the card, each relic, each hand relic, and the hand
+last), then the `=` the hit came to in its card's element — `= 288 Arcane Damage Applied`,
+underlined, when it landed, and `Over Damage` when the target had already fallen — and the hand's
+heading carries the grand total of every hit. A landing a relic repeated writes its own whole column
+under `Earth Jab Repeats - Twisted Points`. **What raised the duelist's DMG for the turn is written
+once, at the top of the turn** — their own figure, one `+` per relic or held card that added to it,
+and the total every hit then starts from. **A turn that forms no rung still takes that same heading**: the No Hand is a
 rung, and naming it says the true thing rather than dressing a turn that agreed about nothing as an
 achievement.
 
@@ -1205,10 +1211,10 @@ one they win. `go run ./tools/handsheet` draws it.
   the engine names and never derives it from a pattern length.
 - **A place to browse hands** — a reference the player can return to. Probably belongs with the
   profile rather than inside a duel. `Hands()` exists for it to read.
-- **The attack phase writes the hand's line and a line per hit.** Attack cards write no act of
-  their own: a turn of five Bashes is the hand's heading and five hits under it, each carrying its
-  arithmetic off the event, so the figure shown is the figure used and the hit's outcome attaches
-  to it. **The hand dialog carries the same arithmetic at the size of the screen**; the lines stay
+- **The attack phase writes the hand's line and each hit's working under it.** Attack cards write
+  no act of their own: a turn of five Bashes is the hand's heading and five hits under it, each
+  carrying its arithmetic off the event as a labelled column, so the figure shown is the figure
+  used and the hit's outcome attaches to its `=`. **The hand dialog carries the same arithmetic at the size of the screen**; the lines stay
   because they are the record and the dialog is the moment.
 
 ---

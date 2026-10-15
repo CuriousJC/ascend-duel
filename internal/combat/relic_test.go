@@ -1131,9 +1131,16 @@ func TestTheHeldBonusPaysPerMatchingCardKeptBack(t *testing.T) {
 		{"the wrong color held", []Card{ice, ice}, 0, 0},
 		{"one of each", []Card{fire, ice}, 5, 1},
 	} {
-		got, cards, seats := HeldDMG(wearer.WornRelics(), tc.held)
+		got, cards, seats, by := HeldDMG(wearer.WornRelics(), tc.held)
 		if got != tc.want {
 			t.Errorf("%s paid %d, want %d", tc.name, got, tc.want)
+		}
+		sum := 0
+		for _, n := range by {
+			sum += n
+		}
+		if sum != got {
+			t.Errorf("%s: the seats' own figures come to %d, want the %d paid", tc.name, sum, got)
 		}
 		// **The count is what the account writes beside the figure**, so it is the cards that
 		// matched rather than the cards held: one of each is one card paying, not two.

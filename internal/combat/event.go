@@ -372,6 +372,20 @@ type Event struct {
 	HandDMG     int
 	HandDMGBare int
 
+	// HandDMGBase is the duelist's own DMG before anything this blow added to it, and HeldRiderAdd
+	// and HeldRiderPct are what the cards kept back added to it and then scaled it by — 100 for
+	// none. With HandBonus, HeldDMG and VitaeDMG they are every piece HandDMG is built from:
+	// (HandDMGBase + HandBonus + HeldDMG + VitaeDMG + HeldRiderAdd) x HeldRiderPct, so an account can
+	// write each plus going in rather than the answer alone.
+	HandDMGBase  int
+	HeldRiderAdd int
+	HeldRiderPct int
+
+	// DMGRaiseBy[seat] is what that relic alone added to the DMG this blow was swung at — its
+	// share of HandBonus, HeldDMG and VitaeDMG together, before the held cards' riders — 0 where it
+	// added nothing. So two jars are two figures, each beside its own relic.
+	DMGRaiseBy []int
+
 	// HandPlayAdd[i] and HandPlayPct[i] are what hit i's own card's riders did to its term, after the
 	// card's own multiplier and before any relic: DMG added, then a percentage, 100 for none.
 	// **A played card's rider prices its own hit and nothing else** *(owner's call, 2026-09-26)*,
@@ -481,6 +495,11 @@ type Event struct {
 	// not include it**, so the ladder's own figure is what the banner shows.
 	HandScale      int
 	HandScaleSeats []bool
+
+	// HandScaleBy[seat] is what that relic alone multiplied the blow by, 0 where it paid nothing.
+	// HandScale is these compounded, so an account can name each relic beside its own figure
+	// rather than one figure beside several names.
+	HandScaleBy []int
 }
 
 // Slot is one card's place in a round's resolution order: whose it is, where it sits

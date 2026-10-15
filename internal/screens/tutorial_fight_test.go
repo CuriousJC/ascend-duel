@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -399,7 +400,10 @@ func TestFindATaughtFight(t *testing.T) {
 	motifs, shape := data.LoadMotifs(), data.LoadJourney()
 	records := data.MotifRecords(motifs)
 	me := data.LoadDuelists()["Fighter1"]
-	art := assets.LoadImageData()
+	// The motif pictures off the disk, keyed as the game keys them: importing assets/motifs here
+	// would link the whole roster into this package's test binary for a search that is skipped.
+	art := map[string][]byte{}
+	assets.EmbedTree(art, os.DirFS(filepath.Join("..", "..", "assets", "motifs")), ".")
 
 	// Any creature with a picture in the element may stand in the taught room — the script names it.
 	// **Round two is played as the Block alone**: the cards a script names beside it depend on the

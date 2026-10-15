@@ -158,6 +158,13 @@ func ColorToward(c, ground color.RGBA, pct int) color.RGBA {
 // Now it is what gets painted, and a press repaints one button once instead of the screen
 // repainting all of them forever.
 func DrawButton(gs *state.GlobalState, screen *ebiten.Image, button *models.Button) {
+	DrawButtonGeo(gs, screen, button, ebiten.GeoM{})
+}
+
+// DrawButtonGeo is DrawButton with `post` applied after the button is placed — a turn about
+// something it hangs from. Identity draws it on the pixel grid; anything else filters it. Hit
+// testing still reads the unturned rectangle.
+func DrawButtonGeo(gs *state.GlobalState, screen *ebiten.Image, button *models.Button, post ebiten.GeoM) {
 	if needsPaint(button) {
 		paintButton(gs, button)
 	}
@@ -167,6 +174,10 @@ func DrawButton(gs *state.GlobalState, screen *ebiten.Image, button *models.Butt
 	centerX := float64(button.ScreenX) - float64(button.Width)/2
 	centerY := float64(button.ScreenY) - float64(button.Height)/2
 	screenLocation.GeoM.Translate(centerX, centerY)
+	if post != (ebiten.GeoM{}) {
+		screenLocation.GeoM.Concat(post)
+		screenLocation.Filter = ebiten.FilterLinear
+	}
 	screen.DrawImage(button.Image, screenLocation)
 }
 

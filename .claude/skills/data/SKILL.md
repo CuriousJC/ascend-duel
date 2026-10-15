@@ -137,7 +137,7 @@ a deck from `decks.json`. One struct would make every field optional and none of
 Dragon is not on realm one.
 
 **A portrait's key is its filename stem**, unlike every other asset: they come in through one
-`//go:embed motifs` tree under `assets/motifs/`, so renaming a file means editing the `Art` field of
+embedded tree under `assets/motifs/` — its own package, see `go doc ./assets/motifs` — so renaming a file means editing the `Art` field of
 the record that names it. That is the price of not hand-maintaining two lines per picture that nobody could
 review.
 

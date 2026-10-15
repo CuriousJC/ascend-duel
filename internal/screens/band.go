@@ -82,9 +82,9 @@ type bandHooks struct {
 	relicSeat func(key string) (image.Rectangle, bool)
 
 	// relicMotion is how far one of the run's relics is displaced from its seat right now — its
-	// float, or its weightless drift — so the sale tab moves with it. Nil means the run's own row,
-	// seat for seat. See bandMotion.
-	relicMotion func(key string) (dx, dy float64)
+	// float, or its weightless drift and turn — so the sale tab moves with it. Nil means the run's
+	// own row, seat for seat. See bandMotion.
+	relicMotion func(key string) (dx, dy, turn float64)
 }
 
 // init puts the band at rest: no drag in progress and nothing armed.

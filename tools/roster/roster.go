@@ -52,6 +52,7 @@ import (
 	"sync"
 
 	"github.com/curiousjc/ascend-duel/assets"
+	_ "github.com/curiousjc/ascend-duel/assets/motifs" // the portraits this sheet is made of
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"

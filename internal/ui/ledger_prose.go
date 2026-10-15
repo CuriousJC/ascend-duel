@@ -29,10 +29,11 @@ import (
 
 // LedgerLines is a block of records read back as lines: a round's, or the gap after a fight.
 func LedgerLines(recs []session.LedgerRecord) []session.LedgerLine {
-	w := lineWriter{}
+	w := lineWriter{blowRow: -1}
 	for _, r := range recs {
 		w.write(r)
 	}
+	w.closeBlow()
 	return w.rows
 }
 
@@ -54,6 +55,40 @@ type lineWriter struct {
 	hits     map[int]int
 	hitSide  string
 	outcomes map[int]int
+
+	// hand is the name of the blow being written, which labels its multiplier in each hit's
+	// working on an account whose hit records do not carry it themselves.
+	hand string
+
+	// blowRow is the blow's heading, where its grand total is written, or -1 outside a blow.
+	blowRow int
+
+	// hitSum is what each hit's working came to and the element it was dealt in, keyed by Hit, so
+	// the damage that hit landed can be written as that sum applied.
+	hitSum map[int]session.LedgerRecord
+
+	// settled is which hits of the blow something became of; lastLanded is the last hit whose
+	// damage was applied, which a fall that follows it is written on; and fell says the blow's
+	// target went down, after which a hit nothing became of was over damage.
+	settled    map[int]bool
+	lastLanded int
+	fell       bool
+}
+
+// closeBlow says what the blow's leftover hits were: **a hit that came to something, landed
+// nothing and had no shield or fizzle to say why, after the target fell, was over damage** — the
+// target was already down. Called when the next blow begins and when the block ends.
+func (w *lineWriter) closeBlow() {
+	if w.fell {
+		for hit, rec := range w.hitSum {
+			if w.settled[hit] || rec.Total <= 0 || !w.onHit(hit) {
+				continue
+			}
+			row := &w.rows[w.hits[hit]]
+			row.Spans = append(row.Spans, session.LedgerSpan{Text: " " + SayText(SayTermOver, nil)})
+		}
+	}
+	w.hitSum, w.settled, w.lastLanded, w.fell = nil, nil, 0, false
 }
 
 // attach adds an outcome to the tail of the line it belongs to, after the verb, so the colored verb
@@ -62,6 +97,7 @@ func (w *lineWriter) attach(hit int, what []session.LedgerSpan) {
 	row := w.cur
 	if w.onHit(hit) {
 		row = w.hits[hit]
+		w.settle(hit)
 	}
 	if row < 0 {
 		return
@@ -75,6 +111,64 @@ func (w *lineWriter) attach(hit int, what []session.LedgerSpan) {
 	}
 	w.rows[row].Spans = append(w.rows[row].Spans, Say(sep+"{what}", Slots{"what": what})...)
 	w.outcomes[row]++
+}
+
+// applied writes a hit's damage as its sum applied — `= 288 Arcane Damage Applied`, underlined —
+// and reports whether it could. **Only when the hit landed the whole of what its working came to**;
+// anything else is said as an outcome beside the sum, so a figure the hit did not land is never
+// written as though it had.
+func (w *lineWriter) applied(hit, amount int) bool {
+	rec, ok := w.hitSum[hit]
+	if !ok || !w.onHit(hit) || amount != rec.Total {
+		return false
+	}
+	// **A hit that came to nothing applied nothing** — a defense's line is `= 0` — so it is
+	// settled with nothing said rather than written as damage applied.
+	if amount == 0 {
+		w.settle(hit)
+		return true
+	}
+	// The figure and the words after it, all in the hit's element and underlined; the `=` is not.
+	row := &w.rows[w.hits[hit]]
+	for i := 1; i < len(row.Spans); i++ {
+		row.Spans[i].Mark = true
+	}
+	words := SayText(SayTermApplied, nil)
+	if rec.Element != "" {
+		words = capitalize(rec.Element) + " " + words
+	}
+	row.Spans = append(row.Spans, session.LedgerSpan{Text: " " + words, Ink: rec.Element, Mark: true})
+	w.settle(hit)
+	w.lastLanded = hit
+	return true
+}
+
+// settle records that something became of a hit, so the blow's close does not call it over damage.
+func (w *lineWriter) settle(hit int) {
+	if w.settled == nil {
+		w.settled = map[int]bool{}
+	}
+	w.settled[hit] = true
+}
+
+// grandTotal is what every hit of a blow came to together, written after the hand's name: the words
+// in the grand total's own amber and **the figure in red, the one red figure in the working**.
+func grandTotal(total int) []session.LedgerSpan {
+	spans := Say(SayTermGrand, Slots{"n": {{Text: strconv.Itoa(total), Ink: session.InkTotal}}})
+	for i := range spans {
+		if spans[i].Ink == "" {
+			spans[i].Ink = session.InkGrand
+		}
+	}
+	return spans
+}
+
+// capitalize is a word with its first letter raised: `arcane` is `Arcane`.
+func capitalize(s string) string {
+	if s == "" {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
 }
 
 // onHit reports whether an outcome naming this hit has a hit's line to attach to.
@@ -114,7 +208,7 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 		w.open(session.LedgerLine{
 			Voice: voiceForSide(r.Side),
 			Spans: Say(SayAct, Slots{
-				"who":    Plain(r.Name),
+				"who":    ElementSpans(r.Name),
 				"verb":   Marked(verbWord(r.Verb), verbInkName(r.Verb)),
 				"clause": cardClause(r),
 			}),
@@ -127,18 +221,26 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 		// and an underline under a name alone on its line reads as a mistake rather than emphasis.
 		//
 		// **A new blow forgets the last one's hits**, since a Hit counts within one blow.
-		w.hits, w.hitSide = map[int]int{}, r.Side
+		w.closeBlow()
+		w.hits, w.hitSide, w.hand = map[int]int{}, r.Side, r.Hand
+		w.hitSum = map[int]session.LedgerRecord{}
 		w.open(session.LedgerLine{
 			Voice: session.VoiceHand,
 			Spans: []session.LedgerSpan{{Text: r.Hand, Ink: session.InkHand}},
 		}, r.Side)
+		w.blowRow = w.cur
 
 	// ---- the outcomes ----
 
 	case session.KindFizzled:
 		// **Naming the reason is the point**: a hit that landed nothing with no word beside it
 		// would read as a bug.
-		w.attach(r.Hit, Say(SayFizzled, nil))
+		// "Ice attack fizzles, no damage applied." — the hit's own element, in its colour.
+		what := "Attack"
+		if el := w.hitSum[r.Hit].Element; el != "" {
+			what = capitalize(el) + " attack"
+		}
+		w.attach(r.Hit, Say(SayFizzled, Slots{"what": ElementSpans(what)}))
 
 	case session.KindDrained:
 		// **The relic names itself**, so a second drain relic cannot narrate identically to the
@@ -185,7 +287,13 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 			w.attach(r.Hit, Say(SayHitBack, Slots{"n": figure(r.Amount)}))
 			return
 		}
+		if w.applied(r.Hit, r.Amount) {
+			return
+		}
 		w.attach(r.Hit, Say(SayDamage, Slots{"n": figure(r.Amount)}))
+		if w.onHit(r.Hit) {
+			w.lastLanded = r.Hit
+		}
 
 	// ---- the announcements ----
 
@@ -193,14 +301,14 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 		// **A line of its own, where a drain attaches to one.** This happens at the top of a turn
 		// with nothing before it, so there is nothing to attach to.
 		w.announce(voiceForSide(r.Side), Say(SayRegenerated, Slots{
-			"who": Plain(r.Name), "n": figure(r.Amount), "relic": Plain(r.Relic),
+			"who": ElementSpans(r.Name), "n": figure(r.Amount), "relic": Plain(r.Relic),
 		}))
 
 	case session.KindWarded:
 		// **A line of its own**, like a regeneration: the top of a turn has nothing to attach to.
 		w.announce(voiceForSide(r.Side), Say(SayWarded, Slots{
-			"who":     Plain(r.Name),
-			"shields": Plain(strings.Replace(ShieldCount(r.Amount), " ", " "+r.Element+" ", 1)),
+			"who":     ElementSpans(r.Name),
+			"shields": ElementSpans(strings.Replace(ShieldCount(r.Amount), " ", " "+r.Element+" ", 1)),
 			"relic":   Plain(r.Relic),
 		}))
 
@@ -208,17 +316,40 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 		// **A line of its own, and it opens one.** Nobody swung, so there is no attacker's sentence
 		// for this to attach to — and the fall on the next record would otherwise be the only
 		// account of the biggest thing that can happen in a fight.
-		w.announce(voiceForSide(r.Target), Say(SayTimeUp, Slots{"who": Plain(r.Name), "n": figure(r.Amount)}))
+		w.announce(voiceForSide(r.Target), Say(SayTimeUp, Slots{"who": ElementSpans(r.Name), "n": figure(r.Amount)}))
+
+	case session.KindDMG:
+		// **The duelist's DMG for the turn, built once at its top**: their own figure, each plus a
+		// relic or a held card put into it, and what it came to — the figure every hit below starts
+		// from, so a hit swung at 238 has already said why.
+		w.announce(voiceForSide(r.Side), Say(SayDMGBuilt, Slots{"who": ElementSpans(r.Name)}))
+		w.rows = append(w.rows, workStep("", strconv.Itoa(r.DMGBase), "", SayText(SayStepBase, nil), ""))
+		for _, f := range r.DMGParts {
+			if f.Add != 0 {
+				w.rows = append(w.rows, workStep("+", strconv.Itoa(f.Add), session.InkRelic, f.Relic, session.InkRelic))
+			} else {
+				w.rows = append(w.rows, workStep("x", HandMultiplierText(f.Scale), session.InkRelic, f.Relic, session.InkRelic))
+			}
+		}
+		w.rows = append(w.rows, workStep("=", strconv.Itoa(r.Amount), "", SayText(SayStepDMG, nil), ""))
 
 	case session.KindDefeated:
-		w.announce(voiceForSide(r.Target), Say(SayDefeated, Slots{"who": Plain(r.Name)}))
+		// **A fall to a blow is written on the hit that landed it**, the last hit of the blow whose
+		// damage went in, because that is where the fight was won. Any other fall — the clock, a
+		// creature's own blow — is a line of its own.
+		if w.lastLanded > 0 && w.onHit(w.lastLanded) && r.Target != w.hitSide {
+			w.attach(w.lastLanded, Say(SayDefeated, Slots{"who": ElementSpans(r.Name)}))
+			w.fell = true
+			return
+		}
+		w.announce(voiceForSide(r.Target), Say(SayDefeated, Slots{"who": ElementSpans(r.Name)}))
 
 	case session.KindUsed:
 		// "Duelist casts Cantrip of Might - DMG 10 to 20", "Duelist uses Embermark on a jab and a
 		// bash". **The verb is marked like an act's** so a round's spending can be scanned for, and
 		// takes the row's own ink: a consumable is neither of the two verbs that own a color.
 		spans := Say(SayUsed, Slots{
-			"who":     Plain(r.Name),
+			"who":     ElementSpans(r.Name),
 			"verb":    Marked(usedVerb(r.Note), ""),
 			"subject": Plain(r.Subject),
 		})
@@ -235,14 +366,35 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 	// ---- the working under a blow ----
 
 	case session.KindTerm:
-		w.rows = append(w.rows, termLine(r))
 		w.cur = -1
-		// **A hit's line is where its outcomes go**, however many lines are written after it.
-		if r.Role == session.RoleHit && r.Hit > 0 {
+		// **Every hit together is the blow's grand total, said on the blow's own heading**, where
+		// the hand is named, rather than under the last hit.
+		if r.Role == session.RoleTotal && w.blowRow >= 0 && w.blowRow < len(w.rows) {
+			head := &w.rows[w.blowRow]
+			for i := range head.Spans {
+				head.Spans[i].Ink = session.InkGrand
+			}
+			head.Spans = append(head.Spans, grandTotal(r.Total)...)
+			return
+		}
+		if r.Role == session.RoleDMG || r.Role == session.RoleTotal {
+			w.rows = append(w.rows, termLine(r))
+			return
+		}
+		// RoleHit, and any role this build does not write — a line read back from an older account
+		// draws as the hit it was part of.
+		w.rows = append(w.rows, hitLines(r, w.hand)...)
+		// **A hit's `=` line is where its outcomes go**, however many lines are written after it:
+		// what the hit did sits beside what it came to.
+		if r.Hit > 0 {
 			if w.hits == nil {
 				w.hits = map[int]int{}
 			}
+			if w.hitSum == nil {
+				w.hitSum = map[int]session.LedgerRecord{}
+			}
 			w.hits[r.Hit] = len(w.rows) - 1
+			w.hitSum[r.Hit] = r
 		}
 
 	// ---- the gap between two fights ----
@@ -273,10 +425,11 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 	}
 }
 
-// termLine is one line of a blow's working, drawn by its role.
+// termLine is a line of a blow's working that is not a hit: what a relic did to the DMG, or every
+// hit's total.
 //
-// **The name column is one width for every role**, so a card's figure, a flat term's and the
-// relic's all land in the same place and the working reads as one column of figures.
+// **The name column is one width for both**, so the relic's figure and the total land in the same
+// place.
 func termLine(r session.LedgerRecord) session.LedgerLine {
 	switch r.Role {
 
@@ -294,175 +447,172 @@ func termLine(r session.LedgerRecord) session.LedgerLine {
 			{Text: SayText(SayTermDMG, Slots{"n": figure(r.Amount)}), Ink: session.InkRelic},
 		}}
 
-	case session.RoleTotal:
-		return session.LedgerLine{Voice: session.VoiceTerm, Spans: []session.LedgerSpan{
-			{Text: fmt.Sprintf("%-14s", SayTermTotal)},
-			{Text: strconv.Itoa(r.Total), Ink: session.InkTotal},
-		}}
-
-	default:
-		// RoleHit, and any role this build does not write — a line read back from an older
-		// account draws as the hit it was part of.
-		// **The card, then its arithmetic, then its relics**, so the column of card names reads
-		// down the blow and each hit's working sits beside the card that threw it.
-		spans := []session.LedgerSpan{{Text: fmt.Sprintf("%-14s", termCardName(r)), Ink: r.Element}}
-		spans = append(spans, sumSpans(r)...)
-		return session.LedgerLine{Voice: session.VoiceTerm, Spans: append(spans, factorNotes(r.Factors)...)}
+	default: // RoleTotal, on an account with no blow heading to write it on
+		return session.LedgerLine{Voice: session.VoiceTerm, Spans: grandTotal(r.Total)}
 	}
 }
 
-// termCardName is what a landing is called in a column of figures: the card, and its color when it
-// has one. **Not a clause** — that is what an act line writes.
+// workCol is the column a step's label starts at, in digit widths from where the step's text
+// begins: room for an operator and the widest figure a step writes, a hit's total included.
+const workCol = 9
+
+// hitLines is one hit written down a column: the card's line, then **one step per figure that
+// went into it, each labelled with what produced it**, then the `=` the hit came to.
+//
+//	Thrust (lightning)
+//	      20   DMG
+//	    x 1    Thrust
+//	    x 2    Lightning Ring
+//	    x 4    Prism Crown
+//	    x 1.4  Two Pair
+//	    = 448
+//
+// **The order is the card's term outward, with the hand last**: the DMG, what an Awakening woke
+// into it, the card's own multiplier, the card's played riders, each relic that priced the card,
+// the flat terms, each relic that multiplies the hand, then the hand itself — so the column ends on
+// the rung the player built. The flats are added before any multiplier, as the resolver adds them;
+// past that every step multiplies, so where the hand stands changes no figure. A landing a relic
+// bought — an echo — is said on the card's line, because it is why this hit exists rather than a
+// figure in it.
+//
+// **It computes nothing.** Every figure is a field of the record; the labels are the names the
+// record carries beside them.
+func hitLines(r session.LedgerRecord, hand string) []session.LedgerLine {
+	var landed []string
+	var priced []session.LedgerFactor
+	for _, f := range r.Factors {
+		if f.Landed {
+			landed = append(landed, f.Relic)
+		} else {
+			priced = append(priced, f)
+		}
+	}
+
+	head := []session.LedgerSpan{{Text: termCardName(r), Ink: r.Element}}
+	// "Earth Jab Repeats - Twisted Points": the word in the card's own colour, since it is the card
+	// landing again, and the relic that made it in the relic's.
+	if len(landed) > 0 {
+		head = append(head,
+			session.LedgerSpan{Text: " " + SayText(SayHitAgain, nil), Ink: r.Element},
+			session.LedgerSpan{Text: " - " + strings.Join(landed, " + "), Ink: session.InkRelic})
+	}
+	return append([]session.LedgerLine{{Voice: session.VoiceTerm, Spans: head}}, hitSteps(r, priced, hand)...)
+}
+
+// hitSteps is the column under a hit's line. `priced` is the record's factors less its landings,
+// in the order hitRecord wrote them — what an Awakening added, the card's played riders, then each
+// relic's price — which is the order the steps take them in.
+func hitSteps(r session.LedgerRecord, priced []session.LedgerFactor, hand string) []session.LedgerLine {
+	var out []session.LedgerLine
+	add := func(op, figure, figureInk, label, labelInk string) {
+		out = append(out, workStep(op, figure, figureInk, label, labelInk))
+	}
+	// next is the factor the next step is labelled by, or a relic nobody named on an account that
+	// carries fewer factors than figures.
+	next := func() session.LedgerFactor {
+		if len(priced) == 0 {
+			return session.LedgerFactor{Relic: "a relic"}
+		}
+		f := priced[0]
+		priced = priced[1:]
+		return f
+	}
+
+	for _, t := range r.Terms {
+		if t.Split {
+			// The DMG the card was swung at. What built it is written once, at the top of the turn —
+			// see KindDMG — so every hit starts from the figure that block came to.
+			add("", strconv.Itoa(t.DMG), "", SayText(SayStepBase, nil), "")
+			if t.Awaken != 0 {
+				add("+", strconv.Itoa(t.Awaken), session.InkRelic, next().Relic, session.InkRelic)
+			}
+			add("x", HandMultiplierText(t.Weight), t.Element, r.Card, t.Element)
+		} else {
+			// **The flat form already holds what the card and an Awakening made of the DMG**, so
+			// its Awakening is passed over rather than added a second time.
+			if t.Awaken != 0 {
+				next()
+			}
+			add("", strconv.Itoa(t.Base), t.Element, r.Card, t.Element)
+		}
+		if t.PlayAdd != 0 {
+			add("+", strconv.Itoa(t.PlayAdd), t.Element, next().Relic, t.Element)
+		}
+		if t.PlayPct != 0 {
+			add("x", HandMultiplierText(t.PlayPct), t.Element, next().Relic, t.Element)
+		}
+		for _, pct := range t.Scales {
+			f := next()
+			label := f.Relic
+			// **What the relic stood at after this hit**, written only where it moved — the one
+			// case in which the same relic prices two hits of one blow differently.
+			if f.Grown > 0 {
+				label += SayText(SayFactorGrown, Slots{"n": figure(f.Grown)})
+			}
+			add("x", HandMultiplierText(pct), session.InkRelic, label, session.InkRelic)
+		}
+	}
+
+	for _, flat := range r.Flats {
+		add("+", strconv.Itoa(flat), "", SayText(SayStepFlat, nil), "")
+	}
+
+	// A hit whose record carries no terms still has its figure: an account nothing produces today,
+	// written as the base it was rather than as a multiplier with nothing in front of it.
+	if len(r.Terms) == 0 && len(r.Flats) == 0 {
+		add("", strconv.Itoa(r.Base), r.Element, r.Card, r.Element)
+	}
+
+	// **A hand relic is its own step**, never a bigger figure in the hand's, which keeps the hand
+	// reading as the rung the player built — one step per relic, each beside what it alone
+	// multiplied by; an account that kept only the compounded figure writes it once.
+	if r.HandScale != 0 && r.HandScale != 100 {
+		if len(r.HandRelics) == 0 {
+			add("x", HandMultiplierText(r.HandScale), session.InkRelic, "a relic", session.InkRelic)
+		}
+		for _, f := range r.HandRelics {
+			add("x", HandMultiplierText(f.Scale), session.InkRelic, f.Relic, session.InkRelic)
+		}
+	}
+
+	// **The hand is the last step**, labelled by name — which a hit record carries and an older one
+	// leaves to the blow above it — so the column ends on the rung the player built.
+	name := r.Hand
+	if name == "" {
+		name = hand
+	}
+	add("x", HandMultiplierText(r.Multiplier), session.InkHand, name, session.InkHand)
+
+	// **The hit's figure is in its card's element**; red is kept for the blow's grand total alone.
+	return append(out, session.LedgerLine{Voice: session.VoiceWork, Spans: []session.LedgerSpan{
+		{Text: "= "},
+		{Text: strconv.Itoa(r.Total), Ink: r.Element},
+	}})
+}
+
+// workStep is one step of a hit's working: an operator, the figure in the ink of what produced it,
+// and on the label column the name of what that was. **The operator is the panel's own ink**, the
+// one thing on the line the game supplied rather than the player. The first step has no operator
+// and is set in by one, so its figure sits over the figures below it.
+func workStep(op, figure, figureInk, label, labelInk string) session.LedgerLine {
+	if op == "" {
+		op = " "
+	}
+	return session.LedgerLine{Voice: session.VoiceWork, Spans: []session.LedgerSpan{
+		{Text: op + " "},
+		{Text: figure, Ink: figureInk},
+		{Text: label, Ink: labelInk, Col: workCol},
+	}}
+}
+
+// termCardName is what a landing is called in a column of figures: the card, its element in front
+// of it when it has one — `Earth Jab`, `Arcane Brace`. **Not a clause** — that is what an act line
+// writes.
 func termCardName(r session.LedgerRecord) string {
 	if r.Element == "" {
 		return r.Card
 	}
-	return r.Card + " (" + r.Element + ")"
-}
-
-// factorNotes is what the relics did to one term: the landings they bought, then the figures they
-// priced it at, in the order they fired.
-//
-// **A landing and a multiplier are said differently because they are different things.** An echo
-// relic buys a term and contributes no figure, so a note reading `x Echo 1x` would credit it with
-// arithmetic it did not do.
-//
-// **A relic firing at the identity still fired** and is written: leaving it out is how a growing
-// relic's climb off 1x becomes invisible.
-func factorNotes(factors []session.LedgerFactor) []session.LedgerSpan {
-	var out []session.LedgerSpan
-	for _, f := range factors {
-		if f.Landed {
-			out = append(out, session.LedgerSpan{
-				Text: SayText(SayFactorLands, Slots{"relic": Plain(f.Relic)}), Ink: session.InkRelic,
-			})
-			continue
-		}
-		if f.Add != 0 {
-			out = append(out, session.LedgerSpan{
-				Text: fmt.Sprintf("  + %s %d", f.Relic, f.Add), Ink: session.InkRelic,
-			})
-			continue
-		}
-		note := "  x " + f.Relic + " " + HandMultiplierText(f.Scale) + "x"
-
-		// **What the relic stood at after this term**, written only where it moved — the one case
-		// in which the same relic prices two terms of one blow differently.
-		if f.Grown > 0 {
-			note += SayText(SayFactorGrown, Slots{"n": figure(f.Grown)})
-		}
-		out = append(out, session.LedgerSpan{Text: note, Ink: session.InkRelic})
-	}
-	return out
-}
-
-// sumSpans is arithmetic written out as the hand dialog it is: `(10 x 2 x 1.5) + 10 x 2.5 = 50`. A hit's
-// line is one term and its flats.
-//
-// **A relic's figure stays with the term it priced**, in brackets, rather than being folded into
-// the term or hung on the end of the whole sum. Folding it in hides the relic; hanging it on the
-// end reads as multiplying every term, which is not what happened and does not come to the total.
-func sumSpans(r session.LedgerRecord) []session.LedgerSpan {
-	var spans []session.LedgerSpan
-
-	for _, t := range r.Terms {
-		if len(spans) > 0 {
-			spans = append(spans, session.LedgerSpan{Text: " + "})
-		}
-
-		// **The term is the product the game worked out, not its answer**: the DMG the hand was
-		// swung at, times this card's own multiplier, times whatever a relic priced it at.
-		if t.Split {
-			// **What the opener woke joins the DMG before the card multiplies it**, so the two are
-			// bracketed together and written in the relic pink.
-			if t.Awaken != 0 {
-				spans = append(spans, session.LedgerSpan{Text: "((" + strconv.Itoa(t.DMG)})
-				spans = append(spans, session.LedgerSpan{Text: " + " + strconv.Itoa(t.Awaken), Ink: session.InkRelic})
-				spans = append(spans, session.LedgerSpan{Text: ")"})
-			} else {
-				spans = append(spans, session.LedgerSpan{Text: "(" + strconv.Itoa(t.DMG)})
-			}
-			spans = append(spans, session.LedgerSpan{
-				Text: " x " + HandMultiplierText(t.Weight), Ink: t.Element,
-			})
-			spans = append(spans, playSpans(t)...)
-			spans = append(spans, scaleSpans(t.Scales)...)
-			spans = append(spans, session.LedgerSpan{Text: ")"})
-			continue
-		}
-
-		// **The flat form is for the term the split cannot describe** — an echo's rounding, or a
-		// card that hit the damage floor. Its base already holds what the opener woke.
-		if len(t.Scales) == 0 && t.PlayAdd == 0 && t.PlayPct == 0 {
-			spans = append(spans, session.LedgerSpan{Text: strconv.Itoa(t.Base), Ink: t.Element})
-			continue
-		}
-		spans = append(spans, session.LedgerSpan{Text: "(" + strconv.Itoa(t.Base), Ink: t.Element})
-		spans = append(spans, playSpans(t)...)
-		spans = append(spans, scaleSpans(t.Scales)...)
-		spans = append(spans, session.LedgerSpan{Text: ")", Ink: t.Element})
-	}
-
-	// **The flat terms, after the cards and before the multiplier**, which is where the resolver
-	// adds them in. Written in no ink at all: a relic put them in a hit's line and the term is still the
-	// hand paying.
-	for _, flat := range r.Flats {
-		if len(spans) > 0 {
-			spans = append(spans, session.LedgerSpan{Text: " + "})
-		}
-		spans = append(spans, session.LedgerSpan{Text: strconv.Itoa(flat)})
-	}
-
-	// A blow whose record carries no terms still has its two figures. Nothing produces one today;
-	// saying the hand dialog it did is better than a line reading `x 1.5 = 30` with nothing in front.
-	if len(spans) == 0 {
-		spans = append(spans, session.LedgerSpan{Text: strconv.Itoa(r.Base)})
-	}
-
-	// **No mark.** An underline under a multiplier in the middle of a sum reads as a typesetting
-	// accident; the whole panel is bold already, and the figure's place in the line says what it is.
-	spans = append(spans, session.LedgerSpan{
-		Text: " x " + HandMultiplierText(r.Multiplier), Ink: session.InkHand,
-	})
-
-	// **A hand relic is a second multiplier, after the hand's own** — the HAND RELICS step — so it
-	// is a second `x` on the line rather than a bigger figure in the first, which is what keeps the
-	// hand's reading as the rung the player built.
-	if r.HandScale != 0 && r.HandScale != 100 {
-		spans = append(spans, session.LedgerSpan{
-			Text: " x " + HandMultiplierText(r.HandScale), Ink: session.InkRelic,
-		})
-	}
-
-	return append(spans,
-		session.LedgerSpan{Text: " = "},
-		session.LedgerSpan{Text: strconv.Itoa(r.Total), Ink: session.InkTotal},
-	)
-}
-
-// playSpans writes a card's own played riders inside its term, after its own multiplier and before
-// the relics — the order the resolver applies them in — in the card's own color.
-func playSpans(t session.LedgerSum) []session.LedgerSpan {
-	var out []session.LedgerSpan
-	if t.PlayAdd != 0 {
-		out = append(out, session.LedgerSpan{Text: " + " + strconv.Itoa(t.PlayAdd), Ink: t.Element})
-	}
-	if t.PlayPct != 0 {
-		out = append(out, session.LedgerSpan{Text: " x " + HandMultiplierText(t.PlayPct), Ink: t.Element})
-	}
-	return out
-}
-
-// scaleSpans writes relic multipliers as factors inside a term's bracket, in the relic pink the
-// rest of the panel gives a relic's own figure.
-func scaleSpans(scales []int) []session.LedgerSpan {
-	out := make([]session.LedgerSpan, 0, len(scales))
-	for _, pct := range scales {
-		out = append(out, session.LedgerSpan{
-			Text: " x " + HandMultiplierText(pct), Ink: session.InkRelic,
-		})
-	}
-	return out
+	return capitalize(r.Element) + " " + r.Card
 }
 
 // afterLine is one line of what the player did between two fights: a marked verb and what it was

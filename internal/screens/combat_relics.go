@@ -477,13 +477,13 @@ func (s *CombatScene) runRelicSeat(gs *state.GlobalState, key string) (image.Rec
 
 // runRelicMotion is how far one of the run's relics is displaced from its seat in the fight's row
 // right now, for the sale tab to move with it.
-func (s *CombatScene) runRelicMotion(gs *state.GlobalState, key string) (float64, float64) {
+func (s *CombatScene) runRelicMotion(gs *state.GlobalState, key string) (float64, float64, float64) {
 	for i, r := range s.relicRowSeats(gs) {
 		if r.runRelic() && r.key == key {
 			return bandMotion(gs, i, s.wornWeightless(i))
 		}
 	}
-	return 0, 0
+	return 0, 0, 0
 }
 
 // cantripRelicRecord is a cantrip-relic as the row draws a relic.

@@ -25,6 +25,8 @@ package session
 // voice and an ink are short closed vocabularies written as words, on the rule every other snapshot
 // is under. See save.go.
 
+import "strings"
+
 // The voices a line can be spoken in. **A name rather than a color**, because a color in a save
 // file is a palette decision frozen into a run — the screen maps these onto its swatches, so a
 // re-colored pane re-colors every ledger already written.
@@ -40,6 +42,11 @@ const (
 	// relic did to the DMG, or every hit's total — so a multiplier reads as a number the player built
 	// rather than one the game decided.
 	VoiceTerm = "term"
+
+	// VoiceWork is one step inside a hit's working: a figure and what produced it — the DMG, the
+	// card, a relic, the hand — or the `=` the hit came to. Set in under the hit's own line, so a
+	// hit reads as a sum written down a column.
+	VoiceWork = "work"
 
 	// VoicePlain is a line belonging to nobody: a heading, or an empty ledger saying so.
 	VoicePlain = "plain"
@@ -72,6 +79,10 @@ const (
 	// the figure that leaves the hand dialog and lands in a life bar.
 	InkTotal = "total"
 
+	// InkGrand is a blow's heading once it carries its grand total — the hand's name and the words
+	// around the figure — so the line summing the whole attack stands apart from the hits under it.
+	InkGrand = "grand"
+
 	// InkVitae is the purse: a figure paid in or held, in the crimson vitae is written in everywhere.
 	InkVitae = "vitae"
 )
@@ -99,6 +110,12 @@ type LedgerSpan struct {
 	// panel that also uses color for the side; two together are not, and no line carries both a
 	// verb and a hand.
 	Mark bool
+
+	// Col starts the run at a column rather than straight after the run before it, counted in the
+	// widths of a digit from where the line's text begins, so a label lines up down a column of
+	// figures whatever the figures' widths. Zero flows on. A run that would start past its column
+	// is pushed on rather than drawn over what is already there.
+	Col int
 }
 
 // LedgerLine is one line of the account, worded and colored.
@@ -117,9 +134,20 @@ type LedgerLine struct {
 
 // Text is the whole line as one string, for a caller reading it rather than drawing it: a test, or
 // the scripted demo's report.
+//
+// **A column is spaces**, padded out to the column in characters, so a working exported as text
+// still reads as a column.
 func (l LedgerLine) Text() string {
 	var out string
 	for _, r := range l.Spans {
+		if r.Col > 0 {
+			for len([]rune(out)) < r.Col {
+				out += " "
+			}
+			if out != "" && !strings.HasSuffix(out, " ") {
+				out += " "
+			}
+		}
 		out += r.Text
 	}
 	return out

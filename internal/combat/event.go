@@ -401,11 +401,13 @@ type Event struct {
 	HandAwaken [maxHandTerms]int
 
 	// Awaken is what every attack after the turn's first card gains from the Awakenings the first
-	// card woke, and AwakenSeats is which worn seats woke. AwakenOpener is the opener's index into the
-	// turn as it resolved — the convention HandCards and Slot use — so a screen can toast the card
-	// that woke them. See combat.AwakenBonus.
+	// card woke, AwakenSeats is which worn seats woke, and AwakenBy is what each seat added — so two
+	// Awakenings that both wake are written as two steps rather than one sum. AwakenOpener is the
+	// opener's index into the turn as it resolved — the convention HandCards and Slot use — so a
+	// screen can toast the card that woke them. See combat.AwakenBonus.
 	Awaken       int
 	AwakenSeats  []bool
+	AwakenBy     []int
 	AwakenOpener int
 
 	// HitAmounts[i] is what hit i comes to: the card's term (its riders and its relics inside it),

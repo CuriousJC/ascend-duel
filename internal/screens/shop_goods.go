@@ -888,10 +888,13 @@ func stoneTipLines(gs *state.GlobalState, st session.Stone) []string {
 			have = gs.Run.StonesOn(hand)
 		}
 		worth := session.StoneWorth(hand, have)
-		line := fmt.Sprintf("%s +%d", stoneHandName(hand), worth)
+		line := fmt.Sprintf("%s +%s", stoneHandName(hand), stoneMultiplier(worth))
 		if gs.Run != nil {
+			// **The level the rung reaches with this stone**, counted as the hands panel counts it:
+			// level 1 is the rung as shipped, so a rung with no stones goes to level 2.
 			if now, ok := gs.Run.HandMultiplier(hand); ok {
-				line = fmt.Sprintf("%s: x%d to x%d", stoneHandName(hand), now, now+worth)
+				line = fmt.Sprintf("%s Level %d: %s -> %s", stoneHandName(hand), have+2,
+					stoneMultiplier(now), stoneMultiplier(now+worth))
 			}
 		}
 		out = append(out, line)
@@ -902,6 +905,13 @@ func stoneTipLines(gs *state.GlobalState, st session.Stone) []string {
 		}
 	}
 	return out
+}
+
+// stoneMultiplier is a rung's multiplier as the player reads it, to the tenth: 110 is `1.1`, 100 is
+// `1.0`. **Always a tenth, never more** — every multiplier is a multiple of 10, which the hand loader
+// holds — and the `.0` is kept so a rung that has not moved still reads as a multiplier.
+func stoneMultiplier(pct int) string {
+	return fmt.Sprintf("%d.%d", pct/100, pct%100/10)
 }
 
 // stoneHandName is the rung a stone raises, by the name the rest of the game calls it.

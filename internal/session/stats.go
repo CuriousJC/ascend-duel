@@ -77,6 +77,12 @@ const (
 	StatCreatureDefeated = "defeated:"
 	StatCreatureKiller   = "killed-by:"
 
+	// The same two, per element the creature was dealt as: `defeated-as:<record>:<element>`. **A
+	// family of their own rather than a longer key under the two above**, so a sum over `defeated:`
+	// counts each fight once. See CreatureAs.
+	StatCreatureDefeatedAs = "defeated-as:"
+	StatCreatureKillerAs   = "killed-by-as:"
+
 	StatPlayedElement = "played:element:"
 	StatPlayedForm    = "played:form:"
 	StatDealtElement  = "dealt:element:"
@@ -87,6 +93,15 @@ const (
 func (s *Session) Stats() profile.Tally {
 	var out profile.Tally
 	out.Merge(s.stats)
+	return out
+}
+
+// StatsSoFar is the run's tally with the duel being fought added on: every round already played
+// counts, where Stats waits for the duel to settle. **For reading only** — what is saved and what the
+// profile is handed is Stats, which is why a resume cannot count a round twice. A copy, like Stats.
+func (s *Session) StatsSoFar() profile.Tally {
+	out := s.Stats()
+	out.Merge(s.duel)
 	return out
 }
 
@@ -158,8 +173,9 @@ func (s *Session) TallyRound(log []combat.Event, turn []combat.Card) {
 // against, whether it was won, and how many rounds it took.
 //
 // **Called once per duel, where the ledger closes it**, which is the one place a settled duel is
-// written down whichever way it went.
-func (s *Session) TallyFight(creature string, won bool, rounds int) {
+// written down whichever way it went. `element` is the colour the creature was dealt as, and an
+// empty one counts the creature without it.
+func (s *Session) TallyFight(creature, element string, won bool, rounds int) {
 	d := s.duel
 	s.duel = profile.Tally{}
 
@@ -167,12 +183,24 @@ func (s *Session) TallyFight(creature string, won bool, rounds int) {
 	if won {
 		d.Add(StatFightsWon, 1)
 		d.Add(StatCreatureDefeated+creature, 1)
+		if element != "" {
+			d.Add(CreatureAs(StatCreatureDefeatedAs, creature, element), 1)
+		}
 		d.Min(StatFastestWin, rounds)
 	} else {
 		d.Add(StatFightsLost, 1)
 		d.Add(StatCreatureKiller+creature, 1)
+		if element != "" {
+			d.Add(CreatureAs(StatCreatureKillerAs, creature, element), 1)
+		}
 	}
 	s.stats.Merge(d)
+}
+
+// CreatureAs is the name one creature dealt as one element is counted under, in one of the two
+// per-element families.
+func CreatureAs(family, creature, element string) string {
+	return family + creature + ":" + element
 }
 
 // FinalStats is the run's tally as it goes onto the profile: everything counted along the way, plus

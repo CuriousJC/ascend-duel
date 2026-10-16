@@ -60,6 +60,10 @@ type compendiumEntry struct {
 	title string
 	lines []string
 	extra []string
+
+	// creature is set on the bestiary's entries, and is what a found one shows in place of a
+	// tooltip — see compendium_creature.go.
+	creature *creaturePeek
 }
 
 // catalogCell is the size one entry takes: the reduced card and the caption under it.
@@ -105,6 +109,10 @@ func (s *CompendiumScene) pointAtEntry(gs *state.GlobalState, body image.Rectang
 		}
 		if !e.found {
 			s.tip.Point(seat, ui.TipLine(undiscoveredTitle), ui.TipLines([]string{"Not yet found"}))
+			return
+		}
+		if e.creature != nil {
+			s.peek, s.peekSeat = e.creature, seat
 			return
 		}
 		lines := append(append([]string{}, e.lines...), e.extra...)
@@ -298,39 +306,35 @@ func goodsDialog(gs *state.GlobalState) *compendiumDialog {
 }
 
 // creaturesDialog is the bestiary: every creature and boss on the roster, motif by motif, in each
-// motif file's own order.
+// motif file's own order — **once per element it can be dealt as**, in the record's own order of
+// affinities, since a fire goblin and an ice goblin are two drawings and two decks.
 //
-// **A creature is found once it has been fought**, won or lost — a player who fell to the Toll-Taker
-// has met it. Its caption is the wins; its tooltip says both.
-//
-// **It wears the picture of the first element it can be dealt as.** A creature is painted once per
-// element and the page has one seat for it, so the choice is the record's own first affinity rather
-// than a roll.
+// **Each element is found on its own, once it has been fought** in that colour, won or lost — a
+// player who fell to the Toll-Taker has met it. The figures are the per-element families, which
+// count from the build that introduced them, so a creature met before then is still to find in
+// every colour. Its caption is the wins; resting on a found one opens its card and its deck.
 func creaturesDialog(gs *state.GlobalState) *compendiumDialog {
 	all := everything(gs)
 	var out []compendiumEntry
 	for _, key := range data.MotifOrder(gs.Motifs) {
 		motif := gs.Motifs[key]
 		for _, r := range motif.Records {
-			element := ""
-			if len(r.Affinities) > 0 {
-				element = r.Affinities[0]
-			}
-			spec := cards.Spec{
-				Name: r.FullName(), Form: cards.FormNone, Element: ui.ArtFor(combat.Basic),
-				Art:     ui.ArtworkOr(gs, r.ArtKey(element), data.DefaultEnemyArt),
-				Enabled: true,
-			}
-			beaten := all.Total(session.StatCreatureDefeated + r.Record)
-			fell := all.Total(session.StatCreatureKiller + r.Record)
+			for _, element := range r.Affinities {
+				spec := cards.Spec{
+					Name: r.FullName(), Form: cards.FormNone, Element: ui.ArtFor(combat.Basic),
+					Art:     ui.ArtworkOr(gs, r.ArtKey(element), data.DefaultEnemyArt),
+					Enabled: true,
+				}
+				beaten := all.Total(session.CreatureAs(session.StatCreatureDefeatedAs, r.Record, element))
+				fell := all.Total(session.CreatureAs(session.StatCreatureKillerAs, r.Record, element))
 
-			e := entry(spec, bleedStyle(false), beaten, "BEATEN", r.FullName(),
-				[]string{motif.Name + ", " + strings.ToLower(r.Tier)})
-			e.found = beaten+fell > 0
-			if fell > 0 {
-				e.lines = append(e.lines, "Fell to it "+times(fell))
+				e := entry(spec, bleedStyle(false), beaten, "BEATEN", r.FullName(), nil)
+				e.found = beaten+fell > 0
+				e.creature = &creaturePeek{
+					record: r, element: element, motif: motif.Name, beaten: beaten, fell: fell,
+				}
+				out = append(out, e)
 			}
-			out = append(out, e)
 		}
 	}
 	return catalogDialog("CREATURES", out)

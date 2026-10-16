@@ -120,12 +120,23 @@ func hitFactors(e combat.Event, i int, relics []combat.WornRelic) []session.Ledg
 	return append(out, priced...)
 }
 
-// awakenFactors names the Awakenings that added to one hit, and what they added.
+// awakenFactors names the Awakenings that added to one hit, **one factor per relic**, each beside
+// what it alone added. An event that does not say what each added writes them as one.
 func awakenFactors(e combat.Event, term int, relics []combat.WornRelic) []session.LedgerFactor {
-	if add := e.HandAwaken[term]; add != 0 {
-		return []session.LedgerFactor{{Relic: relicNames(relics, e.AwakenSeats), Add: add}}
+	add := e.HandAwaken[term]
+	if add == 0 {
+		return nil
 	}
-	return nil
+	var out []session.LedgerFactor
+	for seat, by := range e.AwakenBy {
+		if by != 0 {
+			out = append(out, session.LedgerFactor{Relic: relicName(relics, seat), Add: by})
+		}
+	}
+	if len(out) == 0 {
+		out = append(out, session.LedgerFactor{Relic: relicNames(relics, e.AwakenSeats), Add: add})
+	}
+	return out
 }
 
 // handDMGRecords is what the relics did to the DMG this blow was swung at: the rung's raise, the

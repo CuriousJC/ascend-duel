@@ -171,7 +171,7 @@ func strike(
 	// **First as the player queued it**, not as the turn resolves: the defend phase goes first, so
 	// a Brace queued third is turn[0] here. A slot's Index is its place in the queue.
 	opener := firstQueued(turn)
-	e.Awaken, e.AwakenSeats = AwakenBonus(worn, turn[opener].Card)
+	e.Awaken, e.AwakenSeats, e.AwakenBy = AwakenBonus(worn, turn[opener].Card)
 	e.AwakenOpener = opener
 	awaken := func(l landing) int {
 		if e.Awaken == 0 || l.seat == opener || turn[l.seat].Card.Spec().Verb != VerbAttack {

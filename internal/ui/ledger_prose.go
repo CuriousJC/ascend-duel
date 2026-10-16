@@ -518,21 +518,36 @@ func hitSteps(r session.LedgerRecord, priced []session.LedgerFactor, hand string
 		return f
 	}
 
+	// awakens takes the factors that make up a term's Awakening — one per relic, each with its own
+	// figure — until they account for the whole of it. An account that kept only the sum carries one
+	// factor, and it is given the whole figure.
+	awakens := func(total int) []session.LedgerFactor {
+		var out []session.LedgerFactor
+		for left := total; left > 0; {
+			f := next()
+			if f.Add <= 0 || f.Add > left {
+				f.Add = left
+			}
+			out = append(out, f)
+			left -= f.Add
+		}
+		return out
+	}
+
 	for _, t := range r.Terms {
 		if t.Split {
 			// The DMG the card was swung at. What built it is written once, at the top of the turn —
 			// see KindDMG — so every hit starts from the figure that block came to.
 			add("", strconv.Itoa(t.DMG), "", SayText(SayStepBase, nil), "")
-			if t.Awaken != 0 {
-				add("+", strconv.Itoa(t.Awaken), session.InkRelic, next().Relic, session.InkRelic)
+			// **Each Awakening is its own step**, beside what it alone added.
+			for _, f := range awakens(t.Awaken) {
+				add("+", strconv.Itoa(f.Add), session.InkRelic, f.Relic, session.InkRelic)
 			}
 			add("x", HandMultiplierText(t.Weight), t.Element, r.Card, t.Element)
 		} else {
 			// **The flat form already holds what the card and an Awakening made of the DMG**, so
-			// its Awakening is passed over rather than added a second time.
-			if t.Awaken != 0 {
-				next()
-			}
+			// its Awakenings are passed over rather than added a second time.
+			awakens(t.Awaken)
 			add("", strconv.Itoa(t.Base), t.Element, r.Card, t.Element)
 		}
 		if t.PlayAdd != 0 {

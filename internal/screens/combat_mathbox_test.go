@@ -566,28 +566,57 @@ func TestALineIsSetInThreeLevelsOfAir(t *testing.T) {
 	}
 }
 
-// **An Awakening joins the DMG inside the card's own working**, before the card's multiplier, and
-// the line still ends on the hit's own figure.
-func TestAnAwakeningIsATermInsideTheCard(t *testing.T) {
+// **An Awakening is a row of its own under the DMG**, before the card's multiplier, and the line
+// still ends on the hit's own figure.
+func TestAnAwakeningIsARowUnderTheDMG(t *testing.T) {
 	e := handEvent("pair", []int{20, 40}, 150, 90)
 	e.HandDMG = 10
 	e.HandCardPct[1], e.HandCardBase[1] = 200, 40
 	e.HandAwaken[1] = 10
-	e.Awaken, e.AwakenSeats = 10, []bool{true}
+	e.Awaken, e.AwakenSeats, e.AwakenBy = 10, []bool{true}, []int{10}
 
 	sameLines(t, "a Pair behind a fire opener", linesOf(e),
 		[]string{"20 x 1.5 = 30", "+ 10 + 10 x 2 x 1.5 = 60"})
 
-	// The card's multiplier starts a row of its own under the DMG and the woken 10, since it
+	// The DMG, then the woken 10 on its own row, then the card's multiplier under both, since it
 	// multiplies both.
-	var rows []string
-	for _, row := range mathRows(hitScript(e, 1, false)) {
-		rows = append(rows, scriptText(row))
-	}
-	if len(rows) < 2 || rows[0] != "+ 10 + 10" || rows[1] != "x 2" {
-		t.Errorf("the rows read %q, want the DMG and the woken 10 together, then the card's x 2", rows)
+	rows := scriptRows(hitScript(e, 1, false))
+	if len(rows) < 3 || rows[0] != "+ 10" || rows[1] != "+ 10" || rows[2] != "x 2" {
+		t.Errorf("the rows read %q, want the DMG, then the woken 10, then the card's x 2", rows)
 	}
 	if got := awakenedSeats(e); len(got) != 1 || got[0] != e.HandCards[1] {
 		t.Errorf("the Awakening raised seats %v, want only the second card's", got)
 	}
+}
+
+// **Two Awakenings that both wake are two rows**, each its own relic's figure, never one sum.
+func TestTwoAwakeningsAreTwoRows(t *testing.T) {
+	e := handEvent("pair", []int{20, 50}, 150, 105)
+	e.HandDMG = 15
+	e.HandCardPct[1], e.HandCardBase[1] = 200, 70
+	e.HandAwaken[1] = 20
+	e.Awaken, e.AwakenSeats, e.AwakenBy = 20, []bool{true, false, true}, []int{10, 0, 10}
+
+	rows := scriptRows(hitScript(e, 1, false))
+	if len(rows) < 4 || rows[0] != "+ 15" || rows[1] != "+ 10" || rows[2] != "+ 10" || rows[3] != "x 2" {
+		t.Fatalf("the rows read %q, want the DMG, a 10 per Awakening, then the card's x 2", rows)
+	}
+	var seats []int
+	for _, it := range hitScript(e, 1, false) {
+		if it.relicSeat != 0 {
+			seats = append(seats, it.relicSeat)
+		}
+	}
+	if len(seats) != 2 || seats[0] != 1 || seats[1] != 3 {
+		t.Errorf("the 10s fly out of relic seats %v, want 1 and 3", seats)
+	}
+}
+
+// scriptRows is a hit's line as the rows it is stacked in, each as text.
+func scriptRows(items []mathItem) []string {
+	var rows []string
+	for _, row := range mathRows(items) {
+		rows = append(rows, scriptText(row))
+	}
+	return rows
 }

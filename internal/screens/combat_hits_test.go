@@ -178,8 +178,8 @@ func throwScene() *CombatScene {
 	}
 	total := []mathItem{{text: "30"}}
 	s.Theater.mathBox = handMathBox{active: true, side: combat.SideA, columns: []mathColumn{
-		{hit: 0, items: total, at: 1, logAt: 1},
-		{hit: 1, items: total, at: 1, logAt: 2},
+		{hit: 0, items: total, at: 1, logAt: 1, figure: 30},
+		{hit: 1, items: total, at: 1, logAt: 2, figure: 30},
 		{hit: 2, items: total, at: 1, logAt: -1},
 	}}
 	return s
@@ -242,6 +242,48 @@ func TestALineWhoseHitWasNeverThrownFades(t *testing.T) {
 
 	if !s.Theater.mathBox.columns[2].unthrown {
 		t.Error("a hit that never came is drawn as though it did")
+	}
+}
+
+// **A hit after the target fell still flies into it**, and moves no life: the bar is already
+// empty and stays so.
+func TestAnOverkillLineFliesIntoTheDeadCard(t *testing.T) {
+	s := throwScene()
+	s.enemy.CurrentLife = 0
+	col := &s.Theater.mathBox.columns[2]
+	col.overkill, col.figure = true, 40
+	s.throwColumn(testState(), 2)
+
+	if col.unthrown || !col.spent {
+		t.Error("the overkill line stayed on the table rather than setting off")
+	}
+	if len(s.Theater.hits) != 1 || s.Theater.hits[0].amount != 40 {
+		t.Fatalf("the overkill line raised %v, want one figure of 40", s.Theater.hits)
+	}
+	if s.enemy.CurrentLife != 0 {
+		t.Errorf("the model reads %d, want the 0 it already held", s.enemy.CurrentLife)
+	}
+	if got := s.shownLife(combat.SideB, s.enemy.CurrentLife); got != 0 {
+		t.Errorf("the dead card's bar draws %d under the figure, want 0", got)
+	}
+}
+
+// **A hit of nothing is not sent**, even one the creature's element would fizzle.
+func TestAZeroLineThatFizzlesIsNotSent(t *testing.T) {
+	s := throwScene()
+	s.throwColumn(testState(), 1)
+	if len(s.Theater.intercepts) != 1 {
+		t.Fatalf("the fixture's fizzle raised %d intercepts, want 1", len(s.Theater.intercepts))
+	}
+
+	s = throwScene()
+	s.Theater.mathBox.columns[1].figure = 0
+	s.throwColumn(testState(), 1)
+	if len(s.Theater.intercepts) != 0 || len(s.Theater.hits) != 0 {
+		t.Error("a hit of nothing set off")
+	}
+	if !s.Theater.walked[2] {
+		t.Error("the fizzle is not marked as shown, so playback would draw it")
 	}
 }
 

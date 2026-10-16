@@ -124,17 +124,9 @@ func potionSpec(gs *state.GlobalState, p session.Potion, enabled bool) cards.Spe
 	}
 }
 
-// tonicSpec is a tonic drawn as a card, on a potion's terms: basic, the picture as the whole face,
-// and what it does in the tooltip.
+// tonicSpec is a tonic drawn as a card. See ui.TonicSpec, which the deck panel shares.
 func tonicSpec(gs *state.GlobalState, t session.Tonic, enabled bool) cards.Spec {
-	return cards.Spec{
-		Name:    t.Name,
-		Form:    cards.FormNone,
-		Cost:    0,
-		Element: ui.ArtFor(combat.Basic),
-		Art:     ui.Artwork(gs, t.Art),
-		Enabled: enabled,
-	}
+	return ui.TonicSpec(gs, t, enabled)
 }
 
 // drinkTonic pays for the realm's tonic and drinks it. The seat empties until the next realm,
@@ -189,21 +181,5 @@ func potionTip(p session.Potion, price int) (string, []string) {
 // tonicTip is what resting on the tonic says: what it changes, that it lasts the whole run, and its
 // price. **The whole of what the card says**, as a potion's tip is.
 func tonicTip(t session.Tonic, price int) (string, []string) {
-	var what []string
-	switch t.Effect {
-	case session.TonicDiscount:
-		what = []string{fmt.Sprintf("everything in the shop costs %d%% less", t.Amount), "and at least 1 vitae less"}
-	case session.TonicCostCut:
-		what = []string{fmt.Sprintf("your cards cost %d AP less", t.Amount), "but never less than 1 AP"}
-	case session.TonicPressure:
-		what = []string{"every fight is 1 round shorter", fmt.Sprintf("and every vitae you earn is x%d", t.Amount)}
-	case session.TonicHandSize:
-		what = []string{fmt.Sprintf("%d more card in every hand", t.Amount)}
-	case session.TonicDiscards:
-		what = []string{fmt.Sprintf("%d more discard every round", t.Amount)}
-	case session.TonicRelicSlots:
-		what = []string{fmt.Sprintf("wear %d more relic", t.Amount)}
-	}
-	what = append(what, "for the rest of the run")
-	return t.Name, append(what, fmt.Sprintf("%d vitae", price))
+	return t.Name, append(ui.TonicEffect(t), fmt.Sprintf("%d vitae", price))
 }

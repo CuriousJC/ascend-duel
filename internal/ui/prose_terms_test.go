@@ -107,6 +107,27 @@ func TestTheWorkingEndsOnEveryHitTogether(t *testing.T) {
 	}
 }
 
+// **Two Awakenings that both wake are two steps**, each beside what it alone added, and the column
+// still comes to the hit's figure.
+func TestTwoAwakeningsAreTwoSteps(t *testing.T) {
+	e := handEvent("pair", []int{70}, 100, 0)
+	e.HandDMG = 15
+	e.HandCardPct[0], e.HandCardBase[0] = 200, 70
+	e.HandAwaken[0] = 20
+	e.Awaken, e.AwakenSeats, e.AwakenBy = 20, []bool{true, false, true}, []int{10, 0, 10}
+	restateHits(&e)
+	relics := []combat.WornRelic{{}, {}, {}}
+
+	rec := hitRecord(e, 0, combat.Of(combat.Bash, combat.Fire), relics)
+	line := workingSum(rec)
+	if sum, total := evaluateSum(t, line); sum != total || total != e.HitAmounts[0] {
+		t.Errorf("the ledger wrote %q, which comes to %d; the hit was %d", line, sum, e.HitAmounts[0])
+	}
+	if !strings.HasPrefix(line, "15 + 10 + 10 x 2") {
+		t.Errorf("the working reads %q, want the DMG, a + 10 per Awakening, then the card's x 2", line)
+	}
+}
+
 // TestTheRungRelicsMultiplierIsOnTheLine holds the other half: a relic that scales the hand is a
 // second `x`, never a bigger figure in the first — see combat.Event.HandScale — and **two of them
 // are two steps**, each beside what it alone multiplied by, before the hand's, which is last.

@@ -73,7 +73,7 @@ func (s *CombatScene) closeLedgerFight() {
 	if s.enemy != nil {
 		creature = s.enemy.Record
 	}
-	s.run.TallyFight(creature, outcome == session.OutcomeWon, s.round)
+	s.run.TallyFight(creature, s.enemyElement, outcome == session.OutcomeWon, s.round)
 }
 
 // dealtBy is what one side's hits came to in a round: the damage that actually landed on the

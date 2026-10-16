@@ -2058,6 +2058,30 @@
     "Vitae": 20
   },
   {
+    "ScenarioRecord": "awakenings",
+    "Note": "Four Awakenings worn against an earth Giant Bat, so nothing in the opening hand fizzles. Open on the fire Bash and two of them wake at once - fire and crush - so every attack behind it is swung at +20 DMG; open on the arcane Thrust and only the arcane one wakes, for +10; open on the ice Brace and the ice one wakes, though the Brace itself gains nothing. Dummy life on both sides, so it can be replayed round after round with a different opener each time.",
+    "Relics": [
+      "awaken-fire",
+      "awaken-arcane",
+      "awaken-ice",
+      "awaken-crush"
+    ],
+    "Enemy": "animals-outer-bat",
+    "EnemyElement": "earth",
+    "Dummy": true,
+    "Hand": [
+      { "Card": "Bash", "Element": "fire" },
+      { "Card": "Thrust", "Element": "arcane" },
+      { "Card": "Cut", "Element": "ice" },
+      { "Card": "Slice", "Element": "lightning" },
+      { "Card": "Bash", "Element": "arcane" },
+      { "Card": "Jab", "Element": "fire" },
+      { "Card": "Brace", "Element": "ice" },
+      { "Card": "Block", "Element": "lightning" }
+    ],
+    "Screen": "combat"
+  },
+  {
     "ScenarioRecord": "staggers",
     "Note": "The three staggers worn together, to watch a shield leave its ring and fly to each attack of its form as that card's hit sets off. The hand holds two slashes (a Cut and a Slice), a crush (a Bash) and a stab (a Jab), so playing all four sends four shields out of three rings; a Brace is there to show a defense's shields still forming in place beside them. Giant Bat, so the fight lasts.",
     "Relics": ["stagger-slash", "stagger-crush", "stagger-stab"],

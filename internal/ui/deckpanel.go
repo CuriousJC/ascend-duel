@@ -182,7 +182,7 @@ func (t *DeckToggle) Draw(gs *state.GlobalState, screen *ebiten.Image, d DeckCon
 func HoverDeckPanel(gs *state.GlobalState, at image.Point, v DeckView, d DeckContents,
 	tip *models.Tooltip) {
 
-	if v.hoverToggles(gs, d, at, tip) {
+	if v.hoverToggles(gs, d, at, tip) || hoverDeckRecord(gs, at, d, tip) {
 		return
 	}
 
@@ -289,6 +289,10 @@ func DrawDeckPanel(gs *state.GlobalState, screen *ebiten.Image, v *DeckView, d D
 	DrawModalFrame(gs, screen, ModalHead{})
 
 	drawPileGrid(gs, screen, *v, d)
+
+	// **What else the run chose and did**, under the grid: its tonics and its figures so far. See
+	// deckpanel_record.go.
+	drawDeckRecord(gs, screen, d)
 
 	// **The figures moved out from under the grid and onto the buttons that select them**
 	// *(owner's call, 2026-09-11)*. See deckpanel_view.go: a count that can be pressed is a count

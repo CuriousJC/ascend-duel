@@ -1962,8 +1962,10 @@ figure. One per element and one per attack form, all common.
   the 10, an echo's or a repeat's included; two Awakenings that both wake add.
 - **It is shown before a card is counted**: on the announcement's beat the Awakening and its opener
   toast together, then every attack it raised rattles, and only then do the lines run — each
-  carrying its `+ 10` flying out of the relic beside the duelist's DMG, with the card's multiplier
-  on the row under the pair. The fight log brackets the two, `((12 + 10) x 3 ...)`. `Event.HandAwaken`, `Awaken`, `AwakenSeats` and `AwakenOpener` carry it.
+  carrying a `+ 10` row per Awakening under the duelist's DMG, flying out of its own relic, with the
+  card's multiplier on the row under them. **Two that wake are two rows, never one sum**, and the
+  fight log writes each as its own step labelled with its relic. `Event.HandAwaken`, `Awaken`,
+  `AwakenSeats`, `AwakenBy` and `AwakenOpener` carry it.
 
 ### The Eternity Pearl — the mythic
 
@@ -2528,6 +2530,10 @@ which cards — and a panel covering the screen to ask that was covering the ans
   aims an essence at a card off the whole deck while showing eight of them, so it is the place the
   deck matters most. `deckpile.go` is the pile all three draw, and each
   screen owns its own toggle and its own click.
+- **Under the grid is the run's record**: the tonics it has drunk, as cards that explain themselves
+  when rested on, and its figures so far — fights won, rounds, damage dealt and taken, healed, hits
+  blocked, the biggest hit, cards played, vitae earned and spent — the duel being fought included.
+  See `internal/ui/deckpanel_record.go`.
 - **The ways out are taking a card or pressing SKIP**, which takes nothing and forfeits what the
   good cost — the reward screen's LET THEM ESCAPE on the same terms. The chrome stands down, as it
   does on the reward screen.
@@ -3606,7 +3612,12 @@ it — the statistics, the achievements, the bestiary, and every catalog a run b
 - **A catalog book is every record in the catalog, in its own order, as its own card.** A record the
   player has never had is drawn dark, down to a silhouette, and its tooltip keeps its name and its
   rule back; one they have had carries its count — bought, drunk, cast, used, opened, beaten — and
-  its full tooltip. A creature counts as met once it has been fought, won or lost.
+  its full tooltip.
+- **The bestiary has a card per creature per element it can be dealt as**, and each colour is met
+  on its own, once it has been fought in that colour, won or lost — counted by the
+  `defeated-as:` / `killed-by-as:` families, which only fights from then on fill. Resting on a met
+  one opens its card at full size beside the deck it is dealt in that colour, a card per concept
+  with the copies under it, and its base figures; one not yet met says nothing.
 - **The statistics book is two records behind two tabs**: rolled runs and chosen-seed runs. See
   §Lifetime statistics.
 - **Both read the run in progress as well as the finished ones**, so a relic bought an hour ago is

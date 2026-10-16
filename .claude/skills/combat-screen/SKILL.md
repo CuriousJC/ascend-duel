@@ -211,7 +211,9 @@ exist.
   event over the hits it threw and hands each line its own outcome's position. A finished line
   that **landed** flies its figure into the target (`throwColumn` moves the target's life at that
   moment and marks the event walked), a **fizzle** or a **block** flies to be met in the middle by
-  the shield that stops it (`interceptLine`, also walked), and a line with no outcome — the target fell to an earlier hit — fades where it stands.
+  the shield that stops it (`interceptLine`, also walked), **a line whose figure is 0 is not sent at all**, fizzled or not, and a line with no outcome
+  flies into the target's card anyway when the target fell to an earlier hit (`throwOverkill`,
+  moving no life) and fades where it stands when the thrower fell.
   **This is one of the two places the screen reads ahead of the cursor, beside the defend phase's bundle**, and it
   is confined to the hits directly after the hand.
 - **Events it has already shown are walked past.** `combatTheater.walked` holds the log positions

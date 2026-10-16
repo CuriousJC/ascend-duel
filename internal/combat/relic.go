@@ -1864,10 +1864,12 @@ func distinctForms(cards []Card) int {
 }
 
 // AwakenBonus is what every attack after the turn's first card gains, given that first card, and
-// which worn seats woke. **The rule's card predicates are read against the first card** — a fire
-// Awakening wakes on a fire opener whatever follows it. Two that wake add. See DoAwaken.
-func AwakenBonus(worn []WornRelic, first Card) (int, []bool) {
+// which worn seats woke, and what each of them added. **The rule's card predicates are read against
+// the first card** — a fire Awakening wakes on a fire opener whatever follows it. Two that wake add,
+// and `by` keeps them apart so each can be written as its own step. See DoAwaken.
+func AwakenBonus(worn []WornRelic, first Card) (int, []bool, []int) {
 	seats := make([]bool, len(worn))
+	by := make([]int, len(worn))
 	total := 0
 	for seat, w := range worn {
 		for _, rule := range RelicOf(w.Relic).Rules {
@@ -1877,12 +1879,13 @@ func AwakenBonus(worn []WornRelic, first Card) (int, []bool) {
 			for _, e := range rule.Then {
 				if e.Do == DoAwaken {
 					total += e.Amount
+					by[seat] += e.Amount
 					seats[seat] = true
 				}
 			}
 		}
 	}
-	return total, seats
+	return total, seats, by
 }
 
 func HandBonus(worn []WornRelic, satisfied []HandID) (int, []bool, []int) {

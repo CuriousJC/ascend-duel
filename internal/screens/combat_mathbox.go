@@ -41,7 +41,8 @@ const mathBandGapAboveCards = 5
 // **What became of each hit is read ahead in the log.** The hand event is followed by one outcome
 // per thrown hit, and a finished line looks its own up — see hitOutcomes — so a hit that landed
 // flies, a fizzle or a block flies to be met by the shield that stops it — see combat_intercept.go —
-// and a hit after a death fades where it stands. The
+// a hit after the target's death still flies into the dead card, and a hit after the thrower's
+// fades where it stands. The
 // damage that line throws is applied to the target's bar as it lands, and the log's own event for
 // it is walked past without a second flight: see CombatScene.throwColumn.
 //
@@ -326,8 +327,14 @@ type mathColumn struct {
 	cardAt, multAt int
 
 	// logAt is where this hit's outcome sits in the resolved log, and -1 for a hit that was never
-	// thrown because the target fell to an earlier one. See hitOutcomes.
+	// thrown because someone fell to an earlier one. See hitOutcomes.
 	logAt int
+
+	// figure is the hit's own amount off the event, `HitAmounts[hit]`. overkill says the hit was
+	// never thrown because the target had already fallen, so its figure still flies into the dead
+	// card — see throwColumn.
+	figure   int
+	overkill bool
 
 	// thrown says the finished line has been handed on — its figure flown into the target, or
 	// marked as a fizzle or a block — so it happens once. spent says the total has left the line.
@@ -528,10 +535,14 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event, at in
 	}
 
 	outcomes := hitOutcomes(s.log, at)
+	killed := handKilled(s.log, at, e.Side)
 	for i := 0; i < e.HandCardCount; i++ {
-		col := mathColumn{hit: i, seat: e.HandCards[i], items: hitScript(e, i, i == 0), logAt: -1}
+		col := mathColumn{hit: i, seat: e.HandCards[i], items: hitScript(e, i, i == 0), logAt: -1,
+			figure: e.HitAmounts[i]}
 		if k, ok := outcomes[i]; ok {
 			col.logAt = k
+		} else {
+			col.overkill = killed
 		}
 		s.placeFigures(gs, e, &col)
 		box.columns = append(box.columns, col)
@@ -641,6 +652,27 @@ func hitOutcomes(log []combat.Event, at int) map[int]int {
 		}
 	}
 	return out
+}
+
+// handKilled reports whether the hand at `at` felled its target: a KindDefeated naming anyone but
+// the side that acted, among the hits that follow it. It is the walk hitOutcomes makes.
+//
+// **It is what tells an overkill line from one whose thrower fell**: both have no outcome, and only
+// the first has a dead card to fly into.
+func handKilled(log []combat.Event, at int, side combat.Side) bool {
+	for k := at + 1; k < len(log); k++ {
+		switch log[k].Kind {
+		case combat.KindDefeated:
+			if log[k].Target != side {
+				return true
+			}
+		case combat.KindDamage, combat.KindFizzled, combat.KindBlocked, combat.KindDrained,
+			combat.KindReflected, combat.KindRegenerated, combat.KindTithed:
+		default:
+			return false
+		}
+	}
+	return false
 }
 
 // raiseDMGSignal throws the figure a rung relic put into this turn's DMG, out of the relic and onto
@@ -810,10 +842,10 @@ func termItems(e combat.Event, i int) []mathItem {
 		t:           ui.NewTravel(0, mathTermTicks()),
 	}}
 
-	// **DUELIST and AWAKENING, CARD, CARD RELICS**: what the opener woke joins the duelist's DMG on
-	// the first row, and the card's own multiplier then takes a row of its own under the pair, since
-	// every factor on a row below multiplies everything above it. With nothing woken the card's
-	// multiplier sits tight on the DMG's row, as one product.
+	// **DUELIST and AWAKENING, CARD, CARD RELICS**: each Awakening the opener woke is a row of its own
+	// under the duelist's DMG, and the card's own multiplier then takes a row under them, since every
+	// factor on a row below multiplies everything above it. With nothing woken the card's multiplier
+	// sits tight on the DMG's row, as one product.
 	if woke := awakenItems(e, i); woke != nil {
 		out = append(out, woke...)
 		out = append(out, wide(mathOperator("x")), mult)
@@ -824,20 +856,44 @@ func termItems(e combat.Event, i int) []mathItem {
 	return append(out, relicFactorItems(e, i)...)
 }
 
-// awakenItems is what the opener woke on this hit's card: a `+` and the figure, flying out of the
-// Awakening that paid it, in the relic pink — beside the duelist's DMG, before the card multiplies
-// the two.
+// awakenItems is what the opener woke on this hit's card: **a row per Awakening**, each a `+` and
+// that relic's own figure, flying out of it in the relic pink — under the duelist's DMG, before the
+// card multiplies them. Two that woke are two rows, never one sum.
 func awakenItems(e combat.Event, i int) []mathItem {
-	add := e.HandAwaken[i]
-	if add == 0 {
+	if e.HandAwaken[i] == 0 {
 		return nil
 	}
-	it := relicNote(100, firstSeat(e.AwakenSeats)-1)
-	if it == nil {
-		return nil
+	var out []mathItem
+	for _, p := range awakenParts(e) {
+		it := relicNote(100, p.seat)
+		if it == nil {
+			continue
+		}
+		it.text = strconv.Itoa(p.add)
+		out = append(out, wide(mathOperator("+")), *it)
 	}
-	it.text = strconv.Itoa(add)
-	return []mathItem{innerOperator("+"), *it}
+	return out
+}
+
+// awakenPart is one Awakening's share of what the opener woke.
+type awakenPart struct{ seat, add int }
+
+// awakenParts is every Awakening that woke, in worn order, with what each added. **An event that
+// does not say what each added** — one built by hand — is one part, the whole figure, out of the
+// first seat that woke.
+func awakenParts(e combat.Event) []awakenPart {
+	var out []awakenPart
+	for seat, add := range e.AwakenBy {
+		if add != 0 {
+			out = append(out, awakenPart{seat, add})
+		}
+	}
+	if len(out) == 0 {
+		if seat := firstSeat(e.AwakenSeats); seat > 0 {
+			out = append(out, awakenPart{seat - 1, e.Awaken})
+		}
+	}
+	return out
 }
 
 // playRiderItems is what the hit's own card's riders did to its term, each a row of its own after

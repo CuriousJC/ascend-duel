@@ -75,7 +75,8 @@ go run ./tools/relicart -kind relic
 ```
 
 Its inbox is `.scratch/to-process-<kind>-art/` and its kinds are `relic`, `essence`, `rune`,
-`stone`, `cantrip`, `card`, `upgrade`, `other` and `enemy-card` — the last files
+`stone`, `cantrip-relic`, `card`, `upgrade`, `other` and `enemy-card` — `cantrip-relic` takes one
+transparent spirit per cantrip and makes both its relic face and its scroll, and the last files
 `<flavor>-<weight>-<element>.png` under its flavor and fits each figure into the card's open field; the
 `enemy-cards` skill has its procedure. **A flat magenta ground is keyed out on the way
 in** — the fallback the card prompt asks for from a generator that cannot write transparency. A stem naming no record is refused rather than filed.

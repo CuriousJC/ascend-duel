@@ -329,11 +329,19 @@ func (t *ModalToggle) Update(gs *state.GlobalState,
 	// **While the panel is up the opener is inert and the X is the exit.** The opener stays on
 	// screen, latched, so the player can see which control the panel came out of — it simply is
 	// not a second way out.
+	//
+	// **While the scene is busy the opener is drawn disabled**, the same flag the frame's cog and
+	// ledger read — see state.Busy. The X is never touched by it: a panel already up still closes.
 	if t.open {
 		if t.closer.Update(gs) {
 			t.open = false
 		}
+	} else if gs.Busy {
+		t.Button.State = models.ButtonStateDisabled
 	} else if !t.hidden {
+		if t.Button.State == models.ButtonStateDisabled {
+			t.Button.State = models.ButtonStateNormal
+		}
 		systems.UpdateButton(gs, t.Button)
 	}
 
@@ -344,7 +352,7 @@ func (t *ModalToggle) Update(gs *state.GlobalState,
 		if hover != nil {
 			hover(image.Pt(gs.MouseX, gs.MouseY), &t.tip)
 		}
-	} else if t.Tip != "" && !t.hidden && gs.CursorAllowed() {
+	} else if t.Tip != "" && !t.hidden && !gs.Busy && gs.CursorAllowed() {
 		if r := t.Button.Rect(); image.Pt(gs.MouseX, gs.MouseY).In(r) {
 			t.tip.Point(r, TipLine(t.Tip), nil)
 		}

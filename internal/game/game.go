@@ -254,6 +254,7 @@ func (g *Game) update() error {
 	// left with its overlay open cannot leave the chrome hidden for the rest of the session.
 	// See state.ModalOpen.
 	g.GlobalState.ModalOpen = false
+	g.GlobalState.Busy = false
 
 	// **The tutorial's input shield, cleared on the same terms and for the same reason.** A
 	// screen left mid-step — a scene change, a skipped tutorial — must not leave the rest of the

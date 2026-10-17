@@ -77,8 +77,8 @@ var tmpl = template.Must(template.New("cantripsheet").Parse(`<!doctype html>
 
 <h1>Cantrip sheet</h1>
 <p class="facts">
-  {{.Count}} cantrips. Scrolls: {{.Undrawn}} drawing the default face, {{.Unwritten}} with no
-  subject written. Cantrip-relics: {{.RelicUndrawn}} drawing the default face, {{.RelicUnwritten}}
+  {{.Count}} cantrips. Scrolls: {{.Undrawn}} drawing the default face; each scroll is generated
+  from its relic's picture. Cantrip-relics: {{.RelicUndrawn}} drawing the default face, {{.RelicUnwritten}}
   with no subject written. A bundle of scrolls holds <code>{{.Bundles}}</code>, keep one,
   <strong>drawn with replacement</strong> — so a bundle can repeat. A run carries at most
   <code>{{.Cap}}</code> consumables of every kind together. Examples are cast onto the shipped
@@ -131,11 +131,6 @@ var tmpl = template.Must(template.New("cantripsheet").Parse(`<!doctype html>
         <p class="name">{{.Name}}</p>
         <div class="record">{{.Record}}</div>
         <p class="text">{{.Text}}</p>
-        {{if .Draw}}
-          <p class="draw">{{.Draw}}</p>
-        {{else}}
-          <p class="draw missing">no scroll subject written yet</p>
-        {{end}}
         {{if .Default}}
           <p class="art missing">scroll: no art of its own — drawing the placeholder</p>
         {{else}}

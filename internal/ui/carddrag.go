@@ -72,7 +72,7 @@ func RaisedSeat(gs *state.GlobalState, row DragRow, raise bool) int {
 // hard to see — one row of the four behaved.
 //
 // **It takes a count and a seat function rather than a DragRow**, because the rows that need it are
-// not all draggable: the reward screen's offer, the vial's, the pouch's shelf. An interface only
+// not all draggable: the reward screen's offer and the vial's. An interface only
 // two of the callers could satisfy would have left the others writing the loop again, which is the
 // thing that went wrong in the first place.
 //

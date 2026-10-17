@@ -179,7 +179,7 @@ go run ./tools/relicart      # files generated relic art: reduce, commit, set "A
 go run ./tools/relicart -kind essence       # the same, for data/essences.json and assets/essence
 go run ./tools/relicart -kind rune   # the same, for data/runes.json and assets/rune
 go run ./tools/relicart -kind stone  # the same, for data/stones.json and assets/stone
-go run ./tools/relicart -kind cantrip  # the same, for data/cantrips.json and assets/cantrip
+go run ./tools/relicart -kind cantrip-relic  # a cantrip's one transparent spirit: makes its relic and its scroll
 go run ./tools/relicart -kind other  # the potions, the tonics and the sealed goods together, into assets/other
 go run ./tools/relicart -kind deck   # the card backs, for data/decks.json and assets/deck
 go run ./tools/relicart -kind achievement  # the achievement icons, square at Steam's 256, into assets/achievement

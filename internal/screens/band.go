@@ -8,8 +8,9 @@ package screens
 // the opponent's corner. What the player can *do* to it is the same everywhere, which is why it is
 // one controller rather than a copy per screen — the deck pile's argument, applied to the row beside
 // it. A relic or a consumable that is on the screen can be dragged along its row, clicked to arm a
-// sale, and sold through the tab that hangs under it; a consumable on a screen where it can be
-// spent hangs a USE tab beside its SELL.
+// sale, and sold through the tab that hangs under it. **A consumable hangs USE beside its SELL on
+// every screen**, enabled only where it can be spent right now — so a rune in the shop shows the
+// same two tabs it shows in a fight, with USE dark, rather than a different card with one tab.
 //
 // **What differs between screens is a handful of answers, not a second implementation**, and they
 // are bandHooks: whether the band is live this frame, what moving or selling a relic also has to
@@ -33,6 +34,10 @@ type bandControls struct {
 	relicDrag ui.CardDrag
 	heldDrag  ui.CardDrag
 	sale      sellTab
+
+	// uses are stones spent off the table: lifted to the middle of the screen, crumbled, their dust
+	// sent to the hands button. Nothing waits on them. See useStone.
+	uses []ui.Consume
 }
 
 // bandHooks is what one screen answers about the band, every frame.
@@ -58,8 +63,11 @@ type bandHooks struct {
 	// afterSale runs after any sale, relic or carried card, and may be nil.
 	afterSale func()
 
-	// canUse is whether the carried card in one seat can be spent here, now, and nil on a screen
-	// where nothing carried is ever spent — which is what decides whether a USE tab hangs at all.
+	// canUse is whether the carried card in one seat can be spent here, now — which decides whether
+	// its USE tab is lit, never whether it hangs. **Nil is the band's own answer, stoneUsable**: a
+	// stone raises a rung for the rest of the run and needs nothing on screen to do it, so it is
+	// usable wherever the band is; everything else wants a fight or a selection, which only the
+	// combat screen has. use is how, and nil is useStone.
 	canUse func(seat int) bool
 	use    func(seat int)
 
@@ -91,7 +99,56 @@ type bandHooks struct {
 func (b *bandControls) init() {
 	b.relicDrag = ui.CardDrag{}
 	b.heldDrag = ui.CardDrag{}
+	b.uses = nil
 	b.sale.initSellTab()
+}
+
+// stoneUsable is the band's own answer to whether a carried card can be used: a stone, yes,
+// anywhere; anything else, not off the table.
+func stoneUsable(gs *state.GlobalState, seat int) bool {
+	held := heldConsumables(gs)
+	return seat >= 0 && seat < len(held) && held[seat].Kind == session.ConsumableStone
+}
+
+// useStone spends the stone in one seat of the consumables pane onto its rung, for the rest of the
+// run, and crumbles it in the middle of the screen.
+//
+// **Its seat and face are read before it is spent**, since spending takes it out of the pane.
+func (b *bandControls) useStone(gs *state.GlobalState, seat int, h bandHooks) {
+	if !stoneUsable(gs, seat) {
+		return
+	}
+	c := heldConsumables(gs)[seat]
+	from, _ := b.sale.seatOf(gs, heldSale(seat))
+	face := ui.StoneSpec(gs, c.Stone, true)
+	if !gs.Run.SpendCarried(c.At) {
+		return
+	}
+	b.uses = append(b.uses, stoneUseFrom(gs, face, from))
+	gs.Journal.Write(journal.Record{
+		Kind:   journal.KindStone,
+		Action: journal.StoneUsed,
+		Key:    c.Stone.Record,
+		Seat:   c.At,
+	})
+	trace.Logf("band", "used stone %s on shape %s, %d stones left",
+		c.Stone.Record, c.Stone.Shape, gs.Run.CarryCount())
+	if h.forget != nil {
+		h.forget()
+	}
+	saveRun(gs)
+}
+
+// tickUses advances every stone crumbling off the table and drops the finished ones.
+func (b *bandControls) tickUses() {
+	kept := b.uses[:0]
+	for i := range b.uses {
+		b.uses[i].Tick()
+		if !b.uses[i].Done() {
+			kept = append(kept, b.uses[i])
+		}
+	}
+	b.uses = kept
 }
 
 // busy is whether a drag is in progress over either row.
@@ -103,6 +160,14 @@ func (b *bandControls) update(gs *state.GlobalState, h bandHooks) bool {
 	relics := b.relicRow(gs, h)
 	held := b.heldRow(gs, h)
 	defer b.sale.tickScroll()
+	b.tickUses()
+
+	if h.canUse == nil {
+		h.canUse = func(seat int) bool { return stoneUsable(gs, seat) }
+	}
+	if h.use == nil {
+		h.use = func(seat int) { b.useStone(gs, seat, h) }
+	}
 
 	if gs.Run == nil || !h.live || !gs.CursorAllowed() {
 		b.relicDrag.Cancel(relics)

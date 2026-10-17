@@ -32,12 +32,12 @@ type CantripData struct {
 	// Name is what the cantrip is called — the tooltip's title and the ledger's noun.
 	Name string `json:"Name"`
 
-	// Family, Art and Draw are the three fields no rule reads, on the terms every other catalog
-	// carries them: the block a record was authored beside, the assets key of its face (empty means
-	// DefaultCantripArt), and the subject paragraph an art generator is given.
+	// Family and Art are fields no rule reads: the block a record was authored beside, and the
+	// assets key of its face (empty means DefaultCantripArt). **There is no Draw**: the scroll is
+	// generated from the relic's own picture — the blank parchment with the relic's spirit laid on
+	// it, by `tools/relicart -kind cantrip-relic` — so the relic's Draw is the cantrip's one brief.
 	Family string `json:"Family"`
 	Art    string `json:"Art"`
-	Draw   string `json:"Draw"`
 
 	// Text is what the scroll says it does, in the tooltip. **Authored rather than computed**, the
 	// rune's posture: the line is the record's claim and the relic's rules are what fire.
@@ -55,8 +55,8 @@ type CantripRelicData struct {
 	// Name is what the relic is called in the row's tooltip and in the fight's account.
 	Name string `json:"Name"`
 
-	// Art and Draw are the relic's own face and brief, beside the scroll's: a cantrip has two
-	// pictures. Empty Art draws DefaultCantripRelicArt.
+	// Art and Draw are the relic's own face and brief. The brief is the cantrip's only one: the
+	// scroll is generated from the same picture. Empty Art draws DefaultCantripRelicArt.
 	Art  string `json:"Art"`
 	Draw string `json:"Draw"`
 

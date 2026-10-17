@@ -103,7 +103,8 @@ func stoneMotes() ui.Emitter {
 }
 
 // stoneUseFrom is a stone being used out of a seat on a screen with no table: lifted to the middle
-// of the screen, crumbled there, its dust sent to the hands button. The shop's pouch.
+// of the screen, crumbled there, its dust sent to the hands button. A stone used from the band
+// off the combat screen, and one taken from a bag of rocks.
 func stoneUseFrom(gs *state.GlobalState, face cards.Spec, from image.Rectangle) ui.Consume {
 	cx, cy := gs.ScreenWidth/2, gs.ScreenHeight/2
 	return ui.NewConsume(ui.Consume{

@@ -18,7 +18,7 @@ package screens
 //
 // **The bottom corner is the reward screen's**: the cog and the ledger are the frame's and stand up
 // here as they do there, and the hands button stands beside the ledger — so a stone taken from a bag
-// sends its dust to the ladder it raised, exactly as one spent from the pouch does.
+// sends its dust to the ladder it raised, exactly as one used from the consumables pane does.
 //
 // **It is not a station of a run.** It never touches `session.Phase` — it is reached from the
 // shop's shelf and it goes back to the shop — which is the shape Settings, Achievements, Credits

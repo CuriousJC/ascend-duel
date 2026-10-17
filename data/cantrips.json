@@ -4,12 +4,11 @@
     "Name": "Cantrip of Endurance",
     "Family": "The body",
     "Art": "cantrip-endurance",
-    "Draw": "a rolled parchment scroll bound with a red cord, a faint red glow of a heartbeat pulsing through the paper",
     "Text": "DOUBLE YOUR LIFE\nFOR THIS FIGHT",
     "Relic": {
       "Name": "Enduring",
-      "Art": "",
-      "Draw": "a faint ring of red light around a beating heart, its edges dissolving into mist",
+      "Art": "cantrip-endurance-relic",
+      "Draw": "a red spirit bison made of glowing red light, head lowered and massive shoulders squared to the viewer, standing its ground, its shaggy edges dissolving into mist",
       "Text": "2x max life for this fight.",
       "Rules": [
         {
@@ -24,12 +23,11 @@
     "Name": "Cantrip of Might",
     "Family": "The body",
     "Art": "cantrip-might",
-    "Draw": "a rolled parchment scroll bound with an iron band, a clenched fist of orange light rising from its open end",
     "Text": "+10 DMG\nFOR THIS FIGHT",
     "Relic": {
       "Name": "Mighty",
-      "Art": "",
-      "Draw": "a faint ring of orange light around a clenched fist, its edges dissolving into mist",
+      "Art": "cantrip-might-relic",
+      "Draw": "an orange spirit rhinoceros made of glowing orange light, charging toward the viewer with its horn forward, its hindquarters dissolving into mist",
       "Text": "+10 DMG for this fight.",
       "Rules": [
         {
@@ -43,18 +41,97 @@
     "CantripRecord": "cantrip-chill",
     "Name": "Cantrip of Chill",
     "Family": "The elements",
-    "Art": "",
-    "Draw": "a rolled parchment scroll bound with a frosted blue cord, rime creeping across the paper and a breath of cold mist curling from its open end",
+    "Art": "cantrip-chill",
     "Text": "ICE CARDS DEAL 2x\nFOR THIS FIGHT",
     "Relic": {
       "Name": "Chilled",
-      "Art": "",
-      "Draw": "a faint ring of woven blue ice, its edges dissolving into cold mist",
+      "Art": "cantrip-chill-relic",
+      "Draw": "a blue spirit snowy owl made of glowing blue light, facing the viewer with its wings spread wide, its wingtips dissolving into cold mist",
       "Text": "Ice cards deal 2x DMG for this fight.",
       "Rules": [
         {
           "When": "card-damage",
           "If": { "Element": "ice" },
+          "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+        }
+      ]
+    }
+  },
+  {
+    "CantripRecord": "cantrip-blaze",
+    "Name": "Cantrip of Blaze",
+    "Family": "The elements",
+    "Art": "cantrip-blaze",
+    "Text": "FIRE CARDS DEAL 2x\nFOR THIS FIGHT",
+    "Relic": {
+      "Name": "Blazing",
+      "Art": "cantrip-blaze-relic",
+      "Draw": "an orange spirit salamander made of glowing orange light, curled in an S with its head raised, its tail dissolving into smoke",
+      "Text": "Fire cards deal 2x DMG for this fight.",
+      "Rules": [
+        {
+          "When": "card-damage",
+          "If": { "Element": "fire" },
+          "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+        }
+      ]
+    }
+  },
+  {
+    "CantripRecord": "cantrip-charge",
+    "Name": "Cantrip of Charge",
+    "Family": "The elements",
+    "Art": "cantrip-charge",
+    "Text": "LIGHTNING CARDS DEAL 2x\nFOR THIS FIGHT",
+    "Relic": {
+      "Name": "Charged",
+      "Art": "cantrip-charge-relic",
+      "Draw": "a yellow spirit electric eel made of glowing yellow light, coiled in a loose spiral with its jaws open, its tail dissolving into crackling mist",
+      "Text": "Lightning cards deal 2x DMG for this fight.",
+      "Rules": [
+        {
+          "When": "card-damage",
+          "If": { "Element": "lightning" },
+          "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+        }
+      ]
+    }
+  },
+  {
+    "CantripRecord": "cantrip-quake",
+    "Name": "Cantrip of Quake",
+    "Family": "The elements",
+    "Art": "cantrip-quake",
+    "Text": "EARTH CARDS DEAL 2x\nFOR THIS FIGHT",
+    "Relic": {
+      "Name": "Quaking",
+      "Art": "cantrip-quake-relic",
+      "Draw": "a green spirit badger made of glowing green light, braced low and square to the viewer with its claws dug in, its edges dissolving into drifting dust",
+      "Text": "Earth cards deal 2x DMG for this fight.",
+      "Rules": [
+        {
+          "When": "card-damage",
+          "If": { "Element": "earth" },
+          "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+        }
+      ]
+    }
+  },
+  {
+    "CantripRecord": "cantrip-aether",
+    "Name": "Cantrip of Aether",
+    "Family": "The elements",
+    "Art": "cantrip-aether",
+    "Text": "ARCANE CARDS DEAL 2x\nFOR THIS FIGHT",
+    "Relic": {
+      "Name": "Aetherial",
+      "Art": "cantrip-aether-relic",
+      "Draw": "a purple spirit octopus made of glowing purple light, its eight arms spread wide around it, the tips of its arms dissolving into glittering mist",
+      "Text": "Arcane cards deal 2x DMG for this fight.",
+      "Rules": [
+        {
+          "When": "card-damage",
+          "If": { "Element": "arcane" },
           "Then": [{ "Do": "scale-damage", "Amount": 200 }]
         }
       ]

@@ -101,6 +101,9 @@ func drawBandOverlay(gs *state.GlobalState, screen *ebiten.Image, band *bandCont
 	drawDraggedRelic(gs, screen, &band.relicDrag, runCounters(gs))
 	band.drawHeldGhost(gs, screen, nil)
 	band.sale.drawTab(gs, screen)
+	for _, u := range band.uses {
+		u.Draw(gs, screen)
+	}
 }
 
 // drawGuideCard puts The Prismatic in the opponent's corner.

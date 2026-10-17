@@ -137,10 +137,6 @@ type ShopScene struct {
 	// answers and the shelf does not. See handspanel.go.
 	hands ui.HandsToggle
 
-	// uses are the stones being used up out of the pouch: crumbling in the middle of the screen with
-	// their dust on its way to the hands button. Nothing waits on them. See stoneUseFrom.
-	uses []ui.Consume
-
 	// offered is which packs this visit put up: two of the three, dealt in Init and fixed for the
 	// visit unless the reroll button under them is pressed. **A slice rather than three flags**,
 	// because the pane's two seats are positions and which kind stands in each is the decision.
@@ -187,11 +183,6 @@ type ShopScene struct {
 	// catalog became data/goods.json: a fourth good is a record, not a field on this scene.
 	opened map[string]bool
 
-	// pouch is the S button beside them: the stones the run is carrying, and the two things
-	// that can be done to one. **A panel rather than a row**, because the screen has no vertical
-	// room left for a fourth row of cards - see shop_pouch.go.
-	pouch pouchToggle
-
 	// tip explains a relic: what it does, what it costs, and where it would sit in the firing order.
 	// **The case the tooltip was built for** — a shelf offering The Sickle says a name and a price
 	// and nothing at all about slashes.
@@ -227,7 +218,6 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	s.band.init()
 
 	s.initRerollButtons()
-	s.pouch.init()
 
 	s.leaving = false
 	s.from, s.move = nil, ui.Travel{}
@@ -417,14 +407,6 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 	s.tut.update(gs, s)
 
 	s.move.Tick()
-	kept := s.uses[:0]
-	for i := range s.uses {
-		s.uses[i].Tick()
-		if !s.uses[i].Done() {
-			kept = append(kept, s.uses[i])
-		}
-	}
-	s.uses = kept
 
 	if s.leaving {
 		s.leaving = false
@@ -434,15 +416,12 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 
 	// While the deck panel is up the two rows are dead. See deckToggle.update, which counts the
 	// frame the panel closes on as a covered one.
-	s.deck.Block(s.hands.IsOpen() || s.pouch.IsOpen())
-	s.hands.Block(s.deck.IsOpen() || s.pouch.IsOpen())
+	s.deck.Block(s.hands.IsOpen())
+	s.hands.Block(s.deck.IsOpen())
 	if s.deck.Update(gs, ui.OwnedContents(gs)) {
 		return nil
 	}
 	if s.hands.Update(gs) {
-		return nil
-	}
-	if s.updatePouch(gs) {
 		return nil
 	}
 
@@ -712,11 +691,6 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// on top of it.
 	s.deck.Draw(gs, screen, ui.OwnedContents(gs))
 	s.hands.Draw(gs, screen, ui.OwnedHands(gs))
-	s.drawPouch(gs, screen)
-	// **Over the pouch it came out of**, so a stone used from the open panel is seen going.
-	for _, u := range s.uses {
-		u.Draw(gs, screen)
-	}
 
 	// **Bob over everything, and the spotlight with him.** See combat.go's Draw, whose last line
 	// this is the counterpart of: the scrim dims what is already drawn, so nothing may follow it.

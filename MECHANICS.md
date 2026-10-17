@@ -2170,7 +2170,7 @@ it raises, which is what makes a stone a consumable rather than a prize.
 | | |
 |---|---|
 | Held | in the run's **pouch**, uncapped, across fights and across a save |
-| Spent | from the **consumables pane**, on the combat screen, beside the runes. The shop's `S` panel also uses one, and sells one for `ConsumableSalePrice` |
+| Spent | from the **consumables pane**, beside the runes, on every screen that shows the band — USE or SELL, like any consumable |
 | Arrives from | the shop's shelf. **A bag of rocks and a rock shower both apply what they draw on the spot** |
 
 **A stone that arrives already decided is applied where it lands.** The bag of rocks is a pick
@@ -2192,11 +2192,12 @@ chore in front of a decision that has already been made. What the pouch is for i
   not a sack position; a drag across the join would reorder by a number meaning something else. A
   stone has nothing to be before or after.
 - **Selling pays what any consumable pays** — see §Selling, on every screen that shows the band.
-- **Selling is the shop's and nowhere else's**, because selling is a trade and the shop is the only
-  screen that trades. Using is on both, since a rung is worth raising in front of the hand that
-  wants it and also worth raising while shopping for the next one.
-- **A panel, not a row.** The shelf ends at y=684 and Continue Journey is centered at 845; a card row wants 224
-  of the 160 between them. So the pouch is the shop's third corner toggle beside `D` and `C`.
+- **Every consumable is used the same way, and a stone is the one usable everywhere.** A carried
+  card armed by a click hangs USE over SELL on every screen with the band, and USE is lit only where
+  the card can be spent right now: a rune or an essence wants its cards selected in a fight, a
+  cantrip wants a fight, and a stone wants nothing, since a rung is worth raising in front of the
+  hand that wants it and also while shopping for the next one. Off the combat screen the stone
+  crumbles in the middle of the screen and its dust goes to the hands button.
 - **Spending asks twice**, on the worn row's own argument: a stone armed by a click puts two tabs
   under it, because a rung raised cannot be lowered and a sale cannot be undone.
 - **The pouch is snapshotted separately from the placed counts.** A carried stone is a decision
@@ -3143,9 +3144,12 @@ be put on other relics without a cantrip being involved. See §Traits.
 | Spent | on the combat screen, **between turns only** — click it; nothing is selected, and it is lit for the whole of planning |
 | Lasts | until the fight ends |
 
-**The record is the scroll's face plus the relic it casts.** The scroll has a `Name`, `Art`, `Draw`
-and the `Text` its tooltip says; its `Relic` has its own `Name`, `Art`, `Draw` and `Text`, and the
-`Rules` a relic record carries. **The cantrip-relic never enters `relics.json`**: it is not a relic
+**The record is the scroll's face plus the relic it casts.** The scroll has a `Name`, `Art` and
+the `Text` its tooltip says; its `Relic` has its own `Name`, `Art`, `Draw` and `Text`, and the
+`Rules` a relic record carries. **A cantrip has one picture**: its relic's spirit, drawn on a
+transparent ground from the relic's `Draw`. The relic's face is that spirit on the near-black, and
+the scroll's face is the same spirit laid on a blank parchment — both made when the picture is filed,
+by `tools/relicart -kind cantrip-relic`. **The cantrip-relic never enters `relics.json`**: it is not a relic
 the shop can sell, so it has no rarity and no unlock, and it is registered with the rules under the
 cantrip's own record key.
 

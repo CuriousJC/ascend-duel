@@ -134,11 +134,6 @@ type DeckToggle struct {
 	view DeckView
 }
 
-// Init wires the button into the corner it stands in.
-func (t *DeckToggle) Init() {
-	t.initInCorner(ChromeSlotStones)
-}
-
 // InitAsPile wires it with no button of its own: the scene draws a draw pile and calls toggle when
 // it is clicked. **The shop's form** *(owner's call, 2026-09-06)* — the combat screen has always
 // opened this panel by clicking the pile, and a lettered square doing the same job two screens over
@@ -146,14 +141,6 @@ func (t *DeckToggle) Init() {
 func (t *DeckToggle) InitAsPile() {
 	t.ModalToggle.Init(deckToggleLabel, ChromeButtonSize, ChromeButtonSize, pileSlotTextSize, nil)
 	t.hidden = true
-}
-
-// initInCorner wires it as one of the squares on the bottom line, n places left of the frame's cog.
-// **The place is the frame's rather than the screen's edge** — see ChromeCornerSlot, which is what
-// stops a scene's own square landing under the cog.
-func (t *DeckToggle) initInCorner(slot int) {
-	t.ModalToggle.Init(deckToggleLabel, ChromeButtonSize, ChromeButtonSize, pileSlotTextSize,
-		func(gs *state.GlobalState) image.Point { return ChromeCornerCenter(gs, slot) })
 }
 
 // Update runs the button and the tooltip over the panel's cards, and reports whether the screen

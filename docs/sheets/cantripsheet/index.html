@@ -70,8 +70,8 @@
 
 <h1>Cantrip sheet</h1>
 <p class="facts">
-  3 cantrips. Scrolls: 1 drawing the default face, 0 with no
-  subject written. Cantrip-relics: 3 drawing the default face, 0
+  7 cantrips. Scrolls: 0 drawing the default face; each scroll is generated
+  from its relic's picture. Cantrip-relics: 0 drawing the default face, 0
   with no subject written. A bundle of scrolls holds <code>3 for 3, 4 for 5 or 5 for 6 vitae</code>, keep one,
   <strong>drawn with replacement</strong> — so a bundle can repeat. A run carries at most
   <code>3</code> consumables of every kind together. Examples are cast onto the shipped
@@ -110,7 +110,7 @@
 
   <li class="effect"><strong>equipped / add-dmg</strong> 1</li>
 
-  <li class="effect"><strong>card-damage / scale-damage</strong> 1</li>
+  <li class="effect"><strong>card-damage / scale-damage</strong> 5</li>
 
 </ul>
 
@@ -130,19 +130,16 @@
         <p class="text">DOUBLE YOUR LIFE
 FOR THIS FIGHT</p>
         
-          <p class="draw">a rolled parchment scroll bound with a red cord, a faint red glow of a heartbeat pulsing through the paper</p>
-        
-        
           <p class="art">scroll art: <code>cantrip-endurance</code></p>
         
 
         <p class="name relic">casts Enduring</p>
         <p class="text">2x max life for this fight.</p>
         
-          <p class="draw">a faint ring of red light around a beating heart, its edges dissolving into mist</p>
+          <p class="draw">a red spirit bison made of glowing red light, head lowered and massive shoulders squared to the viewer, standing its ground, its shaggy edges dissolving into mist</p>
         
         
-          <p class="art missing">relic: no art of its own — drawing the default relic face</p>
+          <p class="art">relic art: <code>cantrip-endurance-relic</code></p>
         
         <p class="rule">when equipped → scale-hp &#43;200</p>
         <p class="example">life 60/60 → 120/120</p><p class="example">life 30/60 → 90/120</p><p class="example">cast twice at full: life 60/60 → 240/240</p>
@@ -160,19 +157,16 @@ FOR THIS FIGHT</p>
         <p class="text">&#43;10 DMG
 FOR THIS FIGHT</p>
         
-          <p class="draw">a rolled parchment scroll bound with an iron band, a clenched fist of orange light rising from its open end</p>
-        
-        
           <p class="art">scroll art: <code>cantrip-might</code></p>
         
 
         <p class="name relic">casts Mighty</p>
         <p class="text">&#43;10 DMG for this fight.</p>
         
-          <p class="draw">a faint ring of orange light around a clenched fist, its edges dissolving into mist</p>
+          <p class="draw">an orange spirit rhinoceros made of glowing orange light, charging toward the viewer with its horn forward, its hindquarters dissolving into mist</p>
         
         
-          <p class="art missing">relic: no art of its own — drawing the default relic face</p>
+          <p class="art">relic art: <code>cantrip-might-relic</code></p>
         
         <p class="rule">when equipped → add-dmg &#43;10</p>
         <p class="example">DMG 10 → 20</p><p class="example">DMG 10 → 20</p><p class="example">cast twice at full: DMG 10 → 30</p>
@@ -181,7 +175,7 @@ FOR THIS FIGHT</p>
   
 </div>
 
-<h3 class="family">The elements <span>1 cantrip</span></h3>
+<h3 class="family">The elements <span>5 cantrips</span></h3>
 <div class="plates">
   
     <div class="plate">
@@ -195,22 +189,127 @@ FOR THIS FIGHT</p>
         <p class="text">ICE CARDS DEAL 2x
 FOR THIS FIGHT</p>
         
-          <p class="draw">a rolled parchment scroll bound with a frosted blue cord, rime creeping across the paper and a breath of cold mist curling from its open end</p>
-        
-        
-          <p class="art missing">scroll: no art of its own — drawing the placeholder</p>
+          <p class="art">scroll art: <code>cantrip-chill</code></p>
         
 
         <p class="name relic">casts Chilled</p>
         <p class="text">Ice cards deal 2x DMG for this fight.</p>
         
-          <p class="draw">a faint ring of woven blue ice, its edges dissolving into cold mist</p>
+          <p class="draw">a blue spirit snowy owl made of glowing blue light, facing the viewer with its wings spread wide, its wingtips dissolving into cold mist</p>
         
         
-          <p class="art missing">relic: no art of its own — drawing the default relic face</p>
+          <p class="art">relic art: <code>cantrip-chill-relic</code></p>
         
         <p class="rule">when card-damage, if ice → scale-damage &#43;200</p>
         <p class="example">moves no figure on the duelist</p><p class="example">moves no figure on the duelist</p><p class="example">cast twice at full: moves no figure on the duelist</p><p class="example">ice Bash: 10 → 20</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="cards">
+        <img src="cantrip-cantrip-blaze.png" width="200" height="280" alt="Cantrip of Blaze">
+        <img src="relic-cantrip-blaze.png" width="200" height="280" alt="Blazing">
+      </div>
+      <div class="about">
+        <p class="name">Cantrip of Blaze</p>
+        <div class="record">cantrip-blaze</div>
+        <p class="text">FIRE CARDS DEAL 2x
+FOR THIS FIGHT</p>
+        
+          <p class="art">scroll art: <code>cantrip-blaze</code></p>
+        
+
+        <p class="name relic">casts Blazing</p>
+        <p class="text">Fire cards deal 2x DMG for this fight.</p>
+        
+          <p class="draw">an orange spirit salamander made of glowing orange light, curled in an S with its head raised, its tail dissolving into smoke</p>
+        
+        
+          <p class="art">relic art: <code>cantrip-blaze-relic</code></p>
+        
+        <p class="rule">when card-damage, if fire → scale-damage &#43;200</p>
+        <p class="example">moves no figure on the duelist</p><p class="example">moves no figure on the duelist</p><p class="example">cast twice at full: moves no figure on the duelist</p><p class="example">fire Bash: 10 → 20</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="cards">
+        <img src="cantrip-cantrip-charge.png" width="200" height="280" alt="Cantrip of Charge">
+        <img src="relic-cantrip-charge.png" width="200" height="280" alt="Charged">
+      </div>
+      <div class="about">
+        <p class="name">Cantrip of Charge</p>
+        <div class="record">cantrip-charge</div>
+        <p class="text">LIGHTNING CARDS DEAL 2x
+FOR THIS FIGHT</p>
+        
+          <p class="art">scroll art: <code>cantrip-charge</code></p>
+        
+
+        <p class="name relic">casts Charged</p>
+        <p class="text">Lightning cards deal 2x DMG for this fight.</p>
+        
+          <p class="draw">a yellow spirit electric eel made of glowing yellow light, coiled in a loose spiral with its jaws open, its tail dissolving into crackling mist</p>
+        
+        
+          <p class="art">relic art: <code>cantrip-charge-relic</code></p>
+        
+        <p class="rule">when card-damage, if lightning → scale-damage &#43;200</p>
+        <p class="example">moves no figure on the duelist</p><p class="example">moves no figure on the duelist</p><p class="example">cast twice at full: moves no figure on the duelist</p><p class="example">lightning Bash: 10 → 20</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="cards">
+        <img src="cantrip-cantrip-quake.png" width="200" height="280" alt="Cantrip of Quake">
+        <img src="relic-cantrip-quake.png" width="200" height="280" alt="Quaking">
+      </div>
+      <div class="about">
+        <p class="name">Cantrip of Quake</p>
+        <div class="record">cantrip-quake</div>
+        <p class="text">EARTH CARDS DEAL 2x
+FOR THIS FIGHT</p>
+        
+          <p class="art">scroll art: <code>cantrip-quake</code></p>
+        
+
+        <p class="name relic">casts Quaking</p>
+        <p class="text">Earth cards deal 2x DMG for this fight.</p>
+        
+          <p class="draw">a green spirit badger made of glowing green light, braced low and square to the viewer with its claws dug in, its edges dissolving into drifting dust</p>
+        
+        
+          <p class="art">relic art: <code>cantrip-quake-relic</code></p>
+        
+        <p class="rule">when card-damage, if earth → scale-damage &#43;200</p>
+        <p class="example">moves no figure on the duelist</p><p class="example">moves no figure on the duelist</p><p class="example">cast twice at full: moves no figure on the duelist</p><p class="example">earth Bash: 10 → 20</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="cards">
+        <img src="cantrip-cantrip-aether.png" width="200" height="280" alt="Cantrip of Aether">
+        <img src="relic-cantrip-aether.png" width="200" height="280" alt="Aetherial">
+      </div>
+      <div class="about">
+        <p class="name">Cantrip of Aether</p>
+        <div class="record">cantrip-aether</div>
+        <p class="text">ARCANE CARDS DEAL 2x
+FOR THIS FIGHT</p>
+        
+          <p class="art">scroll art: <code>cantrip-aether</code></p>
+        
+
+        <p class="name relic">casts Aetherial</p>
+        <p class="text">Arcane cards deal 2x DMG for this fight.</p>
+        
+          <p class="draw">a purple spirit octopus made of glowing purple light, its eight arms spread wide around it, the tips of its arms dissolving into glittering mist</p>
+        
+        
+          <p class="art">relic art: <code>cantrip-aether-relic</code></p>
+        
+        <p class="rule">when card-damage, if arcane → scale-damage &#43;200</p>
+        <p class="example">moves no figure on the duelist</p><p class="example">moves no figure on the duelist</p><p class="example">cast twice at full: moves no figure on the duelist</p><p class="example">arcane Bash: 10 → 20</p>
       </div>
     </div>
   

@@ -113,8 +113,8 @@ half carrying the recognition should be the upper one.
 ## The subject
 
 The block pasted below this prompt is one record, in JSON. Its key field is `PotionRecord` for a
-potion, `TonicRecord` for a tonic, `CantripRecord` for a cantrip and `GoodRecord` for a sealed
-good.
+potion, `TonicRecord` for a tonic and `GoodRecord` for a sealed good. A cantrip has its own
+prompt, `cantrip_relic_art_prompt.MD`.
 
 **A sealed good is the vessel and never its contents.** The bag, the vial and the sack each hold
 four of a catalog the player cannot read before paying, so the picture is a closed container — a

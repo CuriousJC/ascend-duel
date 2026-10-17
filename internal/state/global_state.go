@@ -107,6 +107,20 @@ type GlobalState struct {
 	// session, on screens that have never heard of a modal.
 	ModalOpen bool
 
+	// Busy is a scene declaring that it is working something out on screen — a round playing back
+	// with its working written on the scrolls, an essence changing cards where they stand — so every
+	// control that opens a view over the game stands inactive: the settings cog, the ledger, the
+	// gallery's door and each screen's hands and deck buttons. **One flag for all of them**, so no
+	// two of those controls can disagree about whether now is a time to open something.
+	//
+	// **They are drawn disabled rather than hidden.** A button that vanishes for the length of a
+	// round reads as a button that has gone; a disabled one says "not now". A panel already open
+	// keeps its X live, because the exit of a dialog is never the thing to take away.
+	//
+	// **Cleared by the frame every tick and re-asserted by the scene**, on ModalOpen's terms, so a
+	// screen left mid-playback cannot leave every opener dead for the rest of the session.
+	Busy bool
+
 	// InputFocus is the rectangles still accepting clicks, and InputGated is whether the
 	// restriction is on at all. Together they are the tutorial's shield: while a step says "press
 	// this", the cursor anywhere else clicks nothing.

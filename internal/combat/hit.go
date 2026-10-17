@@ -147,24 +147,31 @@ func strike(
 	// card pays again every turn it is held, and vitae moves inside a fight — a card kept in hand
 	// pays one, and riders fire before the attack phase.
 	baseDMG := actor.DMG
-	e.HandBonus, e.HandBonusSeats = HandBonus(worn, blow.Satisfied)
-	e.HeldDMG, e.HeldDMGCards, e.HeldDMGSeats = HeldDMG(worn, held)
+	var bonusBy, heldBy []int
+	e.HandBonus, e.HandBonusSeats, bonusBy = HandBonus(worn, blow.Satisfied)
+	e.HeldDMG, e.HeldDMGCards, e.HeldDMGSeats, heldBy = HeldDMG(worn, held)
 	e.VitaeDMG, e.VitaeDMGSeats = DMGPerVitae(worn)*actor.Vitae, seatsDoing(worn, DoAddDMGPerVitae)
+	e.DMGRaiseBy = make([]int, len(worn))
+	for seat, rate := range DMGPerVitaeBySeat(worn) {
+		e.DMGRaiseBy[seat] = bonusBy[seat] + heldBy[seat] + rate*actor.Vitae
+	}
 	actor.DMG = blowDMG(baseDMG+e.HandBonus+e.HeldDMG+e.VitaeDMG, held)
 	e.HandDMG, e.HandDMGBare = actor.DMG, blowDMG(baseDMG, held)
+	e.HandDMGBase = baseDMG
+	e.HeldRiderAdd, e.HeldRiderPct = HeldRiders(held)
 
 	// **A rung relic is a second multiplier, never a bigger hand.** `Multiplier` stays the ladder's
 	// own figure, so the banner and the hand row show the rung the player built; this is applied
 	// after it on every hit — the HAND RELICS step.
-	e.HandScale, e.HandScaleSeats = HandScale(worn, blow.Satisfied, scoringCards(blow, turn))
+	e.HandScale, e.HandScaleSeats, e.HandScaleBy = HandScale(worn, blow.Satisfied, scoringCards(blow, turn))
 
-	// **The turn's first card wakes the Awakenings**, and every attack after it gains their figure
-	// on its card — after the card's own multiplier, before the relics that price the card.
+	// **The turn's first card wakes the Awakenings**, and every attack after it is swung at their
+	// figure on top of the turn's DMG — before the card's own multiplier, so the card multiplies it.
 	//
 	// **First as the player queued it**, not as the turn resolves: the defend phase goes first, so
 	// a Brace queued third is turn[0] here. A slot's Index is its place in the queue.
 	opener := firstQueued(turn)
-	e.Awaken, e.AwakenSeats = AwakenBonus(worn, turn[opener].Card)
+	e.Awaken, e.AwakenSeats, e.AwakenBy = AwakenBonus(worn, turn[opener].Card)
 	e.AwakenOpener = opener
 	awaken := func(l landing) int {
 		if e.Awaken == 0 || l.seat == opener || turn[l.seat].Card.Spec().Verb != VerbAttack {
@@ -178,6 +185,7 @@ func strike(
 			break
 		}
 		e.RungCards[e.RungCardCount] = i
+		e.RungGroup[e.RungCardCount] = groupOf(blow.RungGroups, i)
 		e.RungCardCount++
 	}
 
@@ -207,8 +215,8 @@ func strike(
 	for h, l := range landings {
 		card := turn[l.seat].Card
 
-		// **DUELIST, CARD, AWAKENING, CARD RELICS, HAND, HAND RELICS** — `cardDamageWoken` is the
-		// first four; then the hand's multiplier, then the relics that multiply the hand.
+		// **DUELIST and AWAKENING, CARD, CARD RELICS, HAND, HAND RELICS** — `cardDamageWoken` is the
+		// first three; then the hand's multiplier, then the relics that multiply the hand.
 		woke := awaken(l)
 		d := l.shape.Amount(l.nth, actor.cardDamageWoken(card, woke))
 		figure := scaleDamage(d, blow.Multiplier)
@@ -224,7 +232,7 @@ func strike(
 			at := e.HandCardCount
 			e.HandCards[at] = l.seat
 			e.HandAmounts[at] = d
-			e.HandCardBase[at] = l.shape.Amount(l.nth, card.Damage(actor.DMG))
+			e.HandCardBase[at] = l.shape.Amount(l.nth, card.Damage(actor.DMG+woke))
 			// **Only an attack applies a percentage to the DMG.** A defense's Amount is how many
 			// shields it raises, and recorded here it would print as a multiplier of 0.01 per shield;
 			// zero sends its term to the flat figure, which is the 0 it deals.
@@ -416,4 +424,16 @@ func scoringCards(blow Blow, turn []Slot) []Card {
 		}
 	}
 	return out
+}
+
+// groupOf is which of a hand's groups holds turn index i, 0 when none does.
+func groupOf(groups [][]int, i int) int {
+	for g, members := range groups {
+		for _, m := range members {
+			if m == i {
+				return g
+			}
+		}
+	}
+	return 0
 }

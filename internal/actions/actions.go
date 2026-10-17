@@ -10,13 +10,13 @@ import (
 // them there. The chrome's cog does the same thing from every other screen — see game/chrome.go,
 // which cannot call this because actions sits below it and the frame is not a scene.
 func OpenSettings(gs *state.GlobalState) {
-	gs.ReturnScreen = gs.ActiveScreen
+	gs.PushReturn()
 	gs.ActiveScreen = state.Settings
 	gs.NewScreen = true
 }
 
-// OpenCompendium, OpenAchievements and OpenCredits go to the menu screens, remembering where the
-// player was so each screen's Back can put them there.
+// OpenCompendium, OpenAchievements and OpenCredits go to the menu screens, pushing where the player
+// was so each screen's Back can put them there — see state.GlobalState.Returns.
 //
 // **One function per screen rather than one taking a destination**, matching OpenSettings. A shared
 // `openScreen(gs, dest)` would be shorter and would also be the seam through which a *run* screen
@@ -24,19 +24,19 @@ func OpenSettings(gs *state.GlobalState) {
 // station the run is not standing on. These are the screens that are allowed to work like this,
 // and the list being explicit is what says so.
 func OpenCompendium(gs *state.GlobalState) {
-	gs.ReturnScreen = gs.ActiveScreen
+	gs.PushReturn()
 	gs.ActiveScreen = state.Compendium
 	gs.NewScreen = true
 }
 
 func OpenAchievements(gs *state.GlobalState) {
-	gs.ReturnScreen = gs.ActiveScreen
+	gs.PushReturn()
 	gs.ActiveScreen = state.Achievements
 	gs.NewScreen = true
 }
 
 func OpenCredits(gs *state.GlobalState) {
-	gs.ReturnScreen = gs.ActiveScreen
+	gs.PushReturn()
 	gs.ActiveScreen = state.Credits
 	gs.NewScreen = true
 }

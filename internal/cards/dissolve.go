@@ -19,9 +19,9 @@ package cards
 //
 // # One rasterizer today, and the geometry still lives here
 //
-// Unlike ShatterCracks there is no baked counterpart: a dissolve has no settled state, because the
+// There is no baked counterpart: a dissolve has no settled state, because the
 // settled state is simply the other card. It is here anyway for two reasons. The pattern is derived
-// from the card's *name* through the same MarkSeed and the same hasher the break uses, and a second
+// from the card's *name* through MarkSeed and the package's hasher, and a second
 // copy of that derivation is a second answer to "what does this card look like when it comes
 // apart". And it is geometry about a card face, which is this package's subject; internal/screens
 // draws it, exactly as it draws the moving half of a break.

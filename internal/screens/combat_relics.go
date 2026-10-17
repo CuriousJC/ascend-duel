@@ -233,8 +233,12 @@ func drawPaneCount(gs *state.GlobalState, screen *ebiten.Image, back image.Recta
 // the run's relics are counted**: a cantrip-relic is weightless and takes none of the slots, and the
 // denominator is the run's relicSlots rather than any width the row is willing to draw. **It is drawn
 // with nothing worn too**, since `0/5` says the row exists and is empty.
-func drawRelicPaneFrame(gs *state.GlobalState, screen *ebiten.Image, row image.Rectangle) {
+//
+// **An armed relic's tab scroll goes on the backing, under the cards** — see band_scroll.go — so
+// `sale` is the band's, or nil on a screen with none.
+func drawRelicPaneFrame(gs *state.GlobalState, screen *ebiten.Image, row image.Rectangle, sale *sellTab) {
 	drawRelicPaneBack(screen, row)
+	sale.drawScrollBehind(gs, screen, saleRelic)
 	if gs.Run == nil {
 		return
 	}
@@ -339,6 +343,11 @@ func wornRelics(gs *state.GlobalState) []data.RelicData {
 type rowSeat struct {
 	key  string
 	cast int
+
+	// copy is which copy of key this seat holds, counting from 0 in the run's worn order. **A run
+	// may wear a relic more than once**, and each copy is its own seat and its own relic on the
+	// fighter: a seat keyed by the record alone would fold every copy into one.
+	copy int
 }
 
 // runRelic is whether this seat holds one of the run's relics rather than a cantrip-relic.
@@ -359,26 +368,29 @@ func (s *CombatScene) relicRowSeats(gs *state.GlobalState) []rowSeat {
 	if gs.Run != nil {
 		worn = gs.Run.Worn()
 	}
-	isWorn := make(map[string]bool, len(worn))
+	// **One seat per worn copy**: the n-th time a key appears in the worn list is that key's copy n.
+	copies := make(map[string]int, len(worn))
+	wornSeats := make([]rowSeat, 0, len(worn))
 	for _, k := range worn {
-		isWorn[k] = true
+		wornSeats = append(wornSeats, rowSeat{key: k, cast: -1, copy: copies[k]})
+		copies[k]++
 	}
 
 	out := make([]rowSeat, 0, len(worn)+len(s.cast))
-	seenKey, seenCast := map[string]bool{}, map[int]bool{}
+	seenRun, seenCast := map[rowSeat]bool{}, map[int]bool{}
 	for _, r := range s.rowOrder {
 		switch {
-		case r.runRelic() && isWorn[r.key] && !seenKey[r.key]:
-			seenKey[r.key] = true
+		case r.runRelic() && r.copy < copies[r.key] && !seenRun[r]:
+			seenRun[r] = true
 			out = append(out, r)
 		case !r.runRelic() && r.cast < len(s.cast) && !seenCast[r.cast]:
 			seenCast[r.cast] = true
 			out = append(out, r)
 		}
 	}
-	for _, k := range worn {
-		if !seenKey[k] {
-			out = append(out, rowSeat{key: k, cast: -1})
+	for _, r := range wornSeats {
+		if !seenRun[r] {
+			out = append(out, r)
 		}
 	}
 	for i := range s.cast {
@@ -461,6 +473,17 @@ func (s *CombatScene) runRelicSeat(gs *state.GlobalState, key string) (image.Rec
 		}
 	}
 	return image.Rectangle{}, false
+}
+
+// runRelicMotion is how far one of the run's relics is displaced from its seat in the fight's row
+// right now, for the sale tab to move with it.
+func (s *CombatScene) runRelicMotion(gs *state.GlobalState, key string) (float64, float64, float64) {
+	for i, r := range s.relicRowSeats(gs) {
+		if r.runRelic() && r.key == key {
+			return bandMotion(gs, i, s.wornWeightless(i))
+		}
+	}
+	return 0, 0, 0
 }
 
 // cantripRelicRecord is a cantrip-relic as the row draws a relic.
@@ -790,6 +813,9 @@ func (s *CombatScene) tickShakes(gs *state.GlobalState) {
 	for i := range s.cardShake {
 		s.cardShake[i].Tick()
 	}
+	for i := range s.enemyShake {
+		s.enemyShake[i].Tick()
+	}
 
 	relics, cards := s.Theater.mathBox.takeShakes(combat.SideA)
 	for seat, shaking := range relics {
@@ -823,6 +849,25 @@ func (s *CombatScene) playedCardShake(seat int) int {
 		return 0
 	}
 	return shakeOffset(s.cardShake[seat])
+}
+
+// shakeEnemyCard starts one of the opponent's table cards rattling: the card that is swinging.
+func (s *CombatScene) shakeEnemyCard(seat int) {
+	if seat < 0 {
+		return
+	}
+	for len(s.enemyShake) <= seat {
+		s.enemyShake = append(s.enemyShake, ui.Travel{})
+	}
+	s.enemyShake[seat] = ui.NewTravel(0, relicShakeTicks())
+}
+
+// enemyCardShake is how far sideways the opponent's card in one seat sits this frame.
+func (s *CombatScene) enemyCardShake(seat int) int {
+	if seat < 0 || seat >= len(s.enemyShake) {
+		return 0
+	}
+	return shakeOffset(s.enemyShake[seat])
 }
 
 // wornWeightless is whether the relic in one seat of the row is worn weightless. **Read off the
@@ -878,7 +923,7 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 	// showing the band draws. Flat, where the deck panel and the fight log are bevelled: those two
 	// are overlays and a lit edge says they are in front of the game, where this backing covers
 	// nothing and the bevelled cards on it are what is meant to be read.
-	drawRelicPaneFrame(gs, screen, r)
+	drawRelicPaneFrame(gs, screen, r, &s.band.sale)
 
 	worn := s.paneRelics(gs)
 	counters := s.countersNow()

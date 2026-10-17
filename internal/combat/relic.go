@@ -598,10 +598,12 @@ const (
 	// the first card matches the rule — the Awakenings. It needs the `First` predicate, and the
 	// rule's card predicates are read against that first card.
 	//
-	// **Added after the card's own multiplier and before the relics that price the card** *(owner's
-	// call, 2026-10-10)*: a 0.5x card and a 2x card behind a fire opener both gain the same 10, and
-	// a Club, a Swarm and the hand all multiply it. The first card gains nothing, and neither does a defense, which deals
-	// nothing for the 10 to join. Two Awakenings that both fire add. See AwakenBonus.
+	// **Added to the DMG the card is swung at, before the card's own multiplier** *(owner's call,
+	// 2026-10-13)*: a 2x card behind a fire opener gains 20 and a 0.5x card 5, and the card's
+	// riders, a Club, a Swarm and the hand all multiply what that came to. It raises that one card's
+	// DMG and no other's, so it is not HandDMG. The first card gains nothing, and neither does a
+	// defense, which deals nothing for the 10 to join. Two Awakenings that both fire add. See
+	// AwakenBonus.
 	//
 	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
 	DoAwaken
@@ -613,6 +615,18 @@ const (
 	//
 	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
 	DoCopyConsumable
+
+	// DoShieldPerCard raises Amount shields **for every card of the turn the rule matches**, each in
+	// that card's own element — the staggers. The shields go up at the close of the turn, after the
+	// hits, and stand through the opponent's like a Brace's. Each is announced as a KindStaggered
+	// naming the card that earned it. See staggerAtTurnEnd.
+	//
+	// **Every matching card counts, whatever its hit did**, the reading DoSurgePerCard takes: a card
+	// that fizzled or was blocked was still played. Refused with no `If`, since there would be
+	// nothing to count, and bounded per card at MaxShields like DoRaiseShield.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoShieldPerCard
 )
 
 // RelicVerbs is every verb in a fixed order.
@@ -624,7 +638,7 @@ func RelicVerbs() []RelicVerb {
 		DoScaleHandDamage, DoScaleDamagePerVitae, DoDrainDamage, DoHealShare, DoScaleRolls,
 		DoAdjustRoundLimit, DoAdjustEssenceTargets, DoRaiseShield, DoMatchFoeShields,
 		DoKeepShields, DoReflectDamage, DoHealOnBlock, DoVitaeOnBlock, DoSetForm,
-		DoPierceElement, DoSurgePerCard, DoAwaken, DoCopyConsumable}
+		DoPierceElement, DoSurgePerCard, DoAwaken, DoCopyConsumable, DoShieldPerCard}
 }
 
 func (v RelicVerb) String() string {
@@ -703,6 +717,8 @@ func (v RelicVerb) String() string {
 		return "awaken"
 	case DoCopyConsumable:
 		return "copy-consumable"
+	case DoShieldPerCard:
+		return "shield-per-card"
 	default:
 		return "adjust-cost"
 	}
@@ -731,7 +747,7 @@ func verbMoment(v RelicVerb) Moment {
 		return MomentAttackLands
 	case DoHealShare, DoRaiseShield:
 		return MomentTurnStart
-	case DoGrowOnTurn, DoResetGrowth, DoGrowPerCard, DoSurgePerCard:
+	case DoGrowOnTurn, DoResetGrowth, DoGrowPerCard, DoSurgePerCard, DoShieldPerCard:
 		return MomentTurnTaken
 	case DoSetElement:
 		return MomentCardDrawn
@@ -1032,6 +1048,9 @@ func CheckRelic(key string, rules []RelicRule) error {
 			if e.Do == DoSurgePerCard && !rule.If.Any() {
 				return fmt.Errorf("%s surges per card and names no card to count", key)
 			}
+			if e.Do == DoShieldPerCard && !rule.If.Any() {
+				return fmt.Errorf("%s shields per card and names no card to count", key)
+			}
 			// **The first card is what an awakening is about**, so a rule that does not name it
 			// would be adding to every card but one for no reason a player could see.
 			if e.Do == DoAwaken && !rule.If.First {
@@ -1078,7 +1097,7 @@ func checkEffect(key string, e RelicEffect) error {
 		if e.Element == Basic {
 			return fmt.Errorf("%s pierces basic, and a basic card never fizzles", key)
 		}
-	case DoRaiseShield:
+	case DoRaiseShield, DoShieldPerCard:
 		// **Bounded like a card**: one relic raising more shields than one card may would be a
 		// defend card with no cost and a bigger number.
 		if e.Amount <= 0 || e.Amount > MaxShields {
@@ -1400,19 +1419,19 @@ func (d Duelist) CostOf(cards []Card) int {
 // attack.
 func (d Duelist) CardDamage(c Card) int { return d.cardDamageWoken(c, 0) }
 
-// cardDamageWoken is CardDamage with an Awakening's figure added to the card before its relics
-// price it — so a Swarm or a Club multiplies the 10 as it multiplies the card. See DoAwaken.
+// cardDamageWoken is CardDamage with an Awakening's figure added to the DMG this card is swung at,
+// before the card's own multiplier — so a 3x card triples the 10, and a Swarm or a Club multiplies
+// what that came to. See DoAwaken.
 func (d Duelist) cardDamageWoken(c Card, woke int) int {
-	// **DUELIST, then CARD, then AWAKENING, then CARD RELICS** — and the hand and the hand's relics
-	// after all of them, in the resolver. The duelist's DMG is already the turn's; the card's own
-	// multiplier and its played riders come next, on this card alone; then what the opener woke;
-	// then the relics price what the card came to. See MECHANICS.md §Damage: a hit per card, one
-	// multiplier.
-	dmg := playRidden(c.Damage(d.DMG), c.DamageOnPlay(), c.ScaleOnPlay())
+	// **DUELIST and AWAKENING, then CARD, then CARD RELICS** — and the hand and the hand's relics
+	// after all of them, in the resolver. The duelist's DMG is already the turn's and what the
+	// opener woke joins it for this card alone; the card's own multiplier and its played riders
+	// come next; then the relics price what the card came to. See MECHANICS.md §Damage: a hit per
+	// card, one multiplier.
+	dmg := playRidden(c.Damage(d.DMG+woke), c.DamageOnPlay(), c.ScaleOnPlay())
 	if dmg == 0 {
 		return 0
 	}
-	dmg += woke
 	for _, e := range d.relicEffects(MomentCardDamage, c) {
 		dmg = dmg * e.DamagePct(d.Vitae) / 100
 	}
@@ -1736,19 +1755,29 @@ func LandingSeats(worn []WornRelic, card Card, lead bool, rungs []HandID) []bool
 // once at equipped was the first version of this and it was wrong.
 func DMGPerVitae(worn []WornRelic) int {
 	total := 0
-	for _, w := range worn {
+	for _, rate := range DMGPerVitaeBySeat(worn) {
+		total += rate
+	}
+	return total
+}
+
+// DMGPerVitaeBySeat is DMGPerVitae seat by seat, so each relic's share of the purse's DMG can be
+// named beside its own figure.
+func DMGPerVitaeBySeat(worn []WornRelic) []int {
+	by := make([]int, len(worn))
+	for seat, w := range worn {
 		for _, rule := range RelicOf(w.Relic).Rules {
 			if rule.When != MomentEquipped {
 				continue
 			}
 			for _, e := range rule.Then {
 				if e.Do == DoAddDMGPerVitae {
-					total += e.Amount
+					by[seat] += e.Amount
 				}
 			}
 		}
 	}
-	return total
+	return by
 }
 
 // seatsDoing is which worn seats carry a verb at all — the attribution a flat equipped term
@@ -1768,7 +1797,8 @@ func seatsDoing(worn []WornRelic, do RelicVerb) []bool {
 }
 
 // HandScale is what the worn relics multiply a blow by **after its hand multiplier has been
-// applied**, in percent, and which seats paid for it. 100 is the identity.
+// applied**, in percent, which seats paid for it, and what each seat multiplied by on its own — 0
+// for a seat that paid nothing — so an account can name each relic's share. 100 is the identity.
 //
 // **It is deliberately not folded into the hand's own multiplier.** That figure belongs to the
 // ladder and is what the banner and the hand row say; see DoScaleHandDamage.
@@ -1779,12 +1809,13 @@ func seatsDoing(worn []WornRelic, do RelicVerb) []bool {
 //
 // **`cards` is the scoring set, not the turn** — it is what `MinForms` counts, so a card the turn
 // played that paid nothing into the hand is not a second form.
-func HandScale(worn []WornRelic, satisfied []HandID, cards []Card) (int, []bool) {
+func HandScale(worn []WornRelic, satisfied []HandID, cards []Card) (int, []bool, []int) {
 	seats := make([]bool, len(worn))
+	by := make([]int, len(worn))
 	pct := 100
 
 	if len(satisfied) == 0 {
-		return pct, seats
+		return pct, seats, by
 	}
 	for seat, w := range worn {
 		for _, rule := range RelicOf(w.Relic).Rules {
@@ -1802,11 +1833,15 @@ func HandScale(worn []WornRelic, satisfied []HandID, cards []Card) (int, []bool)
 					continue
 				}
 				pct = pct * e.Amount / 100
+				if !seats[seat] {
+					by[seat] = 100
+				}
+				by[seat] = by[seat] * e.Amount / 100
 				seats[seat] = true
 			}
 		}
 	}
-	return pct, seats
+	return pct, seats, by
 }
 
 // distinctForms is how many different forms a set of cards covers. **Defend counts like any other**
@@ -1829,10 +1864,12 @@ func distinctForms(cards []Card) int {
 }
 
 // AwakenBonus is what every attack after the turn's first card gains, given that first card, and
-// which worn seats woke. **The rule's card predicates are read against the first card** — a fire
-// Awakening wakes on a fire opener whatever follows it. Two that wake add. See DoAwaken.
-func AwakenBonus(worn []WornRelic, first Card) (int, []bool) {
+// which worn seats woke, and what each of them added. **The rule's card predicates are read against
+// the first card** — a fire Awakening wakes on a fire opener whatever follows it. Two that wake add,
+// and `by` keeps them apart so each can be written as its own step. See DoAwaken.
+func AwakenBonus(worn []WornRelic, first Card) (int, []bool, []int) {
 	seats := make([]bool, len(worn))
+	by := make([]int, len(worn))
 	total := 0
 	for seat, w := range worn {
 		for _, rule := range RelicOf(w.Relic).Rules {
@@ -1842,20 +1879,22 @@ func AwakenBonus(worn []WornRelic, first Card) (int, []bool) {
 			for _, e := range rule.Then {
 				if e.Do == DoAwaken {
 					total += e.Amount
+					by[seat] += e.Amount
 					seats[seat] = true
 				}
 			}
 		}
 	}
-	return total, seats
+	return total, seats, by
 }
 
-func HandBonus(worn []WornRelic, satisfied []HandID) (int, []bool) {
+func HandBonus(worn []WornRelic, satisfied []HandID) (int, []bool, []int) {
 	seats := make([]bool, len(worn))
+	by := make([]int, len(worn))
 	total := 0
 
 	if len(satisfied) == 0 {
-		return 0, seats
+		return 0, seats, by
 	}
 	for seat, w := range worn {
 		for _, rule := range RelicOf(w.Relic).Rules {
@@ -1867,11 +1906,12 @@ func HandBonus(worn []WornRelic, satisfied []HandID) (int, []bool) {
 					continue
 				}
 				total += e.Amount
+				by[seat] += e.Amount
 				seats[seat] = true
 			}
 		}
 	}
-	return total, seats
+	return total, seats, by
 }
 
 // HeldDMG is the DMG a worn set adds to the duelist for a blow, for the cards the turn **kept
@@ -1889,10 +1929,13 @@ func HandBonus(worn []WornRelic, satisfied []HandID) (int, []bool) {
 // the raise as `Jar of Ice (4 cards kept back)  +20 DMG` — a figure with no count beside it is one
 // the player cannot check against the hand they were holding. It is the tally across every seat:
 // two jars paying for six cards between them is one raise of six.
-func HeldDMG(worn []WornRelic, held []Card) (total, cards int, seats []bool) {
+//
+// `by` is what each seat paid on its own, so two jars are two figures.
+func HeldDMG(worn []WornRelic, held []Card) (total, cards int, seats []bool, by []int) {
 	// A named return, so it needs building like every other seat row here: one entry per worn
 	// relic, all false until one of them pays.
 	seats = make([]bool, len(worn))
+	by = make([]int, len(worn))
 
 	for seat, w := range worn {
 		for _, rule := range RelicOf(w.Relic).Rules {
@@ -1906,6 +1949,7 @@ func HeldDMG(worn []WornRelic, held []Card) (total, cards int, seats []bool) {
 				for _, c := range held {
 					if rule.If.Matches(c) {
 						total += e.Amount
+						by[seat] += e.Amount
 						cards++
 						seats[seat] = true
 					}
@@ -1913,7 +1957,7 @@ func HeldDMG(worn []WornRelic, held []Card) (total, cards int, seats []bool) {
 			}
 		}
 	}
-	return total, cards, seats
+	return total, cards, seats, by
 }
 
 // LandingsOf is how many times a card lands, and how, given what its wearer has on.

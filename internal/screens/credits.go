@@ -70,6 +70,8 @@ const (
 var credits = []creditsLine{
 	{"MADE BY", creditsHeading},
 	{"Ambivalent Systems", creditsBody},
+	{"·  CuriousJC (the dad)", creditsBody},
+	{"·  KingSherman1820 (the kid)", creditsBody},
 	{"", creditsGap},
 
 	{"BUILT WITH", creditsHeading},
@@ -186,10 +188,5 @@ func creditsInk(k creditsKind) color.Color {
 // leave goes back to whichever screen opened this one, on the same terms the settings and
 // achievements screens do.
 func (s *CreditsScene) leave(gs *state.GlobalState) {
-	back := gs.ReturnScreen
-	if back == state.Credits {
-		back = state.Title
-	}
-	gs.ActiveScreen = back
-	gs.NewScreen = true
+	gs.PopReturn()
 }

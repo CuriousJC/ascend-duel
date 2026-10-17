@@ -72,7 +72,7 @@
   },
   {
     "ScenarioRecord": "shields",
-    "Note": "The shields, on their own: what a defend card raises, what one eats, and how the break is drawn. No relics at all, so nothing on the screen is multiplying or recoloring anything and the only thing moving is the defence. The deck is mostly defend cards across all five colors - Brace at 1 AP and Block at 2 - with a thin seam of attacks so a turn can still form a hand and the shields can be watched going up beside the hits rather than instead of them. 15 AP, so a turn is a choice of which five cards rather than which five are affordable; remember combat.MaxActions still caps the turn at five cards however cheap they are, and one card raises at most five shields while a duelist holds as many as the turn paid for. The opponent is a Giant Bat because its deck has three clearly different blows - Nip at 50, Swoop at 100 and Drain at 200 - which is what makes the rule visible: a shield eats the creature's HEAVIEST blow, not its first, and it decides that at the top of the creature's turn. Watch the beat between the two turns, where the blocked pips fly out of the duelist card into the card they kill and the crack opens across its face. The pip row along the bottom of the duelist card draws at most six - screens.maxShieldPips - so a turn that raises ten draws a full row and the true count is on the engine. Against a dummy, so it can be watched as many times as it takes rather than survived.",
+    "Note": "The shields, on their own: what a defend card raises, what one eats, and how a stopped hit is drawn. No relics at all, so nothing on the screen is multiplying or recoloring anything and the only thing moving is the defence. The deck is mostly defend cards across all five colors - Brace at 1 AP and Block at 2 - with a thin seam of attacks so a turn can still form a hand and the shields can be watched going up beside the hits rather than instead of them. 15 AP, so a turn is a choice of which five cards rather than which five are affordable; remember combat.MaxActions still caps the turn at five cards however cheap they are, and one card raises at most five shields while a duelist holds as many as the turn paid for. The opponent is a Giant Bat because its deck has three clearly different blows - Nip at 50, Swoop at 100 and Drain at 200 - which is what makes the rule visible: a shield eats the creature's HEAVIEST blow, not its first, and it decides that at the top of the creature's turn. Watch each defend card's shields heap up over it, then, as the creature swings, each blow it eats set off and a shield leave its heap to meet it in the middle of the screen, the two breaking apart there - with SURGE over the break when the shield matched the attack's element. Against a dummy, so it can be watched as many times as it takes rather than survived.",
     "Relics": [],
     "Enemy": "animals-outer-bat",
     "Hand": [
@@ -673,6 +673,30 @@
     "Relics": [
       "hp-scale",
       "dmg-all-slash"
+    ],
+    "Hand": [],
+    "Runes": [
+      "left-to-right"
+    ],
+    "Screen": "shop",
+    "Fight": 3,
+    "Vitae": 40,
+    "Life": 30
+  },
+  {
+    "ScenarioRecord": "shop-weightless",
+    "Note": "The shop with a mixed owned row: two relics worn the ordinary way and three worn weightless, drifting off the row, plus a rune in the sack. For looking at the sell tab's scroll hanging under a weightless relic as well as a resting one, over the shop's selling panes, and at what selling a weightless relic pays. Money to spend and a wound to heal, as the shop-shelf fixture has.",
+    "Relics": [
+      "hp-scale",
+      "dmg-all-slash",
+      "dmg-pair-hand",
+      "drain-blow",
+      "jar-fire"
+    ],
+    "Weightless": [
+      "dmg-pair-hand",
+      "drain-blow",
+      "jar-fire"
     ],
     "Hand": [],
     "Runes": [
@@ -1785,6 +1809,41 @@
     "Dummy": true
   },
   {
+    "ScenarioRecord": "killing-blow-shields",
+    "Note": "A killing blow with shields standing everywhere a shield can stand, to see what the table does with them when the duel settles instead of moving on. Two helms raise a fire and an earth shield on their rings at the top of the turn, the Tower Shield is worn so a kept shield has a relic to move onto, the Block raises two fire shields over its own card, and one Smash carries a shield-on-play rider so a heap forms over an attack card too. Three fire Smashes and the Block are an elemental hand against the weakest creature in the game, with a budget that pays for all five cards - press DUEL! once and the bat dies with every heap still up.",
+    "Relics": [
+      "burning-helm",
+      "green-helm",
+      "tower-shield"
+    ],
+    "Hand": [
+      {
+        "Card": "Block",
+        "Element": "fire"
+      },
+      {
+        "Card": "Smash",
+        "Element": "fire",
+        "Riders": ["shield-on-play:2"]
+      },
+      {
+        "Card": "Smash",
+        "Element": "fire"
+      },
+      {
+        "Card": "Smash",
+        "Element": "fire"
+      },
+      {
+        "Card": "Brace",
+        "Element": "ice"
+      }
+    ],
+    "Enemy": "animals-outer-bat",
+    "Screen": "combat",
+    "Actions": 30
+  },
+  {
     "ScenarioRecord": "new-card-art",
     "Note": "The ten playing cards drawn from the transparent-background prompt, all ten in the opening hand, with two of every upgrade rune in the sack. It answers whether the new figures read on every upgrade face as well as on the plain card: select a card, click a rune, and the card's face changes under its figure - an upgrade replaces the last one, so the same card can be walked through all eleven. The deck is only these ten, two of each, so every hand is new art, and the fight is a dummy so it never ends while you cycle.",
     "Relics": [],
@@ -1997,5 +2056,57 @@
     "Seed": "CGPBSC",
     "Fight": 7,
     "Vitae": 20
+  },
+  {
+    "ScenarioRecord": "awakenings",
+    "Note": "Four Awakenings worn against an earth Giant Bat, so nothing in the opening hand fizzles. Open on the fire Bash and two of them wake at once - fire and crush - so every attack behind it is swung at +20 DMG; open on the arcane Thrust and only the arcane one wakes, for +10; open on the ice Brace and the ice one wakes, though the Brace itself gains nothing. Dummy life on both sides, so it can be replayed round after round with a different opener each time.",
+    "Relics": [
+      "awaken-fire",
+      "awaken-arcane",
+      "awaken-ice",
+      "awaken-crush"
+    ],
+    "Enemy": "animals-outer-bat",
+    "EnemyElement": "earth",
+    "Dummy": true,
+    "Hand": [
+      { "Card": "Bash", "Element": "fire" },
+      { "Card": "Thrust", "Element": "arcane" },
+      { "Card": "Cut", "Element": "ice" },
+      { "Card": "Slice", "Element": "lightning" },
+      { "Card": "Bash", "Element": "arcane" },
+      { "Card": "Jab", "Element": "fire" },
+      { "Card": "Brace", "Element": "ice" },
+      { "Card": "Block", "Element": "lightning" }
+    ],
+    "Screen": "combat"
+  },
+  {
+    "ScenarioRecord": "staggers",
+    "Note": "The three staggers worn together, to watch a shield leave its ring and fly to each attack of its form as that card's hit sets off. The hand holds two slashes (a Cut and a Slice), a crush (a Bash) and a stab (a Jab), so playing all four sends four shields out of three rings; a Brace is there to show a defense's shields still forming in place beside them. Giant Bat, so the fight lasts.",
+    "Relics": ["stagger-slash", "stagger-crush", "stagger-stab"],
+    "Enemy": "animals-outer-bat",
+    "Hand": [
+      { "Card": "Cut", "Element": "fire" },
+      { "Card": "Slice", "Element": "ice" },
+      { "Card": "Bash", "Element": "earth" },
+      { "Card": "Jab", "Element": "lightning" },
+      { "Card": "Brace", "Element": "arcane" }
+    ],
+    "Screen": "combat"
+  },
+  {
+    "ScenarioRecord": "math-overflow",
+    "Note": "More working than the screen is tall: nine relics that all multiply an ice Cut, each worn three times over - its knife, the ice ring, the Sickle, the ice-slash blade, the 1 AP relic, both growths and both shield streaks - so each line runs to a dozen rows; and the two repeats and the lead echo make the Cut land again and again, every landing another whole line stacked under the last. The lower rows land on the floor, heaped over each other, with each total square on top of the pile before it flies. Play the two ice Cuts together for two overflowing stacks side by side; the Jab and the Brace are there to show a short line beside a long one. Giant Bat, so the fight lasts. RelicSlots is 30, over the shipped five.",
+    "RelicSlots": 30,
+    "Relics": ["hunting-knife", "dmgx-ice", "dmg-all-slash", "dmg-ice-slash", "dmgx-one-ap", "growth-ice", "growth-slash", "dmg-no-shield", "dmg-shield-use", "hunting-knife", "dmgx-ice", "dmg-all-slash", "dmg-ice-slash", "dmgx-one-ap", "growth-ice", "growth-slash", "dmg-no-shield", "dmg-shield-use", "hunting-knife", "dmgx-ice", "dmg-all-slash", "dmg-ice-slash", "dmgx-one-ap", "growth-ice", "growth-slash", "dmg-no-shield", "dmg-shield-use", "repeat-ice", "repeat-slash", "lead-three-times"],
+    "Enemy": "animals-outer-bat",
+    "Hand": [
+      { "Card": "Cut", "Element": "ice" },
+      { "Card": "Cut", "Element": "ice" },
+      { "Card": "Jab", "Element": "fire" },
+      { "Card": "Brace", "Element": "earth" }
+    ],
+    "Screen": "combat"
   }
 ]

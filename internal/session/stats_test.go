@@ -29,7 +29,7 @@ func aRound(t *testing.T) ([]combat.Event, []combat.Card) {
 }
 
 // TestARoundIsCountedWhenItsDuelSettles is the whole arithmetic: what was dealt, by element and by
-// form, what was taken, the hand, and the records — and none of it before the duel settles.
+// form, what was taken, the hand, and the records â€” and none of it before the duel settles.
 func TestARoundIsCountedWhenItsDuelSettles(t *testing.T) {
 	run := bare(t)
 	log, turn := aRound(t)
@@ -39,7 +39,7 @@ func TestARoundIsCountedWhenItsDuelSettles(t *testing.T) {
 		t.Fatalf("a duel still being fought is not in the run's figures yet, got %d dealt", got)
 	}
 
-	run.TallyFight("goblins-outer-serf", true, 1)
+	run.TallyFight("goblins-outer-serf", "fire", true, 1)
 	st := run.Stats()
 	for name, want := range map[string]int{
 		StatDealt:                 19,
@@ -53,7 +53,9 @@ func TestARoundIsCountedWhenItsDuelSettles(t *testing.T) {
 		StatDealtForm + "crush":   19,
 		StatPlayedForm + "crush":  2,
 		StatHandFormed + "pair":   1,
-		StatCreatureDefeated + "goblins-outer-serf": 1,
+		StatCreatureDefeated + "goblins-outer-serf":                      1,
+		CreatureAs(StatCreatureDefeatedAs, "goblins-outer-serf", "fire"): 1,
+		CreatureAs(StatCreatureDefeatedAs, "goblins-outer-serf", "ice"):  0,
 	} {
 		if got := st.Total(name); got != want {
 			t.Errorf("%s: got %d want %d", name, got, want)
@@ -73,10 +75,11 @@ func TestARoundIsCountedWhenItsDuelSettles(t *testing.T) {
 // TestALostDuelNamesWhatKilledThePlayer holds the other branch.
 func TestALostDuelNamesWhatKilledThePlayer(t *testing.T) {
 	run := bare(t)
-	run.TallyFight("goblins-outer-serf", false, 4)
+	run.TallyFight("goblins-outer-serf", "ice", false, 4)
 
 	st := run.Stats()
-	if st.Total(StatFightsLost) != 1 || st.Total(StatCreatureKiller+"goblins-outer-serf") != 1 {
+	if st.Total(StatFightsLost) != 1 || st.Total(StatCreatureKiller+"goblins-outer-serf") != 1 ||
+		st.Total(CreatureAs(StatCreatureKillerAs, "goblins-outer-serf", "ice")) != 1 {
 		t.Errorf("a lost duel is a loss against its creature: %+v", st.Totals)
 	}
 	if _, ok := st.LeastOf(StatFastestWin); ok {
@@ -84,8 +87,8 @@ func TestALostDuelNamesWhatKilledThePlayer(t *testing.T) {
 	}
 }
 
-// TestAResumeDoesNotCountADuelTwice is why a duel's rounds are held apart: a run saved mid-duel —
-// which spending a consumable does — and resumed is fought again from the top of the room.
+// TestAResumeDoesNotCountADuelTwice is why a duel's rounds are held apart: a run saved mid-duel â€”
+// which spending a consumable does â€” and resumed is fought again from the top of the room.
 func TestAResumeDoesNotCountADuelTwice(t *testing.T) {
 	motifs, shape := rosters(t)
 	seed, err := seeds.Parse(theSeed)
@@ -97,7 +100,7 @@ func TestAResumeDoesNotCountADuelTwice(t *testing.T) {
 
 	// One duel settled, then a round of the next before a save.
 	s.TallyRound(log, turn)
-	s.TallyFight("goblins-outer-serf", true, 1)
+	s.TallyFight("goblins-outer-serf", "fire", true, 1)
 	s.TallyRound(log, turn)
 
 	back, _, err := Resume(motifs, shape, s.Snapshot(seed))

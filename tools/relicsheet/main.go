@@ -24,8 +24,8 @@
 //
 // # What to look at
 //
-// **The art, and how much of it there is not.** Four relics have faces; the rest fall back
-// to `default-relic.png`, and the page says which so a row of identical faces reads as a
+// **The art, and how much of it there is not.** A relic with no face of its own falls back
+// to the placeholder, and the page says which so a row of identical faces reads as a
 // backlog rather than as a bug.
 //
 // **The authored line against the rules beside it.** `relics.json` carries a `Text` field

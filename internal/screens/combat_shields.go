@@ -1,462 +1,508 @@
 package screens
 
+// The shields on the table: heaped over whatever raised them, and thrown to meet the attacks they eat.
+//
+// **A shield forms over the card that made it and stays there** — a defend card, an attack card
+// with a shield rider, or the ring of a relic that raises one. Several on one card heap, which is
+// how the count is read: see ui/shield_heap.go. **They form once the turn's arithmetic is done**
+// *(owner's call)*: every hit's line is worked out first, a defense's coming to 0, and the turn's
+// shields go up together on the way out of it.
+//
+// **When the creature swings at a shield, the hit sets off and a shield leaves its heap to meet it**,
+// and the two break apart where they meet on its path — on the beat that attack is reached, so what
+// stops a hit is watched stopping it. See combat_intercept.go.
+//
+// **It is a view over the resolved log and cannot change an outcome.** `combat.Duelist.Shields` is
+// not written until the round's end state is adopted, so the heaps are moved on the beat each event
+// is reached rather than read off the model; at the end of the round they are squared up with the
+// model, which is the authority.
+//
+// **The engine counts shields per element and never says which card's shield it spent**, so the
+// screen picks: the newest heap holding a shield of the spent element gives up its top one. That is
+// a choice about a picture, not about a rule.
+
 import (
 	"image"
-	"image/color"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
-	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-// The shield count on the duelist card, kept in step with playback rather than with the model.
-//
-// **It is `shownLife`'s pattern, and the file it replaced held the same pattern for banked action
-// points** *(2026-08-31)*. `combat.Duelist.Shields` is not written until the round's end state is
-// adopted, so a pip row reading the model would fill up a whole opposing turn after the card that
-// filled it and empty a whole turn after the attack that ate it. The engine's arithmetic is
-// untouched; what this adds is the same figure arriving on the beat it is drawn.
-//
-// **It cannot change an outcome.** The round was decided before a frame of it was drawn, and this
-// is a view over what the log already says.
-//
-// **The pips fly** *(owner's call)*, out of the card that raised them and into the row: **what a
-// card creates shows while the card is on screen.**
-//
-// **The flight predicts and the announcement corrects.** `noteShields` writes the standing count
-// absolutely off `KindRaised`, so the raise arriving later either agrees with what is already drawn
-// or fixes it — there is no double count to guard against, and a mispredicted pip lives for a few
-// beats rather than for the round. The cap is `maxShieldPips`, because a prediction has to know
-// the ceiling the raise will be held to.
-//
-// **It cannot change an outcome**, like everything else on this screen that moves.
-
-// shieldFlight is a defend card's pips on their way to the card that will carry them.
-//
-// **It carries a count rather than one pip per flight.** Block raises two, and two objects
-// crossing the same gap on the same beat would read as two cards having been played rather than as
-// one card worth two.
-type shieldFlight struct {
-	// side is whose card the pips are landing on, and seat is the hand seat they set off from.
+// shieldPile is the heap over one thing that raised shields.
+type shieldPile struct {
+	// side is whose shields these are, and seat the table seat they stand over — or -1 for a heap
+	// standing on a relic.
 	side combat.Side
 	seat int
 
-	// relic is the ring a helm's pips leave, and fromRelic says to use it rather than the seat.
-	// **A bool beside the id**, because the zero RelicID is a real relic.
-	relic     combat.RelicID
-	fromRelic bool
+	// relic is the ring the heap stands on, and onRelic says to use it rather than the seat. **A
+	// bool beside the id**, because the zero RelicID is a real relic.
+	relic   combat.RelicID
+	onRelic bool
 
-	// count is how many pips arrive, already capped.
-	count int
+	// atDuelist is the heap of shields standing with nothing on the table to stand over: what the
+	// model says is up that no card or ring raised this round. It stands on the duelist card.
+	atDuelist bool
 
-	// element is which shield drawing the pips are: their card's own, so the pip that crosses the
-	// screen is the mark that was sitting in that card's corner. **It is the element rather than a
-	// color** *(2026-09-16)*, since the marks are authored per element now and there is nothing
-	// left to tint.
+	shields []heapShield
+}
+
+// heapShield is one standing shield: the element it was raised in, which is a rule — a shield
+// eating a hit of its own element banks an action point — and its forming clock.
+type heapShield struct {
 	element cards.Element
+	form    ui.Travel
 
-	// ink is the color the pips are drawn in: their card's element, the same color that card
-	// wears round its border and on its own corner mark. The element is a rule — a shield of the
-	// hit's own element banks an action point — and the ink is how the row says which is which.
-	ink color.RGBA
-
-	// standing is the count the row shows once the pips land, or -1 for a flight that adds its
-	// own count to whatever is there.
-	//
-	// **Both cases exist because the pips can set off before or after the engine has spoken.** A
-	// defend card scored into a hand flies several beats before the raise is announced, so there
-	// is no authoritative figure yet and the flight adds; a raise announced with nothing having
-	// flown carries `KindRaised.Life`, which is the count itself, and the row takes it outright.
-	standing int
-
-	// landed says the arrival has been paid into the shown count, so a flight still on screen
-	// during its hold cannot pay twice.
-	landed bool
-
-	t ui.Travel
+	// from is where a shield flying in set off — a stagger's ring — and flies says to draw the
+	// forming as that journey rather than as a drop into place. See flyStaggers.
+	from  ui.ShieldPose
+	flies bool
 }
 
-func (f *shieldFlight) Tick()        { f.t.Tick() }
-func (f shieldFlight) Done() bool    { return f.t.Done() }
-func (f shieldFlight) arrived() bool { return f.t.Age >= shieldFlyTicks() }
+// shieldFlyTicks is a stagger's shield crossing from its ring to its card: the hit's own flight, so
+// the shield and the figure leave together and the card has its shield by the time the blow lands.
+func shieldFlyTicks() int { return hitFlyTicks() }
 
-// The flight's clock, in the game's own beats so it slows down and speeds up with the round.
-// **It is the hand dialog's term beat**, because it sets off on that beat and should land inside
-// it: a shield still crossing the screen while the next figure flies out of the next card would
-// read as belonging to that one.
-func shieldFlyTicks() int  { return ui.Beat(22, 25) }
-func shieldHoldTicks() int { return ui.Beat(4, 25) }
-
-// row is one side's shield row, and nil-safe for a side outside the two.
-func (s *CombatScene) row(side combat.Side) *ui.ShieldRow {
-	if side < 0 || int(side) >= len(s.Theater.shieldRows) {
-		return &ui.ShieldRow{}
+// flyStaggers sends every shield a stagger raised over one card out of its ring and onto that card,
+// on the beat the card's hit sets off. **It reads ahead in the log** — the staggers are announced as
+// the turn closes, after every hit — which is the hand dialog's licence and stays inside the turn:
+// the walk stops at the first event of the other side's. A stagger flown here is walked past, so
+// the turn's bundle does not form it a second time; one this does not reach (a card whose line was
+// never thrown) still forms over its card with the rest.
+func (s *CombatScene) flyStaggers(gs *state.GlobalState, side combat.Side, seat int) {
+	for at := s.cursor; at < len(s.log); at++ {
+		e := s.log[at]
+		if e.Kind == combat.KindRoundEnd || e.Side != side {
+			break
+		}
+		if e.Kind != combat.KindStaggered || e.Slot != seat || e.Amount <= 0 || s.Theater.walked[at] {
+			continue
+		}
+		s.markShown(at)
+		from, ok := s.relicShieldPose(gs, e.Relic)
+		if !ok {
+			// No ring on screen to leave from: the shield forms where it lands, like a raise.
+			s.Theater.pendingRaises = append(s.Theater.pendingRaises, e)
+			continue
+		}
+		if i, ok := s.wornSeatOf(gs, e.Relic); ok {
+			s.shakeRelicAt(i)
+		}
+		p := s.pileAtSeat(e.Side, e.Slot)
+		if p == nil {
+			s.Theater.piles = append(s.Theater.piles, shieldPile{side: e.Side, seat: e.Slot})
+			p = &s.Theater.piles[len(s.Theater.piles)-1]
+		}
+		for i := 0; i < e.Amount; i++ {
+			p.shields = append(p.shields, heapShield{
+				element: ui.ArtFor(e.Element),
+				form:    ui.NewTravel(i*ui.ShieldStaggerTicks(), shieldFlyTicks()),
+				from:    from,
+				flies:   true,
+			})
+		}
 	}
-	return &s.Theater.shieldRows[side]
 }
 
-// noteShieldRaise flies the pips for the whole defend phase, and it is **the only place pips fly
-// from**.
-//
-// **Every shield in the turn goes up as one gesture.** The first raise reached flies its own pips
-// and every raise behind it in the same phase, all on one frame; the ones behind it then arrive at
-// their own beats and find their seats already flown. It is the shield break's rule and the deal
-// cascade's — what the defend phase says is one thing about the turn, not three things about cards
-// — and it is what lets the cards stay still under it, since a lift per card is three beats of
-// movement in front of a hand nobody has named yet. See noteResolved, which lifts no defense.
-//
-// **The pips are the phase's and never a hit's.** A defense's hit line comes to 0 and flies
-// nothing; what the card did happened a phase earlier, where the player was watching for it.
-//
-// **Each flight leaves its own card, named by `Event.Slot`** — nothing is lit during the defend
-// phase, so there is no lit card to read a seat off. It reports whether it flew anything, so the
-// log can tell a raise it drew from one it did not.
-//
-// **The count is clamped to the row rather than to the rules.** A duelist holds as many shields as
-// the turn paid for and the row draws maxShieldPips of them, so a raise past the row's end flies
-// nothing rather than flying a pip with nowhere to land — see shownShields, and CLAUDE.md on the
-// row being a separate number from the engine's.
+// relicShieldPose is a shield sitting on a worn ring, at the ring's own scale: where a stagger's
+// shield sets off from.
+func (s *CombatScene) relicShieldPose(gs *state.GlobalState, id combat.RelicID) (ui.ShieldPose, bool) {
+	seat, ok := s.wornSeatOf(gs, id)
+	if !ok {
+		return ui.ShieldPose{}, false
+	}
+	r := s.relicRow(gs).RowSlot(gs, seat)
+	scale := float64(r.Dy()) / cardHeight
+	return ui.HeapPose(float64(r.Min.X+r.Max.X)/2, float64(r.Min.Y+r.Max.Y)/2, 0, 1, scale), true
+}
+
+// fadingShield is a shield going away where it stood: lapsing unspent as its card leaves the
+// table, or squared away by an announcement. It carries its own pose, because whatever it stood on
+// may already have gone.
+type fadingShield struct {
+	element cards.Element
+	pose    ui.ShieldPose
+	t       ui.Travel
+}
+
+func (f *fadingShield) Tick()     { f.t.Tick() }
+func (f fadingShield) Done() bool { return f.t.Done() }
+
+// shieldFadeTicks is a shield going away where it stood.
+func shieldFadeTicks() int { return ui.Beat(1, 2) }
+
+// ---- the events ----
+
+// noteShieldRaise holds a raise until the turn's arithmetic is done, and reports that it took it.
+// **Each heap stands over its own card, named by `Event.Slot`** — nothing is lit during the defend
+// phase, so there is no lit card to read a seat off.
 func (s *CombatScene) noteShieldRaise(e combat.Event) bool {
-	if e.Kind != combat.KindRaised {
+	if e.Kind != combat.KindRaised && e.Kind != combat.KindStaggered {
 		return false
 	}
-	for _, r := range s.raisesInPhase(e) {
-		s.flyOneRaise(r)
-	}
-	// **The answer is whether this raise's pips are in the air, not whether they left just now.**
-	// Every raise but the first was flown by the bundle several beats ago and arrives here with
-	// nothing to do — and it must still be swallowed, or `noteShields` would set the row to the
-	// absolute count while the pips that fill it are still crossing the screen. That is the one
-	// failure this whole gesture exists to prevent.
-	return s.row(e.Side).Flew(e.Slot)
-}
-
-// flyOneRaise sends one card's pips, or reports false for a raise with nothing to draw — a seat
-// that has already flown, or a count the row has no room left for.
-func (s *CombatScene) flyOneRaise(e combat.Event) bool {
-	if e.Amount <= 0 {
-		return false
-	}
-	seat := e.Slot
-	if s.row(e.Side).Flew(seat) {
-		return false
-	}
-
-	// The raise names what is standing after its own card, so what this card put up is the
-	// difference — and the row can only show maxShieldPips of it.
-	count := e.Amount
-	if room := ui.MaxShieldPips - (e.Life - e.Amount); count > room {
-		count = room
-	}
-	if count <= 0 {
-		return false
-	}
-
-	// **The raise names the shields' element**, which is the card's own unless a worn relic turned
-	// it — so the pip is read off the event rather than off the card it leaves.
-	s.flyShields(shieldFlight{
-		side: e.Side, seat: seat, count: count, standing: e.Life,
-		element: ui.ArtFor(e.Element),
-		ink:     cards.BorderOf(ui.ArtFor(e.Element)),
-	})
+	s.Theater.pendingRaises = append(s.Theater.pendingRaises, e)
 	return true
 }
 
-// noteWard flies a helm's pips out of its ring and into the row. **It never records a seat**, since
-// the pips left no card, so nothing about the defend phase's bundle can mistake it for a raise.
+// noteWard holds a helm's shields for its ring, on the same terms as a card's.
 func (s *CombatScene) noteWard(e combat.Event) {
-	count := e.Amount
-	if room := ui.MaxShieldPips - (e.Life - e.Amount); count > room {
-		count = room
+	s.Theater.pendingRaises = append(s.Theater.pendingRaises, e)
+}
+
+// turnOver reports that the acting side's turn has nothing left to reach: the next event belongs
+// to the other side, ends the round, or there is none.
+func (s *CombatScene) turnOver() bool {
+	if len(s.Theater.pendingRaises) == 0 {
+		return false
 	}
-	if count <= 0 {
-		s.row(e.Side).RaiseTo(e.Life, ui.ArtFor(e.Element))
+	if s.cursor >= len(s.log) {
+		return true
+	}
+	next := s.log[s.cursor]
+	return next.Kind == combat.KindRoundEnd || next.Side != s.Theater.pendingRaises[0].Side
+}
+
+// formPendingShields forms every shield the turn raised, all on one frame — **the turn's shields
+// go up as one gesture**, each heap over its own card or ring — and reports whether it formed any.
+// The cursor then waits for them: see combatTheater.shieldsMoving.
+//
+// **A fight that has just been won or lost forms nothing** *(owner's call)*. Once a fighter is down
+// there is no turn left to defend, so shields going up over the body would be the defend phase
+// carrying on after the duel ended: they are dropped. The life is read off the screen's own model,
+// which a killing line has already written.
+func (s *CombatScene) formPendingShields() bool {
+	pending := s.Theater.pendingRaises
+	s.Theater.pendingRaises = nil
+	if s.fightDecided() {
+		return false
+	}
+	formed := false
+	for _, e := range pending {
+		if e.Amount <= 0 {
+			continue
+		}
+		var p *shieldPile
+		if e.Kind == combat.KindWarded {
+			if p = s.pileOnRelic(e.Side, e.Relic); p == nil {
+				s.Theater.piles = append(s.Theater.piles, shieldPile{side: e.Side, seat: -1, relic: e.Relic, onRelic: true})
+				p = &s.Theater.piles[len(s.Theater.piles)-1]
+			}
+		} else if p = s.pileAtSeat(e.Side, e.Slot); p == nil {
+			s.Theater.piles = append(s.Theater.piles, shieldPile{side: e.Side, seat: e.Slot})
+			p = &s.Theater.piles[len(s.Theater.piles)-1]
+		}
+		p.add(ui.ArtFor(e.Element), e.Amount)
+		formed = true
+	}
+	return formed
+}
+
+// noteExpired squares a side's heaps with what an expiry leaves standing: `Life`, which is what a
+// worn relic kept and nothing for nearly every run.
+func (s *CombatScene) noteExpired(gs *state.GlobalState, e combat.Event) {
+	s.trimShields(gs, e.Target, e.Life)
+}
+
+// ---- the heaps ----
+
+// add puts n shields of one element on top of a heap, forming one after another.
+func (p *shieldPile) add(el cards.Element, n int) {
+	start := 0
+	for _, sh := range p.shields {
+		if !sh.form.Done() {
+			start++
+		}
+	}
+	for i := 0; i < n; i++ {
+		p.shields = append(p.shields, heapShield{
+			element: el,
+			form:    ui.NewTravel((start+i)*ui.ShieldStaggerTicks(), ui.ShieldFormTicks()),
+		})
+	}
+}
+
+func (s *CombatScene) pileAtSeat(side combat.Side, seat int) *shieldPile {
+	for i := range s.Theater.piles {
+		p := &s.Theater.piles[i]
+		if p.side == side && !p.onRelic && !p.atDuelist && p.seat == seat {
+			return p
+		}
+	}
+	return nil
+}
+
+func (s *CombatScene) pileOnRelic(side combat.Side, id combat.RelicID) *shieldPile {
+	for i := range s.Theater.piles {
+		p := &s.Theater.piles[i]
+		if p.side == side && p.onRelic && p.relic == id {
+			return p
+		}
+	}
+	return nil
+}
+
+func (s *CombatScene) pileAtDuelist(side combat.Side) *shieldPile {
+	for i := range s.Theater.piles {
+		p := &s.Theater.piles[i]
+		if p.side == side && p.atDuelist {
+			return p
+		}
+	}
+	s.Theater.piles = append(s.Theater.piles, shieldPile{side: side, seat: -1, atDuelist: true})
+	return &s.Theater.piles[len(s.Theater.piles)-1]
+}
+
+// takeShield lifts one shield of an element off a side's heaps and reports where it was: the
+// newest heap holding one gives up its topmost, or — on a heap that has drifted from the engine —
+// the newest heap's top shield whatever it is.
+func (s *CombatScene) takeShield(gs *state.GlobalState, side combat.Side, el cards.Element) (ui.ShieldPose, bool) {
+	for _, loose := range []bool{false, true} {
+		for pi := len(s.Theater.piles) - 1; pi >= 0; pi-- {
+			p := &s.Theater.piles[pi]
+			if p.side != side {
+				continue
+			}
+			for si := len(p.shields) - 1; si >= 0; si-- {
+				if !loose && p.shields[si].element != el {
+					continue
+				}
+				pose, ok := s.shieldPose(gs, *p, si)
+				p.shields = append(p.shields[:si:si], p.shields[si+1:]...)
+				s.dropEmptyPiles()
+				return pose, ok
+			}
+		}
+	}
+	return ui.ShieldPose{}, false
+}
+
+// fadeShield lets one shield go where it is.
+func (s *CombatScene) fadeShield(el cards.Element, pose ui.ShieldPose) {
+	s.Theater.fades = append(s.Theater.fades, fadingShield{element: el, pose: pose,
+		t: ui.NewTravel(0, shieldFadeTicks())})
+}
+
+// fadePile lets every shield on one heap go where it stands.
+func (s *CombatScene) fadePile(gs *state.GlobalState, p shieldPile) {
+	for i, sh := range p.shields {
+		if pose, ok := s.shieldPose(gs, p, i); ok {
+			s.fadeShield(sh.element, pose)
+		}
+	}
+}
+
+func (s *CombatScene) dropEmptyPiles() {
+	kept := s.Theater.piles[:0]
+	for _, p := range s.Theater.piles {
+		if len(p.shields) > 0 {
+			kept = append(kept, p)
+		}
+	}
+	s.Theater.piles = kept
+}
+
+// trimShields leaves a side standing behind n shields: the ones on rings and the duelist card are
+// kept first, since those are the ones that outlast a card, and the rest fade.
+func (s *CombatScene) trimShields(gs *state.GlobalState, side combat.Side, n int) {
+	for _, offTable := range []bool{true, false} {
+		for pi := range s.Theater.piles {
+			p := &s.Theater.piles[pi]
+			if p.side != side || (p.onRelic || p.atDuelist) != offTable {
+				continue
+			}
+			for si := 0; si < len(p.shields); si++ {
+				if n > 0 {
+					n--
+					continue
+				}
+				if pose, ok := s.shieldPose(gs, *p, si); ok {
+					s.fadeShield(p.shields[si].element, pose)
+				}
+				p.shields = append(p.shields[:si:si], p.shields[si+1:]...)
+				si--
+			}
+		}
+	}
+	s.dropEmptyPiles()
+}
+
+// settleShields squares the player's heaps with the model at the end of a round, as the played
+// cards leave the table.
+//
+// **What the model still has standing outlasts the card that raised it**, and it has to stand on
+// something: the relic that kept it — the Tower Shield — or the duelist card when nothing worn
+// explains it. Everything else lapses, and fades where it stood. A ring's own heap stays on its
+// ring for as long as the model still holds its element.
+func (s *CombatScene) settleShields(gs *state.GlobalState, side combat.Side, standing combat.ShieldStack) {
+	budget := map[cards.Element]int{}
+	for _, e := range combat.AllElements {
+		if n := standing[e]; n > 0 {
+			budget[ui.ArtFor(e)] += n
+		}
+	}
+
+	var carried []cards.Element
+	piles := s.Theater.piles
+	s.Theater.piles = nil
+	for _, p := range piles {
+		if p.side != side {
+			s.Theater.piles = append(s.Theater.piles, p)
+			continue
+		}
+		keep := p
+		keep.shields = nil
+		for i, sh := range p.shields {
+			if budget[sh.element] <= 0 {
+				if pose, ok := s.shieldPose(gs, p, i); ok {
+					s.fadeShield(sh.element, pose)
+				}
+				continue
+			}
+			budget[sh.element]--
+			if p.onRelic || p.atDuelist {
+				keep.shields = append(keep.shields, sh)
+				continue
+			}
+			carried = append(carried, sh.element)
+			if pose, ok := s.shieldPose(gs, p, i); ok {
+				s.fadeShield(sh.element, pose)
+			}
+		}
+		if len(keep.shields) > 0 {
+			s.Theater.piles = append(s.Theater.piles, keep)
+		}
+	}
+	for _, e := range combat.AllElements {
+		for budget[ui.ArtFor(e)] > 0 {
+			budget[ui.ArtFor(e)]--
+			carried = append(carried, ui.ArtFor(e))
+		}
+	}
+	if len(carried) == 0 {
 		return
 	}
-	s.Theater.shields = append(s.Theater.shields, shieldFlight{
-		side: e.Side, seat: -1, relic: e.Relic, fromRelic: true,
-		count: count, standing: e.Life,
-		element: ui.ArtFor(e.Element),
-		ink:     cards.BorderOf(ui.ArtFor(e.Element)),
-		t:       ui.NewTravel(0, shieldFlyTicks()+shieldHoldTicks()),
-	})
-}
 
-// raisesInPhase is the raise handed in plus every raise still to come in the same side's defend
-// phase — which is what makes the bundle one gesture rather than one per card.
-//
-// **The walk stops at the first event that is neither a raise nor a defense being announced**, so
-// it cannot reach past the phase into the attacks, into the opponent's turn, or into next round.
-// A side change stops it for the same reason.
-//
-// It reads forward from the cursor, which is legitimate and is what `shieldedSlots` already does
-// one layer down: the round was decided before a frame of it was drawn, so looking ahead in the log
-// is reading a record rather than predicting one. It may never change an outcome.
-func (s *CombatScene) raisesInPhase(e combat.Event) []combat.Event {
-	out := []combat.Event{e}
-	for i := s.cursor + 1; i < len(s.log); i++ {
-		next := s.log[i]
-		if next.Side != e.Side {
-			break
+	var to *shieldPile
+	if id, ok := s.keeperRelic(side); ok {
+		to = s.pileOnRelic(side, id)
+		if to == nil {
+			s.Theater.piles = append(s.Theater.piles, shieldPile{side: side, seat: -1, relic: id, onRelic: true})
+			to = &s.Theater.piles[len(s.Theater.piles)-1]
 		}
-		switch {
-		case next.Kind == combat.KindRaised:
-			out = append(out, next)
-		case next.Kind == combat.KindAction &&
-			combat.Plain(next.Action).Category() == combat.CategoryDefend:
-			// The announcement of the next defense, which is what sits between two raises.
-		default:
-			return out
-		}
+	} else {
+		to = s.pileAtDuelist(side)
 	}
-	return out
-}
-
-// flyShields raises one flight and records the seat it left, so nothing sends the same card's pips
-// twice.
-func (s *CombatScene) flyShields(f shieldFlight) {
-	f.t = ui.NewTravel(0, shieldFlyTicks()+shieldHoldTicks())
-	s.Theater.shields = append(s.Theater.shields, f)
-	s.row(f.side).NoteFlight(f.seat)
-}
-
-// landShields pays every arrived flight into the row, once each.
-//
-// **A predicted flight adds and an announced one sets.** A flight raised with a card's figure knows
-// what its own card raised and nothing else, so it appends; a raise that flew its own pips carries
-// the count itself and the row takes it. A wrong guess is corrected by the next announcement rather
-// than compounded.
-func (s *CombatScene) landShields() {
-	for i := range s.Theater.shields {
-		f := &s.Theater.shields[i]
-		if f.landed || !f.arrived() {
-			continue
-		}
-		f.landed = true
-
-		row := s.row(f.side)
-		row.FitTo(s.modelShields(f.side))
-		if f.standing < 0 {
-			row.Add(f.element, f.count)
-			continue
-		}
-		// **The announcement brings a count; the flight brings the color.** Every pip this
-		// flight is responsible for wears its card's element — all `count` of them, not just the
-		// newest, or a brace announcing two would land one colored pip and one bare white mark.
-		row.RaiseTo(f.standing, f.element)
-		for i := 0; i < f.count && i < row.Count(); i++ {
-			row.Pips[row.Count()-1-i] = f.element
-		}
+	for _, el := range carried {
+		to.add(el, 1)
 	}
 }
 
-// shownShieldElements is the element of each standing pip, so the card can draw the right shield —
-// and its length is the count, which is the whole point of the row being one list.
-func (s *CombatScene) shownShieldElements(side combat.Side) []cards.Element {
-	return s.row(side).Pips
+// fightDecided reports that a fighter on screen is down, which is the end of anything defensive.
+func (s *CombatScene) fightDecided() bool {
+	return (s.fighter != nil && !s.fighter.Alive()) || (s.enemy != nil && !s.enemy.Alive())
 }
 
-// modelShields is what the engine has standing for a side right now, which is what the row falls
-// back to before any event this round has spoken.
-func (s *CombatScene) modelShields(side combat.Side) int {
+// keeperRelic is the worn relic that keeps shields past their lapse — the Tower Shield — if any.
+func (s *CombatScene) keeperRelic(side combat.Side) (combat.RelicID, bool) {
 	c := s.fighter
 	if side == combat.SideB {
 		c = s.enemy
 	}
 	if c == nil {
-		return 0
+		return 0, false
 	}
-	return c.Duelist.Shields.Count()
+	for _, w := range c.Duelist.WornRelics() {
+		if combat.KeptShields([]combat.WornRelic{w}) > 0 {
+			return w.Relic, true
+		}
+	}
+	return 0, false
 }
 
-// shieldsRaisedBy is how many pips the card in a table seat will raise, and 0 for anything that is
-// not a shield card.
-//
-// **It reads the card on the table, not the event**, so the pips and the card they leave belong to
-// one seat.
-func (s *CombatScene) shieldsRaisedBy(side combat.Side, seat int) int {
-	var card combat.Card
+// ---- the drawing ----
+
+// shieldPose is where shield i of a heap stands right now, following its card as it lifts and
+// moves.
+func (s *CombatScene) shieldPose(gs *state.GlobalState, p shieldPile, i int) (ui.ShieldPose, bool) {
 	switch {
-	case side == combat.SideB:
-		if seat < 0 || seat >= len(s.Theater.enemyDealt) {
-			return 0
-		}
-		card = s.Theater.enemyDealt[seat].card
-	default:
-		if seat < 0 || seat >= len(s.Theater.resolved) {
-			return 0
-		}
-		card = s.Theater.resolved[seat].card
-	}
-	if combat.ConceptOf(card.Concept).Verb != combat.VerbShield {
-		return 0
-	}
-	return card.Amount()
-}
-
-// noteShields records what an announced shield event leaves standing.
-//
-// **The three kinds carry their figure differently, and an expiry is the odd one.** A raise says
-// how many it added in `Amount` and what is standing in `Life`, the same split `KindDamage` makes
-// between the blow and the life left; a block's `Amount` is what is *left* after it ate one; an
-// expiry's is what lapsed, read before the clear — so the row it leaves behind is always empty.
-//
-// **A raise may only raise and a block may lower**, which is the row's one rule about who is
-// allowed to take a shield away. See shieldRow.raiseTo.
-func (s *CombatScene) noteShields(e combat.Event) {
-	switch e.Kind {
-	case combat.KindRaised:
-		// **The raise names its own card**, so the shield any pip it adds should be wearing is that
-		// card's element. Nothing is lit during the defend phase, so the event is the only source.
-		s.row(e.Side).RaiseTo(e.Life, ui.ArtFor(e.Element))
-	case combat.KindBlocked:
-		// **The block names the shield it spent**, so the pip that goes is one of that element.
-		// The count is squared up after it: a break staged ahead of the block has usually taken
-		// the pip already, and the block's `Amount` is the authority on what is left.
-		row := s.row(e.Target)
-		if row.Count() > e.Amount {
-			row.Spend(ui.ArtFor(e.Element))
-		}
-		row.Hold(e.Amount, cards.Basic)
-	case combat.KindExpired:
-		// **An expiry empties the row whatever it says.** Its `Amount` is the count read *before*
-		// the shields were cleared — how many lapsed, not how many are left — so a row taking it
-		// the way it takes a block's would keep drawing every shield that had just gone. **`Life` is
-		// what a worn relic kept standing**, and nothing for nearly every run.
-		s.row(e.Target).Hold(e.Life, cards.Basic)
-	}
-}
-
-// shownShields is how many shields to draw on a side's card: what playback has reached if anything
-// this round has said so, and the adopted model otherwise.
-func (s *CombatScene) shownShields(side combat.Side, model int) int {
-	row := s.row(side)
-	row.FitTo(model)
-	return row.Count()
-}
-
-// The pips' journey, drawn.
-//
-// **They are the card's own mark, not a new picture.** The pip is the same shield drawing the
-// corner of every defend card carries, in the same element, so what leaves the card, what crosses
-// the screen and what lands are one drawing seen three times.
-const (
-	// shieldFromScale and shieldToScale are how big a pip is at each end. It **shrinks into the
-	// card**, the damage figure's grammar: a thing flying into something goes away into it.
-	shieldFromScale = 1.6
-	shieldToScale   = 1.0
-
-	// shieldSpread is how far apart two pips of one flight ride, in pixels at full size, so a
-	// Block reads as two things rather than as one thicker one.
-	shieldSpread = 26
-)
-
-// drawShields draws every pip in the air.
-func (s *CombatScene) drawShields(gs *state.GlobalState, screen *ebiten.Image) {
-	for _, f := range s.Theater.shields {
-		from, ok := s.shieldOrigin(gs, f)
+	case p.atDuelist:
+		return s.duelistShieldPose(gs, i, len(p.shields)), true
+	case p.onRelic:
+		seat, ok := s.wornSeatOf(gs, p.relic)
 		if !ok {
-			continue
+			return ui.ShieldPose{}, false
 		}
-		to := s.shieldTarget(gs, f)
-
-		p := ui.EaseOut(ui.Clamp01(float64(f.t.Age) / float64(shieldFlyTicks())))
-		scale := shieldFromScale + (shieldToScale-shieldFromScale)*p
-		alpha := shieldAlpha(f)
-
-		for i := 0; i < f.count; i++ {
-			// The pips of one flight fan out around the line they travel, closing as they land —
-			// so two arrive as two and stack as the row they are joining.
-			offset := (float64(i) - float64(f.count-1)/2) * shieldSpread * (1 - p)
-			at := image.Pt(
-				from.X+int(float64(to.X-from.X)*p+offset),
-				from.Y+int(float64(to.Y-from.Y)*p),
-			)
-			drawShieldPip(screen, at, scale, alpha, f.element)
-		}
+		r := s.relicRow(gs).RowSlot(gs, seat)
+		scale := float64(r.Dy()) / cardHeight
+		return ui.HeapPose(float64(r.Min.X+r.Max.X)/2, float64(r.Min.Y+r.Max.Y)/2, i, len(p.shields), scale), true
 	}
+	r, ok := s.seatRect(gs, p.side, p.seat)
+	if !ok {
+		return ui.ShieldPose{}, false
+	}
+	return ui.HeapPose(float64(r.Min.X+r.Max.X)/2, float64(r.Min.Y+r.Max.Y)/2, i, len(p.shields), 1), true
 }
 
-// shieldAlpha holds a pip solid for the flight and fades it over the hold, the damage figure's
-// rule: what is left behind is the row it joined, not the thing that joined it.
-func shieldAlpha(f shieldFlight) float32 {
-	if !f.arrived() {
-		return 1
-	}
-	held := float64(f.t.Age-shieldFlyTicks()) / float64(shieldHoldTicks())
-	return float32(ui.Clamp01(1 - held))
+// duelistShieldPose is shield i of n standing on the duelist card.
+func (s *CombatScene) duelistShieldPose(gs *state.GlobalState, i, n int) ui.ShieldPose {
+	r := ui.DuelistCardRect(gs)
+	scale := float64(r.Dy()) / cardHeight
+	return ui.HeapPose(float64(r.Min.X+r.Max.X)/2, float64(r.Min.Y+r.Max.Y)/2, i, n, scale)
 }
 
-// drawShieldPip blits one mark, centered on a point, in its card's own element.
-//
-// **Nothing is tinted any more** *(2026-09-16)*. The pip used to be a near-white drawing multiplied
-// by the card's element color, which was the only way to get five shields out of one picture; there
-// are now five shields, authored, and the pip draws the one the card is showing. An element with no
-// drawing takes the neutral shield rather than nothing, on cards.MarkArtKey's terms.
-func drawShieldPip(screen *ebiten.Image, at image.Point, scale float64, alpha float32, e cards.Element) {
-	img := systems.ArtMarkImage(ui.ShieldPipKey(e), shieldPipSize, shieldPipSize)
-	if img == nil {
-		return
+// seatRect is where a table card is drawn right now, lift included — the same placement its row
+// draws it at, so a heap moves with its card.
+func (s *CombatScene) seatRect(gs *state.GlobalState, side combat.Side, seat int) (image.Rectangle, bool) {
+	if side == combat.SideB {
+		return s.enemySeatRect(gs, seat)
 	}
-	w, h := img.Bounds().Dx(), img.Bounds().Dy()
-
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(-float64(w)/2, -float64(h)/2)
-	op.GeoM.Scale(scale, scale)
-	op.GeoM.Translate(float64(at.X), float64(at.Y))
-	op.ColorScale.ScaleAlpha(alpha)
-	screen.DrawImage(img, op)
-}
-
-// shieldPipSize is the pip's drawn size, which is the card's own form box — the pip is that mark
-// leaving that corner, so a second figure here would be the two drifting apart.
-const shieldPipSize = 32
-
-// shieldOrigin is the seat the pips leave: the card being scored, exactly where its own figure
-// sets off from.
-func (s *CombatScene) shieldOrigin(gs *state.GlobalState, f shieldFlight) (image.Point, bool) {
-	if f.fromRelic {
-		return s.relicCenter(gs, f.relic)
+	n := len(s.Theater.resolved)
+	if n == 0 {
+		return image.Rectangle{}, false
 	}
-	seats := len(s.Theater.resolved)
-	if f.side == combat.SideB {
-		seats = len(s.Theater.enemyDealt)
-	}
-	if seats == 0 {
-		return image.Point{}, false
-	}
-
-	// **A seat the row no longer holds still flies, from the row's first card** *(2026-09-02)*.
-	// It used to draw nothing at all, and `landShields` paid the pips in regardless — so the row
-	// filled with a pip that had never crossed the screen, which is exactly the "some fly and some
-	// do not" the flight exists to prevent. Something traveling from slightly the wrong card is a
-	// far smaller lie than a pip appearing out of nothing.
-	seat := f.seat
-	if seat < 0 || seat >= seats {
+	// **A seat the row no longer holds stands over the row's first card** rather than nowhere: a
+	// heap appearing over slightly the wrong card is a far smaller lie than shields the player
+	// raised not being drawn at all.
+	if seat < 0 || seat >= n {
 		seat = 0
 	}
-	return s.handCardCenter(gs, f.side, seat), true
+	at := s.Theater.resolved[seat].at(gs, n)
+	return image.Rect(at.X, at.Y, at.X+cardWidth, at.Y+cardHeight), true
 }
 
-// shieldTarget is where the pips land: **the row along the bottom of the fighter card**, not the
-// middle of it *(owner's call, 2026-09-02)*.
-//
-// **A pip is joining a row; a damage figure is hitting a card.** The two gestures were the same
-// journey to the same point, which made a shield read as something being done *to* the duelist. It
-// now lands in the seat it is about to occupy, so the arrival and the row filling are one event.
-//
-// The row's own offset comes from the card style — `EffectTop`, the band the pips sit in — so a
-// card re-laid out moves the target with it.
-func (s *CombatScene) shieldTarget(gs *state.GlobalState, f shieldFlight) image.Point {
-	r, style := ui.DuelistCardRect(gs), cards.DuelistStyle
-	if f.side == combat.SideB {
-		r, style = ui.EnemyCardRect(gs), cards.EnemyStyle
+// enemySeatRect is where one of the opponent's cards is drawn right now. **It asks the row's own
+// layout rather than recomputing a seat**, so a shield lands where the card actually is.
+func (s *CombatScene) enemySeatRect(gs *state.GlobalState, seat int) (image.Rectangle, bool) {
+	if seat < 0 || seat >= len(s.Theater.enemyDealt) {
+		return image.Rectangle{}, false
 	}
-	return image.Pt(
-		(r.Min.X+r.Max.X)/2,
-		r.Min.Y+style.EffectTop+style.EffectSize/2,
-	)
+	d := s.Theater.enemyDealt[seat]
+	at := s.enemyCardAt(gs, d, len(s.Theater.enemyDealt))
+	return image.Rect(at.X, at.Y, at.X+cardWidth, at.Y+cardHeight), true
+}
+
+// drawShieldPiles draws every heap and every shield fading. A shield thrown at a hit is the
+// intercept's to draw — see drawIntercepts.
+func (s *CombatScene) drawShieldPiles(gs *state.GlobalState, screen *ebiten.Image) {
+	for _, p := range s.Theater.piles {
+		for i, sh := range p.shields {
+			pose, ok := s.shieldPose(gs, p, i)
+			if !ok || sh.form.Waiting() {
+				continue
+			}
+			if sh.flies {
+				ui.DrawShield(screen, sh.element, ui.LerpPose(sh.from, pose, ui.EaseOut(sh.form.Progress())))
+				continue
+			}
+			ui.DrawShield(screen, sh.element, pose.Forming(sh.form.Progress()))
+		}
+	}
+	for _, f := range s.Theater.fades {
+		pose := f.pose
+		pose.Alpha *= float32(1 - f.t.Progress())
+		ui.DrawShield(screen, f.element, pose)
+	}
 }

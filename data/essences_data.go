@@ -94,12 +94,8 @@ type EssenceData struct {
 	Text string `json:"Text"`
 }
 
-// DefaultEssenceArt is the face a record with no Art of its own draws: assets/essence/default-essence.png.
-//
-// **Keys are not file paths** — LoadImageData files that picture under this, which is what a
-// lookup has to spell. Writing the filename instead is why the first version of the essence card drew
-// nothing and logged `no artwork named "default-relic"`.
-const DefaultEssenceArt = "default-essence"
+// DefaultEssenceArt is the face a record with no Art of its own draws: the placeholder.
+const DefaultEssenceArt = PlaceholderArt
 
 // ArtKey is the picture this essence actually draws: its own if it has one, the default otherwise.
 //

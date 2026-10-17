@@ -72,18 +72,8 @@ func LoadStones() map[string]StoneData {
 	return keyed(stonesJSON, "stones.json", func(s StoneData) string { return s.StoneRecord })
 }
 
-// DefaultStoneArt is the face a stone with no Art of its own draws.
-//
-// **It borrows the relics' default**, exactly as DefaultPotionArt does and for the same reason:
-// what a default face says is "nobody has painted this yet", and that sentence does not need to be
-// said in a second picture per catalog.
-//
-// **It replaced a generated boulder on 2026-09-16** *(owner's call)*. Every stone drew
-// a generated boulder before the catalog was painted, and the fallback stayed one after — so a
-// silhouette nothing had drawn in months was among the last reasons `internal/systems` generated
-// anything at all. Every stone carries its own art, so this fires only for a record
-// somebody has just authored, which is precisely the case a default face is for.
-const DefaultStoneArt = DefaultRelicArt
+// DefaultStoneArt is the face a stone with no Art of its own draws: the placeholder.
+const DefaultStoneArt = PlaceholderArt
 
 // ArtKey is the picture this stone actually draws: its own if it has one, the default otherwise.
 //

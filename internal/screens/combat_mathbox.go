@@ -40,7 +40,9 @@ const mathBandGapAboveCards = 5
 //
 // **What became of each hit is read ahead in the log.** The hand event is followed by one outcome
 // per thrown hit, and a finished line looks its own up — see hitOutcomes — so a hit that landed
-// flies, a fizzle says FIZZLE, a block says BLOCKED, and a hit after a death fades where it stands. The
+// flies, a fizzle or a block flies to be met by the shield that stops it — see combat_intercept.go —
+// a hit after the target's death still flies into the dead card, and a hit after the thrower's
+// fades where it stands. The
 // damage that line throws is applied to the target's bar as it lands, and the log's own event for
 // it is walked past without a second flight: see CombatScene.throwColumn.
 //
@@ -113,18 +115,17 @@ const (
 	// mathItemGap is the air between one item of a line and the next.
 	mathItemGap = 16
 
-	// mathLineGap is the air between the card's bottom edge and the first row of its first hit,
-	// mathRowGap the air between two rows of one hit, and mathHitGap the extra air between one hit
-	// and the next under the same card, so an echoed card's hits read as separate sums.
+	// mathRowGap is the air between two rows of one hit, and mathHitGap the extra air between one
+	// hit and the next under the same card, so an echoed card's hits read as separate sums. The air
+	// between the card and the first row is the scroll's own margin, scrollPadY.
 	// mathRowShare is a row's height against its digits', leaving room for the drop shadow.
-	mathLineGap  = 4
 	mathRowGap   = 6
 	mathHitGap   = 24
 	mathRowShare = 1.15
 
 	// mathUnthrownAlpha is how solid a line stays once it is known its hit was never thrown — the
-	// target fell to an earlier hit — and mathVerdictDim how solid the arithmetic under a FIZZLE or a
-	// BLOCKED is.
+	// target fell to an earlier hit — and mathVerdictDim how solid the arithmetic of a hit stopped
+	// on its way stays.
 	mathUnthrownAlpha = 0.35
 	mathVerdictDim    = 0.45
 
@@ -326,28 +327,36 @@ type mathColumn struct {
 	cardAt, multAt int
 
 	// logAt is where this hit's outcome sits in the resolved log, and -1 for a hit that was never
-	// thrown because the target fell to an earlier one. See hitOutcomes.
+	// thrown because someone fell to an earlier one. See hitOutcomes.
 	logAt int
+
+	// figure is the hit's own amount off the event, `HitAmounts[hit]`. overkill says the hit was
+	// never thrown because the target had already fallen, so its figure still flies into the dead
+	// card — see throwColumn.
+	figure   int
+	overkill bool
 
 	// thrown says the finished line has been handed on — its figure flown into the target, or
 	// marked as a fizzle or a block — so it happens once. spent says the total has left the line.
 	thrown bool
 	spent  bool
 
-	// verdict is the word drawn over a line whose hit did not land: FIZZLE, BLOCKED, or "" for a hit
-	// that landed. unthrown dims a line whose hit never happened.
-	verdict  string
-	verdictT ui.Travel
-	unthrown bool
+	// intercepted dims a line whose hit was stopped on its way — the word is written where it was
+	// stopped, see combat_intercept.go — and unthrown one whose hit never happened.
+	intercepted bool
+	unthrown    bool
 
 	// begun says the line has started running. **A card's second and third hits wait for the one
 	// above them** — see Tick — so a line can sit unbegun, and draws nothing, while another is
 	// being worked out.
 	begun bool
 
-	// wrapped says the total's particles have been raised, so they are raised once. See
-	// combat_particles.go.
+	// wrapped says this line's card has had its particles raised, so a card's stack is wrapped once.
+	// See combat_particles.go.
 	wrapped bool
+
+	// scrolled says this line's card has had its pane unrolled. See combat_scrolls.go.
+	scrolled bool
 }
 
 // done reports whether every item of the line is up.
@@ -526,10 +535,14 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event, at in
 	}
 
 	outcomes := hitOutcomes(s.log, at)
+	killed := handKilled(s.log, at, e.Side)
 	for i := 0; i < e.HandCardCount; i++ {
-		col := mathColumn{hit: i, seat: e.HandCards[i], items: hitScript(e, i, i == 0), logAt: -1}
+		col := mathColumn{hit: i, seat: e.HandCards[i], items: hitScript(e, i, i == 0), logAt: -1,
+			figure: e.HitAmounts[i]}
 		if k, ok := outcomes[i]; ok {
 			col.logAt = k
+		} else {
+			col.overkill = killed
 		}
 		s.placeFigures(gs, e, &col)
 		box.columns = append(box.columns, col)
@@ -641,6 +654,27 @@ func hitOutcomes(log []combat.Event, at int) map[int]int {
 	return out
 }
 
+// handKilled reports whether the hand at `at` felled its target: a KindDefeated naming anyone but
+// the side that acted, among the hits that follow it. It is the walk hitOutcomes makes.
+//
+// **It is what tells an overkill line from one whose thrower fell**: both have no outcome, and only
+// the first has a dead card to fly into.
+func handKilled(log []combat.Event, at int, side combat.Side) bool {
+	for k := at + 1; k < len(log); k++ {
+		switch log[k].Kind {
+		case combat.KindDefeated:
+			if log[k].Target != side {
+				return true
+			}
+		case combat.KindDamage, combat.KindFizzled, combat.KindBlocked, combat.KindDrained,
+			combat.KindReflected, combat.KindRegenerated, combat.KindTithed:
+		default:
+			return false
+		}
+	}
+	return false
+}
+
 // raiseDMGSignal throws the figure a rung relic put into this turn's DMG, out of the relic and onto
 // the duelist card's DMG row.
 //
@@ -663,6 +697,28 @@ func (s *CombatScene) raiseDMGSignal(e combat.Event) {
 			if did {
 				s.shakeRelicAt(i)
 			}
+		}
+	}
+
+	// **One figure out of each relic**, each its own share, when those shares are what the DMG
+	// grew by — that is, when no held card's rider scaled the sum. Under a scaling the shares do not
+	// add up to the raise, so the raise flies as one figure out of the first relic that paid.
+	// The held cards' own riders are not in the raise: they fly out of their own cards.
+	if e.HeldRiderPct == 0 || e.HeldRiderPct == 100 {
+		sum := 0
+		for _, add := range e.DMGRaiseBy {
+			sum += add
+		}
+		if sum == raise {
+			for i, add := range e.DMGRaiseBy {
+				if add > 0 {
+					s.Theater.signals = append(s.Theater.signals, cardSignal{
+						dest: signalRaise, amount: add, side: e.Side, relic: i + 1,
+						t: ui.NewTravel(0, signalFlyTicks()+signalHoldTicks()),
+					})
+				}
+			}
+			return
 		}
 	}
 	s.Theater.signals = append(s.Theater.signals, cardSignal{
@@ -757,8 +813,8 @@ func termItems(e combat.Event, i int) []mathItem {
 			cardTerm: true,
 			t:        ui.NewTravel(0, mathTermTicks()),
 		}}
+		// The flat figure already has what the opener woke inside it, multiplied by the card.
 		out = append(out, playRiderItems(e, i)...)
-		out = append(out, awakenItems(e, i)...)
 		return append(out, relicFactorItems(e, i)...)
 	}
 
@@ -774,43 +830,70 @@ func termItems(e combat.Event, i int) []mathItem {
 		t:         ui.NewTravel(0, mathTermTicks()),
 	}
 
-	out := []mathItem{
-		{
-			// **The duelist's figure, flying off the duelist's card.** It is the same number in
-			// every hit of the turn, which is the fact the line is being rewritten to show: one
-			// DMG, several cards taking their own multiple of it.
-			text:        strconv.Itoa(dmg),
-			size:        mathTermSize,
-			tint:        ui.GroundInk,
-			fly:         true,
-			fromDuelist: true,
-			t:           ui.NewTravel(0, mathTermTicks()),
-		},
-		innerOperator("x"),
-		mult,
+	out := []mathItem{{
+		// **The duelist's figure, flying off the duelist's card.** It is the same number in
+		// every hit of the turn, which is the fact the line is being rewritten to show: one
+		// DMG, several cards taking their own multiple of it.
+		text:        strconv.Itoa(dmg),
+		size:        mathTermSize,
+		tint:        ui.GroundInk,
+		fly:         true,
+		fromDuelist: true,
+		t:           ui.NewTravel(0, mathTermTicks()),
+	}}
+
+	// **DUELIST and AWAKENING, CARD, CARD RELICS**: each Awakening the opener woke is a row of its own
+	// under the duelist's DMG, and the card's own multiplier then takes a row under them, since every
+	// factor on a row below multiplies everything above it. With nothing woken the card's multiplier
+	// sits tight on the DMG's row, as one product.
+	if woke := awakenItems(e, i); woke != nil {
+		out = append(out, woke...)
+		out = append(out, wide(mathOperator("x")), mult)
+	} else {
+		out = append(out, innerOperator("x"), mult)
 	}
-	// **DUELIST, CARD, AWAKENING, CARD RELICS**: the duelist's DMG times the card's own multiplier,
-	// then the card's own riders, then what the opener woke, then the relics that priced what the
-	// card came to.
 	out = append(out, playRiderItems(e, i)...)
-	out = append(out, awakenItems(e, i)...)
 	return append(out, relicFactorItems(e, i)...)
 }
 
-// awakenItems is what the opener woke on this hit's card: a `+` and the figure, flying out of the
-// Awakening that paid it, in the relic pink — after the card's riders and before the relics that
-// multiply it.
+// awakenItems is what the opener woke on this hit's card: **a row per Awakening**, each a `+` and
+// that relic's own figure, flying out of it in the relic pink — under the duelist's DMG, before the
+// card multiplies them. Two that woke are two rows, never one sum.
 func awakenItems(e combat.Event, i int) []mathItem {
-	add := e.HandAwaken[i]
-	if add == 0 {
+	if e.HandAwaken[i] == 0 {
 		return nil
 	}
-	it := relicNote(100, firstSeat(e.AwakenSeats)-1)
-	if it == nil {
-		return nil
+	var out []mathItem
+	for _, p := range awakenParts(e) {
+		it := relicNote(100, p.seat)
+		if it == nil {
+			continue
+		}
+		it.text = strconv.Itoa(p.add)
+		out = append(out, wide(mathOperator("+")), *it)
 	}
-	it.text = strconv.Itoa(add)
-	return []mathItem{wide(mathOperator("+")), *it}
+	return out
+}
+
+// awakenPart is one Awakening's share of what the opener woke.
+type awakenPart struct{ seat, add int }
+
+// awakenParts is every Awakening that woke, in worn order, with what each added. **An event that
+// does not say what each added** — one built by hand — is one part, the whole figure, out of the
+// first seat that woke.
+func awakenParts(e combat.Event) []awakenPart {
+	var out []awakenPart
+	for seat, add := range e.AwakenBy {
+		if add != 0 {
+			out = append(out, awakenPart{seat, add})
+		}
+	}
+	if len(out) == 0 {
+		if seat := firstSeat(e.AwakenSeats); seat > 0 {
+			out = append(out, awakenPart{seat - 1, e.Awaken})
+		}
+	}
+	return out
 }
 
 // playRiderItems is what the hit's own card's riders did to its term, each a row of its own after
@@ -1051,22 +1134,81 @@ func (s *CombatScene) mathLinesRect(gs *state.GlobalState) (image.Rectangle, boo
 // the last row of the one before. **Nothing is shrunk** — see the file comment.
 func (s *CombatScene) layOutMath(gs *state.GlobalState, box *handMathBox) {
 	below := map[int]float64{}
+	spilled := map[int]int{}
 	for c := range box.columns {
 		col := &box.columns[c]
 		card := s.handCardCenter(gs, box.side, col.seat)
 		y, ok := below[col.seat]
 		if !ok {
-			y = float64(card.Y + cardHeight/2 + mathLineGap)
+			y = float64(card.Y + cardHeight/2 + scrollPadY)
 		} else {
 			y += mathHitGap
 		}
-		for _, row := range mathRows(col.items) {
+		rows := mathRows(col.items)
+		for r, row := range rows {
 			h := mathRowHeight(row)
+			// **A row that would run off the bottom lands on the floor instead**, heaped on the
+			// ones already there — see mathOverflow.
+			if floor := mathFloor(gs); y+h > floor {
+				k := spilled[col.seat]
+				spilled[col.seat]++
+				dx, dy := mathOverflow(k, r == len(rows)-1)
+				layOutLine(gs, row, card.X+dx, int(floor-h/2)+dy)
+				// **The total keeps its own pace**: it is the figure the pile was for, and it has
+				// to be seen arriving before it flies.
+				if r < len(rows)-1 {
+					hurry(row, k)
+				}
+				continue
+			}
 			layOutLine(gs, row, card.X, int(y+h/2))
 			y += h + mathRowGap
 		}
 		below[col.seat] = y - mathRowGap
 	}
+}
+
+// mathFloorInset is how far above the bottom of the screen the working stops descending.
+const mathFloorInset = 12
+
+// mathFloor is the lowest a row of working may reach: past it, rows pile up rather than leaving
+// the screen. **It stops above the scroll's bottom roll**, so the roll stays on screen and the pile
+// lands on paper.
+func mathFloor(gs *state.GlobalState) float64 {
+	return float64(gs.ScreenHeight - mathFloorInset - scrollPadY - ui.ScrollBottomHeight(cardWidth))
+}
+
+// mathSpill is where each row landing on the floor lies off the floor's centre: a nudge across and
+// a nudge up, so a stack of them is a mess of overlapping figures rather than one row redrawn.
+// **Written out, never rolled** — the shield heap's rule: the same working spills the same way.
+var mathSpill = [...]struct{ dx, dy int }{
+	{-34, -6}, {28, -22}, {-12, -40}, {40, -14}, {-46, -28}, {10, -10}, {-22, -52}, {52, -36},
+}
+
+// mathSpillPace is how much quicker each row landing on the floor is written than the one before
+// it: a tenth, compounding, so a pile that runs on reads as the working running away.
+const mathSpillPace = 0.9
+
+// hurry shortens every item of the k-th row to reach the floor to mathSpillPace^(k+1) of its
+// length. **It changes pacing and nothing else**: the figures are the event's, and only how long
+// each takes to arrive moves.
+func hurry(row []mathItem, k int) {
+	f := math.Pow(mathSpillPace, float64(k+1))
+	for i := range row {
+		row[i].t.Ticks = max(1, int(math.Round(float64(row[i].t.Ticks)*f)))
+	}
+}
+
+// mathOverflow is where the k-th row to reach the floor under one card lies. **The total does
+// not join the mess**: it sits square on the floor, on top of everything under it — the rows are
+// drawn in order and it is the last — so the figure that flies up out of the pile can be read
+// before it goes.
+func mathOverflow(k int, total bool) (dx, dy int) {
+	if total {
+		return 0, 0
+	}
+	m := mathSpill[k%len(mathSpill)]
+	return m.dx, m.dy - (k/len(mathSpill))*8
 }
 
 // mathRows cuts one hit's items into the rows they are stacked in: a new row before every `wide`
@@ -1142,22 +1284,18 @@ func mathFace(gs *state.GlobalState, size float64) *text.GoTextFace {
 	return &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: size}
 }
 
-// handCardCenter is where a figure sets off from: the middle of the card that paid it, **at rest**.
-//
-// **Nothing is lifted while a figure is in the air.** The cards go back down when the tally starts
-// and the shield pips fly in a phase where nothing is raised at all, so a point measured from the
-// lifted position would sit a card's height above the card the figure comes out of.
+// handCardCenter is where a figure sets off from: the middle of the card that paid it. Nothing on
+// the table lifts, so its seat is where it is.
 //
 // **It recomputes the seat rather than storing a point**, exactly as every card in flight on this
 // screen does — the row re-lays out under a moving thing, and a cached coordinate goes stale.
 func (s *CombatScene) handCardCenter(gs *state.GlobalState, side combat.Side, seat int) image.Point {
 	var at image.Point
 	if side == combat.SideB {
-		at = enemySeatAt(gs, seat, len(s.Theater.enemyDealt), s.enemySplit())
+		at = s.enemyPoint(gs, seat)
 	} else {
-		at = playedSeatAt(gs, seat, len(s.Theater.resolved), s.playedSplit())
+		at = s.playedPoint(gs, seat)
 	}
-	at = lift(at, false)
 	return image.Pt(at.X+cardWidth/2, at.Y+cardHeight/2)
 }
 
@@ -1307,7 +1445,6 @@ func (b *handMathBox) Tick() {
 	all := true
 	for c := range b.columns {
 		col := &b.columns[c]
-		col.verdictT.Tick()
 		if col.done() {
 			continue
 		}
@@ -1359,11 +1496,6 @@ func (b *handMathBox) started(col, item int) {
 	b.freshShakes = append(b.freshShakes, ref)
 	b.freshSignals = append(b.freshSignals, ref)
 }
-
-// counting reports whether the box has moved past the announcement into the lines. **It is what
-// puts the hand's cards back down**: they are raised to say which cards the announcement is about,
-// and the lines that follow need no card raised — the figures fly out of the cards where they stand.
-func (b *handMathBox) counting() bool { return b.active && b.shoutT.Done() }
 
 // multStarted reports whether any line's multiplier has set off, which is when the banner — whose
 // second line that figure is — is taken down.
@@ -1557,7 +1689,7 @@ func (s *CombatScene) drawHandMath(gs *state.GlobalState, screen *ebiten.Image) 
 		switch {
 		case col.unthrown:
 			alpha = mathUnthrownAlpha
-		case col.verdict != "":
+		case col.intercepted:
 			alpha = mathVerdictDim
 		}
 		for i := range col.items {
@@ -1573,11 +1705,6 @@ func (s *CombatScene) drawHandMath(gs *state.GlobalState, screen *ebiten.Image) 
 			case i == col.at:
 				drawArrivingMathItem(gs, screen, it)
 			}
-		}
-		if col.verdict != "" {
-			at := col.total().at
-			drawMathText(gs, screen, col.verdict, mathTermSize, ui.VerbInkFor(combat.CategoryAttack), at,
-				popScale(mathPopFromScale, col.verdictT), alphaOf(col.verdictT), true)
 		}
 	}
 }

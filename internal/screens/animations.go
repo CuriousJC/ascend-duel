@@ -33,7 +33,7 @@ package screens
 // # What it is not
 //
 // It is not a station of a run, so it has no `session.Phase` and no entry in `flow.go` â€” same
-// shape as Settings, Achievements and Credits. It records `gs.ReturnScreen`, so Back works from
+// shape as Settings, Achievements and Credits. It pushes onto `gs.Returns`, so Back works from
 // wherever it was opened.
 
 import (
@@ -177,12 +177,12 @@ var animGestures = []animGesture{
 	},
 	{
 		name:  "lift",
-		where: "selectedLift, tableFireLift",
-		what:  "Vertical, and it means picked: selected in the hand, or acting on the table.",
+		where: "selectedNudge",
+		what:  "Vertical, and it means picked: selected in the hand. Nothing on the table lifts.",
 		ticks: ui.SlideTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
 			up := at
-			up.Min.Y -= int(float64(tableFireLift) * ui.EaseOut(animThereAndBack(p)))
+			up.Min.Y -= int(float64(selectedNudge) * ui.EaseOut(animThereAndBack(p)))
 			ui.BlitCard(gs, screen, up.Min, animFace(gs, animCardA), cards.Hand)
 		},
 	},
@@ -258,13 +258,21 @@ var animGestures = []animGesture{
 		},
 	},
 	{
-		name:  "shatter",
-		where: "drawSpreadingCracks, MarkShattered",
-		what:  "A shield eating an attack whole. The cracks travel outward, then the mark settles.",
-		ticks: shatterSpreadTicks,
+		name:  "shield heap",
+		where: "ui.HeapPose, combat_shields.go",
+		what:  "Shields forming over the card that raised them, one after another, heaped so they can be counted.",
+		ticks: heapGalleryTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
-			ui.BlitCard(gs, screen, at.Min, animFace(gs, animCardB), cards.Hand)
-			drawSpreadingCracks(screen, at, animCardB, p)
+			drawHeapGallery(gs, screen, at.Min, s.t.Age)
+		},
+	},
+	{
+		name:  "intercept",
+		where: "drawIntercept, combat_intercept.go",
+		what:  "A hit and the shield that stops it meeting in the middle and breaking apart. A matched block writes SURGE over the break; a fizzle writes FIZZLE.",
+		ticks: interceptGalleryTicks,
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawInterceptGallery(gs, screen, at, s.t.Age)
 		},
 	},
 	{
@@ -343,6 +351,36 @@ var animGestures = []animGesture{
 		what:  "Lifted, it burns from the bottom up; its embers carry its relic into the band.",
 		ticks: func() int { return animConsumeTicks(ui.ExitBurn, 1) },
 		draw:  drawAnimConsume,
+	},
+	{
+		name:        "pane: tans",
+		definedOnly: true,
+		where:       "drawScrollPane, scrollRect, scrollTans",
+		what:        "The pane under a card's working, unrolling and taking a sum, in five steps of tan from the shipped ground.",
+		ticks:       func() int { return ui.Beat(5, 1) },
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawScrollOptions(gs, screen, at, p)
+		},
+	},
+	{
+		name:        "pane: scroll",
+		definedOnly: true,
+		where:       "ui.DrawScroll, drawScrollArtOptions",
+		what:        "The scroll art in tans 2, 3 and 4: top roll, stretched paper, bottom roll unrolling down.",
+		ticks:       func() int { return ui.Beat(5, 1) },
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawScrollArtOptions(gs, screen, at, p, true)
+		},
+	},
+	{
+		name:        "pane: scroll, no top",
+		definedOnly: true,
+		where:       "ui.DrawScroll, drawScrollArtOptions",
+		what:        "The same without the top roll: the paper runs out from under the card and only the bottom roll moves.",
+		ticks:       func() int { return ui.Beat(5, 1) },
+		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
+			drawScrollArtOptions(gs, screen, at, p, false)
+		},
 	},
 	{
 		name:  "wrap: elemental",
@@ -569,8 +607,7 @@ func animText(gs *state.GlobalState, screen *ebiten.Image, line string, x, y int
 // leave goes back to whichever screen opened this one, on the same terms Settings and Credits are
 // under: the run's phase is untouched, because this is not a station of one.
 func (s *AnimationsScene) leave(gs *state.GlobalState) {
-	gs.ActiveScreen = gs.ReturnScreen
-	gs.NewScreen = true
+	gs.PopReturn()
 }
 
 // The float comparison's shape: three columns, each a band row over a hand row, overlapping at the

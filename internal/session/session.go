@@ -281,8 +281,8 @@ func New(deck []combat.Card) *Session {
 			log.Fatalf("StartingRelics names %q, which is in no relic record", key)
 		}
 		if !s.Wear(key) {
-			log.Fatalf("StartingRelics: %q went on no finger — %d relics on %d fingers, "+
-				"and a relic named twice goes on once", key, len(StartingRelics), s.RelicSlots())
+			log.Fatalf("StartingRelics: %q went on no finger — %d relics on %d fingers",
+				key, len(StartingRelics), s.RelicSlots())
 		}
 	}
 	// **The sack goes past the cap on purpose** *(2026-09-06)*. `Hold` refuses a third consumable

@@ -16,6 +16,7 @@ package ui
 import (
 	"image"
 	"image/color"
+	"strings"
 
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
@@ -122,6 +123,23 @@ type paneSpan struct {
 
 	// Mark draws it bold and underlined: the verb, and nothing else.
 	Mark bool
+
+	// Col starts the run at a column, in digit widths from where the row's text begins, rather than
+	// straight after the run before it. Zero flows on. See session.LedgerSpan.Col.
+	Col int
+}
+
+// colX is where a run starting at column col sits, given where the row's text began and where the
+// run before it ended: the column, or just past what is already written if that reaches further.
+func colX(textX, cursorX float64, col int, face *text.GoTextFace) float64 {
+	if col <= 0 {
+		return cursorX
+	}
+	at := textX + float64(col)*systems.MeasureText("0", face)
+	if gap := cursorX + systems.MeasureText(" ", face); cursorX > textX && at < gap {
+		return gap
+	}
+	return at
 }
 
 // PaneRow is one line in a pane: some spans of text, optionally preceded by a color swatch saying
@@ -298,6 +316,7 @@ func DrawPane(gs *state.GlobalState, screen *ebiten.Image, p PanePlacement, r im
 			if span.Text == "" {
 				continue
 			}
+			cursorX = colX(float64(textX), cursorX, span.Col, face)
 			tint := span.Ink
 			if tint.A == 0 || row.Highlighted {
 				tint = ink
@@ -342,3 +361,88 @@ const (
 	// kubasta's weight a single pixel reads as an artefact of the font rather than a mark.
 	underlineHeight = 2
 )
+
+// paneWrapIndent is how far a wrapped row's continuation sits in from where the row's text began,
+// so a sum broken over two lines reads as one line carried on rather than as two.
+const paneWrapIndent = 24
+
+// WrapPaneRows breaks every row too wide for a pane of width w into the row and its continuations.
+// **A break falls between words**, and a run keeps its ink and its mark on whichever line each
+// word lands. A continuation carries the row's band and highlight and no swatch, indented under
+// where the row's text began. A heading — a centered row — is left alone.
+//
+// It exists for the ledger's working, which writes every relic that priced a hit on that hit's
+// line: a run wearing enough of them writes a line wider than the panel.
+func WrapPaneRows(gs *state.GlobalState, p PanePlacement, w int, rows []PaneRow) []PaneRow {
+	size := p.TextSize
+	if size == 0 {
+		size = paneTextSize
+	}
+	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: size}
+
+	out := make([]PaneRow, 0, len(rows))
+	for _, row := range rows {
+		if row.centered() {
+			out = append(out, row)
+			continue
+		}
+		start := paneRowInset + row.Indent
+		if row.Swatch.A != 0 {
+			start = paneRowInset + swatchSize + swatchGap + row.Indent
+		}
+		// Each word is measured a pixel wide for its faux bold, and the pane keeps its own inset on
+		// the right.
+		width := float64(w - p.RightInset - paneRowInset - start)
+
+		line := row
+		line.Spans = nil
+		used := 0.0
+		for _, span := range row.Spans {
+			// A run on a column starts there on the row it began on, so the width it uses is
+			// measured from the column rather than from the end of the run before it.
+			if span.Col > 0 && len(line.Spans) > 0 {
+				used = max(used, float64(span.Col)*systems.MeasureText("0", face))
+			}
+			first := true
+			for _, word := range strings.SplitAfter(span.Text, " ") {
+				if word == "" {
+					continue
+				}
+				ww := systems.MeasureText(word, face) + 1
+				if used > 0 && used+ww > width {
+					out = append(out, line)
+					line = PaneRow{
+						Band:        row.Band,
+						Highlighted: row.Highlighted,
+						Indent:      start - paneRowInset + paneWrapIndent,
+					}
+					width = float64(w - p.RightInset - paneRowInset - (start + paneWrapIndent))
+					used = 0
+					word = strings.TrimLeft(word, " ")
+					ww = systems.MeasureText(word, face) + 1
+				}
+				// The column belongs to the run's first word, and only on the row it began on.
+				col := 0
+				if first && len(line.Spans) > 0 {
+					col = span.Col
+				}
+				line.Spans = appendWord(line.Spans, span, word, col)
+				used += ww
+				first = false
+			}
+		}
+		out = append(out, line)
+	}
+	return out
+}
+
+// appendWord puts one word on a line, joining it to the run before it when the two are written
+// the same way and the word starts no column, so a wrapped line is as few runs as the row it came
+// from.
+func appendWord(spans []paneSpan, from paneSpan, word string, col int) []paneSpan {
+	if n := len(spans); n > 0 && col == 0 && spans[n-1].Ink == from.Ink && spans[n-1].Mark == from.Mark {
+		spans[n-1].Text += word
+		return spans
+	}
+	return append(spans, paneSpan{Text: word, Ink: from.Ink, Mark: from.Mark, Col: col})
+}

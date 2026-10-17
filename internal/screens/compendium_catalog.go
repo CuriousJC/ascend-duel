@@ -3,10 +3,12 @@ package screens
 // **The Compendium's catalog books: every record in a catalog, and what the player has had of it.**
 //
 // Each is a grid of the catalog's own cards — the face the shop, the pane and the review sheet draw —
-// in the catalog's own order. **A record the player has never had is drawn dark**, its picture down
-// to a silhouette, and its tooltip keeps its name and its rule to itself: a compendium that gave the
-// whole catalog away on the first launch would leave nothing to find. One that has been had carries
-// its count under it and its full tooltip.
+// in the catalog's own order. **A record the player has never had is drawn as the placeholder**, with
+// nothing of its own picture showing, and its tooltip keeps its name and its rule to itself: a
+// compendium that gave the whole catalog away on the first launch would leave nothing to find. One
+// that has been had carries its count under it and its full tooltip, and **one that has been had but
+// has no art of its own is its real card darkened**, so a found record waiting for a picture is not
+// mistaken for one still to find.
 //
 // **Which figure counts as "had" is the catalog's own verb**: a relic bought, a potion drunk, a
 // cantrip cast, a creature beaten or fallen to. See the `Stat…` families in internal/session/stats.go.
@@ -33,10 +35,13 @@ const (
 	catalogScaleNum = 3
 	catalogScaleDen = 5
 
-	catalogGapX      = 22
-	catalogGapY      = 14
-	catalogCaptionH  = 34
-	catalogDarkScale = 0.14
+	catalogGapX     = 22
+	catalogGapY     = 14
+	catalogCaptionH = 34
+
+	// catalogUndrawnScale is how far a found record with no art of its own is darkened, so the
+	// placeholder on a found card is told apart from the placeholder standing in for an unfound one.
+	catalogUndrawnScale = 0.45
 
 	// undiscoveredTitle is what a record the player has never had says when rested on.
 	undiscoveredTitle = "Undiscovered"
@@ -55,6 +60,10 @@ type compendiumEntry struct {
 	title string
 	lines []string
 	extra []string
+
+	// creature is set on the bestiary's entries, and is what a found one shows in place of a
+	// tooltip — see compendium_creature.go.
+	creature *creaturePeek
 }
 
 // catalogCell is the size one entry takes: the reduced card and the caption under it.
@@ -102,6 +111,10 @@ func (s *CompendiumScene) pointAtEntry(gs *state.GlobalState, body image.Rectang
 			s.tip.Point(seat, ui.TipLine(undiscoveredTitle), ui.TipLines([]string{"Not yet found"}))
 			return
 		}
+		if e.creature != nil {
+			s.peek, s.peekSeat = e.creature, seat
+			return
+		}
 		lines := append(append([]string{}, e.lines...), e.extra...)
 		s.tip.Point(seat, ui.TipLine(e.title), ui.TipLines(lines))
 		return
@@ -116,12 +129,16 @@ func (s *CompendiumScene) drawCatalog(gs *state.GlobalState, screen *ebiten.Imag
 		if !ok {
 			continue
 		}
-		img := ui.CardImage(gs, e.spec, e.style)
+		spec := e.spec
+		if !e.found {
+			spec = undiscoveredSpec(gs)
+		}
+		img := ui.CardImage(gs, spec, e.style)
 		if img != nil {
 			op := &ebiten.DrawImageOptions{}
 			op.GeoM.Translate(float64(seat.Min.X), float64(seat.Min.Y))
-			if !e.found {
-				op.ColorScale.Scale(catalogDarkScale, catalogDarkScale, catalogDarkScale, 1)
+			if e.found && ui.IsPlaceholder(gs, e.spec.Art) {
+				op.ColorScale.Scale(catalogUndrawnScale, catalogUndrawnScale, catalogUndrawnScale, 1)
 			}
 			screen.DrawImage(img, op)
 		}
@@ -134,6 +151,16 @@ func (s *CompendiumScene) drawCatalog(gs *state.GlobalState, screen *ebiten.Imag
 		cap.SecondaryAlign = text.AlignCenter
 		cap.ColorScale.ScaleWithColor(compendiumInk)
 		systems.DrawUI(screen, e.verb+" "+thousands(e.count), face, cap)
+	}
+}
+
+// undiscoveredSpec is the card an unfound record is drawn as: the placeholder and nothing of the
+// record, so neither its picture nor its outline is given away. It keeps the book's own style, which
+// says only which catalog the page is.
+func undiscoveredSpec(gs *state.GlobalState) cards.Spec {
+	return cards.Spec{
+		Form: cards.FormNone, Element: ui.ArtFor(combat.Basic),
+		Art: ui.Placeholder(gs), Enabled: true,
 	}
 }
 
@@ -279,39 +306,35 @@ func goodsDialog(gs *state.GlobalState) *compendiumDialog {
 }
 
 // creaturesDialog is the bestiary: every creature and boss on the roster, motif by motif, in each
-// motif file's own order.
+// motif file's own order — **once per element it can be dealt as**, in the record's own order of
+// affinities, since a fire goblin and an ice goblin are two drawings and two decks.
 //
-// **A creature is found once it has been fought**, won or lost — a player who fell to the Toll-Taker
-// has met it. Its caption is the wins; its tooltip says both.
-//
-// **It wears the picture of the first element it can be dealt as.** A creature is painted once per
-// element and the page has one seat for it, so the choice is the record's own first affinity rather
-// than a roll.
+// **Each element is found on its own, once it has been fought** in that colour, won or lost — a
+// player who fell to the Toll-Taker has met it. The figures are the per-element families, which
+// count from the build that introduced them, so a creature met before then is still to find in
+// every colour. Its caption is the wins; resting on a found one opens its card and its deck.
 func creaturesDialog(gs *state.GlobalState) *compendiumDialog {
 	all := everything(gs)
 	var out []compendiumEntry
 	for _, key := range data.MotifOrder(gs.Motifs) {
 		motif := gs.Motifs[key]
 		for _, r := range motif.Records {
-			element := ""
-			if len(r.Affinities) > 0 {
-				element = r.Affinities[0]
-			}
-			spec := cards.Spec{
-				Name: r.FullName(), Form: cards.FormNone, Element: ui.ArtFor(combat.Basic),
-				Art:     ui.ArtworkOr(gs, r.ArtKey(element), data.DefaultEnemyArt),
-				Enabled: true,
-			}
-			beaten := all.Total(session.StatCreatureDefeated + r.Record)
-			fell := all.Total(session.StatCreatureKiller + r.Record)
+			for _, element := range r.Affinities {
+				spec := cards.Spec{
+					Name: r.FullName(), Form: cards.FormNone, Element: ui.ArtFor(combat.Basic),
+					Art:     ui.ArtworkOr(gs, r.ArtKey(element), data.DefaultEnemyArt),
+					Enabled: true,
+				}
+				beaten := all.Total(session.CreatureAs(session.StatCreatureDefeatedAs, r.Record, element))
+				fell := all.Total(session.CreatureAs(session.StatCreatureKillerAs, r.Record, element))
 
-			e := entry(spec, bleedStyle(false), beaten, "BEATEN", r.FullName(),
-				[]string{motif.Name + ", " + strings.ToLower(r.Tier)})
-			e.found = beaten+fell > 0
-			if fell > 0 {
-				e.lines = append(e.lines, "Fell to it "+times(fell))
+				e := entry(spec, bleedStyle(false), beaten, "BEATEN", r.FullName(), nil)
+				e.found = beaten+fell > 0
+				e.creature = &creaturePeek{
+					record: r, element: element, motif: motif.Name, beaten: beaten, fell: fell,
+				}
+				out = append(out, e)
 			}
-			out = append(out, e)
 		}
 	}
 	return catalogDialog("CREATURES", out)

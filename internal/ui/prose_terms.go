@@ -28,6 +28,10 @@ import (
 // underneath the blow rather than as more lines of the round.
 const termIndent = 24
 
+// workIndent is how far a step of a hit's working is set in: under the hit's own line, so the
+// steps read as the sum that hit came to.
+const workIndent = 2 * termIndent
+
 // HandTermRecords is the whole working under one blow, in the order the arithmetic happens in:
 // what raised the DMG, a line per hit, and the total.
 //
@@ -41,10 +45,12 @@ func HandTermRecords(e combat.Event, relics []combat.WornRelic, played []combat.
 
 	out := make([]session.LedgerRecord, 0, e.HandCardCount+4)
 
-	// **What raised the DMG comes before the hits it raised**, because that is the order the
-	// arithmetic happens in: the rung is read, the duelist swings bigger, and only then is there a
-	// hit to write.
-	out = append(out, handDMGRecords(e, relics)...)
+	// **What raised the DMG is written once, at the top of the turn**, when the event says what the
+	// DMG was built from — see DMGRecord. An event that only carries the raises writes them as lines
+	// of their own before the hits, the order the arithmetic happens in.
+	if e.HandDMGBase <= 0 {
+		out = append(out, handDMGRecords(e, relics)...)
+	}
 
 	for i := 0; i < e.HandCardCount && i < len(e.HandAmounts); i++ {
 		idx := e.HandCards[i]
@@ -83,15 +89,23 @@ func hitRecord(e combat.Event, i int, card combat.Card, relics []combat.WornReli
 		Element:    ElementName(card.Element),
 		Factors:    hitFactors(e, i, relics),
 		Terms:      []session.LedgerSum{term},
+		Hand:       HandTitle(e),
 		Multiplier: e.Multiplier,
 		HandScale:  e.HandScale,
 		Total:      e.HitAmounts[i],
+	}
+	if e.HandScale != 0 && e.HandScale != 100 {
+		for seat, pct := range e.HandScaleBy {
+			if pct > 0 {
+				rec.HandRelics = append(rec.HandRelics, session.LedgerFactor{Relic: relicName(relics, seat), Scale: pct})
+			}
+		}
 	}
 	return rec
 }
 
 // hitFactors is everything that touched one hit, in the order the arithmetic applied it: the
-// landings relics bought, the card's own riders, what the opener woke, then the relics' prices.
+// landings relics bought, what the opener woke, the card's own riders, then the relics' prices.
 func hitFactors(e combat.Event, i int, relics []combat.WornRelic) []session.LedgerFactor {
 	var landed, priced []session.LedgerFactor
 	for _, f := range termFactors(e, i, relics) {
@@ -101,17 +115,28 @@ func hitFactors(e combat.Event, i int, relics []combat.WornRelic) []session.Ledg
 			priced = append(priced, f)
 		}
 	}
-	out := append(landed, playRiderFactors(e, i)...)
-	out = append(out, awakenFactors(e, i, relics)...)
+	out := append(landed, awakenFactors(e, i, relics)...)
+	out = append(out, playRiderFactors(e, i)...)
 	return append(out, priced...)
 }
 
-// awakenFactors names the Awakenings that added to one hit, and what they added.
+// awakenFactors names the Awakenings that added to one hit, **one factor per relic**, each beside
+// what it alone added. An event that does not say what each added writes them as one.
 func awakenFactors(e combat.Event, term int, relics []combat.WornRelic) []session.LedgerFactor {
-	if add := e.HandAwaken[term]; add != 0 {
-		return []session.LedgerFactor{{Relic: relicNames(relics, e.AwakenSeats), Add: add}}
+	add := e.HandAwaken[term]
+	if add == 0 {
+		return nil
 	}
-	return nil
+	var out []session.LedgerFactor
+	for seat, by := range e.AwakenBy {
+		if by != 0 {
+			out = append(out, session.LedgerFactor{Relic: relicName(relics, seat), Add: by})
+		}
+	}
+	if len(out) == 0 {
+		out = append(out, session.LedgerFactor{Relic: relicNames(relics, e.AwakenSeats), Add: add})
+	}
+	return out
 }
 
 // handDMGRecords is what the relics did to the DMG this blow was swung at: the rung's raise, the
@@ -156,6 +181,42 @@ func handDMGRecords(e combat.Event, relics []combat.WornRelic) []session.LedgerR
 			Note:   "the purse",
 			Amount: e.VitaeDMG,
 		})
+	}
+	return out
+}
+
+// DMGRecord is the duelist's DMG for the turn a hand event was swung in, built from its own
+// figure: what it started at, every plus that went into it, and what it came to. **False when
+// nothing added to it**, since a turn swung at the duelist's own figure has nothing to explain, and
+// for an event that does not say what its DMG was built from.
+func DMGRecord(e combat.Event, relics []combat.WornRelic, side, name string) (session.LedgerRecord, bool) {
+	parts := dmgParts(e, relics)
+	if e.HandDMGBase <= 0 || len(parts) == 0 {
+		return session.LedgerRecord{}, false
+	}
+	return session.LedgerRecord{
+		Kind: session.KindDMG, Side: side, Name: name,
+		DMGBase: e.HandDMGBase, DMGParts: parts, Amount: e.HandDMG,
+	}, true
+}
+
+// dmgParts is everything this blow added to the duelist's own DMG, in the order blowDMG applies
+// it: a rung relic's raise, the jars' DMG for the cards kept back, the purse's, the held cards'
+// riders' DMG, then the held cards' riders' scaling. Each is labelled with the name of what paid it
+// and nothing else.
+func dmgParts(e combat.Event, relics []combat.WornRelic) []session.LedgerFactor {
+	var out []session.LedgerFactor
+	// **One plus per relic**, in worn order, each beside its own figure.
+	for seat, add := range e.DMGRaiseBy {
+		if add != 0 {
+			out = append(out, session.LedgerFactor{Relic: relicName(relics, seat), Add: add})
+		}
+	}
+	if e.HeldRiderAdd != 0 {
+		out = append(out, session.LedgerFactor{Relic: riderName(combat.RiderDamageInHand), Add: e.HeldRiderAdd})
+	}
+	if e.HeldRiderPct != 0 && e.HeldRiderPct != 100 {
+		out = append(out, session.LedgerFactor{Relic: riderName(combat.RiderScaleInHand), Scale: e.HeldRiderPct})
 	}
 	return out
 }

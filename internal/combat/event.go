@@ -163,6 +163,15 @@ const (
 	// KindVitae is: the rules step Duelist.Vitae and the run is paid the difference.
 	KindTithed
 
+	// KindStaggered is a worn relic raising shields over an attack card of its form as the turn
+	// closes — a stagger. Side is the wearer, Relic which ring, Slot the card that earned them,
+	// Action that card, Element the shields' (the card's), Amount how many and Life the count
+	// standing afterwards, KindRaised's split.
+	//
+	// **Its own kind rather than a KindRaised with a relic on it**, for KindWarded's reason: these
+	// shields leave the ring and fly to the card, where a raise's form over the card that made them.
+	KindStaggered
+
 	KindRoundEnd
 )
 
@@ -233,13 +242,18 @@ type Event struct {
 	// banked one action point for the defender's next turn. See Duelist.Surge.
 	Surged bool
 
+	// Would is, on a KindBlocked, the hit as it would have landed — the damage the shield stopped.
+	// **It is the figure the screen throws at the shield that stops it**, and it is
+	// the same figure a Thorned Shield's share is taken of.
+	Would int
+
 	// Element is the card's element on KindAction and KindFizzled. Basic everywhere
 	// else, which is also the zero value — an event with nothing to say about color says `basic`,
 	// exactly as a plain card does.
 	Element Element
 
 	// Relic is the worn relic behind the event, on KindDrained, KindRegenerated, KindWarded,
-	// KindReflected and KindTithed.
+	// KindReflected, KindTithed and KindStaggered.
 	//
 	// **It is here because the cause is something the player can see.** The screen flies the
 	// figure out of the relic that caused it, and there is no other honest way for it to know which
@@ -304,6 +318,11 @@ type Event struct {
 	RungCards     [maxHandTerms]int
 	RungCardCount int
 
+	// RungGroup is, parallel to RungCards, which of the hand's groups each of those cards is in —
+	// 0 for the first, 1 for the second. **It is what lets a screen mark a Two Pair as two pairs**
+	// rather than one set of four. Fixed for RungCards' reason.
+	RungGroup [maxHandTerms]int
+
 	// HandAmounts is what each hit's card deals, in the same order and to the same count — the
 	// card's own term, before the flat bonuses and the multipliers.
 	//
@@ -314,8 +333,9 @@ type Event struct {
 	// A fixed array for the reason HandCards is one: Event has to stay comparable.
 	HandAmounts [maxHandTerms]int
 
-	// HandCardBase is what each landing was worth **before any worn relic touched it** — the card's
-	// own damage at the wielder's DMG, with an echo's fraction already taken off.
+	// HandCardBase is what each landing was worth **before any worn relic priced it** — the card's
+	// own damage at the wielder's DMG plus what an Awakening woke (HandAwaken), with an echo's
+	// fraction already taken off.
 	//
 	// **It is here so a hit can be written the way it is worked out** *(owner's call)*:
 	// `(10 x 2) x 2.5 = 50` rather than `20 x 2.5 = 50`, with the relic's figure beside the term it
@@ -352,6 +372,20 @@ type Event struct {
 	HandDMG     int
 	HandDMGBare int
 
+	// HandDMGBase is the duelist's own DMG before anything this blow added to it, and HeldRiderAdd
+	// and HeldRiderPct are what the cards kept back added to it and then scaled it by — 100 for
+	// none. With HandBonus, HeldDMG and VitaeDMG they are every piece HandDMG is built from:
+	// (HandDMGBase + HandBonus + HeldDMG + VitaeDMG + HeldRiderAdd) x HeldRiderPct, so an account can
+	// write each plus going in rather than the answer alone.
+	HandDMGBase  int
+	HeldRiderAdd int
+	HeldRiderPct int
+
+	// DMGRaiseBy[seat] is what that relic alone added to the DMG this blow was swung at — its
+	// share of HandBonus, HeldDMG and VitaeDMG together, before the held cards' riders — 0 where it
+	// added nothing. So two jars are two figures, each beside its own relic.
+	DMGRaiseBy []int
+
 	// HandPlayAdd[i] and HandPlayPct[i] are what hit i's own card's riders did to its term, after the
 	// card's own multiplier and before any relic: DMG added, then a percentage, 100 for none.
 	// **A played card's rider prices its own hit and nothing else** *(owner's call, 2026-09-26)*,
@@ -360,18 +394,20 @@ type Event struct {
 	HandPlayAdd [maxHandTerms]int
 	HandPlayPct [maxHandTerms]int
 
-	// HandAwaken[i] is the damage an Awakening added to hit i's card: after the card's own multiplier
-	// and played riders, before the relics that price the card. Zero on the turn's first card, on a
-	// defense and on every hit of a turn whose first card woke nothing. HandAmounts already has it
-	// inside it, relic-priced.
+	// HandAwaken[i] is the DMG an Awakening added to hit i's card: to HandDMG, for this card alone,
+	// before the card's own multiplier. Zero on the turn's first card, on a defense and on every hit
+	// of a turn whose first card woke nothing. HandCardBase and HandAmounts already have it inside
+	// them, multiplied.
 	HandAwaken [maxHandTerms]int
 
 	// Awaken is what every attack after the turn's first card gains from the Awakenings the first
-	// card woke, and AwakenSeats is which worn seats woke. AwakenOpener is the opener's index into the
-	// turn as it resolved — the convention HandCards and Slot use — so a screen can toast the card
-	// that woke them. See combat.AwakenBonus.
+	// card woke, AwakenSeats is which worn seats woke, and AwakenBy is what each seat added — so two
+	// Awakenings that both wake are written as two steps rather than one sum. AwakenOpener is the
+	// opener's index into the turn as it resolved — the convention HandCards and Slot use — so a
+	// screen can toast the card that woke them. See combat.AwakenBonus.
 	Awaken       int
 	AwakenSeats  []bool
+	AwakenBy     []int
 	AwakenOpener int
 
 	// HitAmounts[i] is what hit i comes to: the card's term (its riders and its relics inside it),
@@ -461,6 +497,11 @@ type Event struct {
 	// not include it**, so the ladder's own figure is what the banner shows.
 	HandScale      int
 	HandScaleSeats []bool
+
+	// HandScaleBy[seat] is what that relic alone multiplied the blow by, 0 where it paid nothing.
+	// HandScale is these compounded, so an account can name each relic beside its own figure
+	// rather than one figure beside several names.
+	HandScaleBy []int
 }
 
 // Slot is one card's place in a round's resolution order: whose it is, where it sits
@@ -526,8 +567,9 @@ func (e Event) GrownAt(term, seat int) int {
 }
 
 // TermSplit is one hit's card term written the way the game worked it out: the DMG the hand was
-// swung at, and the percentage this card applied to it. It reports false when the two do not come
-// to the term's own figure, and a caller that gets false writes the flat figure instead.
+// swung at, and the percentage this card applied to it — to that DMG plus whatever HandAwaken[term]
+// added, which a caller writes between the two. It reports false when they do not come to the
+// term's own figure, and a caller that gets false writes the flat figure instead.
 //
 // **It exists so that no screen divides one field of this event by another.** Every reading of a
 // term's working goes through here — the hand dialog and the run's account are two drawings of one
@@ -545,7 +587,7 @@ func (e Event) TermSplit(term int) (dmg, pct int, ok bool) {
 	if dmg <= 0 || pct <= 0 {
 		return 0, 0, false
 	}
-	if scaleDamage(dmg, pct) != e.HandCardBase[term] {
+	if scaleDamage(dmg+e.HandAwaken[term], pct) != e.HandCardBase[term] {
 		return 0, 0, false
 	}
 	return dmg, pct, true

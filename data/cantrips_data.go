@@ -67,9 +67,8 @@ type CantripRelicData struct {
 	Rules []RelicRuleData `json:"Rules"`
 }
 
-// DefaultCantripRelicArt is the face a cantrip-relic with no Art of its own draws: the relic
-// catalog's placeholder, until the cantrip-relics have a default of their own.
-const DefaultCantripRelicArt = DefaultRelicArt
+// DefaultCantripRelicArt is the face a cantrip-relic with no Art of its own draws: the placeholder.
+const DefaultCantripRelicArt = PlaceholderArt
 
 // ArtKey is the picture this cantrip-relic actually draws.
 func (r CantripRelicData) ArtKey() string {
@@ -79,10 +78,8 @@ func (r CantripRelicData) ArtKey() string {
 	return r.Art
 }
 
-// DefaultCantripArt is the face a record with no Art of its own draws —
-// `assets/cantrip/default-cantrip.png`, a seat of the catalog's own for the reason the rune's
-// default is one: two catalogs wearing one placeholder are two backlogs nobody can tell apart.
-const DefaultCantripArt = "default-cantrip"
+// DefaultCantripArt is the face a record with no Art of its own draws: the placeholder.
+const DefaultCantripArt = PlaceholderArt
 
 // ArtKey is the picture this cantrip actually draws: its own if it has one, the default otherwise.
 func (c CantripData) ArtKey() string {

@@ -50,15 +50,19 @@ func (s *Session) CanBuy(key string) bool { return s.CanBuyAs(key, false) }
 // CanBuyAs is CanBuy for a relic offered weightless or not: a weightless offer needs no free finger.
 func (s *Session) CanBuyAs(key string, weightless bool) bool {
 	price, ok := relicPrices[key]
-	if !ok || s.Price(price) > s.vitae {
+	if !ok || s.Price(price) > s.vitae || s.Wears(key) {
 		return false
 	}
 	return s.canWearAs(key, weightless)
 }
 
-// canWear is the row's half of the question: the catalog holds it, it is not already worn, and
-// the fifth finger is not spoken for. Shared with Wear so the shelf and the purchase cannot come to
-// different conclusions.
+// canWear is the row's half of the question: the catalog holds it and the fifth finger is not
+// spoken for. Shared with Wear so the shelf and the purchase cannot come to different conclusions.
+//
+// **A relic already worn may go on again** — the rules wear a row of ids and two of one record
+// both fire, in worn order like any other two. **It is the shop that refuses a second copy**, in
+// CanBuyAs and BuyAs: the shelf never offers what the run is wearing, and that is a rule about the
+// pool rather than about what a hand can hold.
 func (s *Session) canWear(key string) bool { return s.canWearAs(key, false) }
 
 // canWearAs is canWear for a relic that is going on weightless, or already flagged so.
@@ -71,12 +75,17 @@ func (s *Session) canWearAs(key string, weightless bool) bool {
 	if !weightless && !s.weightless[key] && s.WeightedCount() >= s.RelicSlots() {
 		return false
 	}
+	return true
+}
+
+// Wears reports whether the run has at least one of that relic on.
+func (s *Session) Wears(key string) bool {
 	for _, k := range s.worn {
 		if k == key {
-			return false
+			return true
 		}
 	}
-	return true
+	return false
 }
 
 // Buy pays for a relic and puts it on, and **reports whether it could**. A caller that does not
@@ -94,7 +103,7 @@ func (s *Session) Buy(key string) bool { return s.BuyAs(key, false) }
 // BuyAs is Buy for a relic offered weightless or not. **A weightless offer is flagged before it goes
 // on**, so it is not refused a finger it does not need.
 func (s *Session) BuyAs(key string, weightless bool) bool {
-	if !s.canWearAs(key, weightless) {
+	if s.Wears(key) || !s.canWearAs(key, weightless) {
 		return false
 	}
 	price, ok := relicPrices[key]

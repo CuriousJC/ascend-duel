@@ -281,16 +281,17 @@ type GlobalState struct {
 	// policy. Awards still land in memory for the session; nothing reaches the disk.
 	ProfileWritable bool
 
-	// ReturnScreen is where the settings screen goes back to.
+	// Returns is the way back from the screens that are not stations of a run — Settings, the
+	// Compendium, Achievements, Credits, the animation gallery. Opening one pushes the screen the
+	// player was on (PushReturn); its Back pops it (PopReturn).
 	//
-	// **The settings screen is the only one that can be entered from anywhere**, so it is the only
-	// one that cannot name its successor the way every other screen does — `advance` walks the run
-	// forward, and settings is not a station of a run. Whoever opens it records where the player
-	// was; Back puts them there.
+	// **A stack rather than one slot, because these screens open each other**: a fight, then
+	// Settings, then the Compendium, then Achievements, and four Backs have to walk that path in
+	// reverse. One slot holds only the last step, and the way back to the fight is lost.
 	//
 	// It deliberately does not touch `session.Phase`. The run stays exactly where it was standing,
 	// which is what makes opening settings mid-duel a look at a dialog rather than a decision.
-	ReturnScreen ActiveScreen
+	Returns []ActiveScreen
 
 	// Crash is what the game has to say about the panic it just survived, or nil while nothing has
 	// gone wrong. It is what the crash screen draws.
@@ -359,6 +360,22 @@ func NewGlobalState() *GlobalState {
 // Percentages anchor a group; offsets *within* a group stay in pixels. Three buttons
 // spaced 150px apart below a 33% anchor must keep that spacing when the anchor moves,
 // which independent percentages would not do. Sizes are never percentages either.
+// PushReturn records the screen the player is on as the way back, before a screen that is not a
+// station of a run is opened over it.
+func (gs *GlobalState) PushReturn() { gs.Returns = append(gs.Returns, gs.ActiveScreen) }
+
+// PopReturn goes back one step: to the screen the last PushReturn recorded, or to the title with
+// nothing recorded.
+func (gs *GlobalState) PopReturn() {
+	back := Title
+	if n := len(gs.Returns); n > 0 {
+		back = gs.Returns[n-1]
+		gs.Returns = gs.Returns[:n-1]
+	}
+	gs.ActiveScreen = back
+	gs.NewScreen = true
+}
+
 func (gs *GlobalState) PctX(pct int) int { return gs.ScreenWidth * pct / 100 }
 func (gs *GlobalState) PctY(pct int) int { return gs.ScreenHeight * pct / 100 }
 
@@ -400,7 +417,7 @@ const (
 	// Settings is the program's own screen: how loud the score is and how fast the game moves.
 	//
 	// **It is reachable from everywhere, so it is the one screen that has to remember where it
-	// came from** — see ReturnScreen. Appended rather than filed next to Title because
+	// came from** — see Returns. Appended rather than filed next to Title because
 	// ActiveScreen is append-only like every other ordinal in the game.
 	Settings
 

@@ -198,9 +198,9 @@ func (s *GoodsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// it lands.
 	drawBuildCard(gs, screen, gs.Run.Vitae())
 	drawGuideCard(gs, screen)
-	drawBuildRelics(gs, screen, &s.band.relicDrag)
+	drawBuildRelics(gs, screen, &s.band)
 	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil,
-		func(i int) bool { return s.landingSeat(i) || s.band.heldSkip(i) }, s.tip.Showing())
+		func(i int) bool { return s.landingSeat(i) || s.band.heldSkip(i) }, s.tip.Showing(), &s.band.sale)
 	drawDeckPile(gs, screen)
 
 	heading := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 34}

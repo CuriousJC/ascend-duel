@@ -106,7 +106,7 @@ var tmpl = template.Must(template.New("cantripsheet").Parse(`<!doctype html>
 <p class="note">
   <strong>The subject paragraph is the art brief.</strong> The quoted block is <code>Draw</code>;
   nothing in the game reads it. A cantrip with no subject and no art is the backlog — both lines go
-  pink. <code>default-cantrip.png</code> is the seat art goes into.
+  pink. Until art lands it draws the placeholder.
 </p>
 
 <h2>What the catalog does</h2>
@@ -137,7 +137,7 @@ var tmpl = template.Must(template.New("cantripsheet").Parse(`<!doctype html>
           <p class="draw missing">no scroll subject written yet</p>
         {{end}}
         {{if .Default}}
-          <p class="art missing">scroll: no art of its own — drawing default-cantrip.png</p>
+          <p class="art missing">scroll: no art of its own — drawing the placeholder</p>
         {{else}}
           <p class="art">scroll art: <code>{{.Art}}</code></p>
         {{end}}

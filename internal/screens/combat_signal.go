@@ -276,9 +276,9 @@ func (s *CombatScene) noteSignal(e combat.Event) bool {
 	case combat.KindGrantedLife, combat.KindHealed:
 		dest = signalLife
 	default:
-		// A shielding attack's KindRaised carries a rider too, and its picture is the pip row's
-		// own — the pips already fly out of the card with its figure. A second gesture for the
-		// same fact is the "said twice" failure the choreography table's reasons are full of.
+		// A shielding attack's KindRaised carries a rider too, and its picture is the shield heap
+		// forming over the card. A second gesture for the same fact is the "said twice" failure the
+		// choreography table's reasons are full of.
 		return false
 	}
 
@@ -658,12 +658,12 @@ func (s *CombatScene) signalOrigin(gs *state.GlobalState, c cardSignal) (image.P
 		if c.seat < 0 || c.seat >= len(s.Theater.resolved) {
 			return image.Point{}, false
 		}
-		at = playedSeatAt(gs, c.seat, len(s.Theater.resolved), s.playedSplit())
+		at = s.playedPoint(gs, c.seat)
 	} else {
 		if c.seat < 0 || c.seat >= len(s.Theater.enemyDealt) {
 			return image.Point{}, false
 		}
-		at = enemySeatAt(gs, c.seat, len(s.Theater.enemyDealt), s.enemySplit())
+		at = s.enemyPoint(gs, c.seat)
 	}
 	return image.Pt(at.X+cardWidth/2, at.Y+cardHeight/2), true
 }

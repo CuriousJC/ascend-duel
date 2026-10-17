@@ -124,17 +124,16 @@ const (
 	// talk about time would point at the wrong sentence.
 	AnchorRoundTimer
 
-	// AnchorShatteredCards is the opponent's queued attacks that a shield broke this round, as one
-	// rectangle over the seats they sit in.
+	// AnchorShatteredCards is the opponent's queued attacks that a shield stopped this round, as
+	// one rectangle over the seats they sit in.
 	//
 	// **It is the second anchor computed from what happened rather than from a layout**, after
 	// [AnchorMatchingCards], and it is the first that depends on a round having already played. A
 	// shield picks the *heaviest* of a creature's blows — see combat.shieldedSlots — which is a rule
 	// the player pays for on every defend card and would otherwise only ever read about in the feed.
 	//
-	// **The break persists to the end of the round, which is what makes this pointable at all.** The
-	// mark is drawn on the card for the rest of the round rather than only while the animation runs,
-	// so a step can name it after the round has finished playing. A step that had to fire *during*
+	// **The shield lies on the card to the end of the round, which is what makes this pointable at
+	// all**, so a step can name it after the round has finished playing. A step that had to fire *during*
 	// the break would need playback to stop for it, and nothing about the tutorial may hold the
 	// cursor — the round is resolved before a frame of it is drawn.
 	//
@@ -618,7 +617,7 @@ type Facts struct {
 	// Resolving is whether a round is playing back rather than being planned.
 	Resolving bool
 
-	// ShieldBreaks is how many of the opponent's attacks a shield has broken this duel.
+	// ShieldBreaks is how many of the opponent's attacks a shield has stopped this round.
 	//
 	// **A running count, not a flag**, so a step can ask for a break of its own against a baseline
 	// — the same shape RoundsPlayed and LedgerOpens have, and for the same reason: a duel has

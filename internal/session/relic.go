@@ -315,7 +315,9 @@ func relicEffect(key string, in data.RelicEffectData) (combat.RelicEffect, error
 }
 
 // Wear puts a relic on, at the right-hand end of the row. It reports false for a record the catalog
-// does not hold, for one already worn, and for the sixth relic.
+// does not hold and for the sixth relic. **A second copy of a worn relic goes on**, and both fire;
+// see canWearAs. Two copies share what is kept by record — the accumulator and the weightless
+// flag — and Sell takes the leftmost.
 //
 // **Worn order is the order relics fire in**, so appending is what makes the row on screen the rule:
 // a relic bought later applies later, and the player can see which.
@@ -482,6 +484,10 @@ func (s *Session) EquipWorn(d combat.Duelist, worn []combat.WornRelic) combat.Du
 	d.MaxLife = s.raiseLifeForBosses(d.MaxLife)
 	d.CurrentLife = s.raiseLifeForBosses(d.CurrentLife)
 
+	// **The finger count goes on before any relic does.** `Wearing` refuses a relic past the
+	// duelist's own count, and a fighter not yet handed the run's carries zero, which reads as the
+	// default — so a run wearing more than the default would be dealt a fighter missing the rest.
+	d.RelicSlots = s.RelicSlots()
 	for _, w := range worn {
 		d = d.Wearing(w)
 	}
@@ -529,11 +535,6 @@ func (s *Session) EquipWorn(d combat.Duelist, worn []combat.WornRelic) combat.Du
 	// as AddedHP and HPScale above. See combat.DoAdjustRoundLimit.
 	d.RoundLimit = combat.RoundLimitFor(worn, s.RoundLimit())
 
-	// **The finger count goes over with it, and for the same reason.** A fighter equipped without
-	// it carries a zero, which the rules read as the default — so this is not load-bearing today
-	// and becomes load-bearing the moment anything moves it. See RelicSlots below.
-	d.RelicSlots = s.RelicSlots()
-
 	// **The tonics that bend the rules inside a fight go over with the rest.** A cost cut comes off
 	// every card after the relics have had their say, and a vitae multiple scales every vitae the
 	// round pays. See tonic.go.
@@ -560,6 +561,40 @@ func (s *Session) EquipWorn(d combat.Duelist, worn []combat.WornRelic) combat.Du
 // discard is folded back into the draw pile.
 func (s *Session) DrawnAs(c combat.Card) combat.Card {
 	return combat.DealtAs(s.WornRelics(), c)
+}
+
+// HeldAs is a card already in the hand after something has changed the run's card under it — a rune
+// or an essence spent mid-fight. face is the card as the hand holds it and before is the run's card
+// as it stood before the change.
+//
+// **Only what changed is carried over, and the worn rings are not walked again** *(owner's call,
+// 2026-10-13)*: a flip or a demotion fires as a card is drawn and at no other time. So a card painted
+// ice under an ice-to-fire orb is held ice until it is drawn again, and a card the orb already made
+// fire keeps its fire under a rune that only gave it a rider. Every other field the hand holds is
+// left as the deal left it.
+//
+// A card the run no longer owns comes back false.
+func (s *Session) HeldAs(face, before combat.Card) (combat.Card, bool) {
+	after, ok := s.CardByID(face.ID)
+	if !ok {
+		return combat.Card{}, false
+	}
+	if after.Concept != before.Concept {
+		face.Concept = after.Concept
+	}
+	if after.Element != before.Element {
+		face.Element = after.Element
+	}
+	if after.CostDelta != before.CostDelta {
+		face.CostDelta = after.CostDelta
+	}
+	if after.AmountPct != before.AmountPct {
+		face.AmountPct = after.AmountPct
+	}
+	if after.Riders != before.Riders {
+		face.Riders = after.Riders
+	}
+	return face, true
 }
 
 // DealStepsFor is the cascade a card goes through on its way into the hand: one entry per worn ring

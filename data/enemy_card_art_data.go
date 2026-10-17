@@ -28,10 +28,12 @@ import (
 )
 
 // EnemyCardArtField is the open part of a creature card a flavor's picture is kept inside, in the
-// card's own 200x280 pixels: right of the column holding the form mark and the cost ticks, below
-// the mark, above the strip holding the badge and the name. `tools/relicart -kind enemy-card` fits
-// every picture into it on the way in, and the prompt asks the generator for the same box.
-var EnemyCardArtField = image.Rect(52, 52, 192, 230)
+// card's own 200x280 pixels: **centred on the card left to right**, as the player's own figures
+// are, between the cost ticks (which end at x 28) and the same distance in from the right edge;
+// below the form mark, and above the strip holding the badge and the name. `tools/relicart -kind
+// enemy-card` fits every picture into it on the way in, and the prompt asks the generator for the
+// same box.
+var EnemyCardArtField = image.Rect(30, 52, 170, 230)
 
 // EnemyCardWeightShare is how much of EnemyCardArtField a picture of each weight fills, as a
 // percentage of its width and height, centred in it. **The install step scales every figure to

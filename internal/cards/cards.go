@@ -355,14 +355,6 @@ type TextSpan struct {
 // a pitch of 38 finished 36 pixels above the bar.
 const MaxStatLines = 5
 
-// MaxEffects is how many pictures the row along the bottom of a fighter card can show at once —
-// the duelist's shield pips.
-//
-// **Five, because that is what the bottom band fits** at 20px pictures and the row's gap, inside
-// the borders. This package does not know what the pictures mean; a sixth is the last that fits,
-// and a seventh is a redesign of the band.
-const MaxEffects = 5
-
 // Spec is everything about one card that changes what it looks like.
 //
 // It is plain data rather than a combat.ActionKind on purpose. The contact sheet renders
@@ -491,20 +483,8 @@ type Spec struct {
 	//
 	// **It is its own field rather than an entry in Stats** because it is not on that ladder: the
 	// rows in Stats stack from the top of the card at one pitch, and this one sits in the block at
-	// the bottom, between the pip row and the health bar. See fighter.go.
+	// the bottom, above the health bar. See fighter.go.
 	PortraitStat StatLine
-
-	// Effects are the pictures drawn in a row along the bottom edge, on the styles that ask for
-	// them — the duelist's shield pips. Nil entries are skipped, so the row is as wide as what is
-	// actually standing and stays centered as it comes and goes.
-	//
-	// **What they mean is none of this package's business.** A caller hands over pictures in
-	// the order it wants them read.
-	//
-	// **A fixed array, and comparable for the same reason `Stats` is** — the screen's card
-	// cache keys on the whole Spec. `image.Image` compares by dynamic type and pointer, which
-	// is exactly what is wanted: the same decoded picture is the same cache entry.
-	Effects [MaxEffects]image.Image
 
 	// Life and MaxLife draw a health bar and a "42/60" line, on the styles that ask for
 	// it. The enemy and duelist cards do — see EnemyStyle and DuelistStyle.
@@ -551,8 +531,8 @@ type Spec struct {
 	// **A count rather than a figure on a badge** *(owner's call, 2026-09-16)*. One shield with a
 	// "3" on it asks the player to read a number; three shields asks them to see three things, and
 	// the count is small enough — one, two or three — that seeing beats reading. It is also what
-	// the pip row under the duelist card already does, so the card and the fighter say the same
-	// thing the same way.
+	// the shields heaped over a played card do, so the card and the table say the same thing the
+	// same way.
 	//
 	// **It takes precedence over Badge**, which is what makes the two mutually exclusive without a
 	// third field saying which: a card either deals damage or raises shields.

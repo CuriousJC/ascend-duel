@@ -113,6 +113,12 @@ type CompendiumScene struct {
 	scroll *models.Scrollbar
 	tip    models.Tooltip
 
+	// peek is the found creature under the cursor, drawn large beside its deck, and peekSeat the
+	// card it is about. **Re-asked every frame**, like the tooltip, so it is nil the moment the
+	// cursor leaves.
+	peek     *creaturePeek
+	peekSeat image.Rectangle
+
 	// The statistics book's two tabs: rolled runs, and runs on a chosen seed.
 	rolledTab, chosenTab *models.Button
 }
@@ -149,6 +155,7 @@ func (s *CompendiumScene) Init(gs *state.GlobalState) {
 	// **Closed on every entry**: a page re-opened with a book already up is a dialog nobody asked
 	// for. Coming back from Achievements lands on the shelf.
 	s.open = nil
+	s.peek = nil
 	s.tip = models.Tooltip{DwellTicks: ui.TipDwell()}
 }
 
@@ -182,6 +189,7 @@ func (s *CompendiumScene) Update(gs *state.GlobalState) error {
 	}
 
 	gs.ModalOpen = true
+	s.peek = nil
 	if s.closer.Update(gs) {
 		s.open = nil
 		systems.UpdateTooltip(gs, &s.tip)
@@ -229,6 +237,7 @@ func (s *CompendiumScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	if s.open != nil {
 		s.drawDialog(gs, screen)
 	}
+	s.drawPeek(gs, screen)
 	systems.DrawTooltip(gs, screen, &s.tip)
 }
 
@@ -273,12 +282,7 @@ func compendiumBody(gs *state.GlobalState) image.Rectangle {
 
 // leave goes back to whichever screen opened this one, on the terms every menu screen's Back does.
 func (s *CompendiumScene) leave(gs *state.GlobalState) {
-	back := gs.ReturnScreen
-	if back == state.Compendium {
-		back = state.Title
-	}
-	gs.ActiveScreen = back
-	gs.NewScreen = true
+	gs.PopReturn()
 }
 
 // compendiumTally is what one of the profile's two records says, with the run in progress added on

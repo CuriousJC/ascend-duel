@@ -9,6 +9,19 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/session"
 )
 
+// workingSum is a hit's working read back as one sum — each step's operator and figure, its label
+// left out — so a test can check that the column adds up: `20 x 1.5 x 2 = 60`.
+func workingSum(rec session.LedgerRecord) string {
+	var parts []string
+	for _, l := range hitLines(rec, "") {
+		if l.Voice != session.VoiceWork || len(l.Spans) < 2 {
+			continue
+		}
+		parts = append(parts, strings.TrimSpace(l.Spans[0].Text+l.Spans[1].Text))
+	}
+	return strings.Join(parts, " ")
+}
+
 // spanText is the line a set of ledger spans writes, joined so a test can read it as one string.
 func spanText(spans []session.LedgerSpan) string {
 	var b strings.Builder
@@ -59,7 +72,7 @@ func TestEveryHitsLineAddsUpToItsOwnTotal(t *testing.T) {
 	e, played := blowWithEveryFlatTerm()
 
 	for i := 0; i < e.HandCardCount; i++ {
-		line := spanText(sumSpans(hitRecord(e, i, played[i], nil)))
+		line := workingSum(hitRecord(e, i, played[i], nil))
 		sum, total := evaluateSum(t, line)
 		if sum != total {
 			t.Errorf("hit %d wrote %q, which comes to %d rather than %d", i, line, sum, total)
@@ -94,19 +107,122 @@ func TestTheWorkingEndsOnEveryHitTogether(t *testing.T) {
 	}
 }
 
+// **Two Awakenings that both wake are two steps**, each beside what it alone added, and the column
+// still comes to the hit's figure.
+func TestTwoAwakeningsAreTwoSteps(t *testing.T) {
+	e := handEvent("pair", []int{70}, 100, 0)
+	e.HandDMG = 15
+	e.HandCardPct[0], e.HandCardBase[0] = 200, 70
+	e.HandAwaken[0] = 20
+	e.Awaken, e.AwakenSeats, e.AwakenBy = 20, []bool{true, false, true}, []int{10, 0, 10}
+	restateHits(&e)
+	relics := []combat.WornRelic{{}, {}, {}}
+
+	rec := hitRecord(e, 0, combat.Of(combat.Bash, combat.Fire), relics)
+	line := workingSum(rec)
+	if sum, total := evaluateSum(t, line); sum != total || total != e.HitAmounts[0] {
+		t.Errorf("the ledger wrote %q, which comes to %d; the hit was %d", line, sum, e.HitAmounts[0])
+	}
+	if !strings.HasPrefix(line, "15 + 10 + 10 x 2") {
+		t.Errorf("the working reads %q, want the DMG, a + 10 per Awakening, then the card's x 2", line)
+	}
+}
+
 // TestTheRungRelicsMultiplierIsOnTheLine holds the other half: a relic that scales the hand is a
-// second `x`, never a bigger figure in the first — see combat.Event.HandScale.
+// second `x`, never a bigger figure in the first — see combat.Event.HandScale — and **two of them
+// are two steps**, each beside what it alone multiplied by, before the hand's, which is last.
 func TestTheRungRelicsMultiplierIsOnTheLine(t *testing.T) {
 	e, played := blowWithEveryFlatTerm()
-	e.HandScale, e.HandScaleSeats = 200, []bool{true}
+	e.HandScale, e.HandScaleSeats, e.HandScaleBy = 600, []bool{true, true}, []int{200, 300}
 	restateHits(&e)
+	relics := []combat.WornRelic{{}, {}}
 
-	line := spanText(sumSpans(hitRecord(e, 0, played[0], nil)))
-	if strings.Count(line, " x ") != 2 {
-		t.Errorf("the ledger wrote %q, want the hand's multiplier and the relic's as two terms", line)
-	}
+	rec := hitRecord(e, 0, played[0], relics)
+	line := workingSum(rec)
 	if sum, total := evaluateSum(t, line); sum != total {
 		t.Errorf("the ledger wrote %q, which comes to %d rather than %d", line, sum, total)
+	}
+
+	steps := hitLines(rec, "")
+	hand := -1
+	for i, l := range steps {
+		if len(l.Spans) == 3 && l.Spans[1].Ink == session.InkHand {
+			hand = i
+		}
+	}
+	// **The hand is the last step before the sum**, and the relics that multiply it come before it.
+	if hand != len(steps)-2 || hand < 3 {
+		t.Fatalf("the hand's multiplier is not the last step, with two relics before it: %v", steps)
+	}
+	for k, want := range []int{200, 300} {
+		step := steps[hand-2+k]
+		if len(step.Spans) != 3 || step.Spans[1].Text != HandMultiplierText(want) || step.Spans[2].Ink != session.InkRelic {
+			t.Errorf("hand relic step %d reads %q, want its own x%s labelled with its relic",
+				k, step.Text(), HandMultiplierText(want))
+		}
+	}
+}
+
+// TestEveryPlusIntoTheDMGIsWritten is the jump from the duelist's own DMG to the figure the cards
+// multiply: **written once, at the top of the turn** — the duelist's own figure, each relic and held
+// card that added to it as its own labelled step, and what they came to — and every hit then starts
+// from that figure.
+func TestEveryPlusIntoTheDMGIsWritten(t *testing.T) {
+	e := combat.Event{Kind: combat.KindHand, HandCardCount: 1, Multiplier: 100}
+	e.HandDMGBase, e.HeldRiderPct = 20, 100
+	e.VitaeDMG, e.VitaeDMGSeats = 200, []bool{true}
+	e.HeldDMG, e.HeldDMGCards, e.HeldDMGSeats = 8, 4, []bool{false, true}
+	e.DMGRaiseBy = []int{200, 8}
+	e.HandDMG = 228
+	e.HandCardPct[0], e.HandCardBase[0], e.HandAmounts[0], e.HitAmounts[0] = 50, 114, 114, 114
+	e.Amount = 114
+
+	recs := HandTermRecords(e, []combat.WornRelic{{}, {}}, []combat.Card{combat.Of(combat.Jab, combat.Ice)})
+	for _, r := range recs {
+		if r.Role == session.RoleDMG {
+			t.Errorf("a raise is written as a line of its own, want it inside the hit: %+v", r)
+		}
+	}
+	hit := recs[0]
+	if text := lineText(hitLines(hit, "")); !strings.Contains(text, "228") || strings.Contains(text, "+ 200") {
+		t.Errorf("the hit reads %q, want it to start from the turn's 228 and not build it again", text)
+	}
+	if sum, total := evaluateSum(t, workingSum(hit)); sum != total {
+		t.Errorf("the working %q comes to %d rather than %d", workingSum(hit), sum, total)
+	}
+
+	rec, ok := DMGRecord(e, []combat.WornRelic{{}, {}}, session.SideYou, "Duelist")
+	if !ok {
+		t.Fatal("a turn whose DMG was raised writes no DMG record")
+	}
+	text := lineText(LedgerLines([]session.LedgerRecord{rec}))
+	for _, want := range []string{"Duelist DMG grows for the attack", "20", "+ 200", "+ 8", "= 228", "Total DMG"} {
+		if !strings.Contains(text, want) {
+			t.Errorf("the turn's DMG reads %q, want %q in it", text, want)
+		}
+	}
+
+	bare := e
+	bare.HeldDMG, bare.VitaeDMG, bare.HandDMG, bare.DMGRaiseBy = 0, 0, 20, nil
+	if _, ok := DMGRecord(bare, nil, session.SideYou, "Duelist"); ok {
+		t.Error("a turn swung at the duelist's own DMG writes a DMG record, with nothing to explain")
+	}
+}
+
+// TestEveryStepOfAHitIsLabelled is the point of writing a hit down a column: every figure in it
+// says what produced it, so nothing in the working is a number the player has to take on trust.
+func TestEveryStepOfAHitIsLabelled(t *testing.T) {
+	e, played := blowWithEveryFlatTerm()
+	e.HandScale, e.HandScaleSeats, e.HandScaleBy = 200, []bool{true}, []int{200}
+	restateHits(&e)
+
+	for _, l := range hitLines(hitRecord(e, 0, played[0], []combat.WornRelic{{}, {}, {}}), "") {
+		if l.Voice != session.VoiceWork || strings.HasPrefix(strings.TrimSpace(l.Text()), "=") {
+			continue
+		}
+		if len(l.Spans) != 3 || strings.TrimSpace(l.Spans[2].Text) == "" || l.Spans[2].Col == 0 {
+			t.Errorf("the step %q has no label on the label column", l.Text())
+		}
 	}
 }
 
@@ -139,7 +255,7 @@ func TestTheRungRelicsRaiseIsSaidButNeverSummed(t *testing.T) {
 	e, played := blowWithEveryFlatTerm()
 	relics := []combat.WornRelic{{}, {}, {}}
 
-	if line := spanText(sumSpans(hitRecord(e, 0, played[0], relics))); strings.Contains(line, "+ 2 ") {
+	if line := workingSum(hitRecord(e, 0, played[0], relics)); strings.Contains(line, "+ 2 ") {
 		t.Errorf("the hit reads %q, and the rung relic's raise is already inside the card term", line)
 	}
 
@@ -153,7 +269,7 @@ func TestTheRungRelicsRaiseIsSaidButNeverSummed(t *testing.T) {
 	if said := spanText(termLine(raises[2]).Spans); !strings.Contains(said, "the purse") || !strings.Contains(said, "+8 DMG") {
 		t.Errorf("the purse's raise reads %q, want it named and the DMG it added", said)
 	}
-	if line := spanText(sumSpans(hitRecord(e, 0, played[0], relics))); strings.Contains(line, "+ 8 ") {
+	if line := workingSum(hitRecord(e, 0, played[0], relics)); strings.Contains(line, "+ 8 ") {
 		t.Errorf("the hit reads %q, and the purse's raise is already inside the card term", line)
 	}
 }

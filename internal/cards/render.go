@@ -179,7 +179,6 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 			return nil, err
 		}
 	}
-	drawEffects(img, s, st)
 	if err := drawCounter(img, s, st, f, border); err != nil {
 		return nil, err
 	}
@@ -206,9 +205,8 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 //
 // **The two halves say their number differently, on purpose** *(owner's call, 2026-09-16)*. An
 // attack's multiplier runs 1/4 to 4 and has a fraction in it, so it is printed; a defense raises
-// one, two or three shields, which is few enough to *see* rather than read, so it is stacked. The
-// stack is also what the pip row under the duelist card already does, so the card and the fighter
-// say one thing one way.
+// one, two or three shields, which is few enough to *see* rather than read, so it is stacked, the
+// way the shields themselves heap over the card once it is played.
 //
 // **It stands in the text band, which is what it costs.** TextColumnLeft is 33 and the badge runs
 // to GlyphInset+BadgeSize — 45 on Hand — so it overlaps the text column by twelve pixels, and the
@@ -466,47 +464,8 @@ func lightness(c color.RGBA) int {
 	return int((299*int(c.R) + 587*int(c.G) + 114*int(c.B)) / 1000)
 }
 
-// drawEffects lays Spec.Effects out in a centered row along the bottom of the card.
-//
-// **The row is sized to what is actually there.** Nil entries are skipped before the width is
-// worked out, so one picture sits in the middle of the card and four spread across it — rather
-// than four fixed slots of which three are holes.
-//
-// **Fitted and resampled like the portrait, not blitted like a glyph.** These are 500-pixel
-// drawings landing in a twenty-pixel box; nearest-neighbor at that ratio throws away 24 rows
-// out of every 25 and what survives is noise. `drawArt`'s argument applies with more force here,
-// and this runs once per distinct card rather than per frame.
-//
-// Each badge is fitted into its own square without distorting, so a picture that is not square
-// keeps its shape and is centered in the slot it was given.
-func drawEffects(dst *image.RGBA, s Spec, st Style) {
-	if st.EffectSize <= 0 {
-		return
-	}
-
-	shown := make([]image.Image, 0, len(s.Effects))
-	for _, e := range s.Effects {
-		if e != nil {
-			shown = append(shown, e)
-		}
-	}
-	if len(shown) == 0 {
-		return
-	}
-
-	span := len(shown)*st.EffectSize + (len(shown)-1)*st.EffectGap
-	left := (st.Width - span) / 2
-
-	for i, e := range shown {
-		box := image.Rect(0, 0, st.EffectSize, st.EffectSize).
-			Add(image.Pt(left+i*(st.EffectSize+st.EffectGap), st.EffectTop))
-		fitInto(dst, e, box)
-	}
-}
-
 // fitInto scales src to fit box without distorting it and centers it there. It is drawArt's
-// arithmetic with the box named by the caller rather than read off the style, which is what lets
-// a row of small badges and one large portrait share it.
+// arithmetic with the box named by the caller rather than read off the style.
 func fitInto(dst *image.RGBA, src image.Image, box image.Rectangle) {
 	b := src.Bounds()
 	if b.Dx() == 0 || b.Dy() == 0 || box.Empty() {

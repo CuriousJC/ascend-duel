@@ -82,8 +82,8 @@ func flightStaggerPer() int { return ui.Beat(1, 6) }
 // the hand, hold in the middle of the screen to be read, then drop into a corner — three
 // beats, because the destination was not somewhere you could read a card. The table *is*
 // the readable place, so there is one beat now: out of the hand and into its seat, where it
-// stays for the rest of the round. What the hold used to say — "this is the one resolving"
-// — is said by tableFireLift instead.
+// stays for the rest of the round. "This is the one resolving" is said by a plate behind the
+// cards that made the hand, or a shake on a creature's card as it swings.
 func riseTicks() int { return ui.Beat(3, 5) }
 
 // cardFlight is one card in the air between the hand and the draw pile. Purely something to
@@ -109,11 +109,7 @@ type cardFlight struct {
 	// fromTable says the pair locates a seat on the table rather than a slot in the hand. A
 	// card played this round spends the rest of it face up on the left of the table, so at the
 	// end of the round it is thrown from there — not from the hand slot it left long before.
-	//
-	// split goes with it: the table row breaks between its attacks and its plans, so a seat
-	// cannot be located without knowing where that break was. It is unread for a hand slot.
 	fromTable bool
-	split     int
 }
 
 // addFlight queues one. Kept as a method so the two call sites in spendSelected read as
@@ -277,7 +273,7 @@ func (s *CombatScene) drawOutbound(gs *state.GlobalState, screen *ebiten.Image, 
 
 	from := slotAt(gs, f.index, f.count)
 	if f.fromTable {
-		from = playedSeatAt(gs, f.index, f.count, f.split)
+		from = playedSeatAt(gs, f.index, f.count)
 	}
 
 	ui.DrawFlyingCard(gs, screen,
@@ -373,6 +369,9 @@ type resolvedCard struct {
 	// starts from the card's own place. Same reason cardFlight stores the pair — the hand is
 	// still holding this card, but a later discard could re-lay the row out around it.
 	handIndex, handCount int
+
+	// place is where the card sits along the row: its position in the queue the player picked.
+	place int
 }
 
 // seatPlayedCards deals the player's whole queue to the table, in resolution order.
@@ -383,9 +382,9 @@ type resolvedCard struct {
 // be one hand against half of another. What playback drives now is which card is *lit*, not
 // which cards exist — see firingSeat.
 //
-// **It asks combat.ResolutionOrder for the order rather than taking the queue as planned.** The
-// order regroups by category, so the third card to resolve is not the third card selected, and
-// a row in selection order would be a confident picture of a round that does not happen.
+// **The list is in combat.ResolutionOrder, because the events name cards by that order** — the third
+// card to resolve is not the third selected. **Each card is drawn at its place in the queue**, so the
+// row on screen is the hand as picked; see playedPoint.
 func (s *CombatScene) seatPlayedCards() {
 	s.Theater.resolved = nil
 
@@ -409,10 +408,11 @@ func (s *CombatScene) seatPlayedCards() {
 		}
 
 		s.Theater.resolved = append(s.Theater.resolved, resolvedCard{
-			Travel:    ui.NewTravel(len(s.Theater.resolved)*flightStaggerPer(), riseTicks()),
+			Travel:    ui.NewTravel(slot.Index*flightStaggerPer(), riseTicks()),
 			card:      s.hand[hand].Card,
 			handIndex: hand,
 			handCount: len(s.hand),
+			place:     slot.Index,
 		})
 	}
 }
@@ -461,29 +461,30 @@ func (s *CombatScene) noteResolved(e combat.Event) {
 		mine, theirs = &s.Theater.enemyFiringSeats, &s.Theater.firingSeats
 	}
 
-	// **Nothing on a duelist's turn lifts on a card's own announcement.** A lift says "this card is
-	// acting now", and a duelist's turn has exactly one moment entitled to say that: the hand's
-	// announcement. See noteHand, which raises the cards that made the rung on the `KindHand` beat,
-	// and advancePlayback, which puts them back down before the hits. **The turn reads shields,
-	// then the announcement, then the hits**, and a second gesture ahead of the announcement reads
-	// as whichever card it lifted having gone first.
+	// **Nothing on a duelist's turn is marked on a card's own announcement.** A duelist's turn has
+	// exactly one moment entitled to say "these cards": the hand's announcement, which names the
+	// rung in its shout and marks nothing on the table — see noteHand. **The turn reads shields, then the announcement,
+	// then the hits.** The defend phase says what it has to say as heaps forming over their own
+	// cards — see noteShieldRaise — so a defense has nothing to add by moving.
 	//
-	// The defend phase says what it has to say as one bundle of pips out of their own cards — see
-	// noteShieldRaise, and MECHANICS.md §Shields — so a defense has nothing left to add by moving.
-	//
-	// **A solo attacker is the exception and that is the whole point of it.** Its three cards swing
-	// three times, in order, no hand is ever named, and the card that is up is the card that is
-	// hitting. It has no other beat to be lifted on.
+	// **A solo attacker is the exception and that is the whole point of it.** Its cards swing one
+	// at a time, no hand is ever named, and the card that is up is the card that is hitting — so it
+	// rattles sideways on its own beat, and its figure leaves it. Nothing on the table lifts.
 	switch {
 	case s.soloAttacker(side) && combat.Plain(e.Action).Category() == combat.CategoryAttack:
 		*mine = []int{seat}
+		if side == combat.SideB {
+			s.shakeEnemyCard(seat)
+		} else {
+			s.shakePlayedCard(seat)
+		}
 	default:
 		*mine = nil
 	}
 	*theirs = nil
 }
 
-// lit reports whether a seat is one of the ones currently raised.
+// lit reports whether a seat is one of the ones currently marked.
 func lit(seats []int, seat int) bool {
 	for _, s := range seats {
 		if s == seat {
@@ -493,35 +494,28 @@ func lit(seats []int, seat int) bool {
 	return false
 }
 
-// noteHand raises the cards the hand was made of, on the beat it is announced.
+// noteHand marks the cards the hand was made of, on the beat it is announced.
 //
 // The engine names them — see Event.RungCards — so this is a lookup, not a search. Nothing
 // here knows what a Flurry is or how many cards one takes, which is what stops the table
 // disagreeing with the hand that actually fired.
 //
 // **The rung, not the blow.** `HandCards` is every attack the turn played, so on a Pair formed by
-// two shields beside one attack it holds the attack too — and raising it would stand up a card that
-// made no part of the hand being announced. `RungCards` is the narrower list and is what the lift
-// means.
+// two shields beside one attack it holds the attack too — and marking it would highlight a card
+// that made no part of the hand being announced. `RungCards` is the narrower list.
 //
-// **The cards need not be adjacent.** A counted hand like Two Pair is two cards, a card that
-// earned nothing, and two more, so this takes the seats it is given rather than a span between
-// the first and the last.
-//
-// **Raising is the whole of what says which cards earned it**: the shout names the hand and the row
-// shows which cards made it, with no ring or bracket drawn round them. **And it ends with the
-// announcement** — advancePlayback puts them down when the tally starts, because a row held up
-// through the arithmetic is the announcement still being made while it is read out.
+// **Nothing is drawn to mark them** *(owner's call)*: the shout names the hand and each card's line
+// shows what it did. The marked seats are still what a fizzle's shield sets off toward.
 func (s *CombatScene) noteHand(e combat.Event) {
 	if e.Kind != combat.KindHand {
 		return
 	}
 
-	// **The No Hand raises nothing.** That rung is announced like any other — it carries a
+	// **The No Hand marks nothing.** That rung is announced like any other — it carries a
 	// multiplier, a stone raises it, a relic can name it — but it is the turn that built *no* hand,
 	// so there is no set of cards that made it. Its `Blow.Rung` is one card picked by damage rather
-	// than by counting, and raising that says the card did something while every other attack in
-	// the turn lands beside it unraised. See builtARung.
+	// than by counting, and marking that says the card did something while every other attack in
+	// the turn lands beside it unmarked. See builtARung.
 	var seats []int
 	if builtARung(e) {
 		seats = make([]int, 0, e.RungCardCount)
@@ -584,10 +578,11 @@ func (s *CombatScene) playedSeatOf(handIndex int) (int, bool) {
 }
 
 // at is where a played card is drawn right now: waiting its turn to set off, flying to its
-// seat, sitting in it, or lifted out of it because it is the card currently resolving.
-func (r resolvedCard) at(gs *state.GlobalState, seat, total, split int, firing bool) image.Point {
+// seat, or sitting in it. **A card on the table never lifts**, and nothing marks the cards that made
+// the hand: the shout names it and every card's line shows what it did.
+func (r resolvedCard) at(gs *state.GlobalState, total int) image.Point {
 	from := slotAt(gs, r.handIndex, r.handCount)
-	to := playedSeatAt(gs, seat, total, split)
+	to := playedSeatAt(gs, r.place, total)
 
 	switch {
 	case r.Waiting():
@@ -595,12 +590,7 @@ func (r resolvedCard) at(gs *state.GlobalState, seat, total, split int, firing b
 	case !r.Done():
 		return ui.LerpPoint(from, to, ui.EaseOut(r.Progress()))
 	}
-
-	// **The lift is applied after the card has landed, never during the flight.** A card still
-	// arriving is already the most moving thing on screen, and lifting it as well would make
-	// the two beats — dealt to the table, then played — impossible to tell apart. The
-	// opponent's cards do not fly, so their row applies the same lift unconditionally.
-	return lift(to, firing)
+	return to
 }
 
 // drawPlayedCards draws the player's side of the table and whatever is still flying into it.
@@ -609,14 +599,13 @@ func (r resolvedCard) at(gs *state.GlobalState, seat, total, split int, firing b
 // reads in the order the round happens — and so a card still arriving is drawn over the ones
 // already seated rather than sliding underneath them.
 func (s *CombatScene) drawPlayedCards(gs *state.GlobalState, screen *ebiten.Image) {
-	split := s.playedSplit()
-	for i, r := range s.Theater.resolved {
-		at := r.at(gs, i, len(s.Theater.resolved), split, lit(s.Theater.firingSeats, i))
+	for _, i := range byPlace(len(s.Theater.resolved), s.playedPlace) {
+		r := s.Theater.resolved[i]
+		at := r.at(gs, len(s.Theater.resolved))
 
 		// **The card rattles as its own figure is written into its line** *(owner's call,
-		// 2026-08-26)*. Sideways, where the lift above is vertical: the lift says this card built
-		// the hand and stays for the whole blow, and the shake says this card is paying *now*. Two
-		// vocabularies on one card, which is why the shake could not also be a jump.
+		// 2026-08-26)*: the shake says this card is paying *now*, and the plate behind it says it is
+		// one of the cards that made the hand.
 		at.X += s.playedCardShake(i)
 
 		ui.DrawCard(gs, screen, at, cards.Hand, r.card, ui.HeldBy(s.fighter.Duelist, r.card), true, false)

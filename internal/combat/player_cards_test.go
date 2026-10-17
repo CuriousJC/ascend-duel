@@ -116,7 +116,7 @@ func TestUnspentShieldsLapseBeforeTheirOwnerActsAgain(t *testing.T) {
 		t.Errorf("A carried %d shields into round 3, want them lapsed", a2.Shields.Count())
 	}
 	if !hasKind(events, KindExpired) {
-		t.Error("no KindExpired — the pip row would keep drawing shields the engine had taken away")
+		t.Error("no KindExpired — the screen would keep drawing shields the engine had taken away")
 	}
 }
 

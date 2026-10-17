@@ -67,7 +67,7 @@ var seedCatalog = []namedSeed{
 	{"both-verbs", 1, "a defend card and an attack: both phases in one round"},
 
 	// 1xJab 2xThrust 1xSkewer 1xSlice 1xThump 1xBrace 1xBlock. It holds both defenses, which is what
-	// the demo wants: three shields in one turn and the pip row on the duelist card part-filled. **Brace and Block are the whole vocabulary**.
+	// the demo wants: three shields in one turn, heaped over two cards. **Brace and Block are the whole vocabulary**.
 	// Together they are 3 AP, half a round.
 	{"all-shields", 2, "a Brace and a Block: the whole defend vocabulary in hand"},
 }

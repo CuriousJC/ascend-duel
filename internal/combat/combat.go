@@ -166,9 +166,47 @@ func playTurn(
 	// **The turn is closed after everything in it has resolved**, which is what makes "a turn with
 	// no defend card in it" a question this can answer. A duelist who fell mid-turn returns above and
 	// never reaches this: a streak is a fact about turns taken, and a corpse takes none.
+	events, actor = staggerAtTurnEnd(events, side, actor, turn, round)
 	actor = actor.TurnTaken(cardsOf(turn))
 
 	return events, actor, target
+}
+
+// staggerAtTurnEnd is every worn `shield-per-card` rule firing as the turn closes — the staggers.
+// **One KindStaggered per matching card, naming that card's seat and in its element**, so the
+// screen can fly each shield from the ring to the card that earned it. Worn order, then queue
+// order. See DoShieldPerCard.
+func staggerAtTurnEnd(events []Event, side Side, actor Duelist, turn []Slot, round int) ([]Event, Duelist) {
+	for _, w := range actor.WornRelics() {
+		for _, rule := range RelicOf(w.Relic).Rules {
+			if rule.When != MomentTurnTaken {
+				continue
+			}
+			for _, e := range rule.Then {
+				if e.Do != DoShieldPerCard {
+					continue
+				}
+				for i, slot := range turn {
+					if !rule.If.Matches(slot.Card) {
+						continue
+					}
+					actor = actor.raiseShields(slot.Card.Element, e.Amount)
+					events = append(events, Event{
+						Kind:    KindStaggered,
+						Side:    side,
+						Action:  slot.Card.Concept,
+						Element: slot.Card.Element,
+						Slot:    i,
+						Relic:   w.Relic,
+						Amount:  e.Amount,
+						Life:    actor.Shields.Count(),
+						Round:   round,
+					})
+				}
+			}
+		}
+	}
+	return events, actor
 }
 
 // cardsOf is a turn's cards without their slots, for the rules that ask about the turn as a whole.
@@ -343,6 +381,7 @@ func blockedByShield(events []Event, side Side, actor, target Duelist, card Card
 		Slot:    slot,
 		Hit:     hit,
 		Surged:  surged,
+		Would:   would,
 		Round:   round,
 	})
 
@@ -495,7 +534,7 @@ func playRiders(events []Event, side Side, actor Duelist, turn []Slot, held []Ca
 		// defend card — it is on a Jab, and the Jab is about to swing — so this cannot wait for
 		// the defend phase without a shielding attack being the only card in the game whose two
 		// halves happen in different phases. It goes through raiseShields, so the five-shield cap
-		// and the pip row hold exactly as they do for a Block.
+		// holds exactly as it does for a Block.
 		if up := slot.Card.ShieldOnPlay(); up > 0 {
 			actor = actor.raiseShields(slot.Card.Element, up)
 			events = append(events, Event{

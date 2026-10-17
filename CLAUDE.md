@@ -283,15 +283,22 @@ hit whole**. See MECHANICS.md §Shields. Six things to know before touching any 
 - **A shield eats its own element's heaviest hit first, then the heaviest of what is left — never
   simply the first**. `combat.shieldedHits` is the whole rule,
   shared by both attack phases, and it decides the mask at the top of the turn rather than as each
-  hit arrives — which is what lets the screen show the exchange before anything swings. Ranked on
+  hit arrives. Ranked on
   each landing's own damage, deliberately: the hand's multiplier is one multiplier over the whole
   turn and cannot reorder two hits, so projecting the pipeline per hit
-  would be a second resolver agreeing with the first. **The screen draws it as a broken window** —
-  `cards.MarkShattered` for the settled mark, `internal/screens/combat_shatter.go` for the pip
-  crossing the table and the crack opening. **A mark is not an upgrade**: an upgrade is what a
-  card permanently *is* and is painted as the face itself, a mark is the card's situation and is
-  painted over the top of it. `Render` fixes that order. See MECHANICS.md §Shields and §An upgrade
-  is painted on the card, as its face.
+  would be a second resolver agreeing with the first. **The screen draws a shield as a picture
+  heaped over whatever raised it** — the defend card, an attack card with a shield rider, or a
+  helm's ring — **once the turn's arithmetic is done**, every hit's line worked out first. On the
+  beat a creature's blocked attack is reached, the hit it would have landed (`Event.Would`) sets
+  off on its real path and a shield leaves its heap to meet it on the way — where the path crosses
+  the screen's horizontal middle — and the two break apart there, and
+  a matched block writes SURGE over the break — a fizzle is the same picture with a shield of the
+  creature's element and FIZZLE. `internal/screens/combat_shields.go` and `combat_intercept.go` are
+  the screen's half and `ui/shield_heap.go` the heap's layout, which the animation gallery's
+  `shield heap` and `intercept` entries share. **The
+  engine counts shields per element and never says which card's shield it spent**, so the newest
+  heap holding one of the spent element gives one up — a choice about the picture, not a rule. See
+  MECHANICS.md §Shields.
 - **A shield's element is a rule, and so is a creature's**. `Duelist.Shields` is a
   `combat.ShieldStack` — a count per element, fixed-width so a Duelist stays a value — and a
   shield eating a hit of its own element banks one action point into `Duelist.Surge` for its
@@ -299,11 +306,11 @@ hit whole**. See MECHANICS.md §Shields. Six things to know before touching any 
   it **fizzles** (`combat.fizzles`, `KindFizzled`): it lands nothing, though the card still forms
   the hand. Wildcards never fizzle, and the duelist has no element, so the fizzle runs one way.
   See MECHANICS.md §A creature's own element.
-- **`cards.Mark` is a bitmask and marks compose**. A card can be broken *and* pointed
-  at; `internal/cards/mark.go`'s `drawMark` owns the order they are painted in, so one pair of facts
-  draws one way. **Append-only, and worse to insert into than an ordinal enum** — claiming a bit in
-  the middle changes what every existing value means, not just the ones after it. Two marks today:
-  `MarkShattered` and `MarkHighlit`. The deck panel's filter is not a mark: it darkens the cards it
+- **`cards.Mark` is a bitmask and marks compose**. `internal/cards/mark.go`'s `drawMark` owns
+  the order they are painted in, so one pair of facts draws one way. **A mark is not an upgrade**:
+  an upgrade is what a card permanently *is* and is painted as the face itself, a mark is the
+  card's situation and is painted over the top of it. One mark today: `MarkHighlit`. The deck
+  panel's filter is not a mark: it darkens the cards it
   leaves out at draw time, beside the fading that says a card has been played.
 - **Only the player raises shields**, and creatures raise nothing at all. Every creature is a solo
   attacker (`SoloAttacks`, a hit per card) and the player forms hands and lands a hit per card,
@@ -320,10 +327,10 @@ hit whole**. See MECHANICS.md §Shields. Six things to know before touching any 
 - **One card raises at most five shields; a duelist holds as many as the turn paid for.** The
   five is `combat.MaxShields` = `MaxActions`, refused at `RegisterConcept` and clamped in
   `Card.Amount`. **`Duelist.raiseShields` does not clamp the total** — five Blocks in a turn is
-  ten shields and is meant to be, because what bounds a turn is the action budget. **The pip row
-  is a separate number in a separate package**: `ui.MaxShieldPips` is `cards.MaxEffects`,
-  being what the bottom band fits — so a duelist behind ten draws a full row and the true count is
-  on the engine. A row that can say a big number has not been designed.
+  ten shields and is meant to be, because what bounds a turn is the action budget. **The screen
+  has no cap either**: each card's shields heap over that card, so a big total is several heaps.
+  A shield still standing when its card leaves the table — one the Tower Shield kept — moves onto
+  the relic that kept it.
 - **The defenses are Brace and Block**, so the deck holds 2 defend concepts × 5 elements and 55
   cards in total. Moving that is a balance change:
   **re-run `tools/handodds` and `tools/seeds` after any edit here**, and read MECHANICS.md §The
@@ -784,9 +791,12 @@ on a tab press, never every frame, so a drag holds until the player asks for an 
 **Settings, the Compendium, Achievements, Credits, RunOver and Goods.** None appears in
 `screens/flow.go` — which is what "not a station" means mechanically — and the chrome stands down on
 the first five. Goods keeps the reward screen's corner: the cog, the ledger and its own hands
-button. The first four are reached by an `actions.Open*` call and record `gs.ReturnScreen` so Back
-works from anywhere — Achievements is opened from inside the Compendium and comes back to it; **RunOver is the exception and goes to the title outright**, because the screen
-it came from was drawing a run that has ended and there is nowhere to put the player back to.
+button. The first four are reached by an `actions.Open*` call, which pushes the screen the player was on
+onto `gs.Returns`, and Back pops it — **a stack, because these screens open each other**: a fight,
+then Settings, then the Compendium (a button on Settings as well as the title), then Achievements,
+and every Back lands one step nearer the fight. **RunOver is the exception and goes to the title
+outright, emptying the stack**, because the screen it came from was drawing a run that has ended
+and there is nowhere to put the player back to.
 
 **Goods is the fifth and it is the one with a door of its own**. It is a sealed good, opened:
 the three to five things inside it, and the one of them the player takes. It is reached from
@@ -843,8 +853,7 @@ the widget, built the same way `models.Button` is and following the same rules �
 a bevelled face, a cached image repainted only when something visible changed.
 
 - **It is reached from the cog in the game's chrome, from any screen**, so it is the only screen
-  that cannot name its successor: `state.ReturnScreen` is where Back goes, recorded by whoever
-  opened it. **It never touches `session.Phase`** — settings is not a station of a run, so opening
+  that cannot name its successor: whoever opens it pushes onto `gs.Returns` and Back pops it. **It never touches `session.Phase`** — settings is not a station of a run, so opening
   it mid-journey is a look at a dialog rather than a decision.
 - **Adding it is the usual three edits minus one.** No `session.Phase` and no entry in
   `screens/flow.go`, because it is not part of the run loop; just the `ActiveScreen` and the
@@ -928,8 +937,8 @@ the machinery and `internal/cards/dissolve.go` is the pattern the face comes apa
 - **It is not a `cards.Mark`.** A mark is the card's situation and the card is still itself
   afterwards, so it has a settled picture `internal/cards` can bake. A morph ends as a *different
   card*, so there is nothing to bake and no second rasterizer — what that package owns is the
-  geometry, on the same terms it owns `ShatterCracks`.
-- **The pattern is derived from the card's name, never rolled**, exactly like the crack pattern and
+  geometry.
+- **The pattern is derived from the card's name, never rolled**, through `cards.MarkSeed`, and
   as the explicit exception the randomness skill records. So one card always comes apart the same
   way, through a resize, an interruption or a re-entry.
 - **It reads as patches because the delays come off a smooth lattice.** Independent per-square
@@ -1066,8 +1075,8 @@ the page it is all reviewed on.
   form and every element answers a key, with anything that is not one of the five elements
   answering the neutral drawing — so a blank corner means a missing file rather than a card with no
   element. A key naming nothing comes back nil and draws nothing, which is the honest failure.
-- **Nothing is tinted.** The hue is in the drawing. `shieldFlight` and `shieldRow` carry
-  a `cards.Element`, which is what lets a pip draw the shield its card was showing.
+- **Nothing is tinted.** The hue is in the drawing. A standing shield carries a `cards.Element`,
+  which is what picks its drawing out of `assets/shield/`.
 - **A card's corner carries a drawn form mark** — a spear, a scimitar, a club and a shield for
   stab, slash, crush and defend, from `assets/form/`. `MarkArtKey` answers `""` for `FormNone`, so
   a relic and both fighter cards leave the slot empty.
@@ -1249,16 +1258,18 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
 
 **Relic, essence and rune art is a globbed family, keyed by filename stem** — `relic/fire.png`
 is `fire`, which is what `data/relics.json` writes in
-its `Art` field. **Each has its own default face** — `default-relic`, `default-essence`,
-`default-rune`, reached through the record's `ArtKey()` rather than through a constant in a
-screen: a fallback living in `internal/screens` is a fallback the review tool does not have, which
-is how a sheet comes to disagree with the game. The runes wore the essence's placeholder until
-they split, and they split because one shared picture is a page where a drawn essence and an undrawn
-rune are the same face.
+its `Art` field. **Every catalog falls back to one placeholder** — `data.PlaceholderArt`, a rainbow
+vapor question mark at `assets/game/placeholder.png` from `docs/art/placeholder_art_prompt.MD` —
+reached through the record's `ArtKey()` rather than through a constant in a screen: a fallback
+living in `internal/screens` is a fallback the review tool does not have, which is how a sheet
+comes to disagree with the game. Each catalog keeps its own `Default…Art` constant naming it, so
+the record's own code says what it falls back to. **The Compendium draws it for a record not found
+yet**, and a found record with no art of its own as its real card darkened —
+`ui.IsPlaceholder` is the test.
 Same exception to the three-edit rule the enemy portraits take, and the same cost: a key is
 tied to its filename, so renaming a file means editing the JSON. `assets.embedFamily` is the one
 walk all four families go through. **A relic with no artwork draws
-`default-relic.png`** — `data.RelicData.ArtKey` is the fallback and `TestEveryRelicDrawsSomething`
+the placeholder** — `data.RelicData.ArtKey` is the fallback and `TestEveryRelicDrawsSomething`
 fails on a key naming no file, so a blank face means art nobody has painted rather than a name
 nobody spelled right.
 
@@ -1633,6 +1644,7 @@ go list -f '{{.Name}}: {{join .Imports " "}}' ./... | grep curiousjc
 | Package | imports, of ours |
 |---|---|
 | `seeds` `models` `assets` `idle` `trace` `music` | *nothing* |
+| `assets/motifs` | assets *(imported blank, by `main` and `tools/roster` only)* |
 | `data` `profile` `privateassets` | *nothing* |
 | `journal` | profile |
 | `scenario` | data, combat *(compiled out unless `-tags scenario`)* |
@@ -1652,7 +1664,7 @@ go list -f '{{.Name}}: {{join .Imports " "}}' ./... | grep curiousjc
 | `ui` | data, achieve, carddesc, cards, combat, crashlog, decks, entities, models, journey, session, state, systems |
 | `screens` | all of the above, plus `ui` and `scenario` |
 | `game` | screens, ui, state, systems, models, profile, crashlog, journal, music, idle, trace |
-| `main` | game, session, assets, data, music, profile, crashlog, journal, scenario, screens, seeds, state |
+| `main` | game, session, assets, assets/motifs, data, music, profile, crashlog, journal, scenario, screens, seeds, state |
 
 Six facts about it that are load-bearing:
 
@@ -1834,7 +1846,12 @@ file was refiled. A named asset is three edits: the file, an `//go:embed` var, a
 **The motif pictures are the exception, and they are a *tree* rather than named assets.**
 `assets/motifs/` mirrors `data/motifs/`: `assets/motifs/<motif>/creature/` holds the creatures and
 `assets/motifs/<motif>/backdrop/` the rooms, with the two placeholders at the top of the tree.
-`//go:embed motifs` pulls the whole tree in and `assets.embedTree` walks it, **keying each file by
+**The tree is its own package, `assets/motifs`**, because it is most of the embedded weight: only
+the game (`main.go`) and `tools/roster` import it, blank, and its `init` files the tree into
+`assets.LoadImageData` through `assets.RegisterImages`. **Everything else — every test binary, every
+other sheet — carries none of it**, so a new program that draws a creature or a room has to import
+it or it draws the placeholder. A tool that only needs to know which pictures exist reads the files
+off disk, as `tools/motifreport` does. `assets.EmbedTree` walks it, **keying each file by
 its filename stem with the folders left out** — so where a file is filed never reaches a record, and
 two files sharing a stem anywhere in the tree fail the launch. **There is one picture per record
 per element** — `goblins-serf-fire.png` is `goblins-serf-fire`, which is what
@@ -1845,7 +1862,7 @@ a picture's key is tied to its filename**, so renaming one means editing the `Ar
 record that names it. Reach for the glob only when a *set* of files is being added; a one-off
 asset still gets its own var.
 
-**`default-enemy.png` is the whole of the creature fallback**, and **`default-background.jpg` is the
+**The placeholder is the whole of the creature fallback**, and **`default-background.jpg` is the
 backdrop's**. A record whose own picture has not been generated yet falls back to it rather than
 drawing a hole, so a blank face means art nobody has made rather than a name nobody spelled right —
 and the default backdrop carries no door, so a fight drawn on it is one with no room of its own.
@@ -1861,8 +1878,8 @@ cost tens of megabytes of resident memory for pictures most runs never show.
 `Combatant` has no `Sprite` field and `entities` imports no Ebitengine at all. **Both duelists
 are cards**, in opposite corners, and both state their life the same way — a bar over a
 fraction, at identical offsets on the two styles so the pair can be compared across the
-screen without measuring. **The player's carries a row of shield pips** in the block above its
-bar, and the enemy's carries its DMG figure there instead.
+screen without measuring. The enemy's carries its DMG figure in the block above its bar; the
+player's has nothing there, its shields being heaped over the cards that raised them.
 
 **A creature is one still picture and there is no animation anywhere.** Animating one means
 generating frames from the same brief `tools/creatureprompt` assembles, not going back for a sprite

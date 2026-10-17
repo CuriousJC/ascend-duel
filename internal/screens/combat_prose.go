@@ -1,6 +1,8 @@
 package screens
 
 import (
+	"strings"
+
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -55,9 +57,30 @@ func (s *CombatScene) ledgerRecords(events []combat.Event) []session.LedgerRecor
 		}
 	}
 
+	// **A side's DMG for the turn is said at the top of its turn**, before its wards and its
+	// defenses, so every hit after it starts from a figure already explained. It is read off the
+	// side's hand event, which arrives later in the log.
+	hands := map[combat.Side]combat.Event{}
+	for _, e := range events {
+		if e.Kind == combat.KindHand {
+			if _, seen := hands[e.Side]; !seen {
+				hands[e.Side] = e
+			}
+		}
+	}
+	opened := map[combat.Side]bool{}
+
 	add := func(r session.LedgerRecord) { out = append(out, r) }
 
 	for _, e := range events {
+		if e.Kind != combat.KindRoundStart && e.Kind != combat.KindRoundEnd && !opened[e.Side] {
+			opened[e.Side] = true
+			if h, ok := hands[e.Side]; ok {
+				if rec, ok := ui.DMGRecord(h, s.wornBy(e.Side), sideWord(e.Side), s.sideName(e.Side)); ok {
+					add(rec)
+				}
+			}
+		}
 		switch e.Kind {
 		case combat.KindRoundStart, combat.KindRoundEnd:
 			// The account holds one round per block, so saying which round it is would be an entry
@@ -100,9 +123,9 @@ func (s *CombatScene) ledgerRecords(events []combat.Event) []session.LedgerRecor
 				Amount: e.Amount, Relic: combat.RelicOf(e.Relic).Name,
 			})
 
-		case combat.KindWarded:
-			// **An entry of its own**, like a regeneration: it happens at the top of a turn with
-			// nothing before it to attach to.
+		case combat.KindWarded, combat.KindStaggered:
+			// **An entry of its own**, like a regeneration: a ward happens at the top of a turn with
+			// nothing before it to attach to, and a stagger at its close, after the hits' lines.
 			add(session.LedgerRecord{
 				Kind: session.KindWarded, Side: sideWord(e.Side), Name: s.sideName(e.Side),
 				Amount: e.Amount, Relic: combat.RelicOf(e.Relic).Name, Element: ui.ElementName(e.Element),
@@ -256,6 +279,13 @@ func (s *CombatScene) sideName(side combat.Side) string {
 		c = s.enemy
 	}
 	if c != nil && c.Name != "" {
+		// **A creature is named with its element in front** — `Ice Hive Drone` — so the account
+		// says what a hit of that element will do against it without the fight's colour to hand.
+		if side == combat.SideB {
+			if el := ui.ElementName(c.Duelist.Element); el != "" {
+				return strings.ToUpper(el[:1]) + el[1:] + " " + c.Name
+			}
+		}
 		return c.Name
 	}
 	return ui.DuelistName

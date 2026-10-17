@@ -94,7 +94,7 @@ creatures stay in one file, and its rooms sit beside them in a second.
 - **`Title` is boss-only** and is refused on a creature.
 - **`Art` is the picture family stem.** The face drawn is `<Art>-<element>.png`, so one record
   carries one picture per element it can be dealt as. A missing file falls back to
-  `default-enemy`, so a blank face means art nobody has made rather than a name nobody spelled
+  the placeholder (`data.DefaultEnemyArt`), so a blank face means art nobody has made rather than a name nobody spelled
   right.
 - **`Affinities` is a non-empty subset of the five elements**, no repeats. `basic` is not one of
   them: a creature takes its realm's colour, and a realm has one.

@@ -24,6 +24,7 @@ import (
 	"image"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
+	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/ui"
@@ -87,10 +88,10 @@ func buildBandBottom(gs *state.GlobalState) int {
 // more. No shields either: nothing is standing between fights.
 func drawBuildBand(gs *state.GlobalState, screen *ebiten.Image, vitae int, band *bandControls, raise bool) {
 	drawBuildCard(gs, screen, vitae)
-	drawBuildRelics(gs, screen, &band.relicDrag)
+	drawBuildRelics(gs, screen, band)
 	// **nil: a rune is carried on these screens, not spent.** The pane draws the same two seats
 	// and the same cards, dim, and the tooltip still explains them. See canSpend.
-	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil, band.heldSkip, raise)
+	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil, band.heldSkip, raise, &band.sale)
 	drawGuideCard(gs, screen)
 }
 
@@ -145,10 +146,8 @@ func drawBuildCard(gs *state.GlobalState, screen *ebiten.Image, vitae int) {
 		// every relic — see Session.Equip.
 		life := gs.Run.LifeAtFightStart(fighter.MaxLife)
 
-		// No shields: this is the build band between fights, where nothing has been raised and
-		// nothing is standing.
 		spec := ui.DuelistSpec(gs, fighter, name, fighter.DMG, vitae, life, fighter.MaxLife,
-			fighter.ActionPoints(), fightIndex(gs.Run), 0)
+			fighter.ActionPoints(), fightIndex(gs.Run))
 		if img := ui.CardImage(gs, spec, cards.DuelistStyle); img != nil {
 			r := buildCardRect(gs)
 			op := &ebiten.DrawImageOptions{}
@@ -163,13 +162,14 @@ func drawBuildCard(gs *state.GlobalState, screen *ebiten.Image, vitae int) {
 // **`drag` is the press in progress over it**, and it may be nil for a caller that does not let the
 // row be reordered. Nothing passes nil today; the parameter is there so that a screen putting the
 // band up to be *read* does not have to invent a controller nobody drives.
-func drawBuildRelics(gs *state.GlobalState, screen *ebiten.Image, drag *ui.CardDrag) {
+func drawBuildRelics(gs *state.GlobalState, screen *ebiten.Image, band *bandControls) {
 	if gs.Run == nil {
 		return
 	}
+	drag := &band.relicDrag
 
 	row := buildRelicRect(gs)
-	drawRelicPaneFrame(gs, screen, row)
+	drawRelicPaneFrame(gs, screen, row, &band.sale)
 	worn := wornRelics(gs)
 	counters := runCounters(gs)
 	for i, record := range worn {
@@ -178,11 +178,27 @@ func drawBuildRelics(gs *state.GlobalState, screen *ebiten.Image, drag *ui.CardD
 			continue
 		}
 		at := relicSlotAt(row, i, len(worn))
-		ui.DrawFloatingCard(gs, screen, at, i,
-			ui.RelicSpec(gs, record, counters[record.RelicRecord], true, false), cards.RelicStyle)
+		drawRunRelic(gs, screen, at, i,
+			ui.RelicSpec(gs, record, counters[record.RelicRecord], true, false), record.RelicRecord)
 	}
 	// The relic riding the cursor is the band's overlay, drawn over everything — see
 	// drawBandOverlay.
+}
+
+// drawRunRelic draws one of the run's worn relics resting in its seat between fights: floating, or
+// weightless when the run wears it so.
+//
+// **Read off the run**, which is the only copy of the row there is between fights — the combat
+// screen reads its fighter instead, which is built from the same flag. A screen drawing the run's
+// relics without asking is a relic bought weightless that sits flat until the next fight.
+func drawRunRelic(gs *state.GlobalState, screen *ebiten.Image, at image.Point, seat int,
+	spec cards.Spec, key string) {
+	if gs.Run != nil && gs.Run.IsWeightless(key) {
+		ui.DrawWeightless(screen, ui.CardImage(gs, spec, cards.RelicStyle), at, 1,
+			float64(gs.Count), float64(seat)*2.1)
+		return
+	}
+	ui.DrawFloatingCard(gs, screen, at, seat, spec, cards.RelicStyle)
 }
 
 // buildRelicRow is the band's row, addressed by the shared drag: the reward screen's and the shop's.
@@ -243,7 +259,7 @@ func hoverBuildRelics(gs *state.GlobalState, at image.Point, tip *models.Tooltip
 		return false
 	}
 	seat := relicSlotRect(row, i, len(worn))
-	title, lines := ui.RelicTip(record)
+	title, lines := ui.WornRelicTip(record, combat.WornRelic{Weightless: gs.Run.IsWeightless(worn[i])})
 	// **To the left of the card, never under it** *(owner's call)*: a panel under the top row
 	// covers the pane's count and the tab a click hangs there. PointLeft flips right at the
 	// screen's edge.

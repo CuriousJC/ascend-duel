@@ -68,6 +68,11 @@ const (
 	KindTimeUp      = "time-up"
 	KindDefeated    = "defeated"
 
+	// KindDMG is a duelist's DMG for one turn, built at its top: DMGBase is their own figure,
+	// DMGParts what relics and held cards added to it, Amount what it came to — the figure every
+	// hit of the turn is swung at. Written only when something added to it.
+	KindDMG = "dmg"
+
 	// KindWarded is a worn relic raising shields at the top of its wearer's turn — a helm. Relic
 	// is its name, Amount how many, Element their element.
 	KindWarded = "warded"
@@ -166,6 +171,17 @@ type LedgerRecord struct {
 	Multiplier int    `json:"multiplier,omitempty"`
 	HandScale  int    `json:"handScale,omitempty"`
 
+	// HandRelics is each relic that paid HandScale and what it alone multiplied by, in worn order,
+	// so every multiplier after the hand's is labelled with its own relic. Empty on an account
+	// written before it was kept, which writes HandScale once as "a relic".
+	HandRelics []LedgerFactor `json:"handRelics,omitempty"`
+
+	// DMGBase is the duelist's own DMG before this turn added anything to it, and DMGParts what was
+	// added to it — a relic's or a held card's DMG as Add, a held card's scaling as Scale, in the
+	// order the resolver applies them. Set on KindDMG.
+	DMGBase  int            `json:"dmgBase,omitempty"`
+	DMGParts []LedgerFactor `json:"dmgParts,omitempty"`
+
 	// Role is which kind of term line this is, from the list above. Set on KindTerm and nothing
 	// else.
 	Role string `json:"role,omitempty"`
@@ -254,7 +270,8 @@ type LedgerSum struct {
 	PlayAdd int `json:"playAdd,omitempty"`
 	PlayPct int `json:"playPct,omitempty"`
 
-	// Awaken is what an Awakening added to the card, after its riders and before its relics.
+	// Awaken is what an Awakening added to the DMG the card was swung at, before the card's own
+	// multiplier.
 	Awaken int `json:"awaken,omitempty"`
 
 	// Scales is what the relics priced it at, in worn order.
@@ -272,7 +289,7 @@ func RecordKinds() []string {
 		KindAct, KindBlow, KindTerm,
 		KindDamage, KindDrained, KindFizzled, KindBlocked,
 		KindRaised, KindLapsed, KindHeld, KindSilver, KindReflected, KindTithed,
-		KindRegenerated, KindWarded, KindTimeUp, KindDefeated, KindUsed,
+		KindRegenerated, KindWarded, KindTimeUp, KindDefeated, KindUsed, KindDMG,
 		KindTook, KindCut, KindChanged, KindWore, KindSold, KindSpent,
 		KindRaisedRung, KindGained, KindPaid,
 	}

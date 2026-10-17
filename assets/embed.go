@@ -83,15 +83,31 @@ var buttonArt embed.FS
 // fights it, and filing it under `motifs/` would put it in the tree the roster is read against,
 // where a picture with no record behind it is a record somebody has lost.
 //
-// **It is the same figure as `motifs/default-enemy.png`**, rendered for a different canvas: a
-// faceless human shape made of rainbow vapour, which is what both the guide and the not-yet-drawn
-// creature have in common — neither of them is anybody in particular. See
-// docs/art/guide_art_prompt.MD, which asks for the two renders together and says why one file
-// cannot serve both: this one is 256x256 with a transparent ground for the bubble, and the card's
-// is 200x280 and opaque because a bleeding card has nothing behind it.
+// A faceless human shape made of rainbow vapour, at 256x256 on a transparent ground for the bubble.
+// See docs/art/guide_art_prompt.MD.
 //
 //go:embed game/guide.png
 var guide_png []byte
+
+// The same figure rendered for a card — 200x280 and opaque, because a bleeding card has nothing
+// behind it — keyed `guide-card`. It is The Prismatic in the opponent's corner on every screen
+// that is not a fight, and it is not the placeholder: the guide is somebody, where the question
+// mark is a picture nobody has made.
+//
+//go:embed game/guide-card.png
+var guide_card_png []byte
+
+// THE PLACEHOLDER
+//
+// The one face every record with no picture of its own draws, in every catalog and on the roster —
+// a rainbow vapor question mark at the card's own 200x280, keyed `placeholder` (data.PlaceholderArt).
+// The Compendium draws it for a record the player has not found yet. **A named one-off rather than a
+// member of any family**, because it belongs to none of them. See
+// docs/art/placeholder_art_prompt.MD. The achievement icons carry their own square cut of it as
+// `achievement/default.png`, at Steam's 256.
+//
+//go:embed game/placeholder.png
+var placeholder_png []byte
 
 // THE GEAR
 
@@ -175,41 +191,22 @@ var textureArt embed.FS
 
 // THE MOTIFS: every creature's picture and every duel's backdrop
 //
-// **One directory per motif, mirroring `data/motifs/<motif>/`**, so what a motif has been drawn
-// is one folder to open: `motifs/goblins/creature/` and `motifs/goblins/backdrop/`. The two
-// placeholders sit at the top of the tree, `motifs/default-enemy.png` and
-// `motifs/default-background.jpg`, because they belong to no motif.
-//
-// **Keyed by filename stem, and the directory is not part of the key.**
-// `motifs/goblins/creature/goblins-serf-fire.png` is `goblins-serf-fire`, which is what
-// `data.MotifRecord.ArtKey` builds out of the record's `Art` field and the element the realm dealt
-// it as; `motifs/goblins/backdrop/goblins-outer-tinker-studio-fire.jpg` is `goblins-outer-tinker-studio-fire`,
-// which is what `data.Backdrop.ArtKey` builds the same way. So a file can be refiled without
-// touching a record, and two files anywhere in the tree sharing a stem are one lookup with two
-// answers — `embedTree` refuses that at load.
-//
-// **Embedded as a tree rather than one var each, which is a deliberate exception to the
-// three-edit rule** at the top of this file. That rule — the file, an //go:embed var, a map
-// entry — is right for a handful of named assets and absurd for a roster of this size: it would
-// be hundreds of lines no reviewer could check, drifting the first time a creature was renamed.
-// The consequence, stated because it is the thing the rule was protecting: **a picture's key is
-// tied to its filename**, so renaming one means editing the `Art` field of the record that names
-// it.
-//
-// **A missing picture falls back to its placeholder**, so a blank face means art nobody has made
-// rather than a name nobody spelled right, and the plain backdrop in a duel means no backdrop
-// fits that room. One placeholder of each kind for every motif: a per-motif placeholder is a
-// picture somebody has to draw before the motif can be looked at.
-//
-// **A creature is a PNG and a backdrop is a JPEG.** A backdrop is opaque edge to edge at the
-// screen's own 1920x1080, and a painted scene is about a sixth the size that way; the image/jpeg
-// import above is what decodes one. Both are handed out as bytes and decoded by whoever draws
-// them, because a decoded 1920x1080 picture is eight megabytes and a run only shows a handful.
-//
-// Provenance: generated from the prompts under `docs/art/`, like everything else in `assets/`.
-//
-//go:embed motifs
-var motifArt embed.FS
+// **Not embedded by this package.** They are most of the embedded weight, so they are their own
+// package, `assets/motifs`, and only what draws a creature or a room imports it — the game and the
+// roster tools. Everything else that links this package, every test binary and review sheet
+// included, carries none of them. The package registers itself through RegisterImages, so
+// LoadImageData is still the one door; see `go doc ./assets/motifs`.
+
+// registered is every family added from outside this package, in the order it was registered.
+var registered []func(images map[string][]byte)
+
+// RegisterImages adds a family to what LoadImageData hands back. **Called from a package's init**,
+// so a blank import is the whole of opting in, and the family is filed before anything can read
+// the map. A program that never imports the package draws a placeholder wherever one of its keys
+// is named, which is what a missing picture does everywhere.
+func RegisterImages(fill func(images map[string][]byte)) {
+	registered = append(registered, fill)
+}
 
 // THE SCREEN BACKDROPS: the picture behind every screen that is not a duel
 //
@@ -235,41 +232,41 @@ var portalArt embed.FS
 //go:embed particle/*.png
 var particleArt embed.FS
 
+// THE SHIELDS: a shield standing over the card that raised it, keyed by filename stem —
+// `shield-<element>`, plus `shield-neutral`. See docs/art/shield_art_prompt.MD and ui.ShieldKey.
+//
+//go:embed shield/*.png
+var shieldArt embed.FS
+
+// THE SCROLLS: the papyrus a card's working is written on, keyed by filename stem —
+// `scroll-light`, `scroll-mid`, `scroll-deep`. A top roll, a middle that stretches, a bottom roll.
+// See docs/art/scroll_art_prompt.MD and ui.DrawScroll.
+//
+//go:embed scroll/*.png
+var scrollArt embed.FS
+
 // The relic faces, globbed as a family and keyed by filename stem — `relic/fire.png` is
 // `fire`, which is what `data/relics.json` writes in its Art field.
 //
-// **It became a family on 2026-09-11**, having been one `//go:embed` var per file. Five pictures
-// is three edits each and readable; a catalog of a hundred and thirty-seven relics being drawn
-// is not, and the var names were the key, so every one of them was also a line in two loaders.
-// The cost is the documented one — a relic's key is now tied to its filename, so renaming a file
-// means editing `relics.json`.
-//
-// `relic/default-relic.png` is in here like any other and is what a relic with no Art of its own
-// falls back to: most of `data/relics.json` has no picture yet, and a pink border around an empty
-// face reads as a card that failed to load rather than as one waiting for art.
+// **A family rather than a var per file**, because a catalog this size as three edits a picture is
+// hundreds of lines no reviewer could check. The cost is the documented one — a relic's key is tied
+// to its filename, so renaming a file means editing `relics.json`. A relic with no Art draws the
+// placeholder.
 //
 //go:embed relic/*.png
 var relicArt embed.FS
 
-// The essence faces, the same way and for the same reason. `essence/default-essence.png` is what an essence
-// with no Art of its own draws — **a copy of the relic's default rather than a share of it**
-// *(owner's call, 2026-08-22)*: two files that happen to look alike today are two files that can
-// be replaced one at a time.
+// The essence faces, the same way and for the same reason.
 //
 //go:embed essence/*.png
 var essenceArt embed.FS
 
-// The rune faces, a family of their own as of 2026-09-12. **They wore the essence's placeholder
-// until then**, and the same argument that split the essence's off the relic's splits this off the
-// essence's: the day either catalog gets art, one shared picture is a page where a drawn essence and
-// an undrawn rune look identical, and a backlog you cannot see is a backlog nobody clears.
+// The rune faces, the same way.
 //
 //go:embed rune/*.png
 var runeArt embed.FS
 
-// The cantrip faces, a family of their own for the rune's reason:
-// `cantrip/default-cantrip.png` is a copy of the rune's placeholder rather than a share of it, so an
-// undrawn cantrip and an undrawn rune are two backlogs that can be cleared one at a time.
+// The cantrip faces, the same way.
 //
 //go:embed cantrip/*.png
 var cantripArt embed.FS
@@ -277,8 +274,8 @@ var cantripArt embed.FS
 // The playing-card faces, one per card per element, globbed the same way — `card/jab-fire.png` is
 // the key `jab-fire`, which is what `data/card_art.json` writes in its Art field.
 //
-// **There is no default-card.png and there must not be.** Every other family has a fallback face
-// because a card with no picture would be a blank rectangle; a playing card already says what it
+// **There is no fallback face and there must not be.** Every other family falls back to the
+// placeholder because a card with no picture would be a blank rectangle; a playing card already says what it
 // is through its mark, its ticks, its name and its text, so a record with no Art draws the card
 // exactly as it looked before this family existed. One shared placeholder across 95 records would
 // put 95 copies of one picture on the table at once. See data.DefaultCardArt.
@@ -305,25 +302,21 @@ var enemyCardArt embed.FS
 //go:embed damage/*.png
 var damageArt embed.FS
 
-// The stone faces, a family of their own as of 2026-09-14. **There is no default-stone.png**, which
-// is the one place this family departs from the three above it: a stone with no Art draws the
-// relics' default face, which is what an unpainted stone draws — see data.DefaultStoneArt.
-// A generated fallback says "nobody has drawn this yet" better than a painted one can, and it
-// leaves nothing to license.
+// The stone faces, the same way. A stone with no Art draws the placeholder — see
+// data.DefaultStoneArt.
 //
 //go:embed stone/*.png
 var stoneArtFS embed.FS
 
-// The shop's other cards, a family of their own as of 2026-09-15: the potions in
-// data/potions.json and the sealed goods in data/goods.json. **One directory for two
-// catalogs**, which is the one place a family is not one catalog — they share
+// The shop's other cards: the potions and tonics in data/potions.json and data/tonics.json, and
+// the sealed goods in data/goods.json. **One directory for several catalogs**, which is the one
+// place a family is not one catalog — they share
 // docs/art/other_card_art_prompt.MD, they are generated in one batch and they are filed by one
 // command, so splitting them into assets/potion and assets/good would be two directories of three
 // files that nothing ever tells apart. The keys are record ids either way and the map is flat.
 //
-// **There is no default-other.png.** A potion with no Art draws the relic catalog's default face
-// and a sealed good borrows the picture of whatever is inside it — see data.PotionData.ArtKey and
-// screens.goodArt, both of which predate this family and both of which still decide the empty case.
+// A potion or tonic with no Art draws the placeholder, and a sealed good borrows the picture of
+// whatever is inside it — see data.PotionData.ArtKey and screens.goodArt.
 //
 //go:embed other/*.png
 var otherArt embed.FS
@@ -448,14 +441,22 @@ func LoadImageData() map[string][]byte {
 	embedPrefixed(images, deckArt, "deck", "deck-")
 	embedPrefixed(images, achievementArt, "achievement", "achievement-")
 	embedFamily(images, barArt, "bar")
-	embedTree(images, motifArt, "motifs")
+	for _, fill := range registered {
+		fill(images)
+	}
 	embedFamily(images, screenArt, "screen")
 	embedFamily(images, portalArt, "portal")
 	embedFamily(images, particleArt, "particle")
+	embedFamily(images, shieldArt, "shield")
+	embedFamily(images, scrollArt, "scroll")
 
 	// Bob's face, for the reason the relic art is here: the tutorial draws him into a card
 	// through internal/cards, which has no graphics context.
 	images["guide_png"] = guide_png
+	images["guide-card"] = guide_card_png
+
+	// The placeholder, for the same reason: every catalog's card draws it through internal/cards.
+	images["placeholder"] = placeholder_png
 
 	// The glyph art. internal/systems takes the bytes rather than an *ebiten.Image for the
 	// same reason the relic art does: internal/cards draws into a plain Go image so the contact
@@ -507,20 +508,20 @@ func embedPrefixed(images map[string][]byte, fsys embed.FS, dir, prefix string) 
 	}
 }
 
-// embedTree is embedFamily for a directory of directories: every picture anywhere under root,
+// EmbedTree is embedFamily for a directory of directories: every picture anywhere under root,
 // keyed by filename stem, with the directories it sits in left out of the key. It is what lets
 // `assets/motifs/` mirror `data/motifs/` without a record having to know which folder its picture
-// was filed in.
+// was filed in. **Only pictures are filed**, so a Go file sitting in the tree is not a key.
 //
 // **Two files sharing a stem is fatal**, where embedFamily never has to ask: one flat directory
 // cannot hold two files of one name, and a tree can.
-func embedTree(images map[string][]byte, fsys embed.FS, root string) {
+func EmbedTree(images map[string][]byte, fsys fs.FS, root string) {
 	where := map[string]string{}
 	err := fs.WalkDir(fsys, root, func(p string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() {
+		if err != nil || d.IsDir() || imageStem(path.Base(p)) == path.Base(p) {
 			return err
 		}
-		raw, err := fsys.ReadFile(p)
+		raw, err := fs.ReadFile(fsys, p)
 		if err != nil {
 			return err
 		}

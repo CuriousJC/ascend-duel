@@ -177,16 +177,6 @@ type Style struct {
 	HealthBarHeight int
 	HealthTextSize  float64
 
-	// Spec.Effects drawn as a centered row of squares along the bottom edge. A zero
-	// EffectSize means the style shows none, which is every style but the duelist's card.
-	//
-	// **A square box each, and the picture is fitted into it** — scaled like the portrait rather
-	// than blitted like a glyph. The row is centered on the card and closes up as pictures come
-	// and go, so two sit in the middle rather than clinging to the left.
-	EffectSize int
-	EffectTop  int
-	EffectGap  int
-
 	// Spec.Counter drawn as a badge in the bottom-right corner. A zero CounterHeight means the
 	// style shows none, which is every style but RelicStyle.
 	//
@@ -462,8 +452,6 @@ func (st Style) Scaled(num, den int) Style {
 	out.HealthBarHeight = i(st.HealthBarHeight)
 	out.HealthTextSize = f(st.HealthTextSize)
 
-	out.EffectSize, out.EffectTop, out.EffectGap = i(st.EffectSize), i(st.EffectTop), i(st.EffectGap)
-
 	// **The counter was missing from this list until 2026-09-09**, which meant the one field block
 	// on Style authored in one space and drawn in another: the offsets are measured from the card's
 	// own edges, so an unscaled CounterBottom on a card a quarter taller put the figure a quarter
@@ -647,7 +635,6 @@ var GuideStyle = func() Style {
 //	156  ROOM             156..173
 //	207  health bar       207..225
 //	229  hit points       229..247   "42/60", centered
-//	247  shield pips      247..271   (Spec.Effects, a centered row)
 //	272  inside of the bottom border
 //
 // **The realm and the room are stat rows as of 2026-09-15** *(owner's call)*. They were two lines
@@ -666,11 +653,6 @@ var GuideStyle = func() Style {
 //
 // **The rule is what stops five rows reading as one list.** DMG, AP and VITAE are what the duelist
 // *is*; REALM and ROOM are where the run has got to. See Style.StatRuleAfter.
-//
-// **The shield row sits in the fighter block's pip row** — see fighter.go. It holds five, which
-// is `combat`'s cap on a duelist's shields for the same reason — a turn is five cards, so a sixth
-// shield could never be spent. The row closes up as shields are eaten, so three pips sit centered
-// rather than clinging to the left, and an unshielded duelist draws nothing at all.
 //
 // **The bar and the fraction are at exactly the enemy card's offsets**, deliberately: the two
 // cards face each other across the screen and a health bar that sat at a different height on
@@ -701,22 +683,14 @@ var DuelistStyle = Style{
 	StatRuleAfter: 3,
 	StatRuleGap:   18,
 
-	// **The bar and the pip row are the opponent's seats exactly**, out of fighter.go — those two
-	// are read across the table against each other. The row between them is the opponent's DMG
-	// and this card leaves it empty: the duelist writes its DMG at the top, where it has a ladder
-	// of stat rows and the opponent has a picture.
-	//
-	// The pip row draws nothing until shields are standing, and the space it holds is *reserved*
-	// rather than spare: taking it would mean a row of pips with nowhere to land the first time a
-	// Block goes down.
+	// **The bar is the opponent's seat exactly**, out of fighter.go — the two are read across the
+	// table against each other. The row above it is the opponent's DMG and this card leaves it
+	// empty: the duelist writes its DMG at the top, where it has a ladder of stat rows and the
+	// opponent has a picture.
 	HealthBarInset:  fighterBarInset,
 	HealthBarTop:    fighterBarTop,
 	HealthBarHeight: fighterBarHeight,
 	HealthTextSize:  fighterBarText,
-
-	EffectSize: fighterPipSize,
-	EffectTop:  fighterPipTop,
-	EffectGap:  fighterPipGap,
 }
 
 // EssenceStyle is an essence, in the card format *(2026-08-22)*.

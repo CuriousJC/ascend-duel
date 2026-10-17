@@ -39,10 +39,11 @@ func TestAnElementRuneReachesTheCardInTheHand(t *testing.T) {
 	}
 
 	ids := s.selectedCardIDs()
+	held := s.heldRunCards(gs)
 	if !run.ApplyRuneRolling(hexmark, ids, nil) {
 		t.Fatalf("hexmark refused %d cards", len(ids))
 	}
-	s.resyncHandFromRun(gs)
+	s.resyncHandFromRun(gs, held)
 
 	if len(s.hand) != len(ids) {
 		t.Fatalf("hand is %d cards, want %d", len(s.hand), len(ids))
@@ -56,6 +57,49 @@ func TestAnElementRuneReachesTheCardInTheHand(t *testing.T) {
 		if c.Element != combat.Arcane {
 			t.Errorf("the run's card is %v after a hexmark, want arcane", c.Element)
 		}
+	}
+}
+
+// **A flip fires as a card is drawn, never after a rune, and a copy is the card the player picked.**
+// Under an ice-to-fire orb, an earth card painted ice is held ice, and Mimic spent on it then puts an
+// ice copy in the hand — not fire, and not the earth the run's card was before the paint.
+func TestARunePaintedCardAndItsCopyAreNotWalkedPastTheOrb(t *testing.T) {
+	run := session.New([]combat.Card{{Concept: combat.Bash, Element: combat.Earth}})
+	if !run.Wear("flip-ice-to-fire") {
+		t.Fatal("the orb would not go on")
+	}
+	mimic, ok := session.RuneByKey("duplicate-card")
+	if !ok {
+		t.Skip("no duplicate-card in the catalog")
+	}
+	paint := session.Rune{Target: session.RuneElement, Element: combat.Ice, Count: 1}
+
+	gs := &state.GlobalState{Run: run}
+	s := &CombatScene{run: run}
+	for _, c := range run.Deck() {
+		s.hand = append(s.hand, paletteCard{Card: s.drawnAs(c), selected: true})
+	}
+
+	spendOn := func(p session.Rune) {
+		t.Helper()
+		inHand := s.heldRunCards(gs)
+		if !run.ApplyRuneRolling(p, s.selectedCardIDs(), nil) {
+			t.Fatalf("%s was refused", p.Record)
+		}
+		s.resyncHandFromRun(gs, inHand)
+		s.seatCopies(gs, inHand)
+	}
+
+	spendOn(paint)
+	if got := s.hand[0].Card.Element; got != combat.Ice {
+		t.Fatalf("the painted card is held %v, want ice", got)
+	}
+	spendOn(mimic)
+	if len(s.hand) != 2 {
+		t.Fatalf("the hand is %d cards after a Mimic, want 2", len(s.hand))
+	}
+	if got := s.hand[1].Card; got.Element != combat.Ice || got.ID == s.hand[0].Card.ID {
+		t.Errorf("the copy is %v with ID %d, want an ice card of its own", got.Element, got.ID)
 	}
 }
 

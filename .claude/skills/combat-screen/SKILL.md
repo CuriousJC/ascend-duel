@@ -68,12 +68,14 @@ a `KindAction`, then one `KindHand` names the hand they formed and carries every
 then each hit lands as its own `KindFizzled`, `KindBlocked` or `KindDamage`, carrying `Slot` (the
 card) and `Hit` (its term on the hand event). Five Bashes are five hits under one Four of a Kind.
 
-**The run's account writes the hand once and a line per hit under it.** The `KindAction`s still
-play — each is a beat, and each raises its card on the table — but they write no record. Each hit's
-line carries its own working, the identity multiplier included *(owner's call)*, because hands are
+**The run's account writes the hand once and each hit under it.** The `KindAction`s still
+play — each is a beat — but they write no record. Each hit is its card's line and then its own
+working down a column, **one step per figure, each labelled with what produced it**
+(`ui.hitLines`), the identity multiplier included *(owner's call)*, because hands are
 going to be upgradable and a term that appeared only once the multiplier stopped being 1 would
-make an upgrade read as a new rule; the hit's outcome attaches to that line by its `Hit`, whatever
-was written after it. **Every card the turn played throws a hit** *(owner's call)*, whether
+make an upgrade read as a new rule; the hit's outcome attaches to its `=` step by its `Hit`,
+whatever was written after it. A label lines up because a run can start on a column
+(`session.LedgerSpan.Col`, in digit widths). **Every card the turn played throws a hit** *(owner's call)*, whether
 or not it made the rung. See MECHANICS.md §Damage: a hit per card, one multiplier.
 
 **None of the paragraphs above describes an enemy's turn.** `Duelist.SoloAttacks` makes attack
@@ -84,11 +86,12 @@ for it and two things read it:
 
 - **The log writes a sentence per attack card**, because there is no phase line coming to carry
   them. `logRows` suppresses an attack's `KindAction` only when a hand *is* coming.
-- **The table lights one card at a time, and a creature is the only thing that lights one at all.**
-  `noteResolved` seats `[]int{seat}` for a solo attacker and nothing for anybody else — a duelist's
-  cards are raised by the hand's announcement, which a creature never gets. Raising a set says
-  "these cards made the hand", which an enemy's turn has none of: three cards swing three times,
-  and the card that is up is the card that is hitting.
+- **The table marks one card at a time, and a creature is the only thing that marks one at all.**
+  `noteResolved` seats `[]int{seat}` for a solo attacker and nothing for anybody else, and that card
+  **rattles sideways** (`shakeEnemyCard`) — a duelist's cards are named by the hand's announcement,
+  which a creature never gets. Highlighting a set says "these cards made the hand", which an enemy's turn
+  has none of: three cards swing three times, and the card that rattles is the card that is hitting.
+  **Nothing on the table ever lifts**; only a selected card in the hand does.
 
 Everything else about playback is unchanged — one `KindAction` per slot, so `currentSlot` still
 counts beats the same way.
@@ -111,17 +114,23 @@ action to lead, and nothing buys priority.
   top of the attacker's turn by `combat.shieldedHits` — each shield its own element's heaviest hit
   first, then the heaviest of what is left — so the order the shields went up in reaches no outcome.
   **The element is a rule**: a matched block banks an action point (`Event.Surged`,
-  `Duelist.Surge`), so a `KindBlocked` carries **the shield's** element in `Element` and the row
-  spends that pip (`ui.ShieldRow.Spend`). **Nothing reduces a hit to zero by arithmetic** — a
+  `Duelist.Surge`), so a `KindBlocked` carries **the shield's** element in `Element`, and the shield thrown onto
+  the attack is one of that element. **Nothing reduces a hit to zero by arithmetic** — a
   shield eats a whole hit or it does not, and a fizzle (`KindFizzled`, a hit of a creature's own
-  element) wastes a whole hit rather than zeroing a figure. It is drawn as `FIZZLE` on the hit's
-  line.
+  element) wastes a whole hit rather than zeroing a figure. It is drawn as the creature's own
+  shield meeting the hit on its way in, with `FIZZLE` over the break — see the shields
+  section.
 - **`Slot.Index` is not a position in the round.** It is where the card sits in its own
   side's queue, which regrouping breaks apart. Anything asking "how far through the round are
   we" counts slots — `CombatScene.currentSlot` does, and lighting the right Resolution row
   depends on it.
-- **The category is deliberately not concealed** on enemy rows. It is what decides where a row
-  sits, so withholding it would make the pane unreadable rather than merely uncertain.
+- **A table row is drawn as the turn was picked, one hand, in one run** *(owner's call)*.
+  `resolved` and `enemyDealt` stay in resolution order, because that is how every event names a
+  card, but each card carries its `place` — `Slot.Index`, its position in the queue — and is
+  drawn there (`playedPoint`, `enemyPoint`, `byPlace`). There is no break between defenses and
+  attacks, so nothing regroups between the hand and the table. **Geometry takes a place, everything else a seat**: a new
+  caller of `playedSeatAt` converts through `playedPlace` first.
+- **The category is deliberately not concealed** on enemy rows.
 - **The card shows its form as a corner mark** — a spear, a scimitar, a club, a shield — in
   the top-left corner above the cost, drawn in the card's element. A form is not a quantity, which is
   why it is not a numbered badge; a 32-pixel drawing is read before any text is.
@@ -159,12 +168,10 @@ in `MECHANICS.md`; these are what matter to the screen.
   `Event.RungCards[:RungCardCount]` names which cards of the turn formed it. **Never derive
   that from the hand's group sizes, and never assume the cards are adjacent.** A counted hand is
   not contiguous — Two Pair is two cards, a card that earned nothing, and two more — which is why
-  the event carries a list rather than a start and a length. `noteHand` narrows the raised set on
+  the event carries a list rather than a start and a length. `noteHand` sets the highlighted set on
   whichever row it belongs to, so the opponent's hand says it the same way.
-  **No bracket marks those cards** *(owner's call, 2026-08-19)*, in the hand row or on either
-  table row. What says which cards earned the hand is the lift, and in the
-  hand row nothing says it at all — the name is the whole of the feedback while planning. That is
-  the trade to know about before adding a third way to mark a set of cards.
+  **Nothing is drawn to mark them** *(owner's call)*: the shout names the rung and every card's line
+  shows what it did. The marked seats are what a stopped hit's shield is aimed from.
 - **`combat.BlowFor` previews the hand while the player plans**. It is the same
   function the resolver uses, so a previewed hand is the hand that fires by construction rather
   than by two pieces of code agreeing. `previewAttack` calls it on `ResolutionOrder(queue, nil)`
@@ -203,9 +210,11 @@ exist.
 - **What became of each hit is read ahead in the log.** `hitOutcomes` walks forward from the hand
   event over the hits it threw and hands each line its own outcome's position. A finished line
   that **landed** flies its figure into the target (`throwColumn` moves the target's life at that
-  moment and marks the event walked), a **fizzle** says FIZZLE over the line, a **block** says BLOCKED,
-  and a line with no outcome — the target fell to an earlier hit — fades where it stands.
-  **This is the one place the screen reads ahead of the cursor besides the shield break**, and it
+  moment and marks the event walked), a **fizzle** or a **block** flies to be met in the middle by
+  the shield that stops it (`interceptLine`, also walked), **a line whose figure is 0 is not sent at all**, fizzled or not, and a line with no outcome
+  flies into the target's card anyway when the target fell to an earlier hit (`throwOverkill`,
+  moving no life) and fades where it stands when the thrower fell.
+  **This is one of the two places the screen reads ahead of the cursor, beside the defend phase's bundle**, and it
   is confined to the hits directly after the hand.
 - **Events it has already shown are walked past.** `combatTheater.walked` holds the log positions
   a line drew, and `advancePlayback` steps over them without a beat, so a hit is never drawn twice.
@@ -227,9 +236,8 @@ exist.
   them on different schedules and several lines start on one frame.
 - **Every rung the engine names is shouted, `NO HAND!` included.** The bottom of the ladder is a
   rung like any other — a multiplier, a stone that raises it, a relic that names it — and the word
-  says what the turn was. **What the No Hand does not get is the lift**: the announcement raises the
-  cards that *made* the rung and that turn made none, so `builtARung` gates the raise and nothing
-  else. A card standing up for having done nothing is worse than a still table.
+  says what the turn was. **What the No Hand does not get is a marked set**: the turn made no rung, so
+  `builtARung` leaves `firingSeats` empty for it.
   An event naming *no* hand is silent; nothing emits one.
 - **The hand's name is one word with two homes, and it travels between them** *(2026-08-19,
   owner's call)*. `handBanner` holds it: the planning seat is the middle of **the whole table**,
@@ -323,17 +331,15 @@ Three consequences for playback. **The hand line lands after its cards are annou
 any hit**, so a boosted figure never arrives before the reason for it, and `noteHand` has real rows
 to mark because the whole queue is seated at DUEL! rather than a card at a time.
 
-**The rung is raised by the hand's announcement and by nothing else.** `noteHand` lifts
+**The rung is highlighted by the hand's announcement and by nothing else.** `noteHand` marks
 `Event.RungCards` — the cards that *made the hand* — rather than `HandCards`, which is every hit the
-turn throws and would stand up a card that is in no part of the rung. `firingSeats` is a list
-rather than one seat because a counted hand is not contiguous. Then `advancePlayback` puts them back
-down the moment the lines start, and the lines walk `HandCards`: **the rung is raised, the hits are
-thrown.**
+turn throws and would mark a card that is in no part of the rung. `firingSeats` is a list rather
+than one seat because a counted hand is not contiguous. Nothing draws it; the lines walk `HandCards`:
+**the rung is named, the hits are thrown.**
 
-**A duelist's turn is three moments and each has exactly one gesture: the shields fire as a bundle
-with nothing lifted, the hand is announced with its cards up, and the lines run with the table at
-rest.** Nothing else on that turn may lift a card — a second gesture ahead of the announcement
-reads as whichever card it lifted having gone first.
+**A duelist's turn is three moments and each has exactly one gesture: the shields form as a bundle,
+the hand is announced by name, and the lines run with each card shaking as it pays.**
+Nothing on the table lifts; a chosen card goes to the middle row and its line says the rest.
 
 And **the hand is announced even if every hit then lands nothing** — a fizzle or a block is decided
 per hit, after the hand event, because the hand is scored off the queue and the queue was committed
@@ -399,45 +405,6 @@ them, and the row **sorts itself last**.
   `slidingTo`, and it is checked after the first three for the same reason the morph is checked
   last.
 
-### Shields break the attacks they ate, and a card can be marked
-
-*`combat_shatter.go` and `internal/cards/mark.go`.* A shield eats the creature's
-hit of its own element first and then its **heaviest** — never simply its first —
-`combat.shieldedSlots`, decided at the top of the creature's turn — and the screen plays that as
-**one beat between the two turns**: every blocked pip flies out of the duelist card into the attack
-card it kills, wearing the element of the shield the engine spent, the break opens across that
-card's face, the round holds, then the creature swings with what is left. **A matched block writes
-`+1 AP` over the card it broke** — `drawSurgeNote`, a placeholder — and the banked points show as
-`(+N surge)` beside the AP figure while the player plans the turn they pay for.
-
-- **The rules decided it before a frame was drawn, which is the only reason it is drawable.** The
-  mask is chosen up front rather than as each card arrives, so the whole exchange is known at the
-  boundary. Re-ranking as the turn resolved would win a little optimality and cost the player any
-  way of watching it happen — see MECHANICS.md §Shields, which records that trade.
-- **A *mark* is the third way to say something on a card, and it is not an upgrade.** The face is
-  what the card is; an upgrade is what the run permanently made it and takes the left column; a mark
-  is the card's situation and covers the face. `cards.Mark` is a **bitmask** — a card can be broken
-  and pointed at at once — and `cards.drawMark` owns the order they compose in. Append-only, and
-  worse to insert into than an ordinal enum: claiming a bit in the middle changes every existing
-  value's meaning.
-- **Two halves, one geometry.** The settled mark is baked into the cached card image; the arrival
-  changes every frame and would blow that cache, so `internal/cards` exports the crack geometry and
-  the screen strokes the same lines on the GPU. Same seed both sides, so the frame the animation
-  ends on and the frame the mark starts are the same picture.
-- **`advanceBreaks` is a copy of `advance` and has to be.** The generic one ticks a mover and drops
-  it in the same pass, so a break has exactly one frame in which it is both finished and still in
-  the list — noted outside that loop, the mark never lands and the web appears and vanishes.
-- **A break lives inside its own round.** `seatEnemyCards` drops the marks, because the opponent's
-  row is re-planned the instant a round ends and a seat number stops meaning what it meant. Anything
-  wanting to *point* at a break has to do it during the round.
-- **The pips leave the shield row as they fly**, several beats before `KindBlocked` says so — the
-  same predict-then-correct the raises use.
-- **`Event.Slot` is the index into the turn as it resolved**, the convention `HandCards` already
-  uses.
-- **It holds the playback cursor** — `combatTheater.running` — which is pacing and is allowed. The
-  hold after the break is the longest single one on this screen, deliberately: the round has three
-  acts and the middle one needs a beat of its own.
-
 ### A hit landing, and the bar that waits for it
 
 *`combat_hits.go`.* A hit's figure travels out of wherever it was worked out and into the card whose
@@ -479,12 +446,14 @@ arrival are one event rather than two. It is the second half of the hand dialog:
 - **`Init` takes the whole theater down**, because anything tidied up only by the end-of-round spend
   assumes every round ends in one, and a settled duel does not.
 
-### Elemental particles round a total and behind its figure
+### Elemental particles round a whole line and behind its figure
 
-*`combat_particles.go`; the emitter is `internal/ui/particles.go`, the art `assets/particle/`.* A
-line's total is **wrapped** in its card's element from the beat it starts landing until the line is
-thrown, and the figure that flies on out of it **trails** the same element into the target — a
-creature's solo hits included. Both are `ui.Emitter`s off `wrapEmitter` / `trailEmitter`, elemental
+*`combat_particles.go`; the emitter is `internal/ui/particles.go`, the art `assets/particle/`.* **A
+card's whole stack** — every row of every line that card throws, its echoes' lines included — is
+**wrapped** in its element, from the beat its first line starts until its last is thrown: one field
+round everything `layOutMath` placed for it (`stackExtent`), born faster round a bigger stack so the
+cloud is as thick round five rows as round one (`wrapRate`). The figure that flies on out of it **trails** the same element into the target — a
+creature's solo hits included — or as far as a shield stops it. Both are `ui.Emitter`s off `wrapEmitter` / `trailEmitter`, elemental
 physics on the mixed set (`particle-*` pieces and `spark-*` flecks together).
 
 - **Nothing waits on a particle.** `particles` is ticked with the theater and is deliberately not in
@@ -563,8 +532,7 @@ the screen defers *(owner's call)*:
   decision with its own argument in `playRiders`. The screen owns when it draws; the log owns what
   happened.
 - **A turn that never scores flushes at the boundary** — the acting side changing, or the round
-  ending. A hand of nothing but defenses forms no hand, so there is no sequence to hang anything on;
-  `noteShieldRaise` keeps the same fallback for pips.
+  ending. A hand of nothing but defenses forms no hand, so there is no sequence to hang anything on.
 
 **Every signal holds the playback cursor** *(owner's call: every signal of a card firing holds)*,
 including inside the lines — the box waits on `running(theater.signals)` before its next term.
@@ -625,61 +593,54 @@ round, filled for the rounds already spent.
   would), pops on the card whose bar it empties rather than flying from a seat there is none of,
   and opens its own line in the feed with the fall following it.
 
-### The shield row on the duelist card
+### Shields: heaped over what raised them, thrown to meet what they eat
 
-*`combat_shields.go` and `card_art.go`.* The player's defend cards raise shields, and
-**one pip per shield is drawn in the fighter block's pip row**, above the bar — see
-`cards.FighterBlockTop`. The pip is the defend form mark in the raising
-card's element — `ui.ShieldPipKey`, out of `assets/form/` — the mark the cards themselves carry, so what was raised and what is standing are the same picture.
+*`combat_shields.go`; the heap's layout and drawing are `internal/ui/shield_heap.go`, the art
+`assets/shield/`, the prompt `docs/art/shield_art_prompt.MD`.* There is no shield readout on the
+duelist card. **A shield forms over the thing that raised it and stays there**: a defend card on
+the table, an attack card with a shield rider, or a helm's ring in the band. Several on one card
+**heap** — each offset and turned by a written-out table, never rolled — so the count is read by
+eye.
 
-- **`shownShields` is a view, exactly like `shownLife`.** `Duelist.Shields` is not
-  written until the round's end state is adopted, so a row reading the model would fill a whole
-  opposing turn after the card that filled it and empty a whole turn after the attack that ate it.
-- **All three changes to the count are announced**: `KindRaised` when a card goes down,
-  `KindBlocked` each time one eats an attack, `KindExpired` when the unspent ones lapse. The last of
-  those exists *for this row* — without it the pips would keep drawing a defense the engine had
-  already taken away.
-- **It falls back to the model when no event this round has spoken**, which is what makes the
-  planning phase right: a shield raised at the end of the last round is standing while the player
-  builds this one, and nothing has fired yet.
-- **The row draws at most `ui.MaxShieldPips`, and the engine does not cap the total.** One card
-  raises at most `combat.MaxShields`, but `Duelist.raiseShields` does not clamp what a duelist holds,
-  so a duelist behind more shields than the row fits draws a full row and the true count is on the
-  engine.
-- **The whole defend phase is one gesture** *(owner's call, 2026-09-17)*. Every shield in the turn
-  goes up together: the first `KindRaised` reached flies its own pips and every raise behind it in
-  the same phase, all on one frame, out of their own cards and into the pip row along the bottom of
-  the fighter card — a pip joins a row, where a damage figure hits a card. The raises behind it
-  arrive at their own beats with nothing to do. **It is the shield break's rule and the deal
-  cascade's**: what the defend phase says is one thing about the turn, not three things about cards.
-  `noteShieldRaise` is the bundle and `raisesInPhase` is the walk. **The pips are the phase's and
-  never a hit's** — a defense's hit line comes to 0 and flies nothing; its shields went up a
-  phase earlier.
-- **A raise names its own card, in `Event.Slot`**, which is the only thing the pips have to leave
-  from: nothing is lit during the defend phase, so a seat read off the lit card would have no
-  answer. `noteShields` reads the same field for the element a pip lands wearing.
-- **The count comes from the announcement, and the row waits for the pips.** A raise carries what is
-  standing after its own card in `Life`, which the row takes when that flight lands; `noteShieldRaise`
-  swallows the event either way, including the bundled raises that flew beats ago, **because letting
-  one through to `noteShields` fills the row while the pips filling it are still crossing the
-  screen**. The row records the seat, so one card's pips can never fly twice — **and forgets it at
-  the end of the round**, because a seat is a position in one round's table — kept across the
-  boundary it gags the next round's defense in the same seat, which then flies nothing and lands
-  with no color.
-- **The row is one list, and the count is its length** — `shield_row.go`. Do not split it into
-  parallel structures — a count, a color per pip, a "has anything spoken" flag, a set of seats:
-  every such pair can disagree, drawing a white pip or losing a pip's element. A pip *is* its color,
-  so that failure is unrepresentable. **The rule the type carries**: a raise may only raise, and only a block or an expiry may
-  lower — a raise is announced a phase after the pips it describes have landed and names what is
-  standing after *its own* card, so the first of two raises is smaller than what is already drawn.
-- **A defense lifts nothing at all.** `noteResolved` switches on the card's kind: a defense raises
-  no seats, a solo attacker's card raises its own, an attack raises nothing. A lift says "this card
-  is acting now" and the bundle says it for every shield at once, so lifting them one by one is
-  three beats of card movement in front of a hand that has not been named yet. **The argument to
-  answer before changing this is which single gesture says the defense happened.**
-- **A flight whose seat the row no longer holds still flies, from the row's first card.** Drawing
-  nothing while `landShields` pays the pips in anyway is a pip appearing without having crossed the
-  screen — the one failure this whole gesture exists to prevent.
+- **A turn's shields form once its arithmetic is done, as one gesture** *(owner's call)*. A
+  `KindRaised` or `KindWarded` reached is queued (`noteShieldRaise`, `noteWard`), and the queue
+  forms on one frame when the turn has nothing left to reach — `turnOver`, `formPendingShields`, in
+  `advancePlayback` before the next side's first event. A raise's own beat draws nothing, which is
+  why its dwell is a quarter. **A raise names its own card in `Event.Slot`**, which is the only
+  thing a heap has to stand over: nothing is lit during the defend phase.
+- **A defense marks nothing.** `noteResolved` seats nothing for a defense; the forming heap is the
+  gesture that says the defense happened. A heap follows its card when the card moves — `seatRect`
+  reads the row's own placement.
+- **A stopped hit is met on its way in** *(owner's call)* — `combat_intercept.go`. On the beat a
+  blocked attack is reached, its figure (`Event.Would`) sets off out of the swinging card **on the
+  path and at the pace a landing figure takes into the target's card**, and `noteBlock`'s shield, of
+  the spent element off the newest heap holding one, sets off to meet it. **Where on the path is one
+  rule, `interceptAt`**: `meetScreenMiddle` (where the path crosses the screen's horizontal middle,
+  the shipped one) or `meetNearTarget` (`interceptNearShare` short of the target card).
+  `intercept.aim` turns the share into the tick the eased figure gets there, so the hit is the one
+  it would have been, cut short. They arrive together and both crumble there
+  (`ui.DrawCrumble`, the stone's break). **Nothing lands on the attack card.** A matched block
+  (`Event.Surged`) writes **SURGE** over the break in the AP bar's amber. **A fizzle is the same
+  picture from the other side** — the duelist's line throws its total (`interceptLine`) and a
+  shield of the creature's own element leaves the creature's card, with **FIZZLE** over the break.
+  **The engine never says which card's shield it spent**, so that pick is the screen's and decides
+  nothing.
+- **The crumble's seeds are fixed per element**, never per hit: `ui.dissolveCells` caches by seed
+  and size, and a seed per hit would grow that cache for a whole session.
+- **The cursor waits for forming shields and running intercepts** — `combatTheater.shieldsMoving`,
+  read by `Running`. Pacing, never an outcome.
+- **The intercepts belong to the row they happened in.** `seatEnemyCards` drops them, because a seat
+  number stops meaning what it meant the moment the opponent re-plans. The tutorial's
+  `shattered-cards` anchor and its block count read `stoppedSeats`.
+- **A fight with a fighter down forms no shields** *(owner's call)*: `formPendingShields` drops the
+  turn's pending raises and wards once `fightDecided`, and a settled duel skips `settleShields`
+  too, so nothing defensive moves after the last blow.
+- **The round's end squares the heaps with the model** — `settleShields`, from `endOfRound`, after
+  the end state is adopted. What the model no longer holds fades where it stood as its card leaves;
+  what it still holds — a shield the Tower Shield kept — moves onto that relic, or onto the duelist
+  card if nothing worn explains it. `KindExpired` trims to what was kept (`noteExpired`).
+- **The gallery's `shield heap` and `intercept` entries call the same drawing** — `ui.HeapPose`,
+  `ui.DrawShield`, `drawIntercept`.
 
 ### The log writes sentences, and the verb is marked in the text
 
@@ -807,9 +768,8 @@ The active one latches darker than the other two.
   no figure on the line. Each line runs its items one at a time, so putting the relic figures *in*
   the script is the whole of the sequencing within a hit. `mathItem`'s `relicSeat` / `cardSeat` /
   `shakeRelics` are the marks, and `handMathBox.takeShakes` is what the screen drains each tick.
-- **Sideways, never a jump.** Vertical is spoken for twice already — a selected card lifts in the
-  hand, and a card that built the hand lifts on the table while the hand is announced. The shake says "this
-  one is paying *now*", so it needed a direction nothing else uses.
+- **Sideways, never a jump.** Vertical is spoken for — a selected card lifts in the hand. The shake says "this one is paying *now*", so it
+  needed a gesture nothing else uses.
 - **The drag runs on the shared controller in `carddrag.go`**, which the worn relic
   row also uses on all three screens that draw it. The hand's adapter is `handRow`; it really does
   remove the card from `s.hand`, where the relic row's removes nothing and lets the run stay the

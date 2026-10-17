@@ -262,6 +262,45 @@ func TestAFlipRecolorsTheDrawnCardAndNotWhatIsOwned(t *testing.T) {
 	}
 }
 
+// **A flip fires as a card is drawn and at no other time.** A rune spent on a card already in the
+// hand changes that card and nothing else: painted ice under an ice-to-fire orb, it is ice until it
+// is drawn again. And a card the orb already flipped keeps its flipped color under a rune that did
+// not touch color.
+func TestARuneOnAHeldCardIsNotWalkedPastTheFlips(t *testing.T) {
+	run := runWith(
+		combat.Card{Concept: combat.Bash, Element: combat.Earth},
+		combat.Card{Concept: combat.Jab, Element: combat.Ice},
+	)
+	if !run.Wear("flip-ice-to-fire") {
+		t.Fatal("the orb would not go on")
+	}
+	held := ids(run)
+	earth, _ := run.CardByID(held[0])
+	ice, _ := run.CardByID(held[1])
+	earthFace, iceFace := run.DrawnAs(earth), run.DrawnAs(ice)
+	if iceFace.Element != combat.Fire {
+		t.Fatalf("the ice card was dealt %v, want fire", iceFace.Element)
+	}
+
+	paint := Rune{Target: RuneElement, Element: combat.Ice, Count: 1}
+	if !run.ApplyRune(paint, []int{held[0]}) {
+		t.Fatal("the paint was refused")
+	}
+	if got, _ := run.HeldAs(earthFace, earth); got.Element != combat.Ice {
+		t.Errorf("an earth card painted ice is held as %v, want ice", got.Element)
+	}
+
+	ride := Rune{Rider: combat.RiderHealOnPlay, Number: 3, Count: 1}
+	if !run.ApplyRune(ride, []int{held[1]}) {
+		t.Fatal("the rider was refused")
+	}
+	got, _ := run.HeldAs(iceFace, ice)
+	if got.Element != combat.Fire || got.HealOnPlay() != 3 {
+		t.Errorf("the flipped card under a rider is held as %v healing %d, want fire healing 3",
+			got.Element, got.HealOnPlay())
+	}
+}
+
 func TestARedrawnCardDoesNotTakeTheCascadeTwice(t *testing.T) {
 	// **The flips chain within one draw and must not chain across two** *(owner's call,
 	// 2026-09-15)*. Lightning-to-ice worn beside ice-to-fire deals a lightning card as fire, in one
@@ -538,5 +577,42 @@ func TestMomentumCarriesBetweenFights(t *testing.T) {
 	run.AbsorbGrowth(wiped)
 	if got := run.Grown("dmg-no-shield"); got != 0 {
 		t.Errorf("a fight ending on a wiped streak left the run at %d, want 0", got)
+	}
+}
+
+// TestASecondCopyOfARelicGoesOnAndBothFire. Two Fire Rings are two relics in the row, and a fire
+// card under them is scaled twice — while the shop still refuses to sell a second.
+func TestASecondCopyOfARelicGoesOnAndBothFire(t *testing.T) {
+	run := wearing(t, "dmgx-fire", "dmgx-fire")
+	if got := len(run.WornRelics()); got != 2 {
+		t.Fatalf("two Fire Rings wore as %d relics", got)
+	}
+	bash := combat.Of(combat.Bash, combat.Fire)
+	plain := combat.Duelist{DMG: 10, MaxLife: 10, CurrentLife: 10}
+	one := wearing(t, "dmgx-fire").Equip(plain).CardDamage(bash)
+	two := run.Equip(plain).CardDamage(bash)
+	if two != one*2 {
+		t.Errorf("a second Fire Ring took a fire Bash from %d to %d, want %d", one, two, one*2)
+	}
+
+	run.vitae = 1000
+	if run.CanBuy("dmgx-fire") || run.Buy("dmgx-fire") {
+		t.Error("the shop sold a relic the run is already wearing")
+	}
+}
+
+// TestAFighterWearsEveryRelicTheRunDoes. A run with seven fingers wearing seven relics is dealt a
+// fighter wearing seven, not the default five.
+func TestAFighterWearsEveryRelicTheRunDoes(t *testing.T) {
+	run := bare(t)
+	run.SetRelicSlots(7)
+	for _, key := range []string{"dmgx-fire", "dmgx-ice", "dmgx-lightning", "dmgx-earth", "dmgx-arcane", "dmg-all-slash", "dmg-all-crush"} {
+		if !run.Wear(key) {
+			t.Fatalf("%s would not go on", key)
+		}
+	}
+	d := run.Equip(combat.Duelist{DMG: 10, MaxLife: 10, CurrentLife: 10})
+	if got := len(d.WornRelics()); got != 7 {
+		t.Errorf("a run wearing 7 relics was dealt a fighter wearing %d", got)
 	}
 }

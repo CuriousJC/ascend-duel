@@ -72,9 +72,11 @@ const defeatButtonLabel = "END RUN"
 // drawn; these decide only how long the player looks at each part of it. Same constraint as the
 // debug flags and every card in flight.
 var eventDwells = map[combat.EventKind]float64{
-	combat.KindRoundStart:  1,
-	combat.KindAction:      1,
-	combat.KindRaised:      1,
+	combat.KindRoundStart: 1,
+	combat.KindAction:     1,
+	// **A quarter beat, because nothing is drawn on a raise's own beat**: its shields form once the
+	// turn's arithmetic is done. A full beat here is a pause over a still table.
+	combat.KindRaised:      0.25,
 	combat.KindBlocked:     1,
 	combat.KindExpired:     1,
 	combat.KindDamage:      1,
@@ -85,9 +87,12 @@ var eventDwells = map[combat.EventKind]float64{
 	combat.KindDrained:     1,
 	combat.KindRegenerated: 1,
 	combat.KindVitae:       1,
-	combat.KindWarded:      1,
-	combat.KindReflected:   1,
-	combat.KindTithed:      1,
+	// The same, for a helm's shield.
+	combat.KindWarded: 0.25,
+	// The same, for a stagger's: its picture is the flight out of the ring, on the card's hit.
+	combat.KindStaggered: 0.25,
+	combat.KindReflected: 1,
+	combat.KindTithed:    1,
 	// **Two beats, because a permanent bonus is the rarest thing that happens on this screen.**
 	// Everything else in a round is spent by the end of it; this one follows the player up the
 	// journey, and a grant that went past on the same beat as a shield pip would be the least
@@ -324,6 +329,10 @@ type CombatScene struct {
 	// is how the drawing reads it.
 	relicShake []ui.Travel
 	cardShake  []ui.Travel
+
+	// enemyShake is each of the opponent's seats' shake: a creature's card rattles on the beat it
+	// swings, which is the whole of how the table says which card is hitting.
+	enemyShake []ui.Travel
 
 	// DeckView is how the deck overlay is being read — the alterations and FULL/PLAYED toggles
 	// along its bottom edge. **Not reset by Init**, exactly like sortMode: a reading preference is
@@ -630,7 +639,7 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	s.fighterActions = nil
 	s.drag = ui.CardDrag{}
 	s.band.init()
-	s.relicShake, s.cardShake = nil, nil
+	s.relicShake, s.cardShake, s.enemyShake = nil, nil, nil
 
 	// **A pearl that copied something toasts as the screen opens** *(owner's call)*, so the copy
 	// floating in the pane has a relic that said it made it.
@@ -900,12 +909,6 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	s.tut.update(gs, s)
 
 	s.Theater.Tick()
-
-	// **Pips are paid in as they arrive, wherever the round is.** A flight raised inside the hand
-	// dialog can outlive it — the box stops holding the cursor the moment its script ends — so the
-	// arrival is checked on the frame clock rather than only inside playback. Paying twice is
-	// impossible: a landed flight says so. See combat_shields.go.
-	s.landShields()
 	// **Every opener is inert while any dialog is up, and the X on the panel is the exit**
 	// *(owner's call, 2026-08-24)*. It used to be the other way round — each control survived its
 	// own overlay because it was the only thing that closed one — and that stopped working when a
@@ -1246,11 +1249,6 @@ func (s *CombatScene) startRound() {
 	// adopted — so this is the last frame the screen can name what the player built. From here it
 	// is the banner's, and it flies down into the hand row as the cards fly up to the table. See
 	// handBanner.
-	// **The staging flag is this round's and nothing else is.** The marks themselves are dropped by
-	// seatEnemyCards, which is the line that actually invalidates them — see there. A settled duel
-	// never reaches either and freezes with its breaks on screen, which is the picture the player
-	// is looking at when the fight ended.
-	s.Theater.breaksStaged = false
 
 	// **The turn is written down before it is resolved**, which is the journal's whole posture: a
 	// line records what the player committed to, and what came of it is the ledger's. See
@@ -1345,6 +1343,7 @@ func (s *CombatScene) startRound() {
 	// above is already resolved. See combat_table.go.
 	s.Theater.firingSeats, s.Theater.enemyFiringSeats = nil, nil
 	s.closeWraps()
+	s.closeScrolls()
 	s.Theater.mathBox.Clear()
 	// **What the dialog showed was a position in last round's log**, and this round's log starts
 	// again from nothing.
@@ -1402,6 +1401,9 @@ func eventLabel(e combat.Event) string {
 	case combat.KindWarded:
 		return fmt.Sprintf("warded      %v raises %d %v from %v, standing at %d",
 			e.Side, e.Amount, e.Element, combat.RelicOf(e.Relic).Name, e.Life)
+	case combat.KindStaggered:
+		return fmt.Sprintf("staggered   %v raises %d %v over %v from %v, standing at %d",
+			e.Side, e.Amount, e.Element, combat.ConceptOf(e.Action).Label, combat.RelicOf(e.Relic).Name, e.Life)
 	case combat.KindReflected:
 		return fmt.Sprintf("reflected   %v's %v returns %d to %v, leaving %d",
 			e.Side, combat.RelicOf(e.Relic).Name, e.Amount, e.Target, e.Life)
@@ -1444,16 +1446,10 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 		}
 
 		s.Theater.mathBox.Tick()
-		// A total that has started landing gets its particles. See combat_particles.go.
-		s.raiseWraps()
-
-		// **The lines need no card raised** *(owner's call)*. The blow's cards are lifted by
-		// noteHand on the `KindHand` beat, which is the announcement — what the hand is made of,
-		// said once — and they go back down the moment the lines start. Idempotent, so it needs no
-		// flag: nothing else writes these while the box holds the cursor.
-		if s.Theater.mathBox.counting() {
-			s.Theater.firingSeats, s.Theater.enemyFiringSeats = nil, nil
-		}
+		// A line that has started gets its particles, round the whole of it. See combat_particles.go.
+		s.raiseWraps(gs)
+		// And the pane it is written on. See combat_scrolls.go.
+		s.raiseScrolls(gs)
 
 		// **A played card's riders fire on the beat its own figure sets off.** See
 		// combat_signal.go, where the deferral is argued: these events were reached several beats
@@ -1464,14 +1460,9 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 
 		// **A finished line is thrown at once**, whatever the others are doing. See throwColumn.
 		for _, c := range s.Theater.mathBox.finished() {
-			s.throwColumn(c)
+			s.throwColumn(gs, c)
 		}
 
-		// **The pips are not a hit's** *(owner's call)*. A defend card raises
-		// its shields in the defend phase, which runs *before* the attack phase — so the raise
-		// has a beat of its own, in front of the hand, and noteShieldRaise is the one place pips fly
-		// from. See combat.Categories.
-		s.landShields()
 		// **The banner goes when its own figure sets off** *(owner's call)*. The multiplier flies
 		// out of the second line under the hand's name and into every hit's line, so from the first
 		// of those frames the number is in the lines and the banner is a copy of something that has
@@ -1480,20 +1471,6 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 			s.Theater.banner.Clear()
 		}
 		return
-	}
-
-	// **The shield breaks are staged on the frame the creature's turn is about to start**, which is
-	// the last frame before anything of theirs resolves. Before the dwell below, so the beat that
-	// follows is the break's own rather than the tail of the player's last event; and before the
-	// `running` check, since the breaks are exactly what that will then wait on.
-	//
-	// **It reads ahead in the resolved log**, which nothing else on this screen does — see
-	// stageShieldBreaks, where that is argued and confined.
-	if !s.Theater.breaksStaged && s.cursor < len(s.log) && s.log[s.cursor].Side == combat.SideB {
-		s.Theater.breaksStaged = true
-		if s.stageShieldBreaks(gs) {
-			return
-		}
 	}
 
 	// **A tutorial step waiting for NEXT holds the round where it is** *(owner's call, 2026-09-08)*.
@@ -1528,10 +1505,11 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	}
 	s.ticks = 0
 
-	// **The finished lines stay on screen until the event after them is reached**, so a FIZZLE or a
-	// BLOCKED is still being read while the flights that did land finish.
+	// **The finished lines stay on screen until the event after them is reached**, so a stopped
+	// hit's dimmed line is still being read while the flights that did land finish.
 	if s.Theater.mathBox.active && !s.Theater.mathBox.Running() {
 		s.closeWraps()
+		s.closeScrolls()
 		s.Theater.mathBox.Clear()
 		// **The turn-length raise comes down with the lines that used it.** See signalRaise.
 		s.Theater.clearRaise()
@@ -1552,12 +1530,20 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	for s.cursor < len(s.log) && s.Theater.walked[s.cursor] {
 		s.cursor++
 	}
-	if s.cursor >= len(s.log) {
-		s.endOfRound()
+
+	// **The turn's shields form once its arithmetic is done** *(owner's call)*: the hits are worked
+	// out first, a defense's line coming to 0, and only then do the shields go up — on the boundary
+	// out of the turn, before anything of the next one is reached. See formPendingShields.
+	if s.turnOver() && s.formPendingShields() {
 		return
 	}
 
-	s.applyEvent(s.log[s.cursor])
+	if s.cursor >= len(s.log) {
+		s.endOfRound(gs)
+		return
+	}
+
+	s.applyEvent(gs, s.log[s.cursor])
 	s.startHandMath(gs, s.log[s.cursor], s.cursor)
 	s.cursor++
 
@@ -1571,7 +1557,7 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	// Playback has caught up with the resolver: hand control back to the player, or freeze
 	// the screen if there is nobody left to play against. See endOfRound.
 	if s.cursor >= len(s.log) {
-		s.endOfRound()
+		s.endOfRound(gs)
 	}
 }
 
@@ -1592,7 +1578,7 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 // It is a branch here rather than a rule inside `drawHand`, because what has to stop is not the
 // *drawing*, it is the whole end-of-round movement. A hand that was spent but not refilled still
 // reflows.
-func (s *CombatScene) endOfRound() {
+func (s *CombatScene) endOfRound(gs *state.GlobalState) {
 	s.fighter.Duelist = s.fighterAfter
 	s.enemy.Duelist = s.enemyAfter
 
@@ -1603,16 +1589,19 @@ func (s *CombatScene) endOfRound() {
 
 	// Before the early return below: a settled duel adopts its end state like any other.
 	//
-	// **The shield rows hand authority back to the model and forget this round's seats.** The pips
-	// themselves stay: the shields survive the round, and their colors are the only account of what
-	// raised them. See shield_row.go.
-	for i := range s.Theater.shieldRows {
-		s.Theater.shieldRows[i].EndRound()
-	}
+	s.formPendingShields()
 
+	// **A settled duel freezes its shields with everything else** *(owner's call)*: the fight is
+	// over, so nothing defensive moves after the last blow — no heap lapses and none moves onto a
+	// keeper.
 	if s.duelSettled() {
 		return
 	}
+
+	// **The heaps are squared with the model as the played cards leave the table.** What lapsed
+	// fades where it stood, and what the model still holds goes onto the relic that kept it. See
+	// settleShields.
+	s.settleShields(gs, combat.SideA, s.fighter.Shields)
 
 	// **The banner is usually gone by now**, cleared on the frame its multiplier flew into a line
 	// — see advancePlayback. This is the round that scored no hand at all: nothing took the name
@@ -1673,7 +1662,7 @@ func (s *CombatScene) planEnemyRound() {
 // **None of this decides anything.** ResolveRound settled the whole round before playback
 // began, so these are three ways of showing the same log and the screen could stop calling
 // any of them without changing a result.
-func (s *CombatScene) applyEvent(e combat.Event) {
+func (s *CombatScene) applyEvent(gs *state.GlobalState, e combat.Event) {
 	// **A turn that never scored throws its signals here.** The hand dialog is what normally sequences
 	// them, and a turn of nothing but defenses forms no hand — so the fallback is the boundary:
 	// the moment the acting side changes, or the round ends. Before anything else, so the parked
@@ -1692,9 +1681,9 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 		return
 	}
 
-	// The shield row on the duelist card, moved on the beat rather than at adoption — the same
-	// division noteHit makes between the model and the drawing. See noteShields.
-	// **A helm's shields leave its ring**, so they fly from there rather than from a seat.
+	// The shields on the table, moved on the beat rather than at adoption — the same division
+	// noteHit makes between the model and the drawing. See combat_shields.go.
+	// **A helm's shields form on its ring**, since nothing on the table raised them.
 	if e.Kind == combat.KindWarded {
 		s.noteWard(e)
 		return
@@ -1706,15 +1695,15 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 		return
 	}
 
-	if e.Kind == combat.KindRaised || e.Kind == combat.KindBlocked || e.Kind == combat.KindExpired {
-		// **A raise whose pips have not flown flies them now, and the row waits for them.** A turn
-		// of nothing but defenses forms no hand, so there is no sum to leave with — see
-		// noteShieldRaise. When it does fly, the count arrives with the pips rather than here, or
-		// the row would fill before the thing filling it had crossed the screen.
-		if s.noteShieldRaise(e) {
-			return
-		}
-		s.noteShields(e)
+	switch e.Kind {
+	case combat.KindRaised, combat.KindStaggered:
+		s.noteShieldRaise(e)
+		return
+	case combat.KindBlocked:
+		s.noteBlock(gs, e)
+		return
+	case combat.KindExpired:
+		s.noteExpired(gs, e)
 		return
 	}
 
@@ -1801,7 +1790,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// combat_relics.go.
 	s.drawRelicPane(gs, screen)
 	drawConsumablePane(gs, screen, s.consumablePaneRect(gs), s.consumableSpendable(gs),
-		s.band.heldSkip, s.tip.Showing())
+		s.band.heldSkip, s.tip.Showing(), &s.band.sale)
 	s.band.drawHeldGhost(gs, screen, s.consumableSpendable(gs))
 
 	s.drawEnemyCard(gs, screen)
@@ -1841,9 +1830,11 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawDraggedCard(gs, screen)
 
 	// The table: the round as a confrontation. The opponent's queued cards right-aligned, the
-	// player's played cards left-aligned facing them, and whichever of them is firing lifted
-	// out of its row. Over the hand, which is inert during playback, and under the overlay like
+	// player's played cards left-aligned facing them. Over the hand, which is inert during playback, and under the overlay like
 	// everything else. See combat_table.go.
+	// **The scrolls the working is written on, under the cards they hang from** and over the hand row,
+	// which they run down across. See combat_scrolls.go.
+	s.drawScrolls(screen)
 	s.drawEnemyQueue(gs, screen)
 	s.drawPlayedCards(gs, screen)
 
@@ -1864,33 +1855,26 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// screen for the few seconds it is up, and it is deliberately over both rows of cards: the
 	// shout is written across the hand row, which is inert while it is up, and every hit's line
 	// under its card. See combat_mathbox.go.
-	// **The wraps under the lines**, so the total reads over its own particles.
-	s.drawParticles(gs, screen, false)
-	s.drawHandMath(gs, screen)
-
 	// **The planned hand's name, in the middle of the half of the table its cards are about to
-	// land in.** It and the shout above can never both be up: this one is gated on `planning()`
-	// and that one only runs during playback. See drawPlannedHand.
+	// land in.** It and the hand dialog's shout can never both be up: this one is gated on
+	// `planning()` and that one only runs during playback. See drawPlannedHand.
 	s.drawPlannedHand(gs, screen)
 
-	// **The damage figures, over the lines they came out of and the card they are flying into.**
-	// They are drawn after the dialog because a figure leaving a line has to be on top of it —
-	// underneath, the first frames of the flight would be hidden by the number it left. **Their trails
-	// go under them**, for the wraps' reason.
-	s.drawParticles(gs, screen, true)
-	s.drawHits(gs, screen)
+	// The working, here only while something of the scene's own is covering the screen; otherwise
+	// it goes over the frame's buttons. See DrawOverChrome.
+	if !s.workingOverChrome(gs) {
+		s.drawWorking(gs, screen)
+	}
 
 	// **After the hits, because a drain is a share of one.** A drain's event is reached after the
 	// hand dialog has finished and its figures have landed, so the order here is about reading the
 	// file rather than about overlap. See combat_drain.go.
 	s.drawDrains(gs, screen)
-	// The pips, over the cards they are crossing and under the dialogs. See combat_shields.go.
-	s.drawShields(gs, screen)
-
-	// **The breaks, over the opponent's row.** A crack drawn under the card it is breaking would be
-	// invisible, and the pip crossing to it has to ride over everything it passes, exactly as the
-	// other pips do. See combat_shatter.go.
-	s.drawShieldBreaks(gs, screen)
+	// The shields, over both rows and the relics they stand on and under the dialogs. See
+	// combat_shields.go.
+	s.drawShieldPiles(gs, screen)
+	// The hits stopped on their way in, over the heaps their shields left.
+	s.drawIntercepts(gs, screen)
 
 	// **The signals, over everything on the table and under the panels.** A burst thrown out of a
 	// card has to ride over the card and its neighbors, and the figure that leaves with it is the
@@ -1934,6 +1918,38 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// Last of all, so a capture holds the finished frame rather than a half-drawn one.
 	s.demoDraw(gs, screen)
+}
+
+// drawWorking is the hand dialog and what flies out of it: the panes, the wraps, the lines, the
+// trails and the damage figures, in that order.
+//
+// **The scrolls are here only below their cards**: each goes under the card it hangs from, which
+// the table draws, and is drawn again here from the card's bottom edge down — see
+// drawScrollsBelowCards. **The wraps under the lines**, so the total reads over its own particles. **The damage figures
+// over the lines they came out of**, because a figure leaving a line has to be on top of it —
+// underneath, the first frames of the flight would be hidden by the number it left — and their
+// trails under them, for the wraps' reason.
+func (s *CombatScene) drawWorking(gs *state.GlobalState, screen *ebiten.Image) {
+	s.drawScrollsBelowCards(screen)
+	s.drawParticles(gs, screen, false)
+	s.drawHandMath(gs, screen)
+	s.drawParticles(gs, screen, true)
+	s.drawHits(gs, screen)
+}
+
+// workingOverChrome says the working goes over the frame's buttons this frame: **only with nothing
+// of the scene's own up** — the deck, the hands panel, the tutorial — since each of those is
+// drawn over the table and the working is part of the table.
+func (s *CombatScene) workingOverChrome(gs *state.GlobalState) bool {
+	return !s.modalUp() && !runOf(gs).Active()
+}
+
+// DrawOverChrome is the working, over the game's frame: a line of arithmetic long enough to reach
+// the bottom of the screen runs over the buttons there rather than under them. See ui.OverChrome.
+func (s *CombatScene) DrawOverChrome(gs *state.GlobalState, screen *ebiten.Image) {
+	if s.workingOverChrome(gs) {
+		s.drawWorking(gs, screen)
+	}
 }
 
 // currentSlot reports how far into the round's resolution order playback has got: the

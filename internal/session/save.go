@@ -171,6 +171,17 @@ func recordsSnapshot(in []LedgerRecord) []profile.LedgerRecordSnapshot {
 				Relic: f.Relic, Landed: f.Landed, Scale: f.Scale, Grown: f.Grown, Add: f.Add,
 			})
 		}
+		for _, f := range r.HandRelics {
+			rec.HandRelics = append(rec.HandRelics, profile.LedgerFactorSnapshot{
+				Relic: f.Relic, Landed: f.Landed, Scale: f.Scale, Grown: f.Grown, Add: f.Add,
+			})
+		}
+		rec.DMGBase = r.DMGBase
+		for _, f := range r.DMGParts {
+			rec.DMGParts = append(rec.DMGParts, profile.LedgerFactorSnapshot{
+				Relic: f.Relic, Landed: f.Landed, Scale: f.Scale, Grown: f.Grown, Add: f.Add,
+			})
+		}
 		for _, t := range r.Terms {
 			rec.Terms = append(rec.Terms, profile.LedgerSumSnapshot{
 				Element: t.Element, Split: t.Split, DMG: t.DMG, Weight: t.Weight,
@@ -200,6 +211,17 @@ func resumeRecords(in []profile.LedgerRecordSnapshot) []LedgerRecord {
 		}
 		for _, f := range r.Factors {
 			rec.Factors = append(rec.Factors, LedgerFactor{
+				Relic: f.Relic, Landed: f.Landed, Scale: f.Scale, Grown: f.Grown, Add: f.Add,
+			})
+		}
+		for _, f := range r.HandRelics {
+			rec.HandRelics = append(rec.HandRelics, LedgerFactor{
+				Relic: f.Relic, Landed: f.Landed, Scale: f.Scale, Grown: f.Grown, Add: f.Add,
+			})
+		}
+		rec.DMGBase = r.DMGBase
+		for _, f := range r.DMGParts {
+			rec.DMGParts = append(rec.DMGParts, LedgerFactor{
 				Relic: f.Relic, Landed: f.Landed, Scale: f.Scale, Grown: f.Grown, Add: f.Add,
 			})
 		}

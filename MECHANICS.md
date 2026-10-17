@@ -268,38 +268,35 @@ is a block and nothing else. Basic is no element and matches nothing.
 - **It is the mirror of the fizzle** — see §A creature's own element. The duelist has no element
   for a creature's hit to fizzle on, so matching a creature's element pays the player on defense
   where it costs them on offense.
-- **The screen says it twice, as placeholders**: `+1 AP` over each card a matched shield breaks,
-  and `(+N surge)` beside the budget while the player plans the turn it pays for.
+- **The screen says it twice**: SURGE written over the break where a matched shield meets the hit
+  it eats, and `(+N surge)` beside the budget while the player plans the turn it pays for.
 
 #### The turn reads: shields, then the hand, then the hits
 
 The defend phase resolves first — see `combat.Categories` — and the screen plays it as **one
-gesture**: every shield in the turn goes up together, pips out of their own cards into the row
-along the bottom of the duelist card, with **no card lifting off the table**. Only then is the
-hand announced, with the cards that formed it raised, and only then are the hits worked out — a
-line of arithmetic under every card of the turn, all of them at once. A defense's line usually
-comes to 0.
+gesture**: every shield in the turn forms together, heaped over the card that raised it, with
+**no card on the table ever lifts** — and it forms last, once the hits below have been worked out.
+The hand is announced and only then are the hits
+worked out — a line of arithmetic under every card of the turn, all of them at once, each wrapped in
+its card's element. A defense's line usually comes to 0.
 
-**A lift says "this card is acting now", so exactly one thing in the turn may use it.** The defend
-phase is one gesture for the whole set — the shield break's rule and the deal cascade's — because
-three pauses over one phase say three things about cards where the phase says one thing about the
-turn. Nothing lifts on a card's own announcement; the raise belongs to the hand's, and it ends
-there.
+**A chosen card goes to the table and nothing more happens to it there**, because every card's line
+shows what it did. The defend phase is one gesture for the whole set — the deal cascade's rule —
+because three pauses over one phase say three things about cards where the phase says one thing
+about the turn. **Nothing on the table marks the cards that formed the hand** *(owner's call)*: the
+shout names the rung and every card's line shows what it did.
 
-**The rung is raised and the hits are thrown, and they are different sets.** On a turn of two
-shields and one attack the Pair is the two shields, so they are what stands up; every card throws
-a hit, and the attack's is the one that hurts while being in no part of the hand, so it stays down. `Blow.Rung` against `Blow.Cards` is
-the distinction in the rules and `Event.RungCards` against `Event.HandCards` is how it reaches the
-screen. **A row held up through the arithmetic is the announcement still being made while the thing
-it announced is being read out**, so the cards go back down when the hits start.
+**The rung and the hits are different sets.** On a turn of two shields and one attack the Pair is the
+two shields, and every card throws a hit — the attack's is the one that hurts while being in no part
+of the hand. `Blow.Rung` against `Blow.Cards` is the distinction in the rules and `Event.RungCards`
+against `Event.HandCards` is how it reaches the screen.
 
-**The No Hand is announced and raises nothing.** It is a rung and the word says what happened, but
-it is the turn that made no hand — its `Blow.Rung` is a single card picked by damage rather than by
-counting, and standing that card up says it did something while every other attack in the turn
-lands beside it unraised. `Blow.BuiltAHand` is the predicate and it gates the lift alone.
+**The No Hand is announced like any other rung.** It is the turn that made no hand — its `Blow.Rung`
+is a single card picked by damage rather than by counting — so nothing treats that card as having
+formed anything.
 
-**The creature's turn is the exception to all of it.** It names no hand, so its card lifting one at
-a time is the only thing saying which hit is landing.
+**The creature's turn is the exception to all of it.** It names no hand, so its card rattling
+sideways one at a time, as it swings, is the only thing saying which hit is landing.
 
 **None of it reaches the rules.** The order the events resolve in is unchanged, `ResolveRound`
 decided the whole round before a frame was drawn, and the bundle is the screen reading forward in a
@@ -322,11 +319,8 @@ shields and is meant to be. Clamping the total to five would price a shield at w
 rather than at what it cost, and a player paying six AP for two Guards has bought six shields
 whether or not the next turn throws six hits.
 
-**The pip row on the duelist card holds six**, which is what fits the bottom band at the current
-pitch, and it is a *readout* limit rather than a rule — `screens.maxShieldPips`, not
-`combat.MaxShields`. A duelist standing behind ten draws a full row of six and the true count is
-on the engine. **A row that says what a big count actually is has not been designed**; a seventh
-pip is a redesign of the band rather than a bigger number.
+**The screen draws every shield.** Each stands over the card that raised it, several on one card
+heaped so they can be counted, so a big total is several heaps rather than one long row.
 
 #### Only the player raises shields
 
@@ -349,29 +343,45 @@ no shields, so their budget is the figure printed on their card.
 stronger and considerably more predictable. **Every creature deck is pure attack**, and none
 falls below three distinct concepts.
 
-#### The break on the card
+#### Stopped in the middle
 
-**A blocked attack is drawn as a broken window over the card that will not fire**, and the
-shield that killed it crosses the table to do it — one beat between the player's turn and the
-creature's, every blocked attack at once.
+**A shield stays over the card that raised it until it is spent or lapses.** It forms there once
+the turn's arithmetic is done *(owner's call)* — every hit's line worked out first, a defense's
+coming to 0 — over a defend card, over an attack card carrying a shield rider, or on the ring of a
+helm — and several on one card heap, each a little offset and turned, so the count is read at a
+glance.
 
-**A shield spent invisibly is a rule the player pays for on every defend card and never watches
-work** — the creature's card comes up, nothing happens, and a line in the feed says so after the
-fact. The break is also the only thing that makes the "heaviest, not first" rule above legible.
+**When a creature's attack is eaten, the hit it would have landed sets off toward the duelist, and
+a shield leaves its heap to meet it** *(owner's call)*: the hit flies the path and the pace a
+landed one would, and is stopped where that path crosses the screen's horizontal middle; the shield
+arrives at that point as the hit does, and the two break apart there, on the beat the attack is reached. A shield spent invisibly is a
+rule the player pays for on every defend card and never watches work; watched meeting the hit it
+stopped, it also makes the "heaviest, not first" rule above legible. **Nothing lands on the attack
+card.** A matched block writes SURGE over the break.
 
-**The break is two drawings of one thing and it stays after the animation.** The card wears the
-break for the rest of the round, because the table is the account of what the turn was and a card
-that never fired has to still say so once the turn is over.
+**Once a fighter is down, the defend phase is over** *(owner's call)*: shields a killing turn raised,
+a helm's included, never form, and nothing standing moves after the last blow.
 
-**It is the first of a general mechanism.** A *mark* is a picture drawn over a finished card face
-about that card's situation, as against an *upgrade*, which is what the card permanently is and
-which takes the left column rather than covering anything. See `internal/cards/mark.go`, which holds
-the split between the settled mark and the animation that puts it there, and
-`internal/screens/combat_shatter.go`.
+**A fizzle is drawn the same way from the other side**: the duelist's hit sets off out of its line,
+and a shield of the creature's own element leaves the creature's card to meet it, with FIZZLE
+written over the break.
+
+**The engine counts shields per element and never says which card's shield it spent**, so the
+screen picks: the newest heap holding one of the spent element gives it up. That is a choice about
+the picture, not about a rule.
+
+**At the end of the round an unspent shield fades where it stood**, as its card leaves the table.
+One the Tower Shield keeps moves onto the Tower Shield instead and stands there until a hit eats
+it. See `internal/screens/combat_shields.go`.
+
+#### Marks
+
+A *mark* is a picture drawn over a finished card face about that card's situation, as against an
+*upgrade*, which is what the card permanently is. See `internal/cards/mark.go`.
 
 **Marks are a set.** A card can be several things at once, so `cards.Mark` is a bitmask rather
 than one value, and the order they are painted in belongs to the renderer rather than to whoever
-asks. The second mark is **the tutorial's highlight**: a card the lesson is pointing at is
+asks. The mark today is **the tutorial's highlight**: a card the lesson is pointing at is
 washed in the tutorial's red rather than having a red frame drawn round it. A frame outside a
 card is a thing near the card; a tinted card is the card answering — and where a step names
 several cards, a frame each is a row of loose rectangles while a tint each is just the cards.
@@ -610,8 +620,9 @@ damage ice hit is 0 — while the fire Bash beside it lands as it always did.
   banks an action point when it eats one of its hits. See §A shield of the hit's own element banks
   an action point.
 
-The fight log says `fizzles - its own element` on the hit's line and the hit's arithmetic line
-takes `FIZZLE`. `combat.fizzles` is the rule and `KindFizzled` the event.
+The fight log says `fizzles - its own element` on the hit's line, and on the table the hit is met
+in the middle by a shield of the creature's element with `FIZZLE` written over the break — see
+§Stopped in the middle. `combat.fizzles` is the rule and `KindFizzled` the event.
 
 ### Elements and relics
 
@@ -661,8 +672,14 @@ hand they form is announced, and then every card of the turn lands its own hit. 
 their own, each doing something to its own duelist.
 
 **The run's account writes the hand once and the hits under it.** The hand's line names the rung;
-under it is a line per hit — the card that threw it, its arithmetic, what became of it — and the
-total of every hit. **A turn that forms no rung still takes that same heading**: the No Hand is a
+under it is each hit — the card that threw it, then its arithmetic down a column, one step per
+figure labelled with what produced it (the DMG, the card, each relic, each hand relic, and the hand
+last), then the `=` the hit came to in its card's element — `= 288 Arcane Damage Applied`,
+underlined, when it landed, and `Over Damage` when the target had already fallen — and the hand's
+heading carries the grand total of every hit. A landing a relic repeated writes its own whole column
+under `Earth Jab Repeats - Twisted Points`. **What raised the duelist's DMG for the turn is written
+once, at the top of the turn** — their own figure, one `+` per relic or held card that added to it,
+and the total every hit then starts from. **A turn that forms no rung still takes that same heading**: the No Hand is a
 rung, and naming it says the true thing rather than dressing a turn that agreed about nothing as an
 achievement.
 
@@ -831,7 +848,8 @@ DUELIST  →  CARD  →  CARD RELICS  →  HAND  →  HAND RELICS
 
 1. **DUELIST** — the DMG every hit of the turn is swung at: the duelist's own DMG, plus what the
    turn's **duelist upgrades** raise it by — the riders on the cards kept back, a rung relic's
-   `add-hand-dmg`, the jars, the purse.
+   `add-hand-dmg`, the jars, the purse. An **Awakening** adds its 10 here too, but to the DMG of
+   each card it raises rather than the whole turn's — see §The Awakenings.
 2. **CARD** — that DMG times the card's own multiplier, then the card's **card upgrades**: its own
    played riders, a flat `+N` first and then a percentage. They touch this card's hit and nothing
    else.
@@ -1193,10 +1211,10 @@ one they win. `go run ./tools/handsheet` draws it.
   the engine names and never derives it from a pattern length.
 - **A place to browse hands** — a reference the player can return to. Probably belongs with the
   profile rather than inside a duel. `Hands()` exists for it to read.
-- **The attack phase writes the hand's line and a line per hit.** Attack cards write no act of
-  their own: a turn of five Bashes is the hand's heading and five hits under it, each carrying its
-  arithmetic off the event, so the figure shown is the figure used and the hit's outcome attaches
-  to it. **The hand dialog carries the same arithmetic at the size of the screen**; the lines stay
+- **The attack phase writes the hand's line and each hit's working under it.** Attack cards write
+  no act of their own: a turn of five Bashes is the hand's heading and five hits under it, each
+  carrying its arithmetic off the event as a labelled column, so the figure shown is the figure
+  used and the hit's outcome attaches to its `=`. **The hand dialog carries the same arithmetic at the size of the screen**; the lines stay
   because they are the record and the dialog is the moment.
 
 ---
@@ -1601,6 +1619,15 @@ What the original is still reachable from is the card's **identity** — every c
 carries an ID, so the deck panel can show either face of a card wherever it is sitting. **No
 rule may read that ID**; it is a handle for the screens.
 
+**A rune or an essence spent on a held card is not a draw** *(owner's call, 2026-10-13)*. It
+changes what it names on the card the player is holding and nothing else, and the orbs are not
+walked over it again: an earth card painted ice under the Burning Frozen Orb is held ice until it is
+drawn again, and a card the orb already made fire keeps its fire under a rune that only gave it a
+rider. **A copy is the card the player picked, as they see it** — a card painted lightning copies
+as lightning, and a card the orb flipped copies in its flipped color. The run's own cards still
+hold what they were, so the next draw deals each of them through the orbs as usual.
+`session.HeldAs` is the rule and `CombatScene.seatCopies` the copy.
+
 - **A flip is what makes a color relic worth wearing**, which is the whole point of the pair:
   the Fire relic doubles fire cards and there are only so many, so the orbs dealing other colors as
   fire are how a
@@ -1825,7 +1852,8 @@ and a proposal landing in a full one is a sibling.
 | **element repeats** | uncommon | the color half of the Twisted form repeats |
 | **held-card relics** | common | DMG per matching card **kept back**, one per color and one per form |
 | **orbs** | common | every flip, element and form — see the tier rule below |
-| **attunements** | uncommon, locked | a pierce per element, a surge per form; each behind the 300-card achievement for its element or form |
+| **attunements** | uncommon, locked | a pierce per element behind the 500-card achievement for its element, a surge per form behind the 1000-card achievement for its form |
+| **staggers** | uncommon, locked | a shield per attack card of one form, behind the 300-card achievement for that form |
 | **awakenings** | common | a first card of one element or form raises every attack after it by 10 |
 | **mythics** | mythic | the Eternity Pearl |
 
@@ -1920,10 +1948,11 @@ are the same predicate and a record setting both is refused at load.
 
 ### The Awakenings — a first card that raises the turn behind it
 
-**If the turn's first card matches, every attack queued after it gains +10 on its card — after the
-card's own multiplier and riders, before the relics that price the card** *(owner's call,
-2026-10-10)*, so a Club, a Swarm and the hand all multiply the 10. One per element and one per
-attack form, all common.
+**If the turn's first card matches, every attack queued after it is swung at +10 DMG — added to
+the DMG that card is swung at, before the card's own multiplier** *(owner's call, 2026-10-13)*, so
+a 3x card gains 30, and its riders, a Club, a Swarm and the hand all multiply what that came to.
+It raises those cards' DMG and not the turn's: the opener and every defense are swung at the plain
+figure. One per element and one per attack form, all common.
 
 - **First as queued, whatever it is.** A Brace queued first is the opener even though the defend
   phase resolves first, and a fire Brace opener wakes the fire Awakening. `First` is the predicate,
@@ -1933,8 +1962,10 @@ attack form, all common.
   the 10, an echo's or a repeat's included; two Awakenings that both wake add.
 - **It is shown before a card is counted**: on the announcement's beat the Awakening and its opener
   toast together, then every attack it raised rattles, and only then do the lines run — each
-  carrying its `+ 10` flying out of the relic inside the card's working. The fight log writes it
-  inside the card's bracket, before the relics' factors. `Event.HandAwaken`, `Awaken`, `AwakenSeats` and `AwakenOpener` carry it.
+  carrying a `+ 10` row per Awakening under the duelist's DMG, flying out of its own relic, with the
+  card's multiplier on the row under them. **Two that wake are two rows, never one sum**, and the
+  fight log writes each as its own step labelled with its relic. `Event.HandAwaken`, `Awaken`,
+  `AwakenSeats`, `AwakenBy` and `AwakenOpener` carry it.
 
 ### The Eternity Pearl — the mythic
 
@@ -1958,7 +1989,7 @@ on a defend concept can never fire; these reach shields through verbs of their o
   would take away the shield it had just been handed. It is a shield like any other: it eats the
   heaviest hit of its own element first, banks the matched block's action point, and lapses with
   the rest. So a helm is a free Brace of its color every turn, and its worth depends entirely on
-  how often the realm is that color. The pips fly out of the ring rather than out of a card.
+  how often the realm is that color. Its shield forms on the ring rather than over a card.
 - **The Prismatic Shield turns every shield a defend card raises to the opponent's element**
   (`match-foe-shields`). **The shield changes and the card does not**: a defend card still carries
   its own element into the hand it forms, so what the relic buys is the matched block's action
@@ -1969,6 +2000,11 @@ on a defend concept can never fire; these reach shields through verbs of their o
   attacker's turn that swung at them ending, and the owner's next turn arriving (`keep-shields`).
   A kept shield stands until a hit eats it. Which ones stay is a function of the stack alone,
   taken in element order, so nothing about when a shield went up decides whether it survives.
+- **A stagger raises a shield for every attack of its form the turn played** — the Concussive
+  Saber for slash, the Stunning Club for crush, the Surgical Spear for stab (`shield-per-card` at
+  `turn-taken`). Each shield is the element of the card that earned it, and every card of the form
+  counts whatever its hit did. They go up as the turn closes and stand through the opponent's turn
+  like any other; on screen each leaves its ring and flies to its card as that card's hit sets off.
 
 **Three more pay out on a block, at their own moment.** `hit-blocked` fires once for every
 incoming hit one of the wearer's shields eats, in `combat.blockedByShield` — the one place a shield
@@ -2494,6 +2530,10 @@ which cards — and a panel covering the screen to ask that was covering the ans
   aims an essence at a card off the whole deck while showing eight of them, so it is the place the
   deck matters most. `deckpile.go` is the pile all three draw, and each
   screen owns its own toggle and its own click.
+- **Under the grid is the run's record**: the tonics it has drunk, as cards that explain themselves
+  when rested on, and its figures so far — fights won, rounds, damage dealt and taken, healed, hits
+  blocked, the biggest hit, cards played, vitae earned and spent — the duel being fought included.
+  See `internal/ui/deckpanel_record.go`.
 - **The ways out are taking a card or pressing SKIP**, which takes nothing and forfeits what the
   good cost — the reward screen's LET THEM ESCAPE on the same terms. The chrome stands down, as it
   does on the reward screen.
@@ -3572,7 +3612,12 @@ it — the statistics, the achievements, the bestiary, and every catalog a run b
 - **A catalog book is every record in the catalog, in its own order, as its own card.** A record the
   player has never had is drawn dark, down to a silhouette, and its tooltip keeps its name and its
   rule back; one they have had carries its count — bought, drunk, cast, used, opened, beaten — and
-  its full tooltip. A creature counts as met once it has been fought, won or lost.
+  its full tooltip.
+- **The bestiary has a card per creature per element it can be dealt as**, and each colour is met
+  on its own, once it has been fought in that colour, won or lost — counted by the
+  `defeated-as:` / `killed-by-as:` families, which only fights from then on fill. Resting on a met
+  one opens its card at full size beside the deck it is dealt in that colour, a card per concept
+  with the copies under it, and its base figures; one not yet met says nothing.
 - **The statistics book is two records behind two tabs**: rolled runs and chosen-seed runs. See
   §Lifetime statistics.
 - **Both read the run in progress as well as the finished ones**, so a relic bought an hour ago is

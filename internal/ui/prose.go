@@ -25,6 +25,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
+	"github.com/curiousjc/ascend-duel/internal/systems"
 
 	"image/color"
 )
@@ -64,7 +65,7 @@ func PaneRowsFor(lines []session.LedgerLine) []PaneRow {
 	for _, l := range lines {
 		spans := make([]paneSpan, 0, len(l.Spans))
 		for _, r := range l.Spans {
-			spans = append(spans, paneSpan{Text: r.Text, Ink: inkNamed(r.Ink), Mark: r.Mark})
+			spans = append(spans, paneSpan{Text: r.Text, Ink: inkNamed(r.Ink), Mark: r.Mark, Col: r.Col})
 		}
 		rows = append(rows, PaneRow{
 			Spans:  spans,
@@ -98,6 +99,8 @@ func inkNamed(name string) color.RGBA {
 		return BoostInk
 	case session.InkTotal:
 		return VerbInkFor(combat.CategoryAttack)
+	case session.InkGrand:
+		return grandInk
 	case session.InkVitae:
 		return VitaeInk
 	}
@@ -106,6 +109,11 @@ func inkNamed(name string) color.RGBA {
 	}
 	return color.RGBA{}
 }
+
+// grandInk is a blow's grand-total heading: a deep amber, the hand swatch's own hue taken dark
+// enough to read as text on the ledger's light ground, so the line summing the attack is the hand's
+// colour rather than any element's.
+var grandInk = systems.ColorAtStrength(handSwatch, 62)
 
 // InkNamed is inkNamed for a screen drawing a Say template outside a pane.
 func InkNamed(name string) color.RGBA { return inkNamed(name) }
@@ -128,8 +136,11 @@ func swatchForVoice(voice string) color.RGBA {
 // indentForVoice is how far a line is set in. Only the arithmetic's own terms are, which is also
 // what keeps them left-aligned rather than centered — see paneRow.indent.
 func indentForVoice(voice string) int {
-	if voice == session.VoiceTerm {
+	switch voice {
+	case session.VoiceTerm:
 		return termIndent
+	case session.VoiceWork:
+		return workIndent
 	}
 	return 0
 }

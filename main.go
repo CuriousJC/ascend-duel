@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/curiousjc/ascend-duel/assets"
+	_ "github.com/curiousjc/ascend-duel/assets/motifs" // the creatures and the rooms; see its doc
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/crashlog"
 	"github.com/curiousjc/ascend-duel/internal/game"

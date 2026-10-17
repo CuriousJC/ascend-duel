@@ -156,7 +156,7 @@ func consumablePaneBackRect(r image.Rectangle) image.Rectangle {
 // on the corner is what says how much room is left. Nothing anywhere outlines an absent card now —
 // the reward screen was the last place doing it, and gave it up on 2026-09-08.
 func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rectangle,
-	spendable func(session.Consumable) bool, skip func(int) bool, raise bool) {
+	spendable func(session.Consumable) bool, skip func(int) bool, raise bool, sale *sellTab) {
 
 	if skip == nil {
 		skip = func(int) bool { return false }
@@ -170,6 +170,8 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 	vector.FillRect(screen,
 		float32(back.Min.X), float32(back.Min.Y), float32(back.Dx()), float32(back.Dy()),
 		relicPaneBackColor, false)
+	// **An armed card's tab scroll on the backing, under the cards.** See band_scroll.go.
+	sale.drawScrollBehind(gs, screen, saleHeld)
 
 	held := heldConsumables(gs)
 	seats := consumableSeats(gs)

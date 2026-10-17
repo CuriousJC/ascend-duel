@@ -179,28 +179,57 @@ func TestABlowWritesItsWorkingOut(t *testing.T) {
 	// **No relics worn**, so every name falls back to "a relic" — which is what this test is
 	// about: the shape of the working and the figures in it, not which record paid them.
 	lines := ui.LedgerLines(ui.HandTermRecords(e, nil, played))
-	if len(lines) != 3 {
-		t.Fatalf("a two-hit blow wrote %d lines, want 2 hits and the total: %v", len(lines), lines)
+
+	// **Each hit is its card's line and then its working down a column**, one labelled step per
+	// figure, ending on what the hit came to. The blow ends on every hit together.
+	var hits [][]session.LedgerLine
+	for _, l := range lines[:len(lines)-1] {
+		if l.Voice == session.VoiceTerm {
+			hits = append(hits, nil)
+		}
+		if len(hits) == 0 {
+			t.Fatalf("the working opens on %q, want a hit's card line", l.Text())
+		}
+		hits[len(hits)-1] = append(hits[len(hits)-1], l)
+	}
+	if len(hits) != 2 {
+		t.Fatalf("a two-hit blow wrote %d hits: %v", len(hits), lines)
+	}
+	texts := func(ls []session.LedgerLine) []string {
+		var out []string
+		for _, l := range ls {
+			out = append(out, l.Text())
+		}
+		return out
+	}
+	has := func(ls []session.LedgerLine, want string) bool {
+		for _, s := range texts(ls) {
+			if strings.Contains(s, want) {
+				return true
+			}
+		}
+		return false
 	}
 
-	// **Each hit is its own arithmetic**, and a relic's figure stays inside the term it priced.
-	if got := lines[0].Text(); !strings.Contains(got, "20 x 1.5 = 30") || !strings.Contains(got, "fire") {
-		t.Errorf("the first hit reads %q, want its card and its own working", got)
+	first, second := hits[0], hits[1]
+	if first[0].Text() != "Fire Bash" || !has(first, "x 1.5") || !strings.Contains(first[len(first)-1].Text(), "= 30") {
+		t.Errorf("the first hit reads %q, want its card, the hand's 1.5 and its own 30", texts(first))
 	}
-	second := lines[1].Text()
-	if !strings.Contains(second, "(20 x 2) x 1.5 = 60") {
-		t.Errorf("the second hit reads %q, want the relic's factor inside its term", second)
+	if !strings.Contains(second[0].Text(), "Repeats - ") {
+		t.Errorf("the second hit opens %q, which does not say a relic made it land again", second[0].Text())
 	}
-	if !strings.Contains(second, "2x") || !strings.Contains(second, "again") {
-		t.Errorf("the second hit reads %q, which does not say what the relics did", second)
+	if !has(second, "x 2") || !has(second, "a relic") || !strings.Contains(second[len(second)-1].Text(), "= 60") {
+		t.Errorf("the second hit reads %q, want the relic's x2 as its own labelled step and its 60", texts(second))
 	}
-	if got := lines[2].Text(); !strings.Contains(got, "90") {
-		t.Errorf("the total reads %q, want every hit's 90", got)
-	}
-	for i, l := range lines {
-		if l.Voice != session.VoiceTerm {
-			t.Errorf("line %d is in the %q voice, want %q", i, l.Voice, session.VoiceTerm)
+	for _, hit := range hits {
+		for i, l := range hit[1:] {
+			if l.Voice != session.VoiceWork {
+				t.Errorf("step %d of a hit is in the %q voice, want %q", i, l.Voice, session.VoiceWork)
+			}
 		}
+	}
+	if got := lines[len(lines)-1].Text(); !strings.Contains(got, "90") {
+		t.Errorf("the total reads %q, want every hit's 90", got)
 	}
 }
 
@@ -236,29 +265,33 @@ func TestTheWorkingIsColoredLikeTheScreen(t *testing.T) {
 	fire := cards.BorderOf(ui.ArtFor(combat.Fire))
 	relic := ui.BoostInk
 
-	term := rows[0]
-	if term.Spans[0].Ink != fire {
-		t.Errorf("the card's name is in %v, want its element's %v", term.Spans[0].Ink, fire)
+	if rows[0].Spans[0].Ink != fire {
+		t.Errorf("the card's name is in %v, want its element's %v", rows[0].Spans[0].Ink, fire)
 	}
-	if last := term.Spans[len(term.Spans)-1]; last.Ink != relic {
-		t.Errorf("the relic's note is in %v, want the relic pink %v", last.Ink, relic)
+
+	// **The relic's step is pink twice over**: its figure and the name labelling it.
+	var sawRelic bool
+	for _, row := range rows[1:] {
+		if len(row.Spans) == 3 && row.Spans[1].Ink == relic && row.Spans[2].Ink == relic {
+			sawRelic = true
+		}
+	}
+	if !sawRelic {
+		t.Error("no step of the hit writes the relic's figure and its name in the relic's color")
 	}
 
 	// **Nothing in a hit's working wears a hue that means something else**, and nothing in it is
 	// underlined: hue belongs to the elements and the wheel is full, and an underline mid-sum
 	// reads as a typesetting accident. This is the check that catches either coming back.
-	var sawRelic bool
-	for _, r := range term.Spans[1 : len(term.Spans)-1] {
-		sawRelic = sawRelic || r.Ink == relic
-		if r.Mark {
-			t.Errorf("a run of the sum is underlined: %q", r.Text)
+	for _, row := range rows {
+		for _, r := range row.Spans {
+			if r.Mark {
+				t.Errorf("a run of the working is underlined: %q", r.Text)
+			}
+			if r.Ink == cards.BorderOf(cards.Arcane) {
+				t.Errorf("a run of the working is written in the arcane element's color: %q", r.Text)
+			}
 		}
-		if r.Ink == cards.BorderOf(cards.Arcane) {
-			t.Errorf("a run of the sum is written in the arcane element's color: %q", r.Text)
-		}
-	}
-	if !sawRelic {
-		t.Error("the relic's figure in the hit is not in the relic's color")
 	}
 }
 

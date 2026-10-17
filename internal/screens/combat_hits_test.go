@@ -3,6 +3,7 @@ package screens
 import (
 	"testing"
 
+	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/entities"
 	"github.com/curiousjc/ascend-duel/internal/ui"
@@ -172,13 +173,13 @@ func throwScene() *CombatScene {
 	s.log = []combat.Event{
 		{Kind: combat.KindHand, Side: combat.SideA},
 		{Kind: combat.KindDamage, Side: combat.SideA, Target: combat.SideB, Hit: 0, Amount: 30, Life: 70},
-		{Kind: combat.KindFizzled, Side: combat.SideA, Hit: 1},
+		{Kind: combat.KindFizzled, Side: combat.SideA, Hit: 1, Element: combat.Fire},
 		{Kind: combat.KindRoundEnd},
 	}
 	total := []mathItem{{text: "30"}}
 	s.Theater.mathBox = handMathBox{active: true, side: combat.SideA, columns: []mathColumn{
-		{hit: 0, items: total, at: 1, logAt: 1},
-		{hit: 1, items: total, at: 1, logAt: 2},
+		{hit: 0, items: total, at: 1, logAt: 1, figure: 30},
+		{hit: 1, items: total, at: 1, logAt: 2, figure: 30},
 		{hit: 2, items: total, at: 1, logAt: -1},
 	}}
 	return s
@@ -186,7 +187,7 @@ func throwScene() *CombatScene {
 
 func TestALandedLineFliesAndTheBarWaitsForIt(t *testing.T) {
 	s := throwScene()
-	s.throwColumn(0)
+	s.throwColumn(testState(), 0)
 
 	if len(s.Theater.hits) != 1 || s.Theater.hits[0].amount != 30 {
 		t.Fatalf("the landed line raised %v, want one figure of 30", s.Theater.hits)
@@ -205,15 +206,30 @@ func TestALandedLineFliesAndTheBarWaitsForIt(t *testing.T) {
 	}
 }
 
-func TestAFizzledLineSaysSoAndFliesNothing(t *testing.T) {
+// **A fizzle is the creature shielding itself in its own element**: the figure still sets off, a
+// shield of that element sets off to meet it, and FIZZLE is written where they meet. Nothing lands,
+// so no bar waits.
+func TestAFizzledLineIsMetByTheCreaturesOwnShield(t *testing.T) {
 	s := throwScene()
-	s.throwColumn(1)
+	s.throwColumn(testState(), 1)
 
-	if col := s.Theater.mathBox.columns[1]; col.verdict != "FIZZLE" {
-		t.Errorf("the fizzled line says %q, want FIZZLE", col.verdict)
+	if len(s.Theater.intercepts) != 1 {
+		t.Fatalf("%d intercepts raised, want 1", len(s.Theater.intercepts))
+	}
+	ic := s.Theater.intercepts[0]
+	if ic.label != "FIZZLE" || ic.shield != cards.Fire || ic.figure != "-30" {
+		t.Errorf("raised %q met by a %s shield saying %q, want -30 met by fire saying FIZZLE",
+			ic.figure, ic.shield, ic.label)
+	}
+	col := s.Theater.mathBox.columns[1]
+	if !col.spent || !col.intercepted {
+		t.Error("the fizzled line still draws its total, or is not dimmed")
 	}
 	if len(s.Theater.hits) != 0 {
-		t.Error("a fizzled hit raised a figure")
+		t.Error("a fizzled hit raised a landing figure")
+	}
+	if !s.Theater.Running() {
+		t.Error("the intercept does not hold the cursor")
 	}
 	if !s.Theater.walked[2] {
 		t.Error("the fizzle is not marked as shown")
@@ -222,10 +238,52 @@ func TestAFizzledLineSaysSoAndFliesNothing(t *testing.T) {
 
 func TestALineWhoseHitWasNeverThrownFades(t *testing.T) {
 	s := throwScene()
-	s.throwColumn(2)
+	s.throwColumn(testState(), 2)
 
 	if !s.Theater.mathBox.columns[2].unthrown {
 		t.Error("a hit that never came is drawn as though it did")
+	}
+}
+
+// **A hit after the target fell still flies into it**, and moves no life: the bar is already
+// empty and stays so.
+func TestAnOverkillLineFliesIntoTheDeadCard(t *testing.T) {
+	s := throwScene()
+	s.enemy.CurrentLife = 0
+	col := &s.Theater.mathBox.columns[2]
+	col.overkill, col.figure = true, 40
+	s.throwColumn(testState(), 2)
+
+	if col.unthrown || !col.spent {
+		t.Error("the overkill line stayed on the table rather than setting off")
+	}
+	if len(s.Theater.hits) != 1 || s.Theater.hits[0].amount != 40 {
+		t.Fatalf("the overkill line raised %v, want one figure of 40", s.Theater.hits)
+	}
+	if s.enemy.CurrentLife != 0 {
+		t.Errorf("the model reads %d, want the 0 it already held", s.enemy.CurrentLife)
+	}
+	if got := s.shownLife(combat.SideB, s.enemy.CurrentLife); got != 0 {
+		t.Errorf("the dead card's bar draws %d under the figure, want 0", got)
+	}
+}
+
+// **A hit of nothing is not sent**, even one the creature's element would fizzle.
+func TestAZeroLineThatFizzlesIsNotSent(t *testing.T) {
+	s := throwScene()
+	s.throwColumn(testState(), 1)
+	if len(s.Theater.intercepts) != 1 {
+		t.Fatalf("the fixture's fizzle raised %d intercepts, want 1", len(s.Theater.intercepts))
+	}
+
+	s = throwScene()
+	s.Theater.mathBox.columns[1].figure = 0
+	s.throwColumn(testState(), 1)
+	if len(s.Theater.intercepts) != 0 || len(s.Theater.hits) != 0 {
+		t.Error("a hit of nothing set off")
+	}
+	if !s.Theater.walked[2] {
+		t.Error("the fizzle is not marked as shown, so playback would draw it")
 	}
 }
 

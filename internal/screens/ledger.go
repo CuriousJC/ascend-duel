@@ -407,13 +407,15 @@ func ledgerRows(gs *state.GlobalState, expanded map[int]bool) []ledgerRow {
 		// fight reads as a block with a lid rather than as a heading followed by whatever came
 		// next. It is the whole reason the band exists: the panel scrolls, and a heading that has
 		// scrolled off the top has to leave something behind saying which fight is being read.
+		// **The lines under a heading alternate** between the fight's ground and a step darker, so a
+		// long column of working can be read across without losing the row.
 		for _, round := range f.Rounds {
 			head := ui.PlainRow(fmt.Sprintf("- Round %d -", round.Number))
 			head.Band = ground
 			rows = append(rows, ledgerRow{row: head})
 
-			for _, l := range ui.PaneRowsFor(ui.LedgerLines(round.Records)) {
-				l.Band = ground
+			for k, l := range ledgerWrap(gs, ui.PaneRowsFor(ui.LedgerLines(round.Records))) {
+				l.Band = ledgerStripe(ground, k)
 				rows = append(rows, ledgerRow{row: l})
 			}
 		}
@@ -426,13 +428,29 @@ func ledgerRows(gs *state.GlobalState, expanded map[int]bool) []ledgerRow {
 			head.Band = ground
 			rows = append(rows, ledgerRow{row: head})
 
-			for _, l := range ui.PaneRowsFor(ui.LedgerLines(f.After)) {
-				l.Band = ground
+			for k, l := range ledgerWrap(gs, ui.PaneRowsFor(ui.LedgerLines(f.After))) {
+				l.Band = ledgerStripe(ground, k)
 				rows = append(rows, ledgerRow{row: l})
 			}
 		}
 	}
 	return rows
+}
+
+// ledgerStripe is the ground of the k-th line under a heading: the fight's own ground, and every
+// other line a step darker. **Derived from the ground**, so it stays one step off whatever the
+// fight's band is.
+func ledgerStripe(ground color.RGBA, k int) color.RGBA {
+	if k%2 == 0 {
+		return ground
+	}
+	return systems.ColorAtStrength(ground, 95)
+}
+
+// ledgerWrap breaks the account's rows to the panel's width, so a hit priced by a long row of
+// relics carries on under itself rather than running off the right edge.
+func ledgerWrap(gs *state.GlobalState, rows []ui.PaneRow) []ui.PaneRow {
+	return ui.WrapPaneRows(gs, ledgerPane, ledgerPanelRect(gs).Dx(), rows)
 }
 
 // ledgerAfterHeading names the block between one fight and the next. **"After" rather than

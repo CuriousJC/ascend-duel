@@ -22,7 +22,7 @@ costs if it does not.
 ```json
 {
   "RelicRecord": "dmgx-fire",
-  "Name": "Fire",
+  "Name": "Fire Ring",
   "Art": "dmgx-fire",
   "Text": "Fire cards deal 2x DMG.",
   "Rarity": "common",
@@ -39,7 +39,7 @@ costs if it does not.
 - **`Name`** — the full name, which is what a tooltip titles and what the shop says. **The card
   face never draws it**: a relic card is a full-bleed picture with no title, so a name has no width
   to fit and can be as long as it reads well.
-- **`Art`** — the assets key for the face. **Empty draws `default-relic.png`** via `RelicData.ArtKey`;
+- **`Art`** — the assets key for the face. **Empty draws the placeholder** via `RelicData.ArtKey`;
   a key naming no embedded image fails
   `TestEveryRelicDrawsSomething` rather than drawing a blank.
 - **`Text`** — the line a player reads. **It is printed**: the hover tooltip on
@@ -205,7 +205,8 @@ not ignored.
 | `vitae-on-block` | `hit-blocked` | `Amount` flat | pays the wearer that much vitae per block, stepping `Duelist.Vitae`. The Tithe Shield |
 | `pierce-element` | `equipped` | `Element` | the wearer's cards of that element **land on a creature of it** instead of fizzling — the Attunements. Read off the thrower in `fizzles`. Basic refused |
 | `surge-per-card` | `turn-taken` | `Amount` points | banks `Amount` AP on `Duelist.Surge` **for every matching card of the turn**, whatever its hit did — the form Attunements. Spent like a block's surge. Refused with no `If` |
-| `awaken` | `blow-formed` | `Amount` flat | every **attack** queued after the first card gains `Amount` on its card — after the card's own multiplier and riders, **before the relics that price the card**, so they multiply it — the Awakenings. Needs `First`. Two that wake add. `Event.HandAwaken` |
+| `shield-per-card` | `turn-taken` | `Amount` shields | raises `Amount` shields **for every matching card of the turn**, each in that card's element and heaped over that card, as the turn closes — the staggers. Whatever its hit did. Refused with no `If`; bounded per card at `MaxShields` |
+| `awaken` | `blow-formed` | `Amount` flat | every **attack** queued after the first card is swung at `Amount` more DMG — **before the card's own multiplier**, so the card, its riders and the relics that price it all multiply it — the Awakenings. Needs `First`. Two that wake add. `Event.HandAwaken` |
 | `copy-consumable` | `fight-begun` | `Amount` copies | a weightless copy of one carried consumable picked off `seeds.PearlCopy`, weightless copies included — the Eternity Pearl |
 | `adjust-essence-targets` | `essence-spent` | `Amount` cards, **signed** | moves how many cards one essence is spent on. 1 is two where the mechanic gives one; **every delta sums and worn order decides nothing**, because addition commutes, so two relics are three cards. **Floored at one card, never at none** |
 

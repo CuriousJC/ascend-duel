@@ -268,9 +268,12 @@ type LedgerRecordSnapshot struct {
 
 	Amount int `json:"amount,omitempty"`
 
-	Hand       string `json:"hand,omitempty"`
-	Multiplier int    `json:"multiplier,omitempty"`
-	HandScale  int    `json:"handScale,omitempty"`
+	Hand       string                 `json:"hand,omitempty"`
+	Multiplier int                    `json:"multiplier,omitempty"`
+	HandScale  int                    `json:"handScale,omitempty"`
+	HandRelics []LedgerFactorSnapshot `json:"handRelics,omitempty"`
+	DMGBase    int                    `json:"dmgBase,omitempty"`
+	DMGParts   []LedgerFactorSnapshot `json:"dmgParts,omitempty"`
 
 	Role string `json:"role,omitempty"`
 	Base int    `json:"base,omitempty"`

@@ -152,21 +152,19 @@ func TestStackStyleKeepsTheCardsProportions(t *testing.T) {
 func TestThePlayedRowFitsOnScreen(t *testing.T) {
 	gs := testState()
 
-	// **A card lifted by tableFireLift is the top of the row**, so the check is against that
-	// rather than against the row's resting y — the moment a card is firing is the moment it is
-	// highest, and a row that only fitted at rest would clip exactly when it mattered.
+	// Nothing on the table lifts, so the row's resting y is its top.
 	//
 	// The widest row the rules can produce, asked of the rules rather than written down: a relic
 	// raising the action cap must not be able to push the row off the screen quietly.
 	//
 	// **This measured the yellow hand relic until 2026-08-19**, which stood off the cards and so
 	// set the margins. The relic is gone and the cards themselves are what has to fit.
-	first := playedSeatAt(gs, 0, combat.Duelist{}.MaxActions(), 0)
+	first := playedSeatAt(gs, 0, combat.Duelist{}.MaxActions())
 	if first.X < 0 {
 		t.Errorf("the played row starts at x=%d, off the left of the screen", first.X)
 	}
-	if top := first.Y - tableFireLift; top < 0 {
-		t.Errorf("a firing card reaches y=%d, off the top of the screen", top)
+	if first.Y < 0 {
+		t.Errorf("the played row reaches y=%d, off the top of the screen", first.Y)
 	}
 
 	// And its bottom must clear the hand itself. **It no longer has to clear the band the sum is

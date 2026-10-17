@@ -79,11 +79,8 @@ func SlideTicks() int { return Beat(1, 2) }
 
 // runeSpec is a rune drawn as a card.
 //
-// **The picture comes off the record** *(2026-09-12)*, through `data.RuneData.ArtKey`, already
-// resolved by the time a `session.Rune` exists. It borrowed the essence's placeholder through one
-// constant until then, and the note on that constant said the day runes got art it should be a
-// `data/runes.json` field appearing rather than a fallback being unpicked — so the fallback is
-// `assets/rune/default-rune.png` now, a seat of the catalog's own.
+// **The picture comes off the record**, through `data.RuneData.ArtKey`, already resolved by the
+// time a `session.Rune` exists; a rune with no Art draws the placeholder.
 //
 // **The card says nothing at all** *(owner's call, 2026-09-16)*. It carried its authored line
 // across the lower half of its picture, and what that cost is the picture: a rune is a full-bleed
@@ -103,17 +100,6 @@ func runeSpec(gs *state.GlobalState, p session.Rune, enabled, selected bool) car
 		Enabled:  enabled,
 		Selected: selected,
 	}
-}
-
-// ShieldPipKey is the shield drawing for one element, neutral for anything that is not one of the
-// five. Spelled here rather than exported from internal/cards because the key is a fact about the
-// asset family and both packages build it the same way off a form and an element.
-func ShieldPipKey(e cards.Element) string {
-	switch e {
-	case cards.Fire, cards.Ice, cards.Lightning, cards.Earth, cards.Arcane:
-		return "formdefend-" + e.String()
-	}
-	return "formdefend-neutral"
 }
 
 // RoomNames is what each of a realm's three fights is called, in order. Indexed by the

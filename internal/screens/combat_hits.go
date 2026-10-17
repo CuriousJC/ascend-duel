@@ -179,9 +179,13 @@ func (s *CombatScene) noteHit(e combat.Event, held int) {
 //     life moves here, when the figure sets off, rather than when playback reaches the event — the
 //     lines finish in whatever order their arithmetic allows, so the event is reached later and is
 //     walked past. `shownLife` holds the bar until the figure arrives.
-//   - **A fizzle says FIZZLE and a block says BLOCKED** over the line. A fizzle is walked past like
-//     a landing; a block is left for playback, because the shield row is moved by it.
-//   - **A hit that was never thrown fades where it stands**: the target fell to an earlier one.
+//   - **A fizzle or a block still flies**, and is met halfway by the shield that stops it. See
+//     combat_intercept.go. **A hit of nothing is not sent at all**, fizzled or not: its line keeps
+//     its `= 0`.
+//   - **A hit after the target fell still flies into the dead card**, so every figure the account
+//     writes is seen going somewhere. It moves no life — the bar is already empty, or will be when
+//     the killing figure lands.
+//   - **A hit after the thrower fell fades where it stands**: there is nobody to swing it.
 //
 // **It decides nothing.** Every figure and every verdict is the resolver's.
 // noteReflect raises the figure for a relic sending part of a blocked hit back — out of the ring,
@@ -202,28 +206,38 @@ func (s *CombatScene) noteReflect(e combat.Event, held int) {
 	})
 }
 
-func (s *CombatScene) throwColumn(c int) {
+func (s *CombatScene) throwColumn(gs *state.GlobalState, c int) {
 	box := &s.Theater.mathBox
 	col := &box.columns[c]
 	col.thrown = true
 	// Whatever became of the hit, the total is no longer resting: its wrap stops here.
 	s.closeWrap(c)
+	// **A stagger's shields leave their ring as the card's hit sets off**, whatever the hit then
+	// does — a card that fizzles or is blocked still earned them. See flyStaggers.
+	s.flyStaggers(gs, box.side, col.seat)
 
 	if col.logAt < 0 || col.logAt >= len(s.log) {
+		if col.overkill && col.figure > 0 {
+			s.throwOverkill(gs, col)
+			return
+		}
 		col.unthrown = true
 		return
 	}
 	e := s.log[col.logAt]
 
 	switch e.Kind {
-	case combat.KindFizzled:
-		col.verdict = "FIZZLE"
-		col.verdictT = ui.NewTravel(0, mathSymbolTicks())
+	case combat.KindFizzled, combat.KindBlocked:
+		if col.figure <= 0 {
+			s.markShown(col.logAt)
+			return
+		}
+		// **A stopped hit still sets off**, and is met on its way in by the shield that
+		// stops it — the opponent's own element, for a fizzle. See combat_intercept.go. The event is
+		// walked past like a landing: the intercept is its picture.
+		col.intercepted = true
+		s.interceptLine(gs, col, e)
 		s.markShown(col.logAt)
-
-	case combat.KindBlocked:
-		col.verdict = "BLOCKED"
-		col.verdictT = ui.NewTravel(0, mathSymbolTicks())
 
 	case combat.KindDamage:
 		// **A hit of nothing flies nothing**: a defense's hit moves no bar, so
@@ -254,6 +268,31 @@ func (s *CombatScene) throwColumn(c int) {
 		s.Theater.hits = append(s.Theater.hits, h)
 		s.raiseTrail(h)
 	}
+}
+
+// throwOverkill flies a hit the resolver never threw, because the target had already fallen, into
+// the target's card anyway. **The model does not move**: `held` is whatever the model holds now,
+// so shownLife never draws the bar above it, and the killing figure — if it is still on its way —
+// is what empties it.
+func (s *CombatScene) throwOverkill(gs *state.GlobalState, col *mathColumn) {
+	side := s.Theater.mathBox.side
+	target, targetSide := s.enemy, combat.SideB
+	if side == combat.SideB {
+		target, targetSide = s.fighter, combat.SideA
+	}
+	col.spent = true
+	h := hitFlight{
+		amount:  col.figure,
+		side:    side,
+		target:  targetSide,
+		seat:    -1,
+		from:    col.total().at,
+		element: s.handCardElement(side, col.seat),
+		held:    target.CurrentLife,
+		t:       ui.NewTravel(0, hitFlyTicks()+hitHoldTicks()),
+	}
+	s.Theater.hits = append(s.Theater.hits, h)
+	s.raiseTrail(h)
 }
 
 // markShown records that playback need not show one event of this round's log again.
@@ -371,12 +410,12 @@ func (s *CombatScene) hitOrigin(gs *state.GlobalState, h hitFlight) (image.Point
 		if h.seat >= len(s.Theater.resolved) {
 			return image.Point{}, false
 		}
-		at = playedSeatAt(gs, h.seat, len(s.Theater.resolved), s.playedSplit())
+		at = s.playedPoint(gs, h.seat)
 	} else {
 		if h.seat >= len(s.Theater.enemyDealt) {
 			return image.Point{}, false
 		}
-		at = enemySeatAt(gs, h.seat, len(s.Theater.enemyDealt), s.enemySplit())
+		at = s.enemyPoint(gs, h.seat)
 	}
 	return image.Pt(at.X+cardWidth/2, at.Y+cardHeight/2), true
 }

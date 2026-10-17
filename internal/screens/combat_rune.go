@@ -211,6 +211,7 @@ func (s *CombatScene) spendEssence(gs *state.GlobalState, i int) {
 	for k, id := range ids {
 		before[k], _ = gs.Run.CardByID(id)
 	}
+	held := s.heldRunCards(gs)
 
 	if !gs.Run.ApplyToAll(w, ids) {
 		return
@@ -237,15 +238,12 @@ func (s *CombatScene) spendEssence(gs *state.GlobalState, i int) {
 		Targets: ids,
 	})
 
-	s.resyncHandFromRun(gs)
+	s.resyncHandFromRun(gs, held)
 
 	// **A copy joins the hand it was copied from**, the duplicate rune's rule: the fight's piles
 	// were dealt before the copy existed, so a card that went only into the run would not be
-	// playable until the next fight. It arrives unselected, whatever the card it came from was
-	// doing — a copy that queued itself would spend action points the player had not committed.
-	for _, copied := range gs.Run.Duplicated() {
-		s.hand = append(s.hand, paletteCard{Card: copied})
-	}
+	// playable until the next fight. See seatCopies.
+	s.seatCopies(gs, held)
 	s.syncQueue()
 
 	morphed := len(s.Theater.morphs)
@@ -437,6 +435,7 @@ func (s *CombatScene) spendRune(gs *state.GlobalState, i int) {
 	// raised without this file knowing what any particular rune does. See raiseHandMorphs.
 	was, seats := s.handFaces(gs)
 	aimed := s.handCardWords(ids)
+	inHand := s.heldRunCards(gs)
 
 	if !gs.Run.ApplyRuneRolling(p, ids, s.runeRNG(gs, p)) {
 		return
@@ -458,19 +457,14 @@ func (s *CombatScene) spendRune(gs *state.GlobalState, i int) {
 	// values dealt off the deck at the start of the round; a rider attached to the run's card would
 	// otherwise not appear on the card the player is looking at until the next deal, and a removed
 	// card would still be sitting in the row.
-	s.resyncHandFromRun(gs)
+	s.resyncHandFromRun(gs, inHand)
 
 	// **A copy joins the hand it was copied from** *(owner's call, 2026-09-02)*. The essence version
 	// of this only has to put a card in the deck, because it is spent between fights; a rune is
 	// spent in the middle of one, and the fight's piles were dealt before it existed — so a copy
 	// that went only into the run would not be playable until the next fight and would read as a
 	// dud. `resyncHandFromRun` cannot do it, because it walks the hand and the copy is not in it.
-	//
-	// **It arrives unselected, whatever the card it came from was doing.** A copy that queued
-	// itself would spend action points the player had not committed.
-	for _, copied := range gs.Run.Duplicated() {
-		s.hand = append(s.hand, paletteCard{Card: copied})
-	}
+	s.seatCopies(gs, inHand)
 	s.syncQueue()
 
 	// **The change is shown where it happened**, on the cards in the row rather than in a panel
@@ -656,37 +650,81 @@ func (s *CombatScene) showerRNG(gs *state.GlobalState) *rand.Rand {
 // argument `seeds.fightStride` is under: consecutive draws should not be consecutive seeds.
 const stoneShowerStride int64 = 0x3B9A_CA07
 
-// resyncHandFromRun brings the hand back in line with the run's deck after a rune has altered
-// it: an altered card is redrawn as it now is, and a card the run no longer owns leaves the row.
+// heldRunCards is the run's own card behind every card in the hand, by identity — taken before a
+// rune or an essence lands, so that afterwards the hand can be told what changed. See
+// resyncHandFromRun.
+func (s *CombatScene) heldRunCards(gs *state.GlobalState) map[int]combat.Card {
+	out := make(map[int]combat.Card, len(s.hand))
+	for _, c := range s.hand {
+		if owned, ok := gs.Run.CardByID(c.Card.ID); ok {
+			out[c.Card.ID] = owned
+		}
+	}
+	return out
+}
+
+// resyncHandFromRun brings the hand back in line with the run's deck after a rune or an essence has
+// altered it: what changed on the run's card is carried onto the card in the hand, and a card the
+// run no longer owns leaves the row. before is heldRunCards from just ahead of the change.
 //
 // **It walks by identity**, which is the whole reason a card has one. A card in the hand is a copy —
 // and, with a flip relic worn, a copy in a color the run's card never had — so the match cannot be
 // made by looking at the two cards.
 //
+// **The worn rings are not walked again** *(owner's call, 2026-10-13)*: a flip or a demotion fires
+// as a card is drawn and at no other time, so a card painted ice under an ice-to-fire orb is held ice.
+// See session.HeldAs, which is the rule.
+//
 // **A card the run has lost is dropped from the hand, the queue and the selection together.**
 // Leaving it in the queue would put a card into a round the player does not own.
-func (s *CombatScene) resyncHandFromRun(gs *state.GlobalState) {
+func (s *CombatScene) resyncHandFromRun(gs *state.GlobalState, before map[int]combat.Card) {
 	kept := make([]paletteCard, 0, len(s.hand))
 	for _, c := range s.hand {
-		owned, ok := gs.Run.CardByID(c.Card.ID)
+		was, ok := before[c.Card.ID]
+		if !ok {
+			// A card nothing was taken for is read straight off the run, as it stands.
+			if was, ok = gs.Run.CardByID(c.Card.ID); !ok {
+				continue
+			}
+		}
+		held, ok := gs.Run.HeldAs(c.Card, was)
 		if !ok {
 			continue
 		}
-		// **The card is re-dealt rather than re-colored** *(2026-09-08)*. It used to take the
-		// element straight off the card in the hand, on the argument that a flip relic had recolored
-		// it as it was drawn and that color is a fact about the card in play. That argument is
-		// right about the flip and wrong about everything else, and it made every element rune
-		// do nothing at all: Hexmark turned the run's card arcane, this line wrote the hand's fire
-		// back over it, and what the player saw was a consumable vanishing.
-		//
-		// **`drawnAs` is the honest answer to both.** It is the same function the deal itself uses,
-		// so the card in the hand is the card the run would deal now — the rune's new color
-		// with the worn flips applied on top of it, exactly as the next fight will deal it.
-		kept = append(kept, paletteCard{Card: s.drawnAs(owned), selected: c.selected})
+		kept = append(kept, paletteCard{Card: held, selected: c.selected})
 	}
 
 	s.hand = kept
 	s.syncQueue()
+}
+
+// seatCopies puts the cards the last rune or essence minted into the hand, unselected.
+//
+// **A copy looks like the card it was copied from as the hand holds it** *(owner's call,
+// 2026-10-13)*: a card the orb flipped, or a rune painted, copies as the color the player picked, and
+// the worn rings are not walked over the copy — they fire when it is drawn. The source is found by
+// the run's own card, which is what the copy was minted from; a copy with no source in the hand
+// comes in as the run holds it.
+//
+// **It arrives unselected, whatever the card it came from was doing.** A copy that queued itself
+// would spend action points the player had not committed.
+func (s *CombatScene) seatCopies(gs *state.GlobalState, before map[int]combat.Card) {
+	for _, copied := range gs.Run.Duplicated() {
+		face := copied
+		for _, h := range s.hand {
+			src, ok := before[h.Card.ID]
+			if !ok {
+				continue
+			}
+			src.ID = copied.ID
+			if src == copied {
+				face = h.Card
+				face.ID = copied.ID
+				break
+			}
+		}
+		s.hand = append(s.hand, paletteCard{Card: face})
+	}
 }
 
 // runeRiderLine is what a rider is called in the fight log and anywhere else a sentence has to

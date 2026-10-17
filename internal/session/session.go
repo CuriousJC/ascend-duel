@@ -159,10 +159,9 @@ type Session struct {
 	// lastRune is the record key of the rune this run spent most recently, which is what a
 	// chimera copies. **Saved**, unlike `granted` and `duplicated`, because the memory is the
 	// run's rather than the fight's: a chimera carried out of one duel still copies what was spent
-	// in the previous one. See luck.go.
+	// in the previous one. See echo.go.
 	//
-	// **A chimera never writes itself here** — `rememberRune` records the resolved record — so
-	// two of them in a row both fire the thing behind them.
+	// **A chimera never writes itself here** — becoming a rune is not spending one.
 	lastRune string
 
 	// ledger is the run's account of itself: every fight, round by round, as flat

@@ -242,9 +242,9 @@ func ruleLine(p session.Rune) string {
 	case session.RuneVitae:
 		return fmt.Sprintf("+%d vitae, touching no card", p.Number)
 	case session.RuneChimera:
-		// **The page cannot say what it copies**, because that is a fact about a run in progress
+		// **The page cannot say what it becomes**, because that is a fact about a run in progress
 		// and this sheet is drawn against no run at all. Saying so is better than saying nothing.
-		return "fires the run's last rune again — count and effect are that one's"
+		return "becomes the run's last rune, in its own seat; fires nothing"
 	default:
 		return p.Target.String()
 	}
@@ -264,10 +264,6 @@ func valueOf(p session.Rune) string {
 // cardsWanted is how many cards the picker will ask for, said in words for the one that asks for
 // none — a rune that touches no card is a decision rather than an omission.
 func cardsWanted(p session.Rune) string {
-	if p.Target == session.RuneChimera {
-		// Its own record names none; what it asks for comes from whatever it is copying.
-		return "as many as the rune it copies"
-	}
 	if p.Count == 0 {
 		return "none — touches no card"
 	}

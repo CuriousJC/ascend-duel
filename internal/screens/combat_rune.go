@@ -41,6 +41,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/ui"
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
 // heldRunes is what the run is carrying, as records, in acquisition order.
@@ -134,17 +135,17 @@ func (s *CombatScene) selectedCardIDs() []int {
 // **The legality question goes to the run**, which is the only thing that knows whether these
 // particular cards can take it — see `Session.CanApplyRune`, which is also what the apply itself
 // checks, so a rune that lit up cannot then be refused.
-// **A chimera is asked through the run as well.** Its own record names no cards; how many it wants
-// comes from whatever it is copying, so the count is read off `Session.Echoes` rather than off the
-// card in the pane. A chimera with nothing to copy resolves to a rune that cannot be satisfied,
-// which is what draws it dim.
+// **A chimera names no cards**: using it turns it into the run's last rune, which then asks for
+// its own. With nothing to copy it can never be satisfied, which is what draws it dim.
 func (s *CombatScene) runeTarget(gs *state.GlobalState, p session.Rune) consumableTarget {
-	echoed, ok := gs.Run.Echoes(p)
-	if !ok {
-		return consumableTarget{needs: -1, legal: func([]int) bool { return false }}
+	if p.Target == session.RuneChimera {
+		if _, ok := gs.Run.Echoes(p); !ok {
+			return consumableTarget{needs: -1}
+		}
+		return consumableTarget{}
 	}
 	return consumableTarget{
-		needs: echoed.Count,
+		needs: p.Count,
 		legal: func(ids []int) bool { return gs.Run.CanApplyRune(p, ids) },
 	}
 }
@@ -206,6 +207,7 @@ func (s *CombatScene) spendEssence(gs *state.GlobalState, i int) {
 	// **The hand as it stands, before any of this lands**, so the morphs are the difference between
 	// two hands and this file goes on knowing nothing about what any one essence does.
 	was, seats := s.handFaces(gs)
+	stood, standing := s.rowSeats(), append([]paletteCard(nil), s.hand...)
 	aimed := s.handCardWords(ids)
 	before := make([]combat.Card, len(ids))
 	for k, id := range ids {
@@ -245,6 +247,7 @@ func (s *CombatScene) spendEssence(gs *state.GlobalState, i int) {
 	// playable until the next fight. See seatCopies.
 	s.seatCopies(gs, held)
 	s.syncQueue()
+	s.holdRow(standing, stood)
 
 	morphed := len(s.Theater.morphs)
 	s.raiseHandMorphs(gs, was, seats)
@@ -429,11 +432,22 @@ func (s *CombatScene) spendRune(gs *state.GlobalState, i int) {
 	if !s.runeTarget(gs, p).satisfiedBy(ids) {
 		return
 	}
+	if p.Target == session.RuneChimera {
+		s.becomeLastRune(gs, i, p)
+		return
+	}
+	// **A rune that takes no card ignores the selection** — the cards picked for the round stay
+	// picked, and the rune is handed none of them.
+	untargeted := p.Count == 0
+	if untargeted {
+		ids = nil
+	}
 
 	// **The hand as it stands, before any of this lands.** What the rune changed is the
 	// difference between this and the hand a few lines below, which is what lets the morphs be
 	// raised without this file knowing what any particular rune does. See raiseHandMorphs.
 	was, seats := s.handFaces(gs)
+	stood, standing := s.rowSeats(), append([]paletteCard(nil), s.hand...)
 	aimed := s.handCardWords(ids)
 	inHand := s.heldRunCards(gs)
 
@@ -467,6 +481,10 @@ func (s *CombatScene) spendRune(gs *state.GlobalState, i int) {
 	s.seatCopies(gs, inHand)
 	s.syncQueue()
 
+	// **A card the rune took leaves a gap, and the row holds round it** until the settle sorts.
+	// Raised before the morphs, so a card that changed is drawn changing where it stood.
+	s.holdRow(standing, stood)
+
 	// **The change is shown where it happened**, on the cards in the row rather than in a panel
 	// about them. Raised after the hand is final — the resync, the copies and the queue are all
 	// done — so every morph is a ghost of something that has already happened, which is the rule
@@ -482,8 +500,11 @@ func (s *CombatScene) spendRune(gs *state.GlobalState, i int) {
 	// **Spending a rune ends the selection**, and the ending is watched rather than applied.
 	// Leaving the targets lifted said the gesture was still going, and leaving them *queued* spent
 	// action points on a card the rune may have just rewritten underneath the player. See
-	// beginSettle for why it is three beats and not one.
-	s.beginSettle()
+	// beginSettle for why it is three beats and not one. **Not for a rune that took no card**:
+	// the selection was never its business.
+	if !untargeted {
+		s.beginSettle()
+	}
 
 	// **A rock shower's stones fly to the duelist card rather than stopping the screen**
 	// *(owner's call, 2026-09-06)*. They are in the run's pouch by the time this runs — there is
@@ -500,6 +521,60 @@ func (s *CombatScene) spendRune(gs *state.GlobalState, i int) {
 	saveRun(gs)
 }
 
+// becomeLastRune uses the chimera at sack position i: it turns into the run's last rune in its own
+// seat, and dissolves into it there. Nothing in the hand is touched and nothing fires.
+func (s *CombatScene) becomeLastRune(gs *state.GlobalState, i int, p session.Rune) {
+	before := ui.RuneSpec(gs, p, true, false)
+	if !gs.Run.BecomeLastRune(i) {
+		return
+	}
+	s.recordUse(gs, "rune", p.Name, "")
+	gs.Journal.Write(journal.Record{Kind: journal.KindRune, Key: p.Record})
+
+	for seat, c := range heldConsumables(gs) {
+		if c.Kind == session.ConsumableRune && c.At == i {
+			s.Theater.paneMorphs = append(s.Theater.paneMorphs, paneMorph{
+				seat: seat,
+				m:    ui.MorphInto(before, ui.RuneSpec(gs, c.Rune, true, false), cards.EssenceStyle),
+			})
+			break
+		}
+	}
+	saveRun(gs)
+}
+
+// paneMorph is a carried card in the consumables pane changing into another where it sits — a
+// chimera becoming the rune it copies. **By seat**, since the pane is drawn by seat.
+type paneMorph struct {
+	seat int
+	m    ui.Morph
+}
+
+func (p *paneMorph) Tick()     { p.m.Tick() }
+func (p paneMorph) Done() bool { return p.m.Done() }
+
+// paneMorphing reports whether a pane seat is drawn by its morph rather than by the pane.
+func (s *CombatScene) paneMorphing(seat int) bool {
+	for _, p := range s.Theater.paneMorphs {
+		if p.seat == seat {
+			return true
+		}
+	}
+	return false
+}
+
+// drawPaneMorphs draws the pane's changing cards in their seats, over the pane.
+func (s *CombatScene) drawPaneMorphs(gs *state.GlobalState, screen *ebiten.Image) {
+	if len(s.Theater.paneMorphs) == 0 {
+		return
+	}
+	r := s.consumablePaneRect(gs)
+	seats := consumableSeats(gs)
+	for _, p := range s.Theater.paneMorphs {
+		ui.DrawMorph(gs, screen, consumableSlotRect(r, p.seat, seats).Min, p.m)
+	}
+}
+
 // settleStage is how far a hand has got in coming to rest after a rune. **Ordered, forward only**,
 // exactly as dealStage is: a settle interrupted by a new round is dropped whole rather than rewound.
 type settleStage int
@@ -511,7 +586,15 @@ const (
 )
 
 // handSettle is one hand coming to rest. The zero value is a settle that is not running.
-type handSettle struct{ stage settleStage }
+type handSettle struct {
+	stage settleStage
+
+	// held is the seat each card keeps while the row is held, by card identity, in a row
+	// heldCount wide. **Nil is a row laid out as it stands**, which is every row but one a rune
+	// or an essence has just taken cards out of. See holdRow.
+	held      map[int]int
+	heldCount int
+}
 
 // Running reports whether the sequence is still going.
 func (h handSettle) Running() bool { return h.stage != settleIdle }
@@ -537,7 +620,117 @@ func (h handSettle) Running() bool { return h.stage != settleIdle }
 // first frame, exactly as it does through a deal; what these stages own is where the cards are
 // drawn and whether they are still queued.
 func (s *CombatScene) beginSettle() {
-	s.Theater.settle = handSettle{stage: settleChanging}
+	s.Theater.settle.stage = settleChanging
+}
+
+// rowSeat is where hand card i is laid out: its position, and the size of the row it is laid
+// out in. **Every reader of a hand card's place goes through it** — cardSlot, and so the drawing
+// and the hit testing alike — so a held row is held for the cursor as well as the eye.
+func (s *CombatScene) rowSeat(i int) (int, int) {
+	h := s.Theater.settle
+	if h.held != nil && i >= 0 && i < len(s.hand) {
+		if at, ok := h.held[s.hand[i].Card.ID]; ok {
+			return at, h.heldCount
+		}
+	}
+	return i, s.laidOutCount()
+}
+
+// rowSeats is every hand card's rowSeat, in hand order: what a reorder slides out of.
+func (s *CombatScene) rowSeats() [][2]int {
+	out := make([][2]int, len(s.hand))
+	for i := range s.hand {
+		at, n := s.rowSeat(i)
+		out[i] = [2]int{at, n}
+	}
+	return out
+}
+
+// holdRow keeps every card where it stood when a spend took some out of the hand.
+//
+// **The cards a rune eats are destroyed in place, and only then does the row close up and sort**
+// *(owner's call)*. Without it the survivors close over the gap on the frame the rune lands, and
+// the eaten cards come apart over a row that has already moved — which reads as the hand sorting
+// first and the cards being destroyed after. The hold lasts through the change and the fall, and
+// the settle's sort is one slide out of the held seats into the sorted ones.
+//
+// before and stood are the hand and its rowSeats from before the spend landed; a card the spend
+// minted takes the next seat past the end. A row nothing was taken out of is not held.
+func (s *CombatScene) holdRow(before []paletteCard, stood [][2]int) {
+	if len(s.hand) >= len(before) && s.Theater.settle.held == nil {
+		return
+	}
+	count := len(before)
+	seat := make(map[int]int, len(before))
+	for i, c := range before {
+		seat[c.Card.ID] = stood[i][0]
+		count = stood[i][1]
+	}
+	held := make(map[int]int, len(s.hand))
+	for _, c := range s.hand {
+		at, ok := seat[c.Card.ID]
+		if !ok {
+			at = count
+			count++
+		}
+		held[c.Card.ID] = at
+	}
+	s.Theater.settle.held, s.Theater.settle.heldCount = held, count
+}
+
+// releaseRow lets a held row close up, sliding each card out of its held seat into the one the
+// row as it stands gives it. A row that is not held is left alone.
+//
+// **Called before anything that reads a seat as a position in the row** — a round starting, a
+// drag lifting a card out.
+func (s *CombatScene) releaseRow() {
+	if s.Theater.settle.held == nil {
+		return
+	}
+	stood := s.rowSeats()
+	s.Theater.settle.held = nil
+	order := make([]int, len(s.hand))
+	for i := range order {
+		order[i] = i
+	}
+	s.slideOutOf(stood, order, nil)
+}
+
+// sortRow sorts the hand into the player's key and slides each card out of where it was drawn —
+// a held seat included, so a row closing up and a row sorting are one movement — then lets go of
+// the hold.
+func (s *CombatScene) sortRow() {
+	stood := s.rowSeats()
+	order := s.sortHand()
+	s.Theater.settle.held = nil
+	s.slideOutOf(stood, order, nil)
+}
+
+// slideOutOf raises a slide for every card whose seat or lift has moved, out of the seats stood
+// (in the order before) and into the ones the row gives it now; order[to] is the position the card
+// at to came from. lifted is each card's lift before, in the same order — nil when it has not
+// changed, which is a reorder: what is queued stays queued.
+func (s *CombatScene) slideOutOf(stood [][2]int, order []int, lifted []int) {
+	for to, from := range order {
+		at, n := s.rowSeat(to)
+		was := stood[from]
+		down := selectedLift(s.hand[to].selected)
+		up := down
+		if lifted != nil {
+			up = lifted[from]
+		}
+		if was[0] == at && was[1] == n && up == down {
+			continue
+		}
+		s.Theater.slides = ui.AddCardSlide(s.Theater.slides, ui.CardSlide{
+			Travel:    ui.NewTravel(0, ui.SlideTicks()),
+			Card:      s.hand[to].Card,
+			FromLift:  up,
+			ToLift:    down,
+			FromIndex: was[0], FromCount: was[1],
+			ToIndex: at, ToCount: n,
+		})
+	}
 }
 
 // tickSettle advances the sequence a frame. Called every tick from Update, whether or not one is
@@ -588,19 +781,12 @@ func (s *CombatScene) dropSelection() {
 	for i := range order {
 		order[i] = i
 	}
-	s.Theater.slides = ui.SlidesFor(s.Theater.slides, order,
-		func(i int) combat.Card { return s.hand[i].Card },
-		func(i int) int { return stood[i] },
-		func(i int) int { return selectedLift(s.hand[i].selected) })
+	s.slideOutOf(s.rowSeats(), order, stood)
 }
 
 // sortSettledHand is the third beat: the row rearranges into the player's key, on the slides the
 // sort buttons already use. Nothing is lifted by now, which is why both ends are the same height.
-func (s *CombatScene) sortSettledHand() {
-	lift := func(i int) int { return selectedLift(s.hand[i].selected) }
-	s.Theater.slides = ui.SlidesFor(s.Theater.slides, s.sortHand(),
-		func(i int) combat.Card { return s.hand[i].Card }, lift, lift)
-}
+func (s *CombatScene) sortSettledHand() { s.sortRow() }
 
 // runeRNG is the source the rune about to be spent draws from, and nil for the ones that
 // draw nothing.

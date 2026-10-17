@@ -8,11 +8,11 @@ func TestTheLedgerSurvivesASnapshot(t *testing.T) {
 	enemies, bosses := rosters(t)
 
 	s := New(testDeck())
-	s.BeginFight(1, "Giant Bat")
+	s.BeginFight(1, "Outer Room", "Giant Bat")
 	s.RecordRound([]LedgerRecord{
 		noted(VoiceYou, "Duelist attacks with a fire strike"),
 		noted(VoiceTerm, "Bash  20  x Keen 2x"),
-	}, 40)
+	}, 40, [2]LedgerStats{})
 	s.EndFight(OutcomeWon)
 
 	back, _, err := Resume(enemies, bosses, s.Snapshot(0))
@@ -49,12 +49,12 @@ func TestTheLedgerSurvivesASnapshot(t *testing.T) {
 func TestAnUnfoughtFightIsNotKept(t *testing.T) {
 	s := New(testDeck())
 
-	s.BeginFight(1, "Giant Bat")
-	s.BeginFight(1, "Giant Bat") // re-entered the room
-	s.RecordRound([]LedgerRecord{noted(VoicePlain, "something happened")}, 5)
+	s.BeginFight(1, "Outer Room", "Giant Bat")
+	s.BeginFight(1, "Outer Room", "Giant Bat") // re-entered the room
+	s.RecordRound([]LedgerRecord{noted(VoicePlain, "something happened")}, 5, [2]LedgerStats{})
 	s.EndFight(OutcomeLost)
 
-	s.BeginFight(1, "Giant Bat") // the retry, left before a round was thrown
+	s.BeginFight(1, "Outer Room", "Giant Bat") // the retry, left before a round was thrown
 	s.EndFight(OutcomeLost)
 
 	if got := len(s.LedgerFights()); got != 1 {
@@ -72,12 +72,12 @@ func TestAnUnfoughtFightIsNotKept(t *testing.T) {
 func TestTwoFightsInTheSameRoomAreTwoRecords(t *testing.T) {
 	s := New(testDeck())
 
-	s.BeginFight(2, "Cave Troll")
-	s.RecordRound([]LedgerRecord{noted(VoicePlain, "lost it")}, 10)
+	s.BeginFight(2, "Outer Room", "Cave Troll")
+	s.RecordRound([]LedgerRecord{noted(VoicePlain, "lost it")}, 10, [2]LedgerStats{})
 	s.EndFight(OutcomeLost)
 
-	s.BeginFight(2, "Cave Troll")
-	s.RecordRound([]LedgerRecord{noted(VoicePlain, "won it")}, 90)
+	s.BeginFight(2, "Outer Room", "Cave Troll")
+	s.RecordRound([]LedgerRecord{noted(VoicePlain, "won it")}, 90, [2]LedgerStats{})
 	s.EndFight(OutcomeWon)
 
 	fights := s.LedgerFights()
@@ -100,8 +100,8 @@ func TestTheOpenFightIsTheOneStillBeingFought(t *testing.T) {
 		t.Error("a run with no fights reports one open")
 	}
 
-	s.BeginFight(1, "Giant Bat")
-	s.RecordRound([]LedgerRecord{noted(VoicePlain, "a round")}, 1)
+	s.BeginFight(1, "Outer Room", "Giant Bat")
+	s.RecordRound([]LedgerRecord{noted(VoicePlain, "a round")}, 1, [2]LedgerStats{})
 	if n, ok := s.LedgerOpenFight(); !ok || n != 1 {
 		t.Errorf("the live fight is (%d, %v), want (1, true)", n, ok)
 	}
@@ -116,11 +116,11 @@ func TestTheOpenFightIsTheOneStillBeingFought(t *testing.T) {
 // and does not leak into the round after.
 func TestAConsumableSpentOpensTheNextRound(t *testing.T) {
 	s := New(testDeck())
-	s.BeginFight(1, "Giant Bat")
+	s.BeginFight(1, "Outer Room", "Giant Bat")
 	s.RecordUse(LedgerRecord{Side: SideYou, Name: "Duelist", Note: "cantrip", Subject: "Cantrip of Might"})
 	s.RecordUse(LedgerRecord{Side: SideYou, Name: "Duelist", Note: "rune", Subject: "Embermark"})
-	s.RecordRound([]LedgerRecord{noted(VoiceYou, "Duelist attacks with a fire strike")}, 10)
-	s.RecordRound([]LedgerRecord{noted(VoiceYou, "Duelist attacks with a fire strike")}, 10)
+	s.RecordRound([]LedgerRecord{noted(VoiceYou, "Duelist attacks with a fire strike")}, 10, [2]LedgerStats{})
+	s.RecordRound([]LedgerRecord{noted(VoiceYou, "Duelist attacks with a fire strike")}, 10, [2]LedgerStats{})
 
 	rounds := s.LedgerFights()[0].Rounds
 	first := rounds[0].Records
@@ -130,5 +130,31 @@ func TestAConsumableSpentOpensTheNextRound(t *testing.T) {
 	}
 	if second := rounds[1].Records; len(second) != 1 || second[0].Kind == KindUsed {
 		t.Errorf("round two carried a use it was not spent before: %+v", second)
+	}
+}
+
+// TestARoundOpensOnBothDuelistsFigures. The line the panel writes under a round's heading, and
+// that it survives a save.
+func TestARoundOpensOnBothDuelistsFigures(t *testing.T) {
+	s := New(nil)
+	s.BeginFight(1, "Outer Room", "Ice Cheetah")
+	s.RecordRound([]LedgerRecord{noted(VoicePlain, "a round")}, 1, [2]LedgerStats{
+		{Name: "Duelist", DMG: 10, Life: 50, MaxLife: 60, AP: 6},
+		{Name: "Ice Cheetah", DMG: 15, Life: 900, MaxLife: 900, AP: 6},
+	})
+	want := "Duelist: DMG - 10, Health 50/60, 6 AP vs. Ice Cheetah: DMG - 15, Health 900/900, 6 AP"
+	if got := s.LedgerFights()[0].Rounds[0].StartLine(); got != want {
+		t.Errorf("the round opens on %q, want %q", got, want)
+	}
+
+	back := resumeLedger(s.ledgerSnapshot())
+	if got := back.Fights[0].Rounds[0].StartLine(); got != want {
+		t.Errorf("after a save the round opens on %q, want %q", got, want)
+	}
+	if back.Fights[0].Room != "Outer Room" {
+		t.Errorf("after a save the fight was in %q", back.Fights[0].Room)
+	}
+	if got := (LedgerRound{}).StartLine(); got != "" {
+		t.Errorf("a round recorded without its figures opens on %q", got)
 	}
 }

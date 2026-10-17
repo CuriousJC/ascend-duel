@@ -219,6 +219,7 @@ type RunSnapshot struct {
 type LedgerFightSnapshot struct {
 	Number int    `json:"number"`
 	Realm  int    `json:"realm"`
+	Room   string `json:"room,omitempty"`
 	Enemy  string `json:"enemy"`
 
 	// Outcome is "won", "lost", or empty for a fight still being fought when the run was saved —
@@ -239,8 +240,22 @@ type LedgerFightSnapshot struct {
 
 // LedgerRoundSnapshot is one round of one fight.
 type LedgerRoundSnapshot struct {
-	Number  int                    `json:"number"`
+	Number int `json:"number"`
+
+	// Start is both duelists' figures as the round opened, the player first. Empty on a round
+	// saved without them, which reads back as a round with no opening line.
+	Start []LedgerStatsSnapshot `json:"start,omitempty"`
+
 	Records []LedgerRecordSnapshot `json:"records,omitempty"`
+}
+
+// LedgerStatsSnapshot is one duelist's figures at the top of a round.
+type LedgerStatsSnapshot struct {
+	Name    string `json:"name"`
+	DMG     int    `json:"dmg"`
+	Life    int    `json:"life"`
+	MaxLife int    `json:"max_life"`
+	AP      int    `json:"ap"`
 }
 
 // LedgerRecordSnapshot is one thing that happened, as flat named data.

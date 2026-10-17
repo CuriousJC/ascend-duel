@@ -7,17 +7,17 @@ import "testing"
 func TestASummaryAddsUpTheAccount(t *testing.T) {
 	s := New(testDeck())
 
-	s.BeginFight(1, "GiantBat")
-	s.RecordRound([]LedgerRecord{noted(VoicePlain, "one")}, 30)
-	s.RecordRound([]LedgerRecord{noted(VoicePlain, "two")}, 25)
+	s.BeginFight(1, "Outer Room", "GiantBat")
+	s.RecordRound([]LedgerRecord{noted(VoicePlain, "one")}, 30, [2]LedgerStats{})
+	s.RecordRound([]LedgerRecord{noted(VoicePlain, "two")}, 25, [2]LedgerStats{})
 	s.EndFight(OutcomeWon)
 
-	s.BeginFight(2, "Ogre")
-	s.RecordRound([]LedgerRecord{noted(VoicePlain, "three")}, 40)
+	s.BeginFight(2, "Outer Room", "Ogre")
+	s.RecordRound([]LedgerRecord{noted(VoicePlain, "three")}, 40, [2]LedgerStats{})
 	s.EndFight(OutcomeWon)
 
-	s.BeginFight(3, "Cave Troll")
-	s.RecordRound([]LedgerRecord{noted(VoicePlain, "four")}, 11)
+	s.BeginFight(3, "Outer Room", "Cave Troll")
+	s.RecordRound([]LedgerRecord{noted(VoicePlain, "four")}, 11, [2]LedgerStats{})
 	s.EndFight(OutcomeLost)
 
 	got := s.Summarize(0, EndedInDefeat)
@@ -45,8 +45,8 @@ func TestASummaryAddsUpTheAccount(t *testing.T) {
 func TestALostFightIsNotADefeatedEnemy(t *testing.T) {
 	s := New(testDeck())
 
-	s.BeginFight(1, "GiantBat")
-	s.RecordRound([]LedgerRecord{noted(VoicePlain, "nope")}, 5)
+	s.BeginFight(1, "Outer Room", "GiantBat")
+	s.RecordRound([]LedgerRecord{noted(VoicePlain, "nope")}, 5, [2]LedgerStats{})
 	s.EndFight(OutcomeLost)
 
 	got := s.Summarize(0, EndedInDefeat)
@@ -77,8 +77,8 @@ func TestTheSummaryReportsTheDeepestRealmReached(t *testing.T) {
 		{4, "Ogre", OutcomeWon},
 		{2, "Cave Troll", OutcomeLost},
 	} {
-		s.BeginFight(f.realm, f.enemy)
-		s.RecordRound([]LedgerRecord{noted(VoicePlain, "a round")}, 1)
+		s.BeginFight(f.realm, "Outer Room", f.enemy)
+		s.RecordRound([]LedgerRecord{noted(VoicePlain, "a round")}, 1, [2]LedgerStats{})
 		s.EndFight(f.outcome)
 	}
 

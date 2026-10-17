@@ -234,6 +234,7 @@ func (r handRow) RowZone(gs *state.GlobalState) image.Rectangle { return handZon
 func (r handRow) RowDropIndex(gs *state.GlobalState) int { return r.s.dropIndex(gs) }
 
 func (r handRow) RowLift(i int) {
+	r.s.releaseRow()
 	r.s.lifted = r.s.hand[i]
 	r.s.hand = append(append([]paletteCard{}, r.s.hand[:i]...), r.s.hand[i+1:]...)
 
@@ -380,6 +381,9 @@ func (s *CombatScene) insertCard(at int, card paletteCard) {
 // the slot it left, so the row keeps its width and stays centered while a card is up —
 // otherwise the whole hand would slide half a card sideways the moment one was lifted.
 func (s *CombatScene) laidOutCount() int {
+	if s.Theater.settle.held != nil {
+		return s.Theater.settle.heldCount
+	}
 	n := len(s.hand)
 	if s.drag.Dragging() {
 		n++
@@ -511,6 +515,10 @@ func handZone(gs *state.GlobalState) image.Rectangle {
 // click in the overlap would pick the card underneath the one it looks like it hit.
 func (s *CombatScene) cardSlot(gs *state.GlobalState, i int) image.Rectangle {
 	at := slotAt(gs, i, s.laidOutCount())
+	if i < len(s.hand) {
+		idx, n := s.rowSeat(i)
+		at = slotAt(gs, idx, n)
+	}
 	if i < len(s.hand) && s.hand[i].selected {
 		at.Y -= selectedNudge
 	}

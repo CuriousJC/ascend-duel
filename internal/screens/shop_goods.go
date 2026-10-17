@@ -344,6 +344,11 @@ func dealScrolls(gs *state.GlobalState, seat string, size int) []session.Cantrip
 	return out
 }
 
+// runeTitle is what a rune's tooltip is headed with: its name in capitals *(owner's call)*, the
+// case its own line is written in. The record keeps its name as authored, for the log and the
+// ledger to say in a sentence.
+func runeTitle(p session.Rune) string { return strings.ToUpper(p.Name) }
+
 // runeTipLines is what resting on a rune says: what it does, what it would fire, and when it can be
 // spent.
 //
@@ -351,13 +356,9 @@ func dealScrolls(gs *state.GlobalState, seat string, size int) []session.Cantrip
 // and a name; the authored line moved here rather than sitting on a scrim over the art. See
 // runeSpec.
 //
-// **The "when" is the half the card never could say.** The thing that makes a rune a different
-// object from an essence is not on its face — so the tooltip is where a player finds out that this
-// one is carried into a fight rather than used now.
-//
-// **A chimera says what it would fire**, because its authored line cannot: its whole subject is a
-// rune named somewhere else, and "copies the last" is a line the player has to remember the answer
-// to. On a run that has spent nothing there is no answer and it keeps its own line.
+// **A chimera says what it would become**, in brackets under its own line, because its authored
+// line cannot: its whole subject is a rune named somewhere else. On a run that has spent nothing
+// there is no answer and it says only its own line.
 func runeTipLines(gs *state.GlobalState, p session.Rune) []string {
 	// **The card's own text, unwrapped.** An authored line break on a face is a tooltip's own line:
 	// the two are the same sentence written for two widths — the treatment essenceTip already gives
@@ -365,10 +366,10 @@ func runeTipLines(gs *state.GlobalState, p session.Rune) []string {
 	lines := strings.Split(p.Text, "\n")
 	if gs.Run != nil {
 		if echoed := gs.Run.EchoedName(p); echoed != "" {
-			lines = append(lines, "it would copy "+echoed)
+			lines = append(lines, "("+strings.ToUpper(echoed)+")")
 		}
 	}
-	return append(lines, "spent between the turns of a fight")
+	return lines
 }
 
 // dealVialOffer is the hand the vial deals beside its essences: a shuffle of every position in the run's
@@ -583,7 +584,7 @@ func (g *goods) hover(gs *state.GlobalState) {
 			g.tip.Point(g.slot(gs, i), ui.TipLine(st.Name), ui.TipLines(stoneTipLines(gs, st)))
 		case session.ContentsRunes:
 			p := g.runes[i]
-			g.tip.Point(g.slot(gs, i), ui.TipLine(p.Name), ui.TipLines(runeTipLines(gs, p)))
+			g.tip.Point(g.slot(gs, i), ui.TipLine(runeTitle(p)), ui.TipLines(runeTipLines(gs, p)))
 		case session.ContentsCantrips:
 			c := g.cantrips[i]
 			g.tip.Point(g.slot(gs, i), ui.TipLine(c.Name), ui.TipLines(cantripTipLines(c)))

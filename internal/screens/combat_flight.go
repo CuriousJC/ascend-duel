@@ -129,7 +129,11 @@ func (s *CombatScene) addSlide(sl ui.CardSlide) {
 
 // slidingTo reports whether a card is currently sliding into hand slot i, so the row can leave
 // that slot empty until it lands.
-func (s *CombatScene) slidingTo(i int) bool { return ui.SlideInto(s.Theater.slides, i) }
+func (s *CombatScene) slidingTo(i int) bool {
+	// A slide is aimed at a seat, and a held row's seats are not its indices — see rowSeat.
+	at, _ := s.rowSeat(i)
+	return ui.SlideInto(s.Theater.slides, at)
+}
 
 // drawSlides draws the cards moving within the hand.
 func (s *CombatScene) drawSlides(gs *state.GlobalState, screen *ebiten.Image) {

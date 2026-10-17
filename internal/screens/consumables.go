@@ -263,7 +263,11 @@ func hoverConsumables(gs *state.GlobalState, r image.Rectangle, at image.Point,
 	if held[i].Weightless {
 		lines = append(lines, ui.WeightlessTipLine)
 	}
-	tip.PointLeft(seat, ui.TipLine(held[i].Name()), ui.TipLines(lines))
+	title := held[i].Name()
+	if held[i].Kind == session.ConsumableRune {
+		title = runeTitle(held[i].Rune)
+	}
+	tip.PointLeft(seat, ui.TipLine(title), ui.TipLines(lines))
 	return true
 }
 

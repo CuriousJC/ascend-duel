@@ -47,6 +47,7 @@ type LedgerExport struct {
 type ExportFight struct {
 	Number int    `json:"fight"`
 	Realm  int    `json:"realm"`
+	Room   string `json:"room,omitempty"`
 	Enemy  string `json:"enemy"`
 
 	// Outcome is "won", "lost", or "fighting" for the duel that was still being fought.
@@ -65,8 +66,12 @@ type ExportFight struct {
 
 // ExportRound is one round of one fight.
 type ExportRound struct {
-	Number int          `json:"round"`
-	Lines  []ExportLine `json:"lines"`
+	Number int `json:"round"`
+
+	// Start is both duelists' figures as the round opened, worded as the panel words them.
+	Start string `json:"start,omitempty"`
+
+	Lines []ExportLine `json:"lines"`
 }
 
 // ExportLine is one line of the account: who spoke and what was said.
@@ -94,6 +99,7 @@ func (s *Session) ExportLedger(code string, at time.Time, words Worder) LedgerEx
 		rec := ExportFight{
 			Number:  f.Number,
 			Realm:   f.Realm,
+			Room:    f.Room,
 			Enemy:   f.Enemy,
 			Outcome: exportOutcome(f.Outcome),
 			Dealt:   f.Dealt(),
@@ -103,7 +109,7 @@ func (s *Session) ExportLedger(code string, at time.Time, words Worder) LedgerEx
 		}
 		for _, r := range f.Rounds {
 			rec.Log = append(rec.Log, ExportRound{
-				Number: r.Number, Lines: exportLines(words(r.Records)),
+				Number: r.Number, Start: r.StartLine(), Lines: exportLines(words(r.Records)),
 			})
 		}
 		out.Fights = append(out.Fights, rec)

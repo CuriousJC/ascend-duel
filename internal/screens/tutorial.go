@@ -488,6 +488,14 @@ func (t *tutorialOverlay) draw(gs *state.GlobalState, screen *ebiten.Image, host
 	}
 	step, _ := run.Current()
 
+	// **Nothing is drawn for a step update has not placed yet.** The frame can skip a scene's
+	// Update on the tick it enters — a toast, a notice or the ledger takes that tick — and still
+	// draw it, so the first Draw can arrive before the bubble has a seat or its buttons exist.
+	// One frame without Bob is invisible; a bubble at the origin with nil buttons is a crash.
+	if step.Key != t.placedFor {
+		return
+	}
+
 	// **Nothing is pointed at while one of the scene's dialogs is up.** The bubble stays, so what
 	// Bob is saying is still readable and Skip is still reachable; what goes is the square and the
 	// line, because both would be describing something the player cannot see.

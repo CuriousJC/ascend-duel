@@ -53,6 +53,38 @@ func TestAReportLandsInTheStore(t *testing.T) {
 	}
 }
 
+// TestTheFrameAndTheLessonReachTheFile holds the two tiers the caller assembles beside the scene's:
+// a report that dropped either would say nothing about whether the scene was updated on the tick it
+// panicked, or whether a lesson was running.
+func TestTheFrameAndTheLessonReachTheFile(t *testing.T) {
+	quiet(t)
+	s := profile.At(t.TempDir())
+
+	st := State{
+		Tick:     6349,
+		Tutorial: "reward-intro",
+		Frame:    map[string]any{"sceneUpdated": 6347, "toast": true},
+	}
+	path, err := Write(s, Build(st, "boom", nil), nil)
+	if err != nil {
+		t.Fatalf("Write: %v", err)
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("reading the report back: %v", err)
+	}
+	var got Report
+	if err := json.Unmarshal(raw, &got); err != nil {
+		t.Fatalf("the report is not readable: %v", err)
+	}
+	if got.Tutorial != "reward-intro" {
+		t.Fatalf("tutorial = %q, want the step that was handed over", got.Tutorial)
+	}
+	if got.Frame["toast"] != true || got.Frame["sceneUpdated"] != float64(6347) {
+		t.Fatalf("frame = %v, want the frame that was handed over", got.Frame)
+	}
+}
+
 // TestTheNameLeadsWithTheTime is the whole reason pruning can sort by name: the UTC stamp comes
 // first and the run code follows, so alphabetical order and chronological order are the same one.
 func TestTheNameLeadsWithTheTime(t *testing.T) {

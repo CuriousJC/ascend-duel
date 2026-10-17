@@ -75,6 +75,16 @@ type State struct {
 	// package ignorant of what a scene is — see ui.Reporter for the interface a screen opts into
 	// and internal/game for the guarded call.
 	Scene map[string]any
+
+	// Frame is what the frame around the scene was doing: which overlay held the tick, and the
+	// tick the scene was last updated on. **Assembled by internal/game for Scene's reason** — this
+	// package never learns what a toast or a ledger is.
+	Frame map[string]any
+
+	// Tutorial is the key of the lesson step on screen, or "" with no lesson running. **It is its
+	// own field because the run snapshot does not carry the lesson**, so a taught run is otherwise
+	// recognisable only by its seed.
+	Tutorial string
 }
 
 // Report is one crash, as it goes to the file.
@@ -82,8 +92,16 @@ type State struct {
 // **The tiers are in the order the plan puts them in**, outermost first, so a report truncated by
 // anything at all still opens with the identity a bug report needs most.
 type Report struct {
-	Schema   int    `json:"schema"`
-	Version  string `json:"version"`
+	Schema  int    `json:"schema"`
+	Version string `json:"version"`
+
+	// Commit is the revision the binary was built from and Modified whether the tree had changes on
+	// top of it, both off the toolchain's own build stamp. **A "dev" version names no build at
+	// all**, so these are what let a stack's line numbers be read against the right source. Empty
+	// for a binary with no stamp — `go run` writes none.
+	Commit   string `json:"commit,omitempty"`
+	Modified bool   `json:"modified,omitempty"`
+
 	RunCode  string `json:"runCode"`
 	Install  string `json:"installId,omitempty"`
 	UTC      string `json:"utc"`
@@ -91,6 +109,11 @@ type Report struct {
 	Screen   string `json:"screen"`
 	Phase    string `json:"phase,omitempty"`
 	Tick     int    `json:"tick"`
+	Tutorial string `json:"tutorial,omitempty"`
+
+	// Frame is the frame's own account of the tick — see State.Frame. **Ahead of the stack** because
+	// it is small and it is what says whether the scene that panicked had been updated at all.
+	Frame map[string]any `json:"frame,omitempty"`
 
 	// Panic is the value that was recovered, worded, and Stack the goroutine stack taken at the
 	// moment of recovery. **The stack is a string rather than a list of frames**: nothing reads it
@@ -121,9 +144,12 @@ type Report struct {
 // Build assembles a report. **Separate from writing it** so a test can read what a panic produced
 // without a directory, and so the crash screen can be handed the same value the file holds.
 func Build(st State, cause any, stack []byte) Report {
+	commit, modified := buildStamp()
 	return Report{
 		Schema:   Schema,
 		Version:  st.Version,
+		Commit:   commit,
+		Modified: modified,
 		RunCode:  seeds.Code(st.RunSeed),
 		Install:  st.InstallID,
 		UTC:      time.Now().UTC().Format(time.RFC3339),
@@ -131,6 +157,8 @@ func Build(st State, cause any, stack []byte) Report {
 		Screen:   st.Screen,
 		Phase:    st.Phase,
 		Tick:     st.Tick,
+		Tutorial: st.Tutorial,
+		Frame:    st.Frame,
 		Panic:    fmt.Sprint(cause),
 		Stack:    string(stack),
 		Run:      st.Run,
@@ -138,6 +166,24 @@ func Build(st State, cause any, stack []byte) Report {
 		Problems: Problems(),
 		Scene:    st.Scene,
 	}
+}
+
+// buildStamp is the revision this binary was built from, and whether the tree was dirty, or
+// nothing when the toolchain stamped neither.
+func buildStamp() (commit string, modified bool) {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "", false
+	}
+	for _, kv := range info.Settings {
+		switch kv.Key {
+		case "vcs.revision":
+			commit = kv.Value
+		case "vcs.modified":
+			modified = kv.Value == "true"
+		}
+	}
+	return commit, modified
 }
 
 // Stack is the goroutine stack, for a caller that has just recovered.

@@ -43,6 +43,8 @@ func TonicEffect(t session.Tonic) []string {
 		what = []string{fmt.Sprintf("%d more discard every round", t.Amount)}
 	case session.TonicRelicSlots:
 		what = []string{fmt.Sprintf("wear %d more relic", t.Amount)}
+	case session.TonicBundleUpgrades:
+		what = []string{fmt.Sprintf("action bundle cards have a %d%% chance", t.Amount), "of coming with an upgrade"}
 	}
 	return append(what, "for the rest of the run")
 }

@@ -34,8 +34,8 @@ import (
 type PotionEffect int
 
 const (
-	// PotionHeal takes the run's wound down by its amount. It is the only one of the three that
-	// does nothing to a duelist who is not hurt.
+	// PotionHeal takes the run's wound down by its amount **as a percentage of max life**, rounded
+	// up. It is the only one of the three that does nothing to a duelist who is not hurt.
 	PotionHeal PotionEffect = iota
 
 	// PotionDMG adds to the damage the duelist deals, for the rest of the run.
@@ -130,6 +130,9 @@ func resolvePotion(rec data.PotionData) (Potion, error) {
 	if rec.Amount <= 0 {
 		return Potion{}, fmt.Errorf("%s: an amount of %d does nothing", rec.PotionRecord, rec.Amount)
 	}
+	if effect == PotionHeal && rec.Amount > 100 {
+		return Potion{}, fmt.Errorf("%s: heals %d%% of max life, past all of it", rec.PotionRecord, rec.Amount)
+	}
 	if rec.Price <= 0 {
 		return Potion{}, fmt.Errorf("%s: a price of %d is not something the shop can charge",
 			rec.PotionRecord, rec.Price)
@@ -175,8 +178,9 @@ func (s *Session) CanDrink(key string) bool {
 // one place a refusal happens, so nothing can be applied to a run that could not pay for it.
 //
 // **A heal cannot take the wound below zero**, which is the only clamp here: the other two grow
-// figures that have no ceiling of their own.
-func (s *Session) Drink(key string) bool {
+// figures that have no ceiling of their own. maxLife is the ceiling the heal is a share of — the
+// fighter's, potions, the boss bonus and every relic included, as the band draws it.
+func (s *Session) Drink(key string, maxLife int) bool {
 	p, ok := PotionByKey(key)
 	if !ok || !s.SpendVitae(s.Price(p.Price)) {
 		return false
@@ -184,10 +188,7 @@ func (s *Session) Drink(key string) bool {
 
 	switch p.Effect {
 	case PotionHeal:
-		s.hurt -= p.Amount
-		if s.hurt < 0 {
-			s.hurt = 0
-		}
+		s.heal(PercentOfLife(maxLife, p.Amount))
 	case PotionDMG:
 		s.dmgBonus += p.Amount
 	case PotionLife:

@@ -147,7 +147,11 @@ func (s *ShopScene) drinkPotion(gs *state.GlobalState, key string) {
 	if gs.Run == nil || s.drunk[key] || !gs.Run.CanDrink(key) {
 		return
 	}
-	if !gs.Run.Drink(key) {
+	maxLife := 0
+	if fighter := ui.BuildFighter(gs); fighter != nil {
+		maxLife = fighter.MaxLife
+	}
+	if !gs.Run.Drink(key, maxLife) {
 		return
 	}
 
@@ -169,7 +173,7 @@ func potionTip(p session.Potion, price int) (string, []string) {
 	var what string
 	switch p.Effect {
 	case session.PotionHeal:
-		what = fmt.Sprintf("heals %d of the wound you are carrying", p.Amount)
+		what = fmt.Sprintf("heals %d%% of your max life", p.Amount)
 	case session.PotionDMG:
 		what = fmt.Sprintf("adds %d to your DMG for the rest of the run", p.Amount)
 	default:

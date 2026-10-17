@@ -45,6 +45,12 @@ func (s Side) Other() Side { return other(s) }
 // — so the player had to learn a number they could never act on directly. Speed was the clearer
 // case of the two: twenty-four distinct values across the roster produced three distinct budgets.
 type Duelist struct {
+	// FavoredElement and FavoredForm are what the run behind this duelist has attacked with most,
+	// set as the fighter is equipped — Basic and FormNone when there is no single favorite. Read only
+	// by a rule narrowed by `Favored`, the Torrents. See RelicCondition.Favored.
+	FavoredElement Element
+	FavoredForm    Form
+
 	// DMG is what a 1x attack deals in this duelist's hands, and it is the figure on the fighter
 	// card. The ladder scales off it: a card declares its multiplier and the arithmetic is
 	// `DMG * Amount / 100`.

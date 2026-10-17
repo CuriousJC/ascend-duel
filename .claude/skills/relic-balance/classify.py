@@ -65,6 +65,8 @@ VERBS = {
     "reflect-damage":          (("offense", "defense"), "multiplicative"),
     "heal-on-block":           (("defense",), "flat"),
     "vitae-on-block":          (("economy",), "flat"),
+    # tempo -- a block that banks action points for the next turn
+    "surge-on-block":          (("tempo", "defense"), "flat"),
     # enabler -- does nothing on its own; it widens what an essence reaches, so the value is
     # entirely in the deck the player goes on to build
     "adjust-essence-targets":  (("enabler",), "flat"),
@@ -74,6 +76,7 @@ VERBS = {
     "grow-on-turn":            (("growth",), "stateful"),
     "grow-per-card":           (("growth",), "stateful"),
     "reset-growth":            (("growth",), "stateful"),
+    "grow-on-streak":          (("offense", "growth"), "stateful"),
 }
 
 # When -> scope. How often the rule gets to matter.
@@ -98,7 +101,7 @@ SCOPES = {
 BREADTHS = {
     "Element": "element", "Form": "form", "Concept": "concept",
     "Tier": "tier", "Hand": "hand", "Hands": "hand", "MinForms": "hand",
-    "Lead": "positional",
+    "Lead": "positional", "Preceding": "positional", "Favored": "favored",
 }
 
 AXES = ("category", "payload", "scope", "breadth", "rarity", "build",

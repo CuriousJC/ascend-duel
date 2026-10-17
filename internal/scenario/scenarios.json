@@ -2059,7 +2059,7 @@
   },
   {
     "ScenarioRecord": "awakenings",
-    "Note": "Four Awakenings worn against an earth Giant Bat, so nothing in the opening hand fizzles. Open on the fire Bash and two of them wake at once - fire and crush - so every attack behind it is swung at +20 DMG; open on the arcane Thrust and only the arcane one wakes, for +10; open on the ice Brace and the ice one wakes, though the Brace itself gains nothing. Dummy life on both sides, so it can be replayed round after round with a different opener each time.",
+    "Note": "Four Awakenings worn against an earth Giant Bat, so nothing in the opening hand fizzles. Every attack is swung at +10 DMG for each matching card queued ahead of it, so order is everything: the fire Bash first is fire and crush at once, +20 to every attack behind it; the arcane Thrust raises only what follows it; an ice Brace ahead counts like any card, though the Brace itself gains nothing. Stack two matching cards ahead of a third attack and it takes both. Dummy life on both sides, so it can be replayed round after round with a different order each time.",
     "Relics": [
       "awaken-fire",
       "awaken-arcane",

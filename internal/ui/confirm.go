@@ -17,8 +17,8 @@ package ui
 // away", and a question with an X on it has three answers where it should have two.
 //
 // **Cancel is the safe answer and it is on the left**, where the eye lands first, with the
-// destructive one at the right end of the row. Nothing here is destructive by accident: both
-// callers are throwing away a journey.
+// destructive one at the right end of the row. Nothing here is destructive by accident: every
+// caller is ending something — a journey, or the program.
 
 import (
 	"image"
@@ -65,6 +65,7 @@ type ConfirmDialog struct {
 	title   string
 	body    string
 	confirm string
+	cancel  string
 	onYes   func()
 
 	Yes *models.Button
@@ -74,7 +75,13 @@ type ConfirmDialog struct {
 // Ask puts the question up. The label on the destructive button is the caller's, because "Abandon
 // Run" and "Start Over" are different promises and a shared "OK" would make them the same one.
 func (d *ConfirmDialog) Ask(title, body, confirm string, onYes func()) {
-	d.title, d.body, d.confirm, d.onYes = title, body, confirm, onYes
+	d.AskAnswers(title, body, confirm, "CANCEL", onYes)
+}
+
+// AskAnswers is Ask with the safe answer named too, for a question whose answers are a plain YES
+// and NO rather than a deed and CANCEL. The body may be empty.
+func (d *ConfirmDialog) AskAnswers(title, body, confirm, cancel string, onYes func()) {
+	d.title, d.body, d.confirm, d.cancel, d.onYes = title, body, confirm, cancel, onYes
 	d.open = true
 }
 
@@ -99,10 +106,11 @@ func (d *ConfirmDialog) Update(gs *state.GlobalState) {
 		d.Yes.BaseColor = ModalCloseColor
 	}
 
-	// **Rebound every frame, because the answer changes with the question.** One dialog serves two
-	// callers, so a callback wired once at build time would run the wrong caller's answer the
+	// **Rebound every frame, because the answer changes with the question.** One dialog serves
+	// several callers, so a callback wired once at build time would run the wrong caller's answer the
 	// second time it was opened.
 	d.Yes.Text = d.confirm
+	d.No.Text = d.cancel
 	d.No.OnClick = func() { d.Close() }
 	yes := d.onYes
 	d.Yes.OnClick = func() {

@@ -93,6 +93,8 @@ const (
 
 	StatPlayedElement = "played:element:"
 	StatPlayedForm    = "played:form:"
+	StatAttackElement = "attacks:element:"
+	StatAttackForm    = "attacks:form:"
 	StatDealtElement  = "dealt:element:"
 	StatDealtForm     = "dealt:form:"
 )
@@ -147,6 +149,10 @@ func (s *Session) TallyRound(log []combat.Event, turn []combat.Card) {
 		d.Add(StatPlayed, 1)
 		d.Add(StatPlayedForm+c.Form().String(), 1)
 		d.Add(StatPlayedElement+c.Element.String(), 1)
+		if c.Spec().Verb == combat.VerbAttack {
+			d.Add(StatAttackForm+c.Form().String(), 1)
+			d.Add(StatAttackElement+c.Element.String(), 1)
+		}
 	}
 
 	round := 0
@@ -232,4 +238,40 @@ func (s *Session) FinalStats(sum RunSummary) profile.Tally {
 	out.Max(StatBestRunDealt, sum.Dealt)
 	out.Max(StatBestRunWins, sum.Defeated)
 	return out
+}
+
+// Favorites is the element and the form the run has played the most attack cards of, this duel's
+// rounds included — what a Torrent keeps a streak in. **A tie is no favorite**, and so is a run
+// that has attacked with nothing yet: Basic and FormNone, which leave a Torrent asleep rather than
+// picking between two the player has used equally.
+func (s *Session) Favorites() (combat.Element, combat.Form) {
+	t := s.StatsSoFar()
+	element, best, tied := combat.Basic, 0, false
+	for _, e := range combat.AllElements {
+		if e == combat.Basic {
+			continue
+		}
+		switch n := t.Total(StatAttackElement + e.String()); {
+		case n > best:
+			element, best, tied = e, n, false
+		case n == best && n > 0:
+			tied = true
+		}
+	}
+	if tied {
+		element = combat.Basic
+	}
+	form, most, even := combat.FormNone, 0, false
+	for _, f := range combat.Forms() {
+		switch n := t.Total(StatAttackForm + f.String()); {
+		case n > most:
+			form, most, even = f, n, false
+		case n == most && n > 0:
+			even = true
+		}
+	}
+	if even {
+		form = combat.FormNone
+	}
+	return element, form
 }

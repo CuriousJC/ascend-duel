@@ -404,16 +404,16 @@ type handMathBox struct {
 	// the card that woke it toast together, then every attack it raised rattles, and only then do
 	// the lines start — so a +10 arriving in a line has already been explained.
 	//
-	// awakenRelics and awakenOpener (a seat, or -1) are the first half's shakes, awakenCards the
-	// second's; awakenLate says the second half has gone. pendRelics and pendCards are what the
+	// awakenRelics and awakenOpeners (the seats that woke anything) are the first half's shakes,
+	// awakenCards the second's; awakenLate says the second half has gone. pendRelics and pendCards are what the
 	// beat has set moving and takeShakes has not yet drained.
-	awakenT      ui.Travel
-	awakenRelics []bool
-	awakenOpener int
-	awakenCards  []int
-	awakenLate   bool
-	pendRelics   []bool
-	pendCards    []int
+	awakenT       ui.Travel
+	awakenRelics  []bool
+	awakenOpeners []int
+	awakenCards   []int
+	awakenLate    bool
+	pendRelics    []bool
+	pendCards     []int
 }
 
 // awakenTicks is the Awakenings' beat: the toast, then the raised cards, a beat each.
@@ -425,9 +425,7 @@ func (b *handMathBox) wake() bool {
 		return false
 	}
 	b.pendRelics = append(b.pendRelics, b.awakenRelics...)
-	if b.awakenOpener >= 0 {
-		b.pendCards = append(b.pendCards, b.awakenOpener)
-	}
+	b.pendCards = append(b.pendCards, b.awakenOpeners...)
 	return true
 }
 
@@ -550,12 +548,11 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event, at in
 
 	s.layOutMath(gs, &box)
 	box.shoutAt = s.handShoutAt(gs)
-	box.awakenOpener = -1
-	if e.Awaken != 0 {
+	if cards := awakenedSeats(e); len(cards) > 0 {
 		box.awakenT = ui.NewTravel(0, awakenTicks())
 		box.awakenRelics = append([]bool(nil), e.AwakenSeats...)
-		box.awakenOpener = e.AwakenOpener
-		box.awakenCards = awakenedSeats(e)
+		box.awakenOpeners = append([]int(nil), e.AwakenOpeners...)
+		box.awakenCards = cards
 	}
 
 	s.Theater.mathBox = box
@@ -856,15 +853,15 @@ func termItems(e combat.Event, i int) []mathItem {
 	return append(out, relicFactorItems(e, i)...)
 }
 
-// awakenItems is what the opener woke on this hit's card: **a row per Awakening**, each a `+` and
-// that relic's own figure, flying out of it in the relic pink — under the duelist's DMG, before the
-// card multiplies them. Two that woke are two rows, never one sum.
+// awakenItems is what the cards ahead woke on this hit's card: **a row per Awakening**, each a `+`
+// and that relic's own figure, flying out of it in the relic pink — under the duelist's DMG, before
+// the card multiplies them. Two that woke are two rows, never one sum.
 func awakenItems(e combat.Event, i int) []mathItem {
 	if e.HandAwaken[i] == 0 {
 		return nil
 	}
 	var out []mathItem
-	for _, p := range awakenParts(e) {
+	for _, p := range awakenParts(e, i) {
 		it := relicNote(100, p.seat)
 		if it == nil {
 			continue
@@ -875,22 +872,22 @@ func awakenItems(e combat.Event, i int) []mathItem {
 	return out
 }
 
-// awakenPart is one Awakening's share of what the opener woke.
+// awakenPart is one Awakening's share of what was woken on one hit's card.
 type awakenPart struct{ seat, add int }
 
-// awakenParts is every Awakening that woke, in worn order, with what each added. **An event that
-// does not say what each added** — one built by hand — is one part, the whole figure, out of the
-// first seat that woke.
-func awakenParts(e combat.Event) []awakenPart {
+// awakenParts is every Awakening that woke hit i's card, in worn order, with what each added. **An
+// event that does not say what each added** — one built by hand — is one part, the whole figure,
+// out of the first seat that woke.
+func awakenParts(e combat.Event, i int) []awakenPart {
 	var out []awakenPart
-	for seat, add := range e.AwakenBy {
+	for seat, add := range e.HandAwakenBy[i] {
 		if add != 0 {
 			out = append(out, awakenPart{seat, add})
 		}
 	}
 	if len(out) == 0 {
 		if seat := firstSeat(e.AwakenSeats); seat > 0 {
-			out = append(out, awakenPart{seat - 1, e.Awaken})
+			out = append(out, awakenPart{seat - 1, e.HandAwaken[i]})
 		}
 	}
 	return out

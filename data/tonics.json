@@ -69,5 +69,15 @@
     "Effect": "relic-slots",
     "Amount": 1,
     "Price": 10
+  },
+  {
+    "TonicRecord": "tinkers-tonic",
+    "Name": "Tinker's Tonic",
+    "Family": "Tonics",
+    "Art": "tinkers-tonic",
+    "Draw": "a squat brass-capped bottle of shimmering silver liquid, a coil of copper wire bound to its neck with twine",
+    "Effect": "bundle-upgrades",
+    "Amount": 5,
+    "Price": 10
   }
 ]

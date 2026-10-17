@@ -2,9 +2,10 @@ package session
 
 // **What the journey does to the body between fights.**
 //
-// A wound is carried out of a room and into the next one, and **nothing between fights takes it
-// away** — not a won room, not a portal room. Life comes back only through what the player spends
-// on it: a potion, a card that heals, a relic. See MECHANICS.md §Life between fights.
+// A wound is carried out of a room and into the next one, **less a small share of max life every
+// won fight gives back** — `WinHealPercent` in data/journey.json. Anything more comes back only
+// through what the player spends on it: a potion, a card that heals, a relic. See MECHANICS.md
+// §Life between fights.
 //
 // **The wound is stored, not the life left.** `MaxLife` is rebuilt from the record every visit and
 // then moved by whatever the run is wearing — a flat +25 here, a percentage there — so a stored
@@ -19,10 +20,32 @@ package session
 // cleared and the bonus is derived from it, for the reason the realm is derived from the room
 // counter: a stored product is a second copy of the same fact, and it is the copy that goes stale.
 
+import "github.com/curiousjc/ascend-duel/data"
+
 // bossLifeBonus is what beating a realm's boss adds to the ceiling, flat, once per portal room
 // cleared. Flat rather than a percentage, so a run's body grows by the same step on realm seven as
 // on realm one.
 const bossLifeBonus = 25
+
+// winHealPercent is the share of max life every won fight gives back. See data.JourneyData.
+var winHealPercent = data.LoadJourney().WinHealPercent
+
+// PercentOfLife is pct percent of a max life, rounded up, so any share of any body is worth at least
+// one life. The win's heal and the Salve both take it.
+func PercentOfLife(maxLife, pct int) int {
+	if maxLife <= 0 || pct <= 0 {
+		return 0
+	}
+	return (maxLife*pct + 99) / 100
+}
+
+// heal takes n off the wound, never past healthy.
+func (s *Session) heal(n int) {
+	s.hurt -= n
+	if s.hurt < 0 {
+		s.hurt = 0
+	}
+}
 
 // LifeAtFightStart is the life a duelist walks into a room with, given the ceiling they are walking
 // in under. It is the wound subtracted from that ceiling.

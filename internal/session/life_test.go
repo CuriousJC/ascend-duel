@@ -2,23 +2,24 @@ package session
 
 import "testing"
 
-// TestAWoundIsCarriedIntoTheNextRoom. The whole point of the change: a duel used to start at full
-// life whatever the last one cost, and damage is a fact about the realm now.
+// TestAWoundIsCarriedIntoTheNextRoom. Damage is a fact about the realm: the wound a fight leaves
+// walks into the next room, less the share of max life a win gives back.
 func TestAWoundIsCarriedIntoTheNextRoom(t *testing.T) {
 	run := bare(t)
 
 	run.WonFight(60, 100)
 
-	if run.Hurt() != 40 {
-		t.Errorf("finished a fight on 60 of 100 and carried %d, want 40", run.Hurt())
+	want := 40 - PercentOfLife(100, winHealPercent)
+	if run.Hurt() != want {
+		t.Errorf("finished a fight on 60 of 100 and carried %d, want %d", run.Hurt(), want)
 	}
-	if got := run.LifeAtFightStart(100); got != 60 {
-		t.Errorf("walked into the next room on %d, want 60", got)
+	if got := run.LifeAtFightStart(100); got != 100-want {
+		t.Errorf("walked into the next room on %d, want %d", got, 100-want)
 	}
 }
 
-// TestABossWinKeepsTheWoundAndRaisesTheCeiling. Nothing between fights heals, the portal room
-// included: it raises the ceiling by a flat amount and the wound stays the size it was, so the life
+// TestABossWinKeepsTheWoundAndRaisesTheCeiling. A portal room heals what any win heals and no more:
+// it raises the ceiling by a flat amount and the wound stays the size the win left it, so the life
 // under the ceiling rises by exactly that amount.
 func TestABossWinKeepsTheWoundAndRaisesTheCeiling(t *testing.T) {
 	run := bare(t)
@@ -28,8 +29,9 @@ func TestABossWinKeepsTheWoundAndRaisesTheCeiling(t *testing.T) {
 	run.WonFight(10, 100)
 	run.WonFight(10, 100)
 
-	if run.Hurt() != 90 {
-		t.Errorf("a boss win left a wound of %d, want the 90 it was walked out with", run.Hurt())
+	wound := 90 - PercentOfLife(100, winHealPercent)
+	if run.Hurt() != wound {
+		t.Errorf("a boss win left a wound of %d, want the %d any win leaves", run.Hurt(), wound)
 	}
 	if run.BossWins() != 1 {
 		t.Errorf("beat one portal room and counted %d", run.BossWins())
@@ -38,8 +40,8 @@ func TestABossWinKeepsTheWoundAndRaisesTheCeiling(t *testing.T) {
 	if ceiling != 100+bossLifeBonus {
 		t.Errorf("one boss raised a ceiling of 100 to %d, want %d", ceiling, 100+bossLifeBonus)
 	}
-	if got := run.LifeAtFightStart(ceiling); got != 10+bossLifeBonus {
-		t.Errorf("walked into realm two on %d, want %d", got, 10+bossLifeBonus)
+	if got := run.LifeAtFightStart(ceiling); got != ceiling-wound {
+		t.Errorf("walked into realm two on %d, want %d", got, ceiling-wound)
 	}
 }
 

@@ -230,3 +230,18 @@ func TestAVictorySurvivesAResume(t *testing.T) {
 		t.Error("a won journey is still won after a resume, and the summary says so")
 	}
 }
+
+// The favorite is whatever the run has attacked with most, and a tie is no favorite.
+func TestFavoritesAreTheMostAttackedWithAndATieIsNone(t *testing.T) {
+	s := New(testDeck())
+	s.TallyRound(nil, []combat.Card{combat.Of(combat.Bash, combat.Fire), combat.Of(combat.Bash, combat.Fire),
+		combat.Of(combat.Jab, combat.Ice), combat.Of(combat.Brace, combat.Ice), combat.Of(combat.Brace, combat.Ice)})
+	e, f := s.Favorites()
+	if e != combat.Fire || f != combat.FormCrush {
+		t.Errorf("favorites are %v and %v, want fire and crush: the ice Braces are not attacks", e, f)
+	}
+	s.TallyRound(nil, []combat.Card{combat.Of(combat.Jab, combat.Ice)})
+	if e, _ := s.Favorites(); e != combat.Basic {
+		t.Errorf("two fire and two ice attacks favor %v, want none", e)
+	}
+}

@@ -222,10 +222,14 @@ func (s *CombatScene) updateDeckStack(gs *state.GlobalState) {
 func (s *CombatScene) drawDeckStack(gs *state.GlobalState, screen *ebiten.Image) {
 	front := deckStackRect(gs)
 
-	// Back to front, so the front card is the one on top and the one the click tests.
-	for i := deckStackDepth - 1; i >= 0; i-- {
-		off := i * deckStackStep
-		s.drawCardBack(gs, screen, image.Pt(front.Min.X-off, front.Min.Y-off), cards.Hand)
+	// Back to front, so the front card is the one on top and the one the click tests. **A pile
+	// with nothing in it draws nothing** — the gap the discard flies back into. See pileShown.
+	shown := s.pileShown()
+	if shown > 0 {
+		for i := deckStackDepth - 1; i >= 0; i-- {
+			off := i * deckStackStep
+			s.drawCardBack(gs, screen, image.Pt(front.Min.X-off, front.Min.Y-off), cards.Hand)
+		}
 	}
 
 	// **Directly under the pile, right-aligned with it.** It shares an edge with the cards, which is
@@ -235,7 +239,7 @@ func (s *CombatScene) drawDeckStack(gs *state.GlobalState, screen *ebiten.Image)
 	op.GeoM.Translate(float64(count.Max.X), float64(count.Min.Y))
 	op.PrimaryAlign = text.AlignEnd
 	op.ColorScale.ScaleWithColor(ui.GroundInk)
-	systems.DrawUI(screen, fmt.Sprintf("%d/%d", len(s.deck), s.deckSize()),
+	systems.DrawUI(screen, fmt.Sprintf("%d/%d", shown, s.deckSize()),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: deckCountSize}, op)
 }
 

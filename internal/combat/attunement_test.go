@@ -72,7 +72,7 @@ func TestASurgePerCardNamesSomethingToCount(t *testing.T) {
 }
 
 func awakening(t *testing.T, key string, cond RelicCondition) RelicID {
-	cond.First = true
+	cond.Preceding = true
 	return relic(t, key, RelicRule{
 		When: MomentBlowFormed,
 		If:   cond,
@@ -80,10 +80,33 @@ func awakening(t *testing.T, key string, cond RelicCondition) RelicID {
 	})
 }
 
-// TestAnAwakeningRaisesEveryAttackAfterTheFirstCard. A fire opener: the cards behind it are each
-// swung at 10 more DMG, which their own multiplier then scales, the opener gains nothing, and a
-// defense gains nothing.
-func TestAnAwakeningRaisesEveryAttackAfterTheFirstCard(t *testing.T) {
+// awakenedByQueue checks every term of a hand against what it should have woken, keyed by where its
+// card was queued, and that the term and the hit were both worked out at that figure.
+func awakenedByQueue(t *testing.T, turn []Card, bare, woke Event, want map[int]int) {
+	t.Helper()
+	slots := ResolutionOrder(turn, nil)
+	for n := 0; n < woke.HandCardCount; n++ {
+		queued := slots[woke.HandCards[n]].Index
+		if woke.HandAwaken[n] != want[queued] {
+			t.Errorf("term %d (queued %d) woke %d, want %d", n, queued, woke.HandAwaken[n], want[queued])
+		}
+		card := turn[queued]
+		if card.Spec().Verb != VerbAttack {
+			continue
+		}
+		if got, wantTerm := woke.HandAmounts[n], card.Damage(bare.HandDMG+want[queued]); got != wantTerm {
+			t.Errorf("term %d came to %d, want the card at DMG %d + %d: %d", n, got, bare.HandDMG, want[queued], wantTerm)
+		}
+		if got := scaleDamage(woke.HandAmounts[n], woke.Multiplier); woke.HitAmounts[n] != got {
+			t.Errorf("term %d's hit is %d, want the hand's multiplier over its term: %d", n, woke.HitAmounts[n], got)
+		}
+	}
+}
+
+// TestAnAwakeningRaisesEveryAttackAfterAMatchingCard. A fire card first: the attacks behind it are
+// each swung at 10 more DMG, which their own multiplier then scales; the fire card gains nothing,
+// having nothing ahead of it, and a defense gains nothing.
+func TestAnAwakeningRaisesEveryAttackAfterAMatchingCard(t *testing.T) {
 	flame := awakening(t, "awaken-fire", RelicCondition{Element: Fire, HasElement: true})
 	turn := []Card{Of(Bash, Fire), Of(Jab, Ice), Of(Brace, Ice), Of(Cut, Earth)}
 
@@ -93,59 +116,54 @@ func TestAnAwakeningRaisesEveryAttackAfterTheFirstCard(t *testing.T) {
 	b, w := handEventOf(t, bare, SideA), handEventOf(t, woke, SideA)
 
 	slots := ResolutionOrder(turn, nil)
-	if w.Awaken != 10 || !w.AwakenSeats[0] || slots[w.AwakenOpener].Index != 0 {
-		t.Fatalf("the hand says it woke %d from seats %v opened by seat %d, want 10 from seat 0 opened by the first card",
-			w.Awaken, w.AwakenSeats, w.AwakenOpener)
+	if !w.AwakenSeats[0] || len(w.AwakenOpeners) != 1 || slots[w.AwakenOpeners[0]].Index != 0 {
+		t.Fatalf("the hand says seats %v woke, opened by %v, want seat 0 opened by the fire Bash",
+			w.AwakenSeats, w.AwakenOpeners)
 	}
-	for n := 0; n < w.HandCardCount; n++ {
-		queued := slots[w.HandCards[n]].Index
-		want := 0
-		if queued > 0 && turn[queued].Spec().Verb == VerbAttack {
-			want = 10
-		}
-		if w.HandAwaken[n] != want {
-			t.Errorf("term %d (queued %d) woke %d, want %d", n, queued, w.HandAwaken[n], want)
-		}
-		card := turn[queued]
-		if got, wantTerm := w.HandAmounts[n], card.Damage(b.HandDMG+want); got != wantTerm {
-			t.Errorf("term %d came to %d, want the card at DMG %d + %d: %d", n, got, b.HandDMG, want, wantTerm)
-		}
-		if got := scaleDamage(w.HandAmounts[n], w.Multiplier); w.HitAmounts[n] != got {
-			t.Errorf("term %d's hit is %d, want the hand's multiplier over its term: %d", n, w.HitAmounts[n], got)
-		}
+	awakenedByQueue(t, turn, b, w, map[int]int{1: 10, 3: 10})
+}
+
+// TestAnAwakeningStacksPerMatchingCardAhead. Every fire card ahead of an attack is another 10, a
+// fire defense ahead counts like any card, and a card never counts itself.
+func TestAnAwakeningStacksPerMatchingCardAhead(t *testing.T) {
+	flame := awakening(t, "awaken-fire-stack", RelicCondition{Element: Fire, HasElement: true})
+	turn := []Card{Of(Jab, Ice), Of(Bash, Fire), Of(Brace, Fire), Of(Cut, Fire), Of(Jab, Earth)}
+
+	bare, _, _ := resolve(duelist(10, 9, 5000), duelist(10, 6, 5000), turn, nil, 1)
+	woke, _, _ := resolve(duelist(10, 9, 5000).Wearing(WornRelic{Relic: flame}),
+		duelist(10, 6, 5000), turn, nil, 1)
+	b, w := handEventOf(t, bare, SideA), handEventOf(t, woke, SideA)
+
+	awakenedByQueue(t, turn, b, w, map[int]int{3: 20, 4: 30})
+	if len(w.AwakenOpeners) != 3 {
+		t.Errorf("%d cards woke something, want the three fire cards", len(w.AwakenOpeners))
 	}
 }
 
-// TestAnAwakeningReadsOnlyTheFirstCard. A fire card second wakes nothing, and neither does a turn
-// opening on a defense of another element — the first card is literally the first.
-func TestAnAwakeningReadsOnlyTheFirstCard(t *testing.T) {
-	flame := awakening(t, "awaken-fire-first", RelicCondition{Element: Fire, HasElement: true})
+// TestNothingMatchingAheadWakesNothing. A fire card last has nothing behind it to raise.
+func TestNothingMatchingAheadWakesNothing(t *testing.T) {
+	flame := awakening(t, "awaken-fire-last", RelicCondition{Element: Fire, HasElement: true})
 	a := duelist(10, 9, 5000).Wearing(WornRelic{Relic: flame})
 
-	for _, turn := range [][]Card{
-		{Of(Jab, Ice), Of(Bash, Fire)},
-		{Of(Brace, Ice), Of(Bash, Fire), Of(Jab, Fire)},
-	} {
-		events, _, _ := resolve(a, duelist(10, 6, 5000), turn, nil, 1)
-		if e := handEventOf(t, events, SideA); e.Awaken != 0 {
-			t.Errorf("a turn opening on %v woke %d", turn[0], e.Awaken)
+	events, _, _ := resolve(a, duelist(10, 6, 5000), []Card{Of(Jab, Ice), Of(Bash, Fire)}, nil, 1)
+	e := handEventOf(t, events, SideA)
+	for n := 0; n < e.HandCardCount; n++ {
+		if e.HandAwaken[n] != 0 {
+			t.Errorf("term %d woke %d with no fire card ahead of it", n, e.HandAwaken[n])
 		}
 	}
-
-	// A fire Brace first does wake it: the opener need not be an attack.
-	events, _, _ := resolve(a, duelist(10, 6, 5000), []Card{Of(Brace, Fire), Of(Jab, Ice)}, nil, 1)
-	if e := handEventOf(t, events, SideA); e.Awaken != 10 {
-		t.Errorf("a fire Brace opener woke %d, want 10", e.Awaken)
+	if len(e.AwakenOpeners) != 0 {
+		t.Errorf("cards %v woke something with nothing behind them", e.AwakenOpeners)
 	}
 }
 
-// TestFirstIsOnlyAnAwakeningsPredicate. It is read at blow-formed alone, and only by awaken; an
-// awaken without it would raise every card but one for no reason a player could see.
-func TestFirstIsOnlyAnAwakeningsPredicate(t *testing.T) {
+// TestPrecedingIsOnlyAnAwakeningsPredicate. It is read at blow-formed alone, and only by awaken; an
+// awaken without it would have nothing to count.
+func TestPrecedingIsOnlyAnAwakeningsPredicate(t *testing.T) {
 	for name, rule := range map[string]RelicRule{
-		"first-elsewhere": {When: MomentCardDamage, If: RelicCondition{First: true},
+		"preceding-elsewhere": {When: MomentCardDamage, If: RelicCondition{Preceding: true},
 			Then: []RelicEffect{{Do: DoScaleDamage, Amount: 200}}},
-		"first-on-echo": {When: MomentBlowFormed, If: RelicCondition{First: true},
+		"preceding-on-echo": {When: MomentBlowFormed, If: RelicCondition{Preceding: true},
 			Then: []RelicEffect{{Do: DoEchoAttack, Amount: 2}}},
 		"awaken-bare": {When: MomentBlowFormed,
 			Then: []RelicEffect{{Do: DoAwaken, Amount: 10}}},

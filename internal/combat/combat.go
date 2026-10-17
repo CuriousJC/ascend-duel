@@ -375,6 +375,17 @@ func blockedByShield(events []Event, side Side, actor, target Duelist, card Card
 	if surged {
 		target.Surge++
 	}
+
+	// **A form shield's surge is banked with the block**, before the event is written, so the
+	// event's Surged says whether this block banked anything at all and the screen writes SURGE
+	// over the break for either reason.
+	rewards := target.blockRewardsFrom(card)
+	for _, r := range rewards {
+		if r.Surge > 0 {
+			target.Surge += r.Surge
+			surged = true
+		}
+	}
 	events = append(events, Event{
 		Kind:    KindBlocked,
 		Side:    other(side),
@@ -390,7 +401,7 @@ func blockedByShield(events []Event, side Side, actor, target Duelist, card Card
 	})
 
 	wearer := other(side)
-	for _, r := range target.blockRewardsFrom(card) {
+	for _, r := range rewards {
 		if n := would * r.Reflect / 100; n > 0 && actor.Alive() {
 			actor.CurrentLife = reduce(actor.CurrentLife, n)
 			events = append(events, Event{

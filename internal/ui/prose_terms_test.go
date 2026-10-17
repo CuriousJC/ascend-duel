@@ -114,7 +114,7 @@ func TestTwoAwakeningsAreTwoSteps(t *testing.T) {
 	e.HandDMG = 15
 	e.HandCardPct[0], e.HandCardBase[0] = 200, 70
 	e.HandAwaken[0] = 20
-	e.Awaken, e.AwakenSeats, e.AwakenBy = 20, []bool{true, false, true}, []int{10, 0, 10}
+	e.AwakenSeats, e.HandAwakenBy[0] = []bool{true, false, true}, []int{10, 0, 10}
 	restateHits(&e)
 	relics := []combat.WornRelic{{}, {}, {}}
 

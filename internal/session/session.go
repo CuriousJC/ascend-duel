@@ -426,8 +426,9 @@ func (s *Session) Fight() int { return s.fight }
 // finished on, and where it sits against `maxLife` is part of the prize — and the three figures are
 // frozen here and handed over by the post-battle screen a sentence at a time. See spoils.go.
 // **It is also where the body is settled.** The wound the fight left is carried into the next room
-// whatever room it was; a portal room heals nothing and raises the ceiling by a flat amount, which
-// lifts the life under it by the same. See life.go, and note that both happen *before* the counter
+// less `winHealPercent` of max life, whatever room it was — the payout has already read the life the
+// fight ended on — and a portal room also raises the ceiling by a flat amount, which lifts the life
+// under it by the same. See life.go, and note that both happen *before* the counter
 // moves, on the same terms the payout does: they belong to the fight that was won, not to the one
 // about to be met.
 func (s *Session) WonFight(lifeLeft, maxLife int) {
@@ -440,6 +441,7 @@ func (s *Session) WonFight(lifeLeft, maxLife int) {
 	} else {
 		s.hurt = 0
 	}
+	s.heal(PercentOfLife(maxLife, winHealPercent))
 	if journey.RoomOf(s.fight) == journey.RoomPortal {
 		s.bossWins++
 	}

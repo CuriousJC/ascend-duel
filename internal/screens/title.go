@@ -63,6 +63,9 @@ type TitleScene struct {
 	// there is a journey in progress to lose.
 	newRun ui.SeedDialog
 
+	// confirm is the question EXIT asks before the program closes.
+	confirm ui.ConfirmDialog
+
 	// backdrops is the rooms behind the menu, chosen once a launch — see pickTitleBackdrops. Nil
 	// until the first Init, and kept through a return to the title so the picture does not change
 	// under a player who only went to the settings.
@@ -112,12 +115,13 @@ func (s *TitleScene) Init(gs *state.GlobalState) {
 		s.settingsButton = models.NewButton(titleButtonWidth, titleButtonHeight, "SETTINGS",
 			func() { actions.OpenSettings(gs) })
 		s.exitButton = models.NewButton(titleButtonWidth, titleButtonHeight, "EXIT",
-			func() { actions.QuitGame(gs) })
+			func() { askExit(gs, &s.confirm) })
 	}
 
 	// **The dialog does not survive a visit.** A scene's Init runs again every time it is entered,
 	// and arriving at the title with a question already up would be a dialog nobody asked.
 	s.newRun.Close()
+	s.confirm.Close()
 
 	// The percentage anchors the menu; the fixed steps space it. Giving each button its own
 	// percentage would let the spacing drift apart the next time the menu moves.
@@ -171,6 +175,10 @@ func (s *TitleScene) Update(gs *state.GlobalState) error {
 	// and a click reaching New Run through the dialog asking about New Run would start two runs.
 	if s.newRun.IsOpen() {
 		s.newRun.Update(gs)
+		return nil
+	}
+	if s.confirm.IsOpen() {
+		s.confirm.Update(gs)
 		return nil
 	}
 
@@ -271,6 +279,13 @@ func (s *TitleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// Over the menu it is asking about.
 	s.newRun.Draw(gs, screen)
+	s.confirm.Draw(gs, screen)
+}
+
+// askExit puts the exit question up on a scene's own confirm dialog. **Both EXIT buttons go through
+// here** — the title's and the settings screen's — so the program never closes on one click.
+func askExit(gs *state.GlobalState, d *ui.ConfirmDialog) {
+	d.AskAnswers("EXIT GAME?", "", "YES", "NO", func() { actions.QuitGame(gs) })
 }
 
 // Where the build string sits on the title screen, and how loud it is.

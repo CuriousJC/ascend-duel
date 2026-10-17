@@ -595,16 +595,16 @@ const (
 	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
 	DoSurgePerCard
 
-	// DoAwaken adds Amount damage to **every attack card queued after the turn's first card**, when
-	// the first card matches the rule — the Awakenings. It needs the `First` predicate, and the
-	// rule's card predicates are read against that first card.
+	// DoAwaken adds Amount damage to an attack card **for every matching card queued before it** —
+	// the Awakenings. It needs the `Preceding` predicate, and the rule's card predicates are read
+	// against each card queued ahead of the attack: two fire cards ahead of a Cut are +20 to it.
 	//
 	// **Added to the DMG the card is swung at, before the card's own multiplier** *(owner's call,
 	// 2026-10-13)*: a 2x card behind a fire opener gains 20 and a 0.5x card 5, and the card's
 	// riders, a Club, a Swarm and the hand all multiply what that came to. It raises that one card's
-	// DMG and no other's, so it is not HandDMG. The first card gains nothing, and neither does a
-	// defense, which deals nothing for the 10 to join. Two Awakenings that both fire add. See
-	// AwakenBonus.
+	// DMG and no other's, so it is not HandDMG. A card never counts itself, and a defense gains
+	// nothing, dealing nothing for the 10 to join — though a defense ahead of an attack is counted
+	// like any card. Two Awakenings that both fire add. See AwakenBonus.
 	//
 	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
 	DoAwaken
@@ -628,6 +628,23 @@ const (
 	//
 	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
 	DoShieldPerCard
+
+	// DoSurgeOnBlock banks Amount action points on the wearer's Duelist.Surge for every hit one of
+	// their shields eats whose card matches the rule — the form shields. Spent at the top of the
+	// wearer's next turn like a matched block's surge, and **it adds to one**: a matched block of a
+	// matching hit banks both.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoSurgeOnBlock
+
+	// DoGrowOnStreak steps this relic's accumulator by Amount on a turn **whose attack cards all
+	// match the rule**, and puts it back to zero on a turn holding an attack that does not — the
+	// Torrents. A turn with no attack does neither, and a defense is never read. Refused with no
+	// `If`, since every attack would match and nothing could break the streak. Usually narrowed by
+	// `Favored`, so what has to match is whatever the run has attacked with most.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoGrowOnStreak
 )
 
 // RelicVerbs is every verb in a fixed order.
@@ -639,7 +656,7 @@ func RelicVerbs() []RelicVerb {
 		DoScaleHandDamage, DoScaleDamagePerVitae, DoDrainDamage, DoHealShare, DoScaleRolls,
 		DoAdjustRoundLimit, DoAdjustEssenceTargets, DoRaiseShield, DoMatchFoeShields,
 		DoKeepShields, DoReflectDamage, DoHealOnBlock, DoVitaeOnBlock, DoSetForm,
-		DoPierceElement, DoSurgePerCard, DoAwaken, DoCopyConsumable, DoShieldPerCard}
+		DoPierceElement, DoSurgePerCard, DoAwaken, DoCopyConsumable, DoShieldPerCard, DoSurgeOnBlock, DoGrowOnStreak}
 }
 
 func (v RelicVerb) String() string {
@@ -720,6 +737,10 @@ func (v RelicVerb) String() string {
 		return "copy-consumable"
 	case DoShieldPerCard:
 		return "shield-per-card"
+	case DoSurgeOnBlock:
+		return "surge-on-block"
+	case DoGrowOnStreak:
+		return "grow-on-streak"
 	default:
 		return "adjust-cost"
 	}
@@ -748,7 +769,7 @@ func verbMoment(v RelicVerb) Moment {
 		return MomentAttackLands
 	case DoHealShare, DoRaiseShield:
 		return MomentTurnStart
-	case DoGrowOnTurn, DoResetGrowth, DoGrowPerCard, DoSurgePerCard, DoShieldPerCard:
+	case DoGrowOnTurn, DoResetGrowth, DoGrowPerCard, DoSurgePerCard, DoShieldPerCard, DoGrowOnStreak:
 		return MomentTurnTaken
 	case DoSetElement:
 		return MomentCardDrawn
@@ -765,7 +786,7 @@ func verbMoment(v RelicVerb) Moment {
 		return MomentFightWon
 	case DoAdjustEssenceTargets:
 		return MomentEssenceSpent
-	case DoReflectDamage, DoHealOnBlock, DoVitaeOnBlock:
+	case DoReflectDamage, DoHealOnBlock, DoVitaeOnBlock, DoSurgeOnBlock:
 		return MomentHitBlocked
 	default:
 		return MomentPrizesDealt
@@ -807,11 +828,19 @@ type RelicCondition struct {
 	// refused at registration — see checkRule.
 	Lead bool
 
-	// First narrows a rule to the **turn's first card, whatever it is** — a defense included — and
-	// the rule's card predicates are then read against that card *(owner's call, 2026-10-10)*.
-	// `Lead` skips to the first attack; this does not. It is the Awakenings' predicate, and like
-	// Lead only `blow-formed` knows the turn, so it is refused anywhere else.
-	First bool
+	// Preceding narrows a rule to **the cards queued ahead of each attack**, a defense included,
+	// and the rule's card predicates are read against every one of them — so the rule is asked of
+	// each attack, and fires once for every matching card ahead of it. It is the Awakenings'
+	// predicate, and like Lead only `blow-formed` knows the turn, so it is refused anywhere else.
+	Preceding bool
+
+	// Favored narrows a rule to **whatever the run has attacked with most** on one axis — element or
+	// form — read off the duelist (Duelist.FavoredElement, FavoredForm), which the run sets as the
+	// fighter is equipped. HasFavored says it is set. A duelist with no favorite — nothing played
+	// yet, or a tie — leaves the rule asleep. It is the Torrents' predicate: `turn-taken` with
+	// `grow-on-streak` only, and refused anywhere else.
+	Favored    Axis
+	HasFavored bool
 
 	// Hands narrows a rule to blows that **satisfied** one of the named rungs of the ladder, and it
 	// is the second predicate that is not a fact about a card *(2026-09-05)*.
@@ -850,7 +879,7 @@ type RelicCondition struct {
 
 // Any reports whether this condition constrains anything at all.
 func (c RelicCondition) Any() bool {
-	return c.HasElement || c.HasForm || c.HasConcept || c.HasTier || c.Lead || c.First ||
+	return c.HasElement || c.HasForm || c.HasConcept || c.HasTier || c.Lead || c.Preceding || c.HasFavored ||
 		c.HasHand() || c.MinForms > 0
 }
 
@@ -917,7 +946,7 @@ func (e RelicEffect) DamagePct(vitae int) int {
 // grows reports whether the verb steps or resets an accumulator.
 func (v RelicVerb) grows() bool {
 	switch v {
-	case DoGrowOnWin, DoGrowOnTurn, DoGrowOnHit, DoGrowPerCard, DoResetGrowth:
+	case DoGrowOnWin, DoGrowOnTurn, DoGrowOnHit, DoGrowPerCard, DoResetGrowth, DoGrowOnStreak:
 		return true
 	}
 	return false
@@ -1029,12 +1058,12 @@ func CheckRelic(key string, rules []RelicRule) error {
 			return fmt.Errorf("%s narrows a %s rule to the lead card, and only blow-formed knows which card leads",
 				key, rule.When)
 		}
-		if rule.If.First && rule.When != MomentBlowFormed {
-			return fmt.Errorf("%s narrows a %s rule to the first card, and only blow-formed knows the turn",
+		if rule.If.Preceding && rule.When != MomentBlowFormed {
+			return fmt.Errorf("%s narrows a %s rule to the cards ahead of an attack, and only blow-formed knows the turn",
 				key, rule.When)
 		}
-		if rule.If.First && (rule.If.Lead || rule.If.HasHand() || rule.If.MinForms > 0) {
-			return fmt.Errorf("%s narrows a rule to the first card and to the blow, and they are different questions", key)
+		if rule.If.Preceding && (rule.If.Lead || rule.If.HasHand() || rule.If.MinForms > 0) {
+			return fmt.Errorf("%s narrows a rule to the cards ahead of an attack and to the blow, and they are different questions", key)
 		}
 		if rule.If.HasHand() && rule.When != MomentBlowFormed {
 			return fmt.Errorf("%s narrows a %s rule to a hand, and only blow-formed knows what formed",
@@ -1074,17 +1103,37 @@ func CheckRelic(key string, rules []RelicRule) error {
 			if e.Do == DoShieldPerCard && !rule.If.Any() {
 				return fmt.Errorf("%s shields per card and names no card to count", key)
 			}
-			// **The first card is what an awakening is about**, so a rule that does not name it
-			// would be adding to every card but one for no reason a player could see.
-			if e.Do == DoAwaken && !rule.If.First {
-				return fmt.Errorf("%s awakens the cards after the first and does not narrow to the first card", key)
+			// **The cards ahead of an attack are what an awakening counts**, so a rule that does not
+			// say so has nothing to count.
+			if e.Do == DoAwaken && !rule.If.Preceding {
+				return fmt.Errorf("%s awakens attacks and does not narrow to the cards ahead of them", key)
 			}
-			if e.Do != DoAwaken && rule.If.First {
-				return fmt.Errorf("%s narrows %s to the first card, and only awaken reads it", key, e.Do)
+			if e.Do != DoAwaken && rule.If.Preceding {
+				return fmt.Errorf("%s narrows %s to the cards ahead of an attack, and only awaken reads them", key, e.Do)
+			}
+			// **A streak is broken by an attack that does not match**, so a rule naming nothing
+			// would match every attack and could never break.
+			if e.Do == DoGrowOnStreak && !rule.If.Any() {
+				return fmt.Errorf("%s grows on a streak and names nothing to keep it to", key)
+			}
+			if e.Do != DoGrowOnStreak && rule.If.HasFavored {
+				return fmt.Errorf("%s narrows %s to the run's favorite, and only grow-on-streak reads it", key, e.Do)
+			}
+			if rule.If.HasFavored && rule.If.Favored != AxisElement && rule.If.Favored != AxisForm {
+				return fmt.Errorf("%s favors a %s, and a favorite is an element or a form", key, rule.If.Favored)
+			}
+			if rule.If.HasFavored && (rule.If.HasElement && rule.If.Favored == AxisElement ||
+				rule.If.HasForm && rule.If.Favored == AxisForm) {
+				return fmt.Errorf("%s names its %s and favors one too, and the two would disagree", key, rule.If.Favored)
 			}
 			if want := verbMoment(e.Do); want != rule.When {
 				return fmt.Errorf("%s does %s at %s, and %s belongs to %s",
 					key, e.Do, rule.When, e.Do, want)
+			}
+			// **A growing relic's DMG may start at nothing**: the Torrents are +0 until a streak
+			// begins, and the accumulator is the whole of the figure.
+			if e.Do == DoAddDMG && e.Amount == 0 && relicGrows(rules) {
+				continue
 			}
 			if err := checkEffect(key, e); err != nil {
 				return err
@@ -1614,12 +1663,13 @@ func CopyingSeats(worn []WornRelic) []bool { return seatsDoing(worn, DoCopyConsu
 func KeptShields(worn []WornRelic) int { return sumAmounts(worn, MomentEquipped, DoKeepShields) }
 
 // blockReward is what one worn relic does when one of its wearer's shields eats a hit: a share of
-// the hit sent back, life, and vitae. Any of the three may be zero.
+// the hit sent back, life, vitae and action points. Any of the four may be zero.
 type blockReward struct {
 	Relic   RelicID
 	Reflect int // percent of the eaten hit returned to its thrower
 	Heal    int // flat life to the wearer
 	Vitae   int // flat vitae to the wearer
+	Surge   int // action points banked for the wearer's next turn
 }
 
 // blockRewardsFrom is every hit-blocked relic this duelist wears that matches the eaten hit's card,
@@ -1641,10 +1691,12 @@ func (d Duelist) blockRewardsFrom(card Card) []blockReward {
 					r.Heal += e.Amount + w.grown(rule)
 				case DoVitaeOnBlock:
 					r.Vitae += e.Amount + w.grown(rule)
+				case DoSurgeOnBlock:
+					r.Surge += e.Amount + w.grown(rule)
 				}
 			}
 		}
-		if r.Reflect > 0 || r.Heal > 0 || r.Vitae > 0 {
+		if r.Reflect > 0 || r.Heal > 0 || r.Vitae > 0 || r.Surge > 0 {
 			out = append(out, r)
 		}
 	}
@@ -1901,29 +1953,47 @@ func distinctForms(cards []Card) int {
 	return n
 }
 
-// AwakenBonus is what every attack after the turn's first card gains, given that first card, and
-// which worn seats woke, and what each of them added. **The rule's card predicates are read against
-// the first card** — a fire Awakening wakes on a fire opener whatever follows it. Two that wake add,
-// and `by` keeps them apart so each can be written as its own step. See DoAwaken.
-func AwakenBonus(worn []WornRelic, first Card) (int, []bool, []int) {
-	seats := make([]bool, len(worn))
-	by := make([]int, len(worn))
-	total := 0
-	for seat, w := range worn {
-		for _, rule := range w.Rules() {
-			if rule.When != MomentBlowFormed || !rule.If.First || !rule.If.Matches(first) {
-				continue
-			}
-			for _, e := range rule.Then {
-				if e.Do == DoAwaken {
-					total += e.Amount
-					by[seat] += e.Amount
-					seats[seat] = true
+// AwakenBonus is what each card of the turn is swung at on top of the turn's DMG, per worn seat:
+// `by[slot][seat]` is what that seat's Awakenings added to that slot's card. **Every rule is asked
+// of every attack** — its card predicates read against each card queued ahead of it, the rule
+// paying its Amount once per match — so two fire cards ahead of a Cut are +20 to it, and a card
+// never counts itself. A defense gains nothing. `seats` is which worn seats woke anything this turn
+// and `openers` which slots woke something, in turn order, so a screen can toast them. See DoAwaken.
+func AwakenBonus(worn []WornRelic, turn []Slot) (by [][]int, seats []bool, openers []int) {
+	by = make([][]int, len(turn))
+	seats = make([]bool, len(worn))
+	opened := make([]bool, len(turn))
+	for at, slot := range turn {
+		by[at] = make([]int, len(worn))
+		if slot.Card.Spec().Verb != VerbAttack {
+			continue
+		}
+		for seat, w := range worn {
+			for _, rule := range w.Rules() {
+				if rule.When != MomentBlowFormed || !rule.If.Preceding {
+					continue
+				}
+				for ahead, prior := range turn {
+					if prior.Index >= slot.Index || !rule.If.Matches(prior.Card) {
+						continue
+					}
+					for _, e := range rule.Then {
+						if e.Do == DoAwaken {
+							by[at][seat] += e.Amount
+							seats[seat] = true
+							opened[ahead] = true
+						}
+					}
 				}
 			}
 		}
 	}
-	return total, seats, by
+	for at, ok := range opened {
+		if ok {
+			openers = append(openers, at)
+		}
+	}
+	return by, seats, openers
 }
 
 func HandBonus(worn []WornRelic, satisfied []HandID) (int, []bool, []int) {
@@ -2160,6 +2230,18 @@ func (d Duelist) TurnTaken(cards []Card) Duelist {
 			if rule.When != MomentTurnTaken {
 				continue
 			}
+			if rule.If.HasFavored {
+				cond, awake := d.favoring(rule.If)
+				if !awake {
+					continue
+				}
+				rule.If = cond
+			}
+			if g, broke, ok := streakOf(rule, cards); ok {
+				step += g
+				reset = reset || broke
+				continue
+			}
 			if rule.If.Any() && !anyMatches(rule.If, cards) {
 				continue
 			}
@@ -2185,6 +2267,58 @@ func (d Duelist) TurnTaken(cards []Card) Duelist {
 		}
 	}
 	return d
+}
+
+// favoring is a condition with its Favored predicate replaced by the duelist's own favorite on that
+// axis, and false when the duelist has none — the rule is then asleep.
+func (d Duelist) favoring(c RelicCondition) (RelicCondition, bool) {
+	switch c.Favored {
+	case AxisElement:
+		if d.FavoredElement == Basic {
+			return c, false
+		}
+		c.Element, c.HasElement = d.FavoredElement, true
+	case AxisForm:
+		if d.FavoredForm == FormNone {
+			return c, false
+		}
+		c.Form, c.HasForm = d.FavoredForm, true
+	default:
+		return c, false
+	}
+	c.HasFavored = false
+	return c, true
+}
+
+// streakOf is what one grow-on-streak rule does with a turn: the step when every attack matched,
+// whether an attack that did not broke the streak, and false when the rule has no grow-on-streak at
+// all. **A turn with no attack does neither** — a turn of shields neither keeps a streak nor breaks
+// one.
+func streakOf(rule RelicRule, cards []Card) (step int, broke bool, ok bool) {
+	for _, e := range rule.Then {
+		if e.Do != DoGrowOnStreak {
+			continue
+		}
+		ok = true
+		attacks, matched := 0, 0
+		for _, c := range cards {
+			if c.Spec().Verb != VerbAttack {
+				continue
+			}
+			attacks++
+			if rule.If.Matches(c) {
+				matched++
+			}
+		}
+		switch {
+		case attacks == 0:
+		case matched == attacks:
+			step += e.Amount
+		default:
+			broke = true
+		}
+	}
+	return step, broke, ok
 }
 
 // countMatches is how many cards of a turn satisfy a condition — the counting counterpart of
@@ -2220,7 +2354,7 @@ func anyMatches(c RelicCondition, cards []Card) bool {
 func Resets(id RelicID) bool {
 	for _, rule := range RelicOf(id).Rules {
 		for _, e := range rule.Then {
-			if e.Do == DoResetGrowth {
+			if e.Do == DoResetGrowth || e.Do == DoGrowOnStreak {
 				return true
 			}
 		}
@@ -2446,6 +2580,18 @@ func DealtAs(worn []WornRelic, card Card) Card {
 	return steps[len(steps)-1].Card
 }
 
+// relicGrows is Grows asked of rules not yet registered.
+func relicGrows(rules []RelicRule) bool {
+	for _, rule := range rules {
+		for _, e := range rule.Then {
+			if e.Do.grows() && e.Do != DoResetGrowth {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // Grows reports whether a relic holds an accumulator at all — a rule with any of the three growth
 // verbs on it.
 //
@@ -2455,7 +2601,7 @@ func Grows(id RelicID) bool {
 	for _, rule := range RelicOf(id).Rules {
 		for _, e := range rule.Then {
 			switch e.Do {
-			case DoGrowOnWin, DoGrowOnTurn, DoGrowOnHit, DoGrowPerCard:
+			case DoGrowOnWin, DoGrowOnTurn, DoGrowOnHit, DoGrowPerCard, DoGrowOnStreak:
 				return true
 			}
 		}
@@ -2496,7 +2642,7 @@ func GrowthEffect(w WornRelic) (RelicEffect, bool) {
 		for _, e := range rule.Then {
 			switch e.Do {
 			case DoGrowOnWin, DoGrowOnTurn, DoGrowOnHit, DoGrowPerCard, DoResetGrowth,
-				DoSetElement:
+				DoGrowOnStreak, DoSetElement:
 				continue
 			}
 			e.Amount += w.grown(rule)

@@ -30,8 +30,8 @@ that raises one rung of the hand ladder, a **potion** that changes the duelist, 
 alters cards mid-fight, a **cantrip** that strengthens the duelist for one fight, or a **sealed
 good**, which is paid for and *then* opened. Then the next room.
 
-Wounds carry from room to room and nothing between fights heals them, so the journey is an attrition
-budget: life comes back only through what the player spends on it.
+Wounds carry from room to room, less a small share every win gives back, so the journey is an
+attrition budget: the rest of the life comes back only through what the player spends on it.
 The run is written to disk between rooms and every run has a six-character code that replays it.
 
 **Beating the eighth realm's boss wins the run.** The player may claim the victory there or walk on
@@ -1788,6 +1788,9 @@ knows what comes after the shop — `session.PhaseShop` is a station of the run 
   each one does and refuses a record the rules cannot apply. **One click and no confirm**, the
   shelf's rule rather than the worn row's: the price is on the card, the purse cannot go into
   debt, and what it does is visible on the duelist card immediately.
+- **The Salve heals a share of max life** — 25%, the record's `Amount` read as a percentage of
+  the ceiling the band draws, potions, boss bonus and relics included, rounded up. A share rather
+  than a flat figure, so it is worth the same fraction of the body on realm eight as on realm one.
 
 - **A relic declares a rarity, and the rarity is the price.** `relics.json` names one of four
   tiers and `data.Rarity` turns it into both what the shop charges and how often the shelf offers
@@ -2013,26 +2016,45 @@ fired once per axis the blow satisfied: Quartered Rings paid 4x twice on four id
 and dealt 16x, against its own printed "Every Four of a Kind deals 4x DMG." `Hand` and `Hands`
 are the same predicate and a record setting both is refused at load.
 
-### The Awakenings — a first card that raises the turn behind it
+### The Awakenings — every matching card raises the attacks behind it
 
-**If the turn's first card matches, every attack queued after it is swung at +10 DMG — added to
-the DMG that card is swung at, before the card's own multiplier** *(owner's call, 2026-10-13)*, so
-a 3x card gains 30, and its riders, a Club, a Swarm and the hand all multiply what that came to.
-It raises those cards' DMG and not the turn's: the opener and every defense are swung at the plain
-figure. One per element and one per attack form, all common.
+**Every attack is swung at +10 DMG for each matching card queued ahead of it — added to the DMG
+that card is swung at, before the card's own multiplier** *(owner's call, 2026-10-17)*, so a 3x card
+behind two fire cards gains 60, and its riders, a Club, a Swarm and the hand all multiply what that
+came to. It raises those cards' DMG and not the turn's. One per element and one per attack form, all
+common.
 
-- **First as queued, whatever it is.** A Brace queued first is the opener even though the defend
-  phase resolves first, and a fire Brace opener wakes the fire Awakening. `First` is the predicate,
-  read at `blow-formed` and only by `awaken`, and the rule's element or form is matched against
-  that one card.
-- **The opener gains nothing and neither does a defense.** Every landing of a later attack gains
-  the 10, an echo's or a repeat's included; two Awakenings that both wake add.
-- **It is shown before a card is counted**: on the announcement's beat the Awakening and its opener
-  toast together, then every attack it raised rattles, and only then do the lines run — each
-  carrying a `+ 10` row per Awakening under the duelist's DMG, flying out of its own relic, with the
-  card's multiplier on the row under them. **Two that wake are two rows, never one sum**, and the
-  fight log writes each as its own step labelled with its relic. `Event.HandAwaken`, `Awaken`,
-  `AwakenSeats`, `AwakenBy` and `AwakenOpener` carry it.
+- **Ahead as queued, whatever it is.** A defense counts as a card ahead of an attack even though the
+  defend phase resolves first, so a fire Brace queued first raises every attack behind it. A card
+  never counts itself. `Preceding` is the predicate, read at `blow-formed` and only by `awaken`, and
+  the rule's element or form is matched against every card ahead of the attack.
+- **It stacks.** Fire Jab, Ice Slash, Fire Bash, Earth Chop: the Slash and the Bash are +10, the Chop
+  +20. Every landing of a raised attack gains its figure, an echo's or a repeat's included; two
+  Awakenings that both wake add.
+- **A defense gains nothing**, having no DMG for the 10 to join.
+- **It is shown before a card is counted**: on the announcement's beat the Awakenings and every card
+  that woke one toast together, then every attack they raised rattles, and only then do the lines
+  run — each carrying a row per Awakening under the duelist's DMG with that relic's figure for this
+  card, flying out of its own relic, with the card's multiplier on the row under them. **Two that
+  wake are two rows, never one sum**, and the fight log writes each as its own step labelled with
+  its relic. `Event.HandAwaken`, `HandAwakenBy`, `AwakenSeats` and `AwakenOpeners` carry it.
+
+### The Torrents — a streak in what the run attacks with most
+
+**Every turn whose attacks are all of the run's most-played element adds +1 DMG to the Elemental
+Torrent; an attack of any other element puts it back to zero** *(owner's call, 2026-10-17)*. The
+Martial Torrent is the same on the form axis. Both uncommon, and both start at +0.
+
+- **Most-played is counted in attack cards over the whole run**, this fight's rounds included, and is
+  settled as the fighter is equipped — at the top of each fight. Defenses are not counted. **A tie is
+  no favorite**, and neither is a run that has attacked with nothing: the Torrent sleeps, neither
+  growing nor resetting, until one element (or form) leads.
+- **The DMG is paid at the top of each fight** (`add-dmg` reading the accumulator), so a streak
+  built in one fight is worn from the next. The streak itself carries across fights, as Momentum's
+  does, and is read back outright, so a reset is kept.
+- **A turn with no attack neither keeps nor breaks the streak.** `grow-on-streak` is the verb and
+  `Favored` the predicate; the tallies are `attacks:element:` and `attacks:form:`, and
+  `Session.Favorites` reads them.
 
 ### The Eternity Pearl — the mythic
 
@@ -2089,6 +2111,11 @@ relic is its own figure out of its own ring, in worn order.
   whatever the hit was.
 - **The Tithe Shield pays vitae per block** (`vitae-on-block`), stepping the fight's purse like
   every other payment inside a round; the run is paid the difference when the duel settles.
+- **The form shields bank AP per block of their form** (`surge-on-block`) — the Spiked Shield for
+  stabs, the Razor Shield for slashes, the Rock Shield for crushes, all uncommon. Read off the eaten
+  hit's card, so two crushes blocked under the Rock Shield are +2 AP next turn. **It adds to a
+  matched block's own surge**: an earth shield eating an earth crush banks two. The block writes
+  SURGE over the break for either reason.
 
 **What these do to a realm is unmeasured.** A helm is worth a shield a turn against its own
 color and much less against any other, and the Thorned Shield turns every shield into damage;
@@ -3240,6 +3267,7 @@ shelf every visit; a tonic changes the run's rules and is offered **once per rea
 | Juggler's | one more card in every hand |
 | Sifter's | one more discard every round |
 | Collector's | one more relic slot |
+| Tinker's | every card an action bundle deals has a 5% chance of coming with an upgrade, picked evenly from every upgrade rune |
 
 - **One seat, one tonic per realm.** The catalog is shuffled once off the run seed
   (`seeds.TonicOrder`, per run) and each realm takes the first tonic in that order the run may
@@ -3264,6 +3292,11 @@ shelf every visit; a tonic changes the run's rules and is offered **once per rea
 - **The cut is the last thing off a card's cost**, after every relic — `combat.CostWith` — so the
   face, the AP bar and the planner read one figure. The hand ladder is priced against a 6 AP turn
   with no cut, so `tools/handodds` describes a run that has drunk neither.
+- **Tinker's rolls once per card, not once per upgrade.** A card holds one upgrade, so a 5% roll per
+  upgrade would upgrade nearly half the cards; one roll, then an even pick, upgrades one in
+  twenty. The upgrade is the rune's own at the rune's own figure, read off `data/runes.json`, so a
+  new upgrade rune is one a bundle can deal. It composes with a card trait. The roll is
+  `seeds.ActionUpgrades`, and a run that has not drunk it draws nothing from it.
 - **Pressure's triple lands where the vitae is decided**: each part of a win's payout, a rune that
   pays vitae, and every vitae a fight pays through `Duelist.Earned`. Selling is a trade, not
   earnings, and pays face value.
@@ -3447,19 +3480,22 @@ it is the only way on: there is no Back and no Skip.
 
 ### Life between fights, and what a portal room is worth
 
-**A wound is carried from room to room, and nothing between fights takes it away.** Not a won
-room and not a portal room. Opening every duel at full life would make damage a fact about one
-round and never about the journey, and the only thing a bad fight would cost is a lower tier of the
-life payout.
+**A wound is carried from room to room, less 5% of max life every won fight gives back.** Opening
+every duel at full life would make damage a fact about one round and never about the journey, and
+the only thing a bad fight would cost is a lower tier of the life payout.
 
-- **Life comes back only through what the player spends on it**: a potion bought in the shop, a card
-  that heals, a relic that restores. Every point of life the run gets back is one it paid for.
+- **The win's heal is `WinHealPercent` in `data/journey.json`**, a whole percentage of the max life
+  the fight was fought under, rounded up so it is always worth at least one life, and never past
+  healthy. It comes off the wound **after** the payout has read the life the fight ended on, so it
+  cannot lift a win into a better tier. Every room heals the same share, the portal room included.
+- **Everything beyond it is paid for**: a potion bought in the shop, a card that heals, a relic that
+  restores.
 - **Beating the realm's portal protector raises the ceiling by a flat 25**, once per portal room
   cleared, so a run standing on realm eight, seven portal rooms up, carries 175 more body than it
   opened with. Flat rather than a share, so the step is the same on every realm.
 - **The wound stays the same size, so the raise is also a heal of exactly 25.** The ceiling rises
-  and the wound under it does not: a fighter who leaves a portal room on 10 of 100 walks into the
-  next realm on 35 of 125.
+  and the wound under it does not: a fighter who leaves a portal room on 10 of 100, healed to 15 by
+  the win, walks into the next realm on 40 of 125.
 - **The wound does not scale with the ceiling.** Forty points taken on realm two are forty points on
   realm six — worth less against a bigger body.
 - **A defeat ends the run**, so nothing carries a wound past the bottom of the journey. There is no

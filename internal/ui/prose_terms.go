@@ -128,7 +128,7 @@ func awakenFactors(e combat.Event, term int, relics []combat.WornRelic) []sessio
 		return nil
 	}
 	var out []session.LedgerFactor
-	for seat, by := range e.AwakenBy {
+	for seat, by := range e.HandAwakenBy[term] {
 		if by != 0 {
 			out = append(out, session.LedgerFactor{Relic: relicName(relics, seat), Add: by})
 		}

@@ -2,7 +2,7 @@ package screens
 
 // animations_weightless.go — the gallery's comparison of ways a weightless relic could be told apart
 // on its face: lifted off the row and drifting, a ghost of itself, and lifted with a shimmer — the
-// last being the one the band draws (`ui.DrawWeightless`). Every one is drawn from the relic's own
+// last being the one the band draws (`ui.DrawAloft`). Every one is drawn from the relic's own
 // finished card over a relic pane's backing, with an untreated relic first in each row to read the
 // others against.
 
@@ -43,7 +43,7 @@ var weightlessOptions = []weightlessOption{
 	{"ghost", "see-through, with a faint pulsing glow", drawWeightlessGhost},
 	{"float + shimmer (the band's)", "lifted and drifting, slightly see-through, light passing over it",
 		func(screen, face *ebiten.Image, at image.Point, t, phase float64) {
-			ui.DrawWeightless(screen, face, at, weightlessScale, t, phase)
+			ui.DrawAloft(screen, face, at, weightlessScale, t, phase)
 		}},
 }
 
@@ -98,8 +98,8 @@ func liftedGeo(face *ebiten.Image, at image.Point, dx, dy, angle float64) ebiten
 }
 
 func drawWeightlessFloat(screen, face *ebiten.Image, at image.Point, t, phase float64) {
-	lift, sway, angle := ui.WeightlessLift(t, phase)
-	ui.DrawWeightlessShadow(screen, face, at, weightlessScale, lift)
+	lift, sway, angle := ui.AloftLift(t, phase)
+	ui.DrawAloftShadow(screen, face, at, weightlessScale, lift)
 	op := &ebiten.DrawImageOptions{Filter: ebiten.FilterLinear}
 	op.GeoM = liftedGeo(face, at, sway, -lift, angle)
 	screen.DrawImage(face, op)
@@ -154,7 +154,7 @@ func drawEphemeralComparison(gs *state.GlobalState, screen *ebiten.Image, origin
 			at := image.Pt(origin.X+col*pitch, y+20)
 			img := ui.EphemeralIf(face, tr.ephemeral)
 			if tr.weightless {
-				ui.DrawWeightless(screen, img, at, weightlessScale, t, float64(row)*2.1)
+				ui.DrawAloft(screen, img, at, weightlessScale, t, float64(row)*2.1)
 				continue
 			}
 			op := &ebiten.DrawImageOptions{Filter: ebiten.FilterLinear}

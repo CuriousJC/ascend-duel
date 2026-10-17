@@ -119,7 +119,7 @@ func TestACastCantripIsWornForTheFightAndKeepsTheWound(t *testing.T) {
 	}
 
 	worn := after.WornRelics()
-	if len(worn) != 2 || worn[1].Relic != endurance.Relic || !worn[1].Weightless || !worn[1].Ephemeral {
+	if len(worn) != 2 || worn[1].Relic != endurance.Relic || !worn[1].Weightless() || !worn[1].Ephemeral() {
 		t.Errorf("the fighter wears %v, want the run's relic then a weightless, ephemeral Endurance", worn)
 	}
 	if got := len(s.paneRelics(gs)); got != 2 {

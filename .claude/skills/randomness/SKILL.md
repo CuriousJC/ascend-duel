@@ -107,11 +107,14 @@ the salt table, so inserting one mid-list re-points every stream after it.
 | `seeds.StoneShower` | fight | `CombatScene.showerRNG` (`internal/screens/combat_rune.go`), mixed with the run's placed-stone count | which stones a rock shower drops, on any change to the shop |
 | `seeds.PackOffer` | fight | `ShopScene.packRNG` (`internal/screens/shop_packs.go`) | which two of the three packs a visit puts up, on any change to the relic shelf |
 | `seeds.ScrollStock` | fight | `dealScrolls` (`internal/screens/shop_goods.go`) | which cantrips a bundle of scrolls holds, on any change to the rune catalog |
+| `seeds.ActionStock` | fight | `dealActionCards` (`internal/screens/shop_goods.go`), split per bundle | which playing cards an action bundle holds, on any change to the other packs |
+| `seeds.ActionTraits` | fight | `dealActionCards`, split per bundle and per card trait: one roll per card per priced trait | which cards every bundle holds, on any change to a card trait's odds |
 | `seeds.MythicRoll` | fight | `dealShelf` (`internal/screens/shop.go`): one roll per shelf seat, one in `data.MythicOdds`, before the seat's ticket draw | every ticket draw after the roll, so every ordinary shelf a run is dealt |
-| `seeds.ShelfWeightless` | fight | `dealShelf` (`internal/screens/shop.go`): one roll per shelf seat, one in `data.WeightlessOdds`, after the seat's relic is picked | which relics every shelf holds, on any change to the weightless odds |
+| `seeds.ShelfTraits` | fight | `dealShelf` (`internal/screens/shop.go`): one roll per shelf seat per priced relic trait, at its `Percent` in `data/relic_traits.json`, after the seat's relic is picked — each trait on its own `ForFightSeat` split keyed by the trait | which relics every shelf holds, on any change to a trait's odds |
 | `seeds.PearlCopy` | fight | `Session.CopyAtFightStart`, from `CombatScene.newDuel` | which consumable the Eternity Pearl copies, on any change to what the shop drew |
 | `seeds.TonicOrder` | run | `newTonicOrder` (`internal/session/tonic.go`): one shuffle of the tonic catalog's sorted keys, walked a realm at a time | which tonic every realm offers, on any change to the relic shelf |
 | `seeds.LuckRoll` | fight | `CombatScene.luckRNG`, injected into `ResolveRound` as `Sources.Luck` | what every gold and silver card in the run rolls, on any change to either shuffle |
+| `seeds.ShieldRoll` | fight | `CombatScene.shieldRNG`, injected into `ResolveRound` as `Sources.Shield`: one roll per `raise-shield` naming `"random"` — armored's — per turn | what every gold and silver card rolls, on buying an armored relic |
 | Loot offers | — | **not built** | — |
 
 **`VialStock` is the sharpest case in the table**: it draws essences from the same
@@ -223,7 +226,8 @@ What a roll costs:
 
 ## The rest of the discipline
 
-- **`internal/combat` has no clock and exactly one roll** — a gold or silver card's gamble. It is otherwise integer arithmetic, and `TestRoundIsDeterministic` pins that an empty
+- **`internal/combat` has no clock and two rolls** — a gold or silver card's gamble, and a random
+  shield's element. Each is its own `Sources` field. It is otherwise integer arithmetic, and `TestRoundIsDeterministic` pins that an empty
   `Sources` resolves identically every time. Every field of `Sources` may be nil and a nil one
   rolls nothing, which is what every test and every headless caller passes.
 - **A second roll goes in `Sources` as its own field.** That is not negotiable: two concerns advancing one cursor means a change to either silently rerolls

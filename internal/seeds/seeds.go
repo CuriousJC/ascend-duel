@@ -150,12 +150,35 @@ const (
 	// sharing one would make what the pearl copies a function of what the shop drew.
 	PearlCopy
 
-	// ShelfWeightless is whether a shelf seat's relic is sold weightless: one roll per seat, after
-	// the seat's relic is picked. Per fight.
+	// ShelfTraits is which relic traits a shelf seat's relic is sold wearing: one roll per seat per
+	// trait, after the seat's relic is picked, each trait on its own split by `ForFightSeat` keyed
+	// by the trait. Per fight.
 	//
 	// **Its own stream rather than ShopStock's or MythicRoll's**: a roll on either cursor would
 	// move every draw after it, so a one-in-twenty flag would reroll which relics every shelf holds.
-	ShelfWeightless
+	ShelfTraits
+
+	// ShieldRoll is the element a `raise-shield` naming "random" raises — armored's — one roll per
+	// raise, injected into ResolveRound as `Sources.Shield`. Per fight.
+	//
+	// **Its own stream rather than LuckRoll's**, although both roll inside a resolved round: sharing
+	// would make what every gold and silver card grants a function of how many random shields the
+	// run raises, so buying an armored relic would reroll every gamble after it.
+	ShieldRoll
+
+	// ActionStock is which playing cards an action bundle holds. Per fight, split per bundle by
+	// `ForFightSeat` exactly as the other packs are.
+	//
+	// **Its own stream rather than any other pack's**: sharing would make which cards a bundle holds
+	// a function of how many runes or stones the other packs drew.
+	ActionStock
+
+	// ActionTraits is which card traits an action bundle's cards carry: one roll per card per priced
+	// trait, split by the bundle and the trait. Per fight.
+	//
+	// **Its own stream rather than ActionStock's**: a roll on the stock's cursor would move every card
+	// after it, so a trait's odds would reroll which cards every bundle holds.
+	ActionTraits
 )
 
 // stream is what the package knows about each one. A table rather than four switch statements,
@@ -180,23 +203,26 @@ type stream struct {
 }
 
 var streams = [...]stream{
-	EnemySelect:     {name: "enemy-select", salt: 0x5EED_E9E3},
-	PlayerDeck:      {name: "player-deck", salt: 0x5EED_DEC4, perFight: true},
-	EnemyDeck:       {name: "enemy-deck", salt: 0x5EED_F0E5, perFight: true},
-	RewardHand:      {name: "reward-hand", salt: 0x5EED_A17E, perFight: true},
-	EssenceOffer:    {name: "essence-offer", salt: 0x5EED_7A19, perFight: true},
-	ShopStock:       {name: "shop-stock", salt: 0x5EED_5403, perFight: true},
-	BagStock:        {name: "bag-stock", salt: 0x5EED_B0C5, perFight: true},
-	VialStock:       {name: "vial-stock", salt: 0x5EED_CA07, perFight: true},
-	SackStock:       {name: "sack-stock", salt: 0x5EED_B0CC, perFight: true},
-	StoneShower:     {name: "stone-shower", salt: 0x5EED_5704, perFight: true},
-	PackOffer:       {name: "pack-offer", salt: 0x5EED_9AC5, perFight: true},
-	LuckRoll:        {name: "luck-roll", salt: 0x5EED_1DCC, perFight: true},
-	ScrollStock:     {name: "scroll-stock", salt: 0x5EED_5C20, perFight: true},
-	TonicOrder:      {name: "tonic-order", salt: 0x5EED_70C1},
-	MythicRoll:      {name: "mythic-roll", salt: 0x5EED_3171, perFight: true},
-	PearlCopy:       {name: "pearl-copy", salt: 0x5EED_9EA4, perFight: true},
-	ShelfWeightless: {name: "shelf-weightless", salt: 0x5EED_0E16, perFight: true},
+	EnemySelect:  {name: "enemy-select", salt: 0x5EED_E9E3},
+	PlayerDeck:   {name: "player-deck", salt: 0x5EED_DEC4, perFight: true},
+	EnemyDeck:    {name: "enemy-deck", salt: 0x5EED_F0E5, perFight: true},
+	RewardHand:   {name: "reward-hand", salt: 0x5EED_A17E, perFight: true},
+	EssenceOffer: {name: "essence-offer", salt: 0x5EED_7A19, perFight: true},
+	ShopStock:    {name: "shop-stock", salt: 0x5EED_5403, perFight: true},
+	BagStock:     {name: "bag-stock", salt: 0x5EED_B0C5, perFight: true},
+	VialStock:    {name: "vial-stock", salt: 0x5EED_CA07, perFight: true},
+	SackStock:    {name: "sack-stock", salt: 0x5EED_B0CC, perFight: true},
+	StoneShower:  {name: "stone-shower", salt: 0x5EED_5704, perFight: true},
+	PackOffer:    {name: "pack-offer", salt: 0x5EED_9AC5, perFight: true},
+	LuckRoll:     {name: "luck-roll", salt: 0x5EED_1DCC, perFight: true},
+	ScrollStock:  {name: "scroll-stock", salt: 0x5EED_5C20, perFight: true},
+	TonicOrder:   {name: "tonic-order", salt: 0x5EED_70C1},
+	MythicRoll:   {name: "mythic-roll", salt: 0x5EED_3171, perFight: true},
+	PearlCopy:    {name: "pearl-copy", salt: 0x5EED_9EA4, perFight: true},
+	ShelfTraits:  {name: "shelf-traits", salt: 0x5EED_0E16, perFight: true},
+	ShieldRoll:   {name: "shield-roll", salt: 0x5EED_A2B0, perFight: true},
+	ActionStock:  {name: "action-stock", salt: 0x5EED_AC70, perFight: true},
+	ActionTraits: {name: "action-traits", salt: 0x5EED_AC7A, perFight: true},
 }
 
 // fightStride separates one fight's seed from the next within a run. A large odd number so

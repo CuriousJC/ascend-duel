@@ -111,6 +111,7 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 			fade, toward = borderDisabledToward, SurfaceDisabled
 		}
 		drawArtBleedFaded(img, art, st, fade, toward)
+		drawMirrorEcho(img, s, st, fade)
 	}
 
 	if st.ShowName {

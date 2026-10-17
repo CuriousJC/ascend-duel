@@ -2108,5 +2108,25 @@
       { "Card": "Brace", "Element": "earth" }
     ],
     "Screen": "combat"
+  },
+  {
+    "ScenarioRecord": "traits",
+    "Note": "Every trait in one fight. The hand holds effortless fire Jabs drawn aloft - lifted, drifting, shimmering - which a full five still takes; mirrored Bashes and a mirrored Block whose pictures carry an offset echo, landing twice and raising twice; and the slash relic is worn armored, raising a shield of a rolled color at the top of every turn. Hover a card or the relic and its tooltip ends on the trait. A dummy fight with 20 AP, so a turn can go well past five cards and the rounds can be played as long as there is something to look at.",
+    "Relics": [
+      "dmg-all-slash"
+    ],
+    "RelicTraits": {
+      "dmg-all-slash": ["armored"]
+    },
+    "Deck": [
+      { "Card": "Jab", "Element": "fire", "Copies": 3, "Traits": ["effortless"] },
+      { "Card": "Bash", "Element": "fire", "Copies": 2, "Traits": ["mirrored"] },
+      { "Card": "Block", "Element": "ice", "Traits": ["mirrored"] },
+      { "Card": "Bash", "Element": "fire", "Copies": 2 },
+      { "Card": "Jab", "Element": "ice", "Copies": 2 }
+    ],
+    "Enemy": "animals-outer-rat",
+    "Dummy": true,
+    "Actions": 20
   }
 ]

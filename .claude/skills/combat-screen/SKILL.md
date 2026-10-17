@@ -718,7 +718,8 @@ it again to take it out, drag sideways to move it along the row.
   from `cursor >= len(log)` plus both duelists alive, not stored. Drag and the DUEL!
   button both gate on it, so they can never disagree.
 - **What is enforced at selection is the *count*, not the budget.** Selection stops at
-  `s.fighter.MaxActions()` cards and a card past that draws dimmed; cost is deliberately not
+  `s.fighter.MaxActions()` counted cards — `Duelist.RoomFor`, which lets an effortless card past a
+  full five and draws it aloft — and a card past that draws dimmed; cost is deliberately not
   checked, because selection is also how a card is picked for the discard pile and a hand you
   could not afford would be a hand you could not throw away. The budget is enforced one step
   later, at DUEL!, which goes dead while the selection is over it.

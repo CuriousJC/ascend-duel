@@ -1825,7 +1825,7 @@ func TestARelicCountsAWildcard(t *testing.T) {
 func TestAWeightlessRelicTakesNoSlot(t *testing.T) {
 	d := Duelist{RelicSlots: 1}.
 		Wearing(WornRelic{Relic: 0}).
-		Wearing(WornRelic{Relic: 1, Weightless: true}).
+		Wearing(WornRelic{Relic: 1, Traits: testTrait(t, "test-weightless", false, false, nil)}).
 		Wearing(WornRelic{Relic: 2})
 
 	worn := d.WornRelics()

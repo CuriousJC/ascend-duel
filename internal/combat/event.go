@@ -175,11 +175,11 @@ const (
 	KindRoundEnd
 )
 
-// maxHandTerms is the width of a hand event's arrays: **every hit a legal turn can throw** — each
-// of its cards, each landing as many times as an echo or a repeat relic allows. A repeat matches on
-// form, so five crush cards under Aftershock is ten hits. An over-long turn drops terms from the
-// *arithmetic* rather than from the fight.
-const maxHandTerms = baseMaxActions * MaxEchoLandings
+// maxHandTerms is the width of a hand event's arrays: **every hit a turn can throw** — each of its
+// cards, effortless ones included, each landing as many times as an echo or a repeat relic allows. A
+// repeat matches on form, so five crush cards under Aftershock is ten hits. An over-long turn drops
+// terms from the *arithmetic* rather than from the fight.
+const maxHandTerms = maxTurnCards * MaxEchoLandings
 
 // Event is one entry in the replayable log for a single round.
 type Event struct {

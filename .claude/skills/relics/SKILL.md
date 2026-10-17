@@ -197,7 +197,7 @@ not ignored.
 | `adjust-round-limit` | `equipped` | `Amount` rounds, **signed** | moves **this fight's** clock — Hermes takes two off. A delta rather than a figure, so it mixes with a relic that buys rounds; **every delta sums and worn order decides nothing**, because addition commutes. Clamped at one round, never at none, and read over the run's number rather than written into it, so selling gives the rounds back |
 | `echo-attack` | `blow-formed` | `Amount` landings | the turn's lead card lands Amount times — a hit each — at even fractions counting down — 3 is full, 2/3, 1/3. Extra landings from two relics **add** rather than compound; capped at `combat.MaxEchoLandings` |
 | `set-form` | `card-drawn` | `Form` | deals a matching card as **its counterpart on that form's ladder** — same declared cost, same element, the concept replaced whole — through `combat.Counterpart`, the form essence's lookup. Chains with the flips and demotions in worn order. The form orbs |
-| `raise-shield` | `turn-start` | `Element`, `Amount` shields | raises that many shields of that element at the top of the wearer's turn, **after the expiry** — the helms. A shield like any other: it eats its own element's heaviest hit first and banks the matched block's AP. Basic is legal. Bounded at `MaxShields`, like a card |
+| `raise-shield` | `turn-start` | `Element`, `Amount` shields | raises that many shields of that element at the top of the wearer's turn, **after the expiry** — the helms. A shield like any other: it eats its own element's heaviest hit first and banks the matched block's AP. Basic is legal. **`"random"` rolls one of the five colors per raise** off `Sources.Shield` (`seeds.ShieldRoll`), and a nil source raises nothing — armored's; `random` is refused on any other verb. Bounded at `MaxShields`, like a card |
 | `match-foe-shields` | `equipped` | *nothing* | every shield the wearer's defend cards raise takes **the opponent's element** — the Prismatic Shield. The card keeps its own element for the hand it forms; only the shield changes |
 | `keep-shields` | `equipped` | `Amount` shields | that many unspent shields survive both lapses — the attacker's turn ending and the owner's next turn arriving — kept in element order. The Tower Shield |
 | `reflect-damage` | `hit-blocked` | `Amount` percent | sends that share of the eaten hit, **as it would have landed** and rounded down, back at the thrower as plain damage — no drain, no growth. A thrower it kills falls there and the rest of their turn is not thrown. The Thorned Shield |
@@ -224,17 +224,26 @@ never assert a verb into existence.
   actually see on screen. See the `randomness` skill.
 - **Compounding is intended.** Two slash relics are ×4, not ×2, and that is a build.
 
-## A wearing can be weightless or ephemeral
+## A wearing carries traits: weightless, ephemeral, armored
 
-**Both are properties of one wearing, never of a relic** — `combat.WornRelic.Weightless` and
-`.Ephemeral` sit beside the accumulator, and the registered `Relic` knows nothing about them. The
-same rules can be worn plain on one duelist and weightless on another.
+**Every trait is a property of one wearing, never of a relic** — `combat.WornRelic.Traits`, a
+`combat.RelicTrait` bitmask, sits beside the accumulator, and the registered `Relic` knows nothing
+about it. The same rules can be worn plain on one duelist and weightless on another. The run keeps
+them by record in `Session.relicTraits` (`SetRelicTrait`, `RelicTraitsOf`) and saves them by name.
+**A trait is a record in `data/relic_traits.json`**, in a grammar: `Slot: false` (weightless),
+`Lasts: "fight"` (ephemeral), and `Rules` in **this skill's relic grammar**, worn after the relic's
+own rules and firing at the same moments — every rule walk goes through `WornRelic.Rules()`. A
+trait's rules never add the relic's accumulator and may not carry a growth verb. `Percent` is the
+shelf's chance per seat. **A new trait that only needs existing verbs is a record and nothing else.**
+See MECHANICS.md §Traits.
 
 - **Weightless takes no slot.** `Duelist.WornRelics` counts only weighted relics against the cap and
   `Wearing` never refuses a weightless one, so it goes on over a full hand.
 - **Ephemeral lasts the fight it was put on in.** Nothing but the fight's own duelist holds it, so
   the next fight's fighter is built without it.
-- **A cantrip-relic is both**, and is the only thing that makes either today. Its rules are written
+- **Armored is `Rules` alone** — a turn-start `raise-shield` with `Element: "random"` — so it fires
+  as a `KindWarded` naming the relic it is worn on, beside whatever that relic's rules do.
+- **A cantrip-relic is both.** Its rules are written
   inline on its cantrip in `data/cantrips.json`, never in `relics.json`, and are registered under the
   cantrip's record key. It may not wake at a moment read off the run — `card-drawn`, `fight-won`,
   `prizes-dealt`, `essence-spent`, `fight-begun` — because it is never among the run's relics. See MECHANICS.md

@@ -154,5 +154,44 @@
     "Title": "",
     "Hint": "",
     "Tip": ["a cantrip strengthens you for one fight,", "spent between the turns"]
+  },
+  {
+    "GoodRecord": "bundle-actions-small",
+    "Name": "SMALL ACTION BUNDLE",
+    "Family": "Sealed goods",
+    "Art": "",
+    "Draw": "a small stack of three face-down playing cards bound with a thin jade ribbon tied in a bow",
+    "Contains": "cards",
+    "Size": 3,
+    "Price": 3,
+    "Title": "",
+    "Hint": "",
+    "Tip": ["a playing card for your deck,", "and it may carry a trait"]
+  },
+  {
+    "GoodRecord": "bundle-actions",
+    "Name": "ACTION BUNDLE",
+    "Family": "Sealed goods",
+    "Art": "",
+    "Draw": "a stack of four face-down playing cards bound crosswise with a deep blue ribbon and a wax seal",
+    "Contains": "cards",
+    "Size": 4,
+    "Price": 5,
+    "Title": "",
+    "Hint": "",
+    "Tip": ["a playing card for your deck,", "and it may carry a trait"]
+  },
+  {
+    "GoodRecord": "bundle-actions-large",
+    "Name": "LARGE ACTION BUNDLE",
+    "Family": "Sealed goods",
+    "Art": "",
+    "Draw": "a thick stack of five face-down playing cards bound with a wine red ribbon, a wax seal and a small brass clasp",
+    "Contains": "cards",
+    "Size": 5,
+    "Price": 6,
+    "Title": "",
+    "Hint": "",
+    "Tip": ["a playing card for your deck,", "and it may carry a trait"]
   }
 ]

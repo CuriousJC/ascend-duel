@@ -49,6 +49,10 @@ const (
 type Sources struct {
 	// Luck is the gamble a golden or a silver card takes when it is played. See rollGolden.
 	Luck *rand.Rand
+
+	// Shield is the element a `raise-shield` naming "random" raises, one roll per raise. See
+	// rollShieldElement.
+	Shield *rand.Rand
 }
 
 // rollGolden takes one golden card's gamble and reports what it granted, in DMG and in life.

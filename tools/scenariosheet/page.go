@@ -193,13 +193,13 @@ var tmpl = template.Must(template.New("scenariosheet").Parse(`<!doctype html>
         {{end}}
         {{with $p.Hand}}
           <table>
-            <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
+            <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders and traits</th></tr>
             {{range .}}<tr><td>{{.Card}}</td><td>{{.Element}}</td><td>{{.Cost}}</td><td class="rider">{{.Riders}}</td></tr>{{end}}
           </table>
         {{end}}
         {{with $p.Deck}}
           <table>
-            <tr><th>Deck — {{$p.DeckSum}} cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
+            <tr><th>Deck — {{$p.DeckSum}} cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders and traits</th></tr>
             {{range .}}<tr><td>{{.Card}}</td><td>{{.Element}}</td><td>{{.Copies}}</td><td>{{.Cost}}</td><td class="rider">{{.Riders}}</td></tr>{{end}}
           </table>
         {{end}}

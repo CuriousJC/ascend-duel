@@ -1,0 +1,37 @@
+[
+  {
+    "RelicTrait": "weightless",
+    "Name": "Weightless",
+    "Family": "Relic traits",
+    "Art": "",
+    "Draw": "",
+    "Text": "TAKES NO RELIC SLOT",
+    "Percent": 5,
+    "Slot": false
+  },
+  {
+    "RelicTrait": "ephemeral",
+    "Name": "Ephemeral",
+    "Family": "Relic traits",
+    "Art": "",
+    "Draw": "",
+    "Text": "GONE WHEN THE FIGHT ENDS",
+    "Percent": 0,
+    "Lasts": "fight"
+  },
+  {
+    "RelicTrait": "armored",
+    "Name": "Armored",
+    "Family": "Relic traits",
+    "Art": "",
+    "Draw": "",
+    "Text": "A SHIELD OF A RANDOM COLOR EVERY TURN",
+    "Percent": 1,
+    "Rules": [
+      {
+        "When": "turn-start",
+        "Then": [{ "Do": "raise-shield", "Element": "random", "Amount": 1 }]
+      }
+    ]
+  }
+]

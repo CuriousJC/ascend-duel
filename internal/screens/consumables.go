@@ -216,7 +216,7 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 
 // drawHeldCard puts one carried thing in its seat in the pane: floating like every card in the band,
 // or — for a weightless copy — lifted, drifting and shimmering exactly as a weightless relic is.
-// See ui.DrawWeightless.
+// See ui.DrawAloft.
 func drawHeldCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, seat int,
 	c session.Consumable, enabled bool) {
 
@@ -224,11 +224,7 @@ func drawHeldCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, s
 	if !ok {
 		return
 	}
-	if c.Weightless {
-		ui.DrawWeightless(screen, ui.CardImage(gs, spec, st), at, 1, float64(gs.Count), float64(seat)*2.1)
-		return
-	}
-	ui.DrawFloatingCard(gs, screen, at, seat, spec, st)
+	ui.DrawSeatedCard(gs, screen, at, seat, spec, st, c.Weightless)
 }
 
 // hoverConsumables explains whichever carried rune the cursor is resting on, and reports whether

@@ -334,6 +334,30 @@ const MaxEchoLandings = 5
 // without touching a single call site. See MECHANICS.md.
 func (d Duelist) MaxActions() int { return baseMaxActions }
 
+// CountedActions is how many of `cards` count against MaxActions: every one a trait has not taken out of the five.
+func CountedActions(cards []Card) int {
+	n := 0
+	for _, c := range cards {
+		if c.Counted() {
+			n++
+		}
+	}
+	return n
+}
+
+// RoomFor reports whether `c` may join a turn already holding `queued`. **An effortless card always
+// fits**, since the cap counts only the cards that weigh something; it still costs its AP, and the
+// budget is checked where it always is. See Card.Counted.
+func (d Duelist) RoomFor(queued []Card, c Card) bool {
+	return !c.Counted() || CountedActions(queued) < d.MaxActions()
+}
+
+// maxTurnCards is the most cards one turn's arrays are sized to hold: the counted five and as many
+// effortless cards again. **A width rather than a rule** — the cap is MaxActions, and nothing bounds
+// how many effortless cards a hand can hold — so a turn past it drops terms from the arithmetic
+// rather than from the fight, as maxHandTerms already says.
+const maxTurnCards = 2 * baseMaxActions
+
 // ActionPoints is how much this duelist has to spend in a round: the stat, plus whatever Surge
 // the blocks of the opponent's last turn banked. Nothing else adds to it, so a player can plan
 // against it for a whole fight and read the surge as a one-turn bonus on top.

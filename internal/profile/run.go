@@ -128,8 +128,12 @@ type RunSnapshot struct {
 	// nothing in a file.
 	Grown map[string]int `json:"grown"`
 
-	// Weightless is the worn relics that take no finger, by record key. Omitted when there are none,
-	// which is every run today.
+	// RelicTraits is what each worn relic is worn with — "weightless", "armored" — by record key,
+	// as trait names. Omitted when no relic carries one.
+	RelicTraits map[string][]string `json:"relicTraits,omitempty"`
+
+	// Weightless is the worn relics that take no finger, by record key — read on resume beside
+	// RelicTraits, and never written: RelicTraits carries weightless with the rest.
 	Weightless []string `json:"weightless,omitempty"`
 
 	// Stones is how many stones the run has put on each rung of the hand ladder, by **hand key**.
@@ -356,6 +360,9 @@ type CardSnapshot struct {
 	// attached — which is the order they fire. Omitted when empty, so an unridden deck reads as a
 	// plain list.
 	Riders []RiderSnapshot `json:"riders,omitempty"`
+
+	// Traits are the card's traits by name — "effortless", "mirrored". Omitted when it has none.
+	Traits []string `json:"traits,omitempty"`
 }
 
 // LoadRun reads the run in progress, and reports whether there was one.

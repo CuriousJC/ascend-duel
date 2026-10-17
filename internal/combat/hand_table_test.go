@@ -66,10 +66,16 @@ func TestTheLadderIsThePokerHandsOnEveryAxis(t *testing.T) {
 		// copies; this counts *difference*, which is the other thing a set of cards can have in
 		// common. Prism, Spectrum, Kitchen Sink, Rising Attack and Weaponmaster were cut with it.
 		"element-elementalist": "Elementalist",
+
+		// **The same card in the same color**, which the starting deck cannot deal: three, four
+		// and five, and no two-pair or full house under them.
+		"synergy-three-of-a-kind": "Synergy Three of a Kind",
+		"synergy-four-of-a-kind":  "Synergy Four of a Kind",
+		"synergy-five-of-a-kind":  "Synergy Five of a Kind",
 	}
 
 	if got := len(Hands()); got != len(want) {
-		t.Errorf("the catalog holds %d hands, want %d - five rungs on each of three of-a-kind axes, the merged Pair, the Elementalist, plus the No Hand", got, len(want))
+		t.Errorf("the catalog holds %d hands, want %d - five rungs on each of three of-a-kind axes, three synergy rungs, the merged Pair, the Elementalist, plus the No Hand", got, len(want))
 	}
 	for key, name := range want {
 		h, ok := handByKey(key)
@@ -273,6 +279,29 @@ func TestACardHandPaysMoreThanTheFormHandInsideIt(t *testing.T) {
 		if form.Multiplier >= card.Multiplier {
 			t.Errorf("form-%s pays x%d, matching or beating the concept-%s it is contained by at x%d",
 				rung, form.Multiplier, rung, card.Multiplier)
+		}
+	}
+}
+
+// **A synergy rung contains the card rung and the elemental rung of its own shape**: three fire
+// Jabs are three Jabs and three fire cards. So it has to pay more than both, or nobody would build
+// the narrower hand - and it is also what keeps the tie-break from ever reaching `AxisSynergy`,
+// which sits last in the enum.
+func TestASynergyHandPaysMoreThanTheHandsInsideIt(t *testing.T) {
+	for _, rung := range []string{"three-of-a-kind", "four-of-a-kind", "five-of-a-kind"} {
+		syn, ok := handByKey("synergy-" + rung)
+		if !ok {
+			t.Fatalf("the catalog has no synergy-%s", rung)
+		}
+		for _, inside := range []string{"concept-", "form-", "element-"} {
+			h, ok := handByKey(inside + rung)
+			if !ok {
+				t.Fatalf("the catalog has no %s%s", inside, rung)
+			}
+			if h.Multiplier >= syn.Multiplier {
+				t.Errorf("%s%s pays x%d, matching or beating the synergy-%s it is contained by at x%d",
+					inside, rung, h.Multiplier, rung, syn.Multiplier)
+			}
 		}
 	}
 }

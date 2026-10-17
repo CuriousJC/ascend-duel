@@ -267,6 +267,8 @@ func axisName(c combat.Card, a combat.Axis) string {
 		return strings.ToLower(c.Form().String())
 	case combat.AxisElement:
 		return c.Element.String()
+	case combat.AxisSynergy:
+		return c.Element.String() + " " + c.Label()
 	default:
 		return c.Label()
 	}

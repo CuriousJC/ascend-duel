@@ -274,8 +274,9 @@ takes the round's purse. The hands panel is where both are read. See MECHANICS.m
 `data/hands.json` and read on whichever of concept / form / element the turn satisfies —
 `combat.Hand.Axes` is the list and `Hand.On(axis)` is one reading. **It pays 1x**, the identity,
 so the loader allows a multi-card rung *at* 100 and refuses one below it: what a pair buys is
-that two cards are summed where a No Hand lands one. **`combat.Axis` is three values** — concept,
-form, element — and a hand can only say what its cards must *agree* on.
+that two cards are summed where a No Hand lands one. **`combat.Axis` is four values** — concept,
+form, element, and synergy (the same card in the same color) — and a hand can only say what its
+cards must *agree* on.
 
 **Shields are the whole of the defensive half.** The player's defend cards — `Brace` and
 `Block` at 1/2 AP — raise that many shields, and **one shield eats one incoming
@@ -425,10 +426,11 @@ of eight holds the cards for the rung at all; **playable** is whether it
 could also pay for them inside the round. They come apart hard on the five-card rungs — a Form Full
 House is dealt in 93% of hands and payable in 8% — and the **score** is the geometric mean of the
 two, which is what the multipliers are priced against. `go run ./tools/handodds -price` prints what
-the curve would charge beside what the file charges and marks every row where they differ. **Seven
-rows are marked and all seven are deliberate** — the Pair at the identity where the curve would
-charge 110, and six rungs the owner set a tenth or two above it; MECHANICS.md names them — so an
-eighth mark is a real signal. **Every multiplier is a multiple of 10**, read as 1.8x and never
+the curve would charge beside what the file charges and marks every row where they differ. **Ten
+rows are marked and all ten are deliberate** — the Pair at the identity where the curve would
+charge 110, six rungs the owner set a tenth or two above it, and the three synergy rungs, which the
+starting deck cannot deal and are priced against the first altered deck that can; MECHANICS.md
+names them — so an eleventh mark is a real signal. **Every multiplier is a multiple of 10**, read as 1.8x and never
 1.79x: the loader refuses anything else and a stone steps on the same grid. See MECHANICS.md for why neither column
 alone can price a ladder. **It counts every card,
 defenses included** — they carry an element and a form and join hands like anything

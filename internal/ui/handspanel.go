@@ -241,10 +241,9 @@ func handsExamples(c HandsContents, h combat.Hand) [][]combat.Card {
 const (
 	// **Three columns as of 2026-08-24**, up from two. A rung was three lines of words and is now
 	// a name over a row of cards, which is wider and shorter — so the ladder wants columns rather
-	// than depth. Eighteen rungs over three is six in the deepest, against a budget that holds
-	// seven: TestTheColumnsHoldTheWholeLadder is what fails when a rung is added past that, and
-	// the headroom is the point — the panel was rebuilt this way to leave room for hands not yet
-	// written.
+	// than depth. Twenty-one rungs over three is seven in the deepest, which is what the body
+	// holds: TestTheColumnsHoldTheWholeLadder is what fails when a rung is added past that, and a
+	// twenty-second rung is a layout change rather than an entry.
 	handsColumnCount = 3
 
 	handsColumnGap = 28
@@ -253,8 +252,9 @@ const (
 	handsNameLine = 0
 
 	// handsRowGap is the air between the bottom of a rung's cards and the hairline that closes it,
-	// and again between that hairline and the next rung's name.
-	handsRowGap = 6
+	// and again between that hairline and the next rung's name. **It is what seven rungs to a
+	// column is paid out of**: at 6 the deepest column runs 24px past the body.
+	handsRowGap = 4
 
 	// handsMultGap is the air between the last card and the multiplier. **Beside the cards, not
 	// out at the column's edge** *(owner's call, 2026-08-24)*: the figure belongs to the hand it

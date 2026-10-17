@@ -14,6 +14,20 @@
     "Trigger": { "Kind": "moment", "Moment": "duel-won" }
   },
   {
+    "APIName": "opening-statement",
+    "DisplayName": "OPENING STATEMENT",
+    "Description": "Win a duel on your first turn.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "opening-statement",
+    "Draw": "A heavy judge's gavel at the instant it strikes a round sounding block, the gavel tilted down from the upper left, with three short, thick impact marks fanning out from the point of contact.",
+    "Said": [
+      "One turn. They hadn't even finished introducing themselves.",
+      "Rude, but efficient."
+    ],
+    "Trigger": { "Kind": "moment", "Moment": "duel-won-first-round" }
+  },
+  {
     "APIName": "taught",
     "DisplayName": "TAUGHT",
     "Description": "Sit through the whole lesson.",

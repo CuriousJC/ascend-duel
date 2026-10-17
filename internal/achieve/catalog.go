@@ -20,6 +20,10 @@ const (
 	// "the first one you ever win" only because the profile keeps one award.
 	MomentDuelWon = "duel-won"
 
+	// MomentDuelWonFirstRound is a fight won by the player's first turn: the creature died in
+	// the duel's opening round. It fires beside MomentDuelWon, never instead of it.
+	MomentDuelWonFirstRound = "duel-won-first-round"
+
 	// MomentTutorialFinished is the teaching run ending, dismissed or played through. Skipping
 	// counts, on the same terms markTutorialSeen is written under.
 	MomentTutorialFinished = "tutorial-finished"
@@ -59,7 +63,7 @@ const (
 
 // moments is the same list, for validation and for the error message.
 var moments = []string{
-	MomentDuelWon, MomentTutorialFinished, MomentRealmReached, MomentLadderWrapped,
+	MomentDuelWon, MomentDuelWonFirstRound, MomentTutorialFinished, MomentRealmReached, MomentLadderWrapped,
 	MomentShieldsRaised, MomentHandFormed,
 }
 

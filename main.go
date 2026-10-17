@@ -169,51 +169,6 @@ func main() {
 	// See state.SeedPinned and screens.NewRun.
 	g.GlobalState.SeedPinned = pinned
 
-	//Load assets into memory one time at startup
-	g.GlobalState.Assets = assets.LoadAssets()
-	g.GlobalState.Fonts = assets.LoadFonts()
-	g.GlobalState.FontData = assets.LoadFontData()
-	g.GlobalState.ImageData = assets.LoadImageData()
-	g.GlobalState.Motifs = data.LoadMotifs()
-	g.GlobalState.Records = data.MotifRecords(g.GlobalState.Motifs)
-	g.GlobalState.Journey = data.LoadJourney()
-	data.MustFillJourney(g.GlobalState.Motifs, g.GlobalState.Journey.Realms)
-	g.GlobalState.Duelists = data.LoadDuelists()
-	g.GlobalState.Decks = data.LoadDecks()
-	g.GlobalState.Relics = data.LoadRelics()
-
-	// **The run starts here** *(2026-08-17)*, because a run outlives every screen and no scene
-	// may build one — two would be two runs. It carries the deck, which the combat screen deals
-	// from and the post-battle screen alters, and it is where the worn relics and the purse go
-	// when buying exists.
-	//
-	// Built from the authored starting list. When a title-screen "New Run" arrives this moves
-	// there and becomes one line in that action instead.
-	// **A scenario dresses the run before it starts.** Compiled out unless `-tags scenario`, in
-	// which case this is the seat that puts a chosen set of relics on — `StartingRelics` is the same
-	// debug seat a hand-edited list would use, so nothing new has to be able to force a worn row.
-	// See internal/scenario.
-	if scenario.Active() {
-		// **The fingers are set before the relics**, and both before the run is built: `New` wears
-		// the list as it goes, so a cap raised after the fact would arrive too late to let a sixth
-		// relic on. See session.StartingRelicSlots.
-		session.StartingRelicSlots = scenario.RelicSlots()
-		session.StartingRelics = scenario.Relics()
-		session.StartingWeightless = scenario.Weightless()
-		session.StartingRelicTraits = scenario.RelicTraits()
-
-		// **A chosen deck, where the relics are a chosen row.** Nil unless the fixture says
-		// otherwise, so this is the authored deck for every scenario that does not care.
-		session.StartingDeckList = scenario.Deck()
-
-		// **A chosen sack, on the same terms.** The board piece is otherwise a shop and a fight
-		// away from any launch; see internal/scenario.
-		session.StartingRunes = scenario.Runes()
-		session.StartingStones = scenario.Stones()
-		session.StartingEssences = scenario.Essences()
-		session.StartingCantrips = scenario.Cantrips()
-	}
-
 	// **The profile is opened before the run, because it can decide what the run is.** A run in
 	// progress is resumed rather than started, and a player who has never been taught is taught.
 	//
@@ -242,92 +197,147 @@ func main() {
 	// can compute a duration in it. See internal/screens/settings.go.
 	screens.ApplySettings(prof.Settings)
 
-	// **Unlocks are re-derived from the awards before the run takes them**, so an achievement that
-	// opens something it did not open when it was earned opens it now. See screens.ReconcileUnlocks.
-	screens.ReconcileUnlocks(g.GlobalState)
-
-	// **The journal is opened before the run, because BootRun is what writes its first line.** It
-	// touches no file here — a journal that made its file at startup would leave one behind for
-	// every player who launched the game and never played — so this is a store and a sentence.
+	// **Everything below is loaded behind the studio splash** — on its own goroutine, while the
+	// window shows the bulb — and the music starts once the splash is over. Nothing here may touch
+	// the window or the score; see internal/game/splash.go for what the frame does meanwhile.
 	//
-	// **The wording of the failure lives here rather than in internal/journal.** A crash report
-	// takes a copy of the journal, so internal/crashlog has to be able to name that file; one of
-	// the two has to point at the other, and the one that knows what a player should be told is
-	// this one. A run that is not being written down cannot be got back, which is why it is a Tell.
-	g.GlobalState.Journal = journal.New(g.GlobalState.Store, func(err error) {
-		crashlog.Tell("This run's choices are not being recorded: %v", err)
+	// **The profile and its settings stay above**, because fullscreen is one of them and the splash
+	// should open on the display the player chose.
+	g.Boot(func() {
+		defer reportLoadPanic(g)
+
+		//Load assets into memory one time at startup
+		g.GlobalState.Assets = assets.LoadAssets()
+		g.GlobalState.Fonts = assets.LoadFonts()
+		g.GlobalState.FontData = assets.LoadFontData()
+		g.GlobalState.ImageData = assets.LoadImageData()
+		g.GlobalState.Motifs = data.LoadMotifs()
+		g.GlobalState.Records = data.MotifRecords(g.GlobalState.Motifs)
+		g.GlobalState.Journey = data.LoadJourney()
+		data.MustFillJourney(g.GlobalState.Motifs, g.GlobalState.Journey.Realms)
+		g.GlobalState.Duelists = data.LoadDuelists()
+		g.GlobalState.Decks = data.LoadDecks()
+		g.GlobalState.Relics = data.LoadRelics()
+
+		// **The run starts here** *(2026-08-17)*, because a run outlives every screen and no scene
+		// may build one — two would be two runs. It carries the deck, which the combat screen deals
+		// from and the post-battle screen alters, and it is where the worn relics and the purse go
+		// when buying exists.
+		//
+		// Built from the authored starting list. When a title-screen "New Run" arrives this moves
+		// there and becomes one line in that action instead.
+		// **A scenario dresses the run before it starts.** Compiled out unless `-tags scenario`, in
+		// which case this is the seat that puts a chosen set of relics on — `StartingRelics` is the same
+		// debug seat a hand-edited list would use, so nothing new has to be able to force a worn row.
+		// See internal/scenario.
+		if scenario.Active() {
+			// **The fingers are set before the relics**, and both before the run is built: `New` wears
+			// the list as it goes, so a cap raised after the fact would arrive too late to let a sixth
+			// relic on. See session.StartingRelicSlots.
+			session.StartingRelicSlots = scenario.RelicSlots()
+			session.StartingRelics = scenario.Relics()
+			session.StartingWeightless = scenario.Weightless()
+			session.StartingRelicTraits = scenario.RelicTraits()
+
+			// **A chosen deck, where the relics are a chosen row.** Nil unless the fixture says
+			// otherwise, so this is the authored deck for every scenario that does not care.
+			session.StartingDeckList = scenario.Deck()
+
+			// **A chosen sack, on the same terms.** The board piece is otherwise a shop and a fight
+			// away from any launch; see internal/scenario.
+			session.StartingRunes = scenario.Runes()
+			session.StartingStones = scenario.Stones()
+			session.StartingEssences = scenario.Essences()
+			session.StartingCantrips = scenario.Cantrips()
+		}
+
+		// **Unlocks are re-derived from the awards before the run takes them**, so an achievement that
+		// opens something it did not open when it was earned opens it now. See screens.ReconcileUnlocks.
+		screens.ReconcileUnlocks(g.GlobalState)
+
+		// **The journal is opened before the run, because BootRun is what writes its first line.** It
+		// touches no file here — a journal that made its file at startup would leave one behind for
+		// every player who launched the game and never played — so this is a store and a sentence.
+		//
+		// **The wording of the failure lives here rather than in internal/journal.** A crash report
+		// takes a copy of the journal, so internal/crashlog has to be able to name that file; one of
+		// the two has to point at the other, and the one that knows what a player should be told is
+		// this one. A run that is not being written down cannot be got back, which is why it is a Tell.
+		g.GlobalState.Journal = journal.New(g.GlobalState.Store, func(err error) {
+			crashlog.Tell("This run's choices are not being recorded: %v", err)
+		})
+
+		screens.BootRun(g.GlobalState)
+
+		// **Logged after the run is built, not before it.** A resumed run brings its own seed and a
+		// taught one brings the script's, so a code printed at the moment one was rolled would name a
+		// journey nobody is playing.
+		log.Printf("run code %s", seeds.Code(g.GlobalState.RunSeed))
+
+		// **A scenario may also open the game somewhere other than the first duel** *(2026-08-22)*.
+		// The run is put in the named room with the named purse, and the phase it lands on decides
+		// which scene draws it — see internal/screens/flow.go, which is the one table mapping the two.
+		// Compiled out with the rest of the package.
+		if scenario.Active() {
+			startScenarioAt(g)
+
+			// **And it may move the clock**, which is a run-level number rather than a screen's —
+			// `session.SetRoundLimit` is the one door, and it clamps rather than obeying, so a fixture
+			// cannot stop the clock through it. A dummy fight needs this: five rounds is five rounds
+			// whoever is standing there, and an unkillable opponent otherwise kills the player on the
+			// clock at the end of round five. See internal/scenario.
+			if n := scenario.RoundLimit(); n > 0 && g.GlobalState.Run != nil {
+				g.GlobalState.Run.SetRoundLimit(n)
+				log.Printf("scenario %s: a %d-round clock", scenario.Name(), n)
+			}
+
+			// **And it may widen the hand.** Unlike the clock this had to be in place *before* the run
+			// was built — see the StartingRelicSlots line above — so what happens here is a resumed run
+			// being brought up to the fixture's number, and a log line saying what the hand is on.
+			if n := scenario.RelicSlots(); n > 0 && g.GlobalState.Run != nil {
+				g.GlobalState.Run.SetRelicSlots(n)
+				log.Printf("scenario %s: %d relic slots", scenario.Name(), n)
+			}
+		}
+
+		// The score is a MIDI file synthesized to PCM here at startup rather than a
+		// recorded track — see internal/music for why. It loops for the whole session
+		// across every screen. How loud it is comes off the profile above — see the settings screen,
+		// which is reached from the cog in the game's chrome. That is a button rather than a hotkey:
+		// the input vocabulary has no keyboard.
+		//
+		// The bought loops, which are not in git and may not be on this machine at all — see
+		// privateassets/README.md. **Loading none of them is a normal build**: internal/game names a
+		// track per screen and music.PlayTrack falls back to the score for a name nothing was loaded
+		// under, so a clone with no bundle synced plays the synthesized score everywhere rather than
+		// falling silent in the shop.
+		//
+		// **Sorted rather than ranged over the map**, because map order is randomized deliberately
+		// and nothing in this game may depend on it. Nothing here does today; a loop that reported
+		// the first failure rather than all of them would.
+		private := privateassets.Audio()
+		files := make([]string, 0, len(private))
+		for file := range private {
+			files = append(files, file)
+		}
+		sort.Strings(files)
+		for _, file := range files {
+			// Filenames, not track names: the extension is what picks music.LoadTrack's decoder and
+			// the stem is what the track ends up called.
+			if err := music.LoadTrack(file, private[file]); err != nil {
+				log.Println(err)
+			}
+		}
+	}, func() {
+		// Not having a sound device is not a reason to refuse to run, so a failure here is
+		// reported and stepped over. Nothing below this line depends on it.
+		if err := music.Start(assets.LoadMusic()["duello_mid"]); err != nil {
+			// **Noted rather than told.** A machine with no audio device is a machine that plays the
+			// game in silence, which the volume bar on the settings screen already says out loud; a box
+			// in the player's way about it would be the game complaining about their hardware.
+			crashlog.Note("music: %v", err)
+		}
 	})
-
-	screens.BootRun(g.GlobalState)
-
-	// **Logged after the run is built, not before it.** A resumed run brings its own seed and a
-	// taught one brings the script's, so a code printed at the moment one was rolled would name a
-	// journey nobody is playing.
-	log.Printf("run code %s", seeds.Code(g.GlobalState.RunSeed))
-
-	// **A scenario may also open the game somewhere other than the first duel** *(2026-08-22)*.
-	// The run is put in the named room with the named purse, and the phase it lands on decides
-	// which scene draws it — see internal/screens/flow.go, which is the one table mapping the two.
-	// Compiled out with the rest of the package.
-	if scenario.Active() {
-		startScenarioAt(g)
-
-		// **And it may move the clock**, which is a run-level number rather than a screen's —
-		// `session.SetRoundLimit` is the one door, and it clamps rather than obeying, so a fixture
-		// cannot stop the clock through it. A dummy fight needs this: five rounds is five rounds
-		// whoever is standing there, and an unkillable opponent otherwise kills the player on the
-		// clock at the end of round five. See internal/scenario.
-		if n := scenario.RoundLimit(); n > 0 && g.GlobalState.Run != nil {
-			g.GlobalState.Run.SetRoundLimit(n)
-			log.Printf("scenario %s: a %d-round clock", scenario.Name(), n)
-		}
-
-		// **And it may widen the hand.** Unlike the clock this had to be in place *before* the run
-		// was built — see the StartingRelicSlots line above — so what happens here is a resumed run
-		// being brought up to the fixture's number, and a log line saying what the hand is on.
-		if n := scenario.RelicSlots(); n > 0 && g.GlobalState.Run != nil {
-			g.GlobalState.Run.SetRelicSlots(n)
-			log.Printf("scenario %s: %d relic slots", scenario.Name(), n)
-		}
-	}
-
-	// The score is a MIDI file synthesized to PCM here at startup rather than a
-	// recorded track — see internal/music for why. It loops for the whole session
-	// across every screen. How loud it is comes off the profile above — see the settings screen,
-	// which is reached from the cog in the game's chrome. That is a button rather than a hotkey:
-	// the input vocabulary has no keyboard.
-	//
-	// Not having a sound device is not a reason to refuse to run, so a failure here is
-	// reported and stepped over. Nothing below this line depends on it.
-	if err := music.Start(assets.LoadMusic()["duello_mid"]); err != nil {
-		// **Noted rather than told.** A machine with no audio device is a machine that plays the
-		// game in silence, which the volume bar on the settings screen already says out loud; a box
-		// in the player's way about it would be the game complaining about their hardware.
-		crashlog.Note("music: %v", err)
-	}
-
-	// The bought loops, which are not in git and may not be on this machine at all — see
-	// privateassets/README.md. **Loading none of them is a normal build**: internal/game names a
-	// track per screen and music.PlayTrack falls back to the score for a name nothing was loaded
-	// under, so a clone with no bundle synced plays the synthesized score everywhere rather than
-	// falling silent in the shop.
-	//
-	// **Sorted rather than ranged over the map**, because map order is randomized deliberately
-	// and nothing in this game may depend on it. Nothing here does today; a loop that reported
-	// the first failure rather than all of them would.
-	private := privateassets.Audio()
-	files := make([]string, 0, len(private))
-	for file := range private {
-		files = append(files, file)
-	}
-	sort.Strings(files)
-	for _, file := range files {
-		// Filenames, not track names: the extension is what picks music.LoadTrack's decoder and
-		// the stem is what the track ends up called.
-		if err := music.LoadTrack(file, private[file]); err != nil {
-			log.Println(err)
-		}
-	}
 
 	// Widgets are no longer wired up here. Each scene builds its own in Init, so main
 	// does not need to know which screens have buttons or what pressing them does.
@@ -339,16 +349,17 @@ func main() {
 	}
 }
 
-// reportLoadPanic catches a panic raised before the game loop is running.
+// reportLoadPanic catches a panic raised while the game is being loaded.
 //
-// **The recovers in internal/game cover Update and Draw, and everything above is this one.** The
-// catalogs are loaded, validated and cross-checked before a window opens — data.MustFillJourney is
-// a panic by design — so the one failure most likely to reach a player who has just downloaded an
-// exe is a failure with no frame to have happened in.
+// **The recovers in internal/game cover Update and Draw, and everything else is this one** — it is
+// deferred in main and again on the loader's goroutine behind the splash, since a recover only
+// catches its own goroutine. The catalogs are loaded, validated and cross-checked there —
+// data.MustFillJourney is a panic by design — so the one failure most likely to reach a player who
+// has just downloaded an exe is a failure with no scene to have happened in.
 //
-// **It exits rather than drawing anything.** There is no window yet and no fonts to draw with, so
-// the report and a line in the log are the whole of what can be said. A crash screen needs a game,
-// and a game is exactly what failed to start.
+// **It exits rather than drawing anything.** There are no fonts to draw with yet, so the report and
+// a line in the log are the whole of what can be said. A crash screen needs a game, and a game is
+// exactly what failed to start.
 func reportLoadPanic(g *game.Game) {
 	cause := recover()
 	if cause == nil {

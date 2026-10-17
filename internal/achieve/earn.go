@@ -28,6 +28,7 @@ type Moment struct {
 
 // The raisers, so a call site spells a moment once and cannot misspell it.
 func DuelWon() Moment               { return Moment{Name: MomentDuelWon} }
+func DuelWonFirstRound() Moment     { return Moment{Name: MomentDuelWonFirstRound} }
 func TutorialFinished() Moment      { return Moment{Name: MomentTutorialFinished} }
 func RealmReached(realm int) Moment { return Moment{Name: MomentRealmReached, N: realm} }
 

@@ -318,7 +318,7 @@ func (s *CombatScene) toggle(i int) {
 		return
 	}
 
-	if !s.hand[i].selected && s.selectedCount() >= s.fighter.MaxActions() {
+	if !s.hand[i].selected && !s.fighter.RoomFor(s.fighterActions, s.hand[i].Card) {
 		trace.Logf("input", "select refused: %s, already %d of %d picked",
 			cardLabel(s.hand[i].Card), s.selectedCount(), s.fighter.MaxActions())
 		return
@@ -600,7 +600,7 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 		// and dimming something you can click would be a lie. What it costs you is reported
 		// by the bar going red, after the fact. A selected card never dims: clicking it off
 		// has to stay open, and it is the way out of an over-allocation.
-		enabled := c.selected || (s.planning() && s.selectedCount() < s.fighter.MaxActions())
+		enabled := c.selected || (s.planning() && s.fighter.RoomFor(s.fighterActions, c.Card))
 
 		seat := s.cardSlot(gs, i)
 
@@ -621,7 +621,9 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 		// what is clickable cannot come apart.
 		spec := ui.CardSpec(c.Card, ui.HeldBy(s.fighter.Duelist, c.Card), enabled, c.selected)
 		spec.Mark = ui.MarksFor(gs, seat)
-		ui.DrawFloatingCard(gs, screen, seat.Min, i, spec, cards.Hand)
+		// **An effortless card is drawn aloft** — it takes no place in the turn's five, which is what
+		// a weightless relic's lift already says about a slot. See ui.DrawSeatedCard.
+		ui.DrawSeatedCard(gs, screen, seat.Min, i, spec, cards.Hand, !c.Card.Counted())
 	}
 
 	// **The raised card, over the row.** It answers the same four suppressions the loop does, so a
@@ -637,10 +639,10 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 		} else {
 			// **It keeps floating** *(owner's call)*: being looked at is not being set down, so the
 			// raised card is the same floating card as in the row, drawn on top of it.
-			enabled := c.selected || (s.planning() && s.selectedCount() < s.fighter.MaxActions())
+			enabled := c.selected || (s.planning() && s.fighter.RoomFor(s.fighterActions, c.Card))
 			spec := ui.CardSpec(c.Card, ui.HeldBy(s.fighter.Duelist, c.Card), enabled, c.selected)
 			spec.Mark = ui.MarksFor(gs, seat)
-			ui.DrawFloatingCard(gs, screen, seat.Min, raised, spec, cards.Hand)
+			ui.DrawSeatedCard(gs, screen, seat.Min, raised, spec, cards.Hand, !c.Card.Counted())
 		}
 	}
 

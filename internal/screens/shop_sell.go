@@ -191,11 +191,11 @@ func (s *sellTab) hangOf(gs *state.GlobalState, a shopSale) (image.Rectangle, fl
 // bandMotion is how far the card in one seat of the band is displaced from it right now, and how
 // far it is turned: the idle float every card in the band has, or a weightless card's lift, sway
 // and turn. **The same two functions the cards are drawn with**, ui.IdleFloat and
-// ui.WeightlessLift, at the same seat phase, so what hangs from a card cannot fall out of step
+// ui.AloftLift, at the same seat phase, so what hangs from a card cannot fall out of step
 // with it.
 func bandMotion(gs *state.GlobalState, seat int, weightless bool) (dx, dy, turn float64) {
 	if weightless {
-		lift, sway, angle := ui.WeightlessLift(float64(gs.Count), float64(seat)*2.1)
+		lift, sway, angle := ui.AloftLift(float64(gs.Count), float64(seat)*2.1)
 		return sway, -lift, angle
 	}
 	return ui.IdleFloat.Offset(gs.Count, seat)

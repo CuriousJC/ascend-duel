@@ -18,6 +18,7 @@ package session
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -78,8 +79,11 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 		if n := s.grown[key]; n != 0 {
 			out.Grown[key] = n
 		}
-		if s.weightless[key] {
-			out.Weightless = append(out.Weightless, key)
+		if names := s.relicTraits[key].Names(); len(names) > 0 {
+			if out.RelicTraits == nil {
+				out.RelicTraits = map[string][]string{}
+			}
+			out.RelicTraits[key] = names
 		}
 	}
 
@@ -106,6 +110,7 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 			CostDelta: c.CostDelta,
 			AmountPct: c.AmountPct,
 			Riders:    riders,
+			Traits:    c.Traits.Names(),
 		})
 	}
 	return out
@@ -356,6 +361,15 @@ func Resume(motifs map[string]data.MotifData, shape data.JourneyData, snap *prof
 			}
 			card = card.SetRider(combat.Rider{Kind: kind, Amount: r.Amount})
 		}
+		// A trait this build has not got is refused, on the rider's terms.
+		for _, name := range c.Traits {
+			t, ok := combat.ParseCardTrait(name)
+			if !ok {
+				return nil, 0, fmt.Errorf("card %q is %q, which is not a trait the rules have",
+					c.Concept, name)
+			}
+			card = card.WithTrait(t, true)
+		}
 		deck = append(deck, card)
 	}
 
@@ -417,9 +431,23 @@ func Resume(motifs map[string]data.MotifData, shape data.JourneyData, snap *prof
 	}
 	s.portals = append([]string(nil), snap.Portals...)
 
-	// **Weightless before the row goes on**, so a weightless relic is not refused a finger.
+	// **The traits before the row goes on**, so a weightless relic is not refused a finger.
 	for _, key := range snap.Weightless {
 		s.SetWeightless(key, true)
+	}
+	traitKeys := make([]string, 0, len(snap.RelicTraits))
+	for key := range snap.RelicTraits {
+		traitKeys = append(traitKeys, key)
+	}
+	sort.Strings(traitKeys)
+	for _, key := range traitKeys {
+		for _, name := range snap.RelicTraits[key] {
+			t, ok := combat.ParseRelicTrait(name)
+			if !ok {
+				return nil, 0, fmt.Errorf("relic %q is worn %q, which is not a trait the rules have", key, name)
+			}
+			s.SetRelicTrait(key, t, true)
+		}
 	}
 	for _, key := range snap.Worn {
 		if !s.Wear(key) {

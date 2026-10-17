@@ -444,23 +444,36 @@ func TestAMythicIsNeverOnTheTickets(t *testing.T) {
 	}
 }
 
-// TestTheWeightlessRollMovesNoRelic. **The roll has its own stream**, so a shelf dealt with it holds
-// exactly the relics one dealt without it does; a roll that always hits makes every seat weightless.
-func TestTheWeightlessRollMovesNoRelic(t *testing.T) {
+// TestTheTraitRollsMoveNoRelic. **Each trait rolls on its own stream**, so a shelf dealt with them
+// holds exactly the relics one dealt without them does; rolls that always hit put every priced trait
+// on every seat.
+func TestTheTraitRollsMoveNoRelic(t *testing.T) {
 	gs := testRun()
-	plain := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil, nil))
-	floated := dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil, rand.New(zeroSource{}))
-	if !sameKeys(plain, shelfKeys(floated)) {
-		t.Fatalf("the weightless roll changed the shelf: %v, then %v", plain, shelfKeys(floated))
+	var always []traitRoll
+	var every combat.RelicTrait
+	for _, st := range session.ShelfTraits() {
+		if st.Percent > 0 {
+			always = append(always, traitRoll{trait: st.Trait, percent: st.Percent, rng: rand.New(zeroSource{})})
+			every |= st.Trait
+		}
 	}
-	for _, item := range floated {
-		if !item.weightless {
-			t.Errorf("%s was not weightless under a roll that always hits", item.key)
+	if every == 0 {
+		t.Skip("relic_traits.json prices no trait")
+	}
+
+	plain := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil, nil))
+	rolled := dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil, always)
+	if !sameKeys(plain, shelfKeys(rolled)) {
+		t.Fatalf("the trait rolls changed the shelf: %v, then %v", plain, shelfKeys(rolled))
+	}
+	for _, item := range rolled {
+		if item.traits != every {
+			t.Errorf("%s was sold %v under rolls that always hit, want %v", item.key, item.traits.Names(), every.Names())
 		}
 	}
 	for _, item := range dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil, nil) {
-		if item.weightless {
-			t.Errorf("%s was weightless with no roll", item.key)
+		if item.traits != 0 {
+			t.Errorf("%s was sold %v with no rolls", item.key, item.traits.Names())
 		}
 	}
 }

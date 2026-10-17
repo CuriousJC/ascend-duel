@@ -76,6 +76,10 @@ type Card struct {
 	// in this package keeps working. See rider.go for what a rider is and why its vocabulary is a
 	// Go enum rather than a data record.
 	Riders [MaxCardRiders]Rider
+
+	// Traits are what the card is besides its upgrade — effortless, mirrored — and they compose
+	// with the upgrade rather than taking its seat. See traits.go.
+	Traits CardTrait
 }
 
 // Plain is a card with no element, which is what an enemy draws and what most tests want.

@@ -297,7 +297,8 @@ func TestAWeightlessOfferGoesOnOverAFullRowAndSellsOffItsFlag(t *testing.T) {
 	if run.CanBuy(extra) {
 		t.Fatalf("a full row would buy %s with weight", extra)
 	}
-	if !run.CanBuyAs(extra, true) || !run.BuyAs(extra, true) {
+	weightless := RelicTraitNamed("weightless")
+	if !run.CanBuyAs(extra, weightless) || !run.BuyAs(extra, weightless) {
 		t.Fatalf("a full row refused %s offered weightless", extra)
 	}
 	if !run.IsWeightless(extra) || run.WeightedCount() != combat.DefaultRelicSlots {

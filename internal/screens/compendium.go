@@ -86,6 +86,7 @@ var compendiumBooks = []compendiumBook{
 	{label: "RUNES", open: runesDialog},
 	{label: "STONES", open: stonesDialog},
 	{label: "SEALED GOODS", open: goodsDialog},
+	{label: "TRAITS", open: traitsDialog},
 }
 
 // compendiumDialog is one open book. **Either a grid of cards or a column of figures**, and which

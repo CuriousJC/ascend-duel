@@ -64,7 +64,7 @@ type Cantrip struct {
 // Worn is the cantrip-relic as a duelist wears it: **weightless and ephemeral**, always. Those are
 // properties of the wearing rather than of the relic, and a cast is the only way one is worn.
 func (c Cantrip) Worn() combat.WornRelic {
-	return combat.WornRelic{Relic: c.Relic, Weightless: true, Ephemeral: true}
+	return combat.WornRelic{Relic: c.Relic, Traits: RelicTraitNamed("weightless") | RelicTraitNamed("ephemeral")}
 }
 
 // CantripRelics is the cantrip-relics a run of casts puts on, in cast order — what EquipWearing is

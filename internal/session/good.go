@@ -51,6 +51,11 @@ const (
 	// **The one pack whose draw repeats** *(owner's call, 2026-09-28)*: the catalog is shorter than
 	// the smallest bundle, so a bundle is drawn with replacement rather than cut short.
 	ContentsCantrips
+
+	// ContentsCards is the action bundle: playing cards out of the duelist's own pool, any of which
+	// may come carrying a card trait. **Spent on the spot** — the card taken goes into the run's deck
+	// before the dialog closes. See TakeActionCard.
+	ContentsCards
 )
 
 // Noun is the word the card's face and its tooltip write for what is inside — "4 stones, keep 1".
@@ -63,6 +68,8 @@ func (c GoodContents) Noun() string {
 		return "runes"
 	case ContentsCantrips:
 		return "cantrips"
+	case ContentsCards:
+		return "cards"
 	default:
 		return "essences"
 	}
@@ -282,6 +289,8 @@ func parseGoodContents(word string) (GoodContents, error) {
 		return ContentsRunes, nil
 	case "cantrips":
 		return ContentsCantrips, nil
+	case "cards":
+		return ContentsCards, nil
 	case "":
 		return 0, fmt.Errorf("no Contains, and a good is what is inside it")
 	default:

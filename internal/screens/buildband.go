@@ -194,7 +194,7 @@ func drawBuildRelics(gs *state.GlobalState, screen *ebiten.Image, band *bandCont
 func drawRunRelic(gs *state.GlobalState, screen *ebiten.Image, at image.Point, seat int,
 	spec cards.Spec, key string) {
 	if gs.Run != nil && gs.Run.IsWeightless(key) {
-		ui.DrawWeightless(screen, ui.CardImage(gs, spec, cards.RelicStyle), at, 1,
+		ui.DrawAloft(screen, ui.CardImage(gs, spec, cards.RelicStyle), at, 1,
 			float64(gs.Count), float64(seat)*2.1)
 		return
 	}
@@ -259,7 +259,7 @@ func hoverBuildRelics(gs *state.GlobalState, at image.Point, tip *models.Tooltip
 		return false
 	}
 	seat := relicSlotRect(row, i, len(worn))
-	title, lines := ui.WornRelicTip(record, combat.WornRelic{Weightless: gs.Run.IsWeightless(worn[i])})
+	title, lines := ui.WornRelicTip(record, combat.WornRelic{Traits: gs.Run.RelicTraitsOf(worn[i])})
 	// **To the left of the card, never under it** *(owner's call)*: a panel under the top row
 	// covers the pane's count and the tab a click hangs there. PointLeft flips right at the
 	// screen's edge.

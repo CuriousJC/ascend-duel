@@ -2,6 +2,7 @@ package session
 
 import (
 	"log"
+	"sort"
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/journey"
@@ -103,11 +104,11 @@ type Session struct {
 	// would mean nothing in a save file.
 	grown map[string]int
 
-	// weightless is which relics the run wears weightless, keyed by record for grown's reason: a
-	// relic taken off and put back on is the same relic. **Any relic may be worn weightless**; it is
-	// a property of the wearing, so it lives here beside the row rather than on the record. See
-	// relic.go's SetWeightless.
-	weightless map[string]bool
+	// relicTraits is what each relic is worn with — weightless, armored — keyed by record for grown's
+	// reason: a relic taken off and put back on is the same relic. **Any relic may carry any trait**;
+	// it is a property of the wearing, so it lives here beside the row rather than on the record. See
+	// relic.go's SetRelicTrait.
+	relicTraits map[string]combat.RelicTrait
 
 	// stones is how many stones the run has put on each rung of the hand ladder, keyed by hand key.
 	// **Keyed by hand rather than by stone record** — a stone lands on every rung of its shape, and
@@ -274,6 +275,16 @@ func New(deck []combat.Card) *Session {
 	// process. See StartingRelics, StartingRunes, StartingStones and StartingEssences.
 	for _, key := range StartingWeightless {
 		s.SetWeightless(key, true)
+	}
+	keys := make([]string, 0, len(StartingRelicTraits))
+	for key := range StartingRelicTraits {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		for _, name := range StartingRelicTraits[key] {
+			s.SetRelicTrait(key, RelicTraitNamed(name), true)
+		}
 	}
 	for _, key := range StartingRelics {
 		if _, ok := registeredRelics[key]; !ok {

@@ -297,7 +297,11 @@ func relicEffect(key string, in data.RelicEffectData) (combat.RelicEffect, error
 	}
 	out.Do, out.Amount = do, in.Amount
 
-	if in.Element != "" {
+	// **"random" is a raise's element rolled per raise** — one of the five colors, off its own
+	// stream. combat.CheckRelic refuses it on any verb but raise-shield.
+	if in.Element == "random" {
+		out.RandomElement = true
+	} else if in.Element != "" {
 		e, ok := combat.ParseElement(in.Element)
 		if !ok {
 			return out, fmt.Errorf("%s names element %q, which the rules do not have", key, in.Element)
@@ -376,33 +380,45 @@ func (s *Session) WornRelics() []combat.WornRelic {
 		if !ok {
 			continue
 		}
-		out = append(out, combat.WornRelic{Relic: id, Grown: s.grown[key], Weightless: s.weightless[key]})
+		out = append(out, combat.WornRelic{Relic: id, Grown: s.grown[key], Traits: s.relicTraits[key]})
 	}
 	return out
 }
 
-// SetWeightless marks a relic as worn weightless or not, by record — before it goes on or while it is
-// worn. **Any relic may be weightless**: it takes no finger, so a full row still takes it. Nothing in
-// the shipped game sets it on a run relic yet; a cantrip-relic is weightless by its own wearing.
-func (s *Session) SetWeightless(key string, on bool) {
-	if s.weightless == nil {
-		s.weightless = map[string]bool{}
+// SetRelicTrait puts a trait on a relic's wearing or takes it off, by record — before it goes on or
+// while it is worn. **Any relic may carry any of them**: a trait is a property of the wearing, so it
+// lives here beside the row rather than on the record.
+func (s *Session) SetRelicTrait(key string, t combat.RelicTrait, on bool) {
+	if s.relicTraits == nil {
+		s.relicTraits = map[string]combat.RelicTrait{}
 	}
 	if on {
-		s.weightless[key] = true
-		return
+		s.relicTraits[key] |= t
+	} else {
+		s.relicTraits[key] &^= t
 	}
-	delete(s.weightless, key)
+	if s.relicTraits[key] == 0 {
+		delete(s.relicTraits, key)
+	}
 }
 
-// IsWeightless reports whether a relic is worn weightless.
-func (s *Session) IsWeightless(key string) bool { return s.weightless[key] }
+// RelicTraitsOf is every trait a relic is worn with.
+func (s *Session) RelicTraitsOf(key string) combat.RelicTrait { return s.relicTraits[key] }
+
+// SetWeightless is SetRelicTrait for weightless. **Weightless takes no finger**, so a full row still
+// takes a relic carrying it.
+func (s *Session) SetWeightless(key string, on bool) {
+	s.SetRelicTrait(key, RelicTraitNamed("weightless"), on)
+}
+
+// IsWeightless reports whether a relic is worn taking no finger — any trait of its saying so.
+func (s *Session) IsWeightless(key string) bool { return s.relicTraits[key].TakesNoSlot() }
 
 // WeightedCount is how many of the worn relics take a finger: every one but the weightless.
 func (s *Session) WeightedCount() int {
 	n := 0
 	for _, key := range s.worn {
-		if !s.weightless[key] {
+		if !s.IsWeightless(key) {
 			n++
 		}
 	}
@@ -413,6 +429,11 @@ func (s *Session) WeightedCount() int {
 // beside StartingRelics and set from the same place: `internal/scenario` fills it and nothing else
 // may. Set before the relics go on, so a weightless one is not refused a finger.
 var StartingWeightless []string
+
+// StartingRelicTraits is which of StartingRelics a run opens wearing with which traits, by trait key.
+// A debug seat, filled by `internal/scenario` and nothing else; a key the trait catalog does not
+// hold fails the launch.
+var StartingRelicTraits map[string][]string
 
 // AbsorbGrowth takes back whatever a fight grew. **The run's accumulators are the duelist's, after
 // the fight** *(2026-08-22)*.

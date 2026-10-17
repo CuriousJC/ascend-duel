@@ -74,6 +74,14 @@ const (
 	StatGoodBought  = "good:"
 	StatHandFormed  = "hand:"
 
+	// The traits: a relic worn with one — bought so, or a cantrip's relic cast — and a card taken out
+	// of an action bundle carrying one.
+	StatRelicTrait = "relic-trait:"
+	StatCardTrait  = "card-trait:"
+
+	// StatCardTaken is a card taken out of an action bundle, by concept key.
+	StatCardTaken = "card-taken:"
+
 	StatCreatureDefeated = "defeated:"
 	StatCreatureKiller   = "killed-by:"
 
@@ -111,7 +119,16 @@ func (s *Session) count(name string, n int) { s.stats.Add(name, n) }
 // CountCantrip records a cantrip cast. **The one count a screen raises**, because a cast is a scroll
 // leaving the case and a cantrip-relic going onto a fighter the session never holds — see
 // screens.castCantrip. The scroll leaving is DropScroll, which a sale also does.
-func (s *Session) CountCantrip(key string) { s.count(StatCantripCast+key, 1) }
+func (s *Session) CountCantrip(key string) {
+	s.count(StatCantripCast+key, 1)
+	if c, ok := CantripByKey(key); ok {
+		for _, t := range combat.RelicTraits() {
+			if c.Worn().Traits.Has(t) {
+				s.count(StatRelicTrait+t.String(), 1)
+			}
+		}
+	}
+}
 
 // TallyRound adds one resolved round to the duel's statistics: what the player dealt and took, the
 // hands formed, the cards played and the records broken.

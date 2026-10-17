@@ -177,6 +177,7 @@ func CardSpec(c combat.Card, h held, enabled, selected bool) cards.Spec {
 		Cost:     h.cost,
 		Element:  ArtFor(c.Element),
 		Upgrade:  upgradeOf(c),
+		Mirrored: c.Landings() > 1,
 		Enabled:  enabled,
 		Selected: selected,
 

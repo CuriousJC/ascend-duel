@@ -186,6 +186,7 @@ func blowBase(d Duelist) int {
 func TestAShapeGathersEveryAxisOfOneHand(t *testing.T) {
 	if got, want := HandsShaped("3"), []string{
 		"concept-three-of-a-kind", "form-three-of-a-kind", "element-three-of-a-kind",
+		"synergy-three-of-a-kind",
 	}; !reflect.DeepEqual(got, want) {
 		t.Errorf("shape 3 is %v, want %v", got, want)
 	}

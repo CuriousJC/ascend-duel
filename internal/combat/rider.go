@@ -404,6 +404,11 @@ func WildAxisOf(k RiderKind) Axis {
 // is a new rider kind here and not a silent widening of one of these. A wildcard that matched on
 // every axis would make the whole ladder one rung, and nothing widens the concept axis.
 func (c Card) Wild(a Axis) bool {
+	// **A card that is every element is every color of itself**, so it is wild on the synergy axis
+	// too — but only among copies of its own card; see WildFits.
+	if a == AxisSynergy {
+		a = AxisElement
+	}
 	for _, r := range c.Riders {
 		if r.Kind != RiderNone && WildAxisOf(r.Kind) == a {
 			return true
@@ -421,6 +426,9 @@ func (c Card) Wild(a Axis) bool {
 func (c Card) WildFits(a Axis, v int) bool {
 	if !c.Wild(a) {
 		return false
+	}
+	if a == AxisSynergy {
+		return synergyConcept(v) == c.Concept
 	}
 	if a != AxisForm {
 		return true

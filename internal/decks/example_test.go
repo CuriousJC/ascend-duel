@@ -108,7 +108,9 @@ func TestAnExampleShowsWhatTheRungLeavesFree(t *testing.T) {
 	deck := session.StartingDeck()
 	for _, h := range combat.Hands() {
 		cards, _ := Example(deck, h)
-		if len(cards) < 2 {
+		// **A synergy rung leaves nothing free** - it is the same card in the same color - so its
+		// picture is copies of one card, and that is what the rung says.
+		if len(cards) < 2 || h.Match == combat.AxisSynergy {
 			continue
 		}
 		if variety(cards, h.Match) == 0 {

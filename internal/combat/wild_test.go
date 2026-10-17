@@ -45,12 +45,13 @@ func TestAWildcardStillCarriesItsOwnElement(t *testing.T) {
 }
 
 // **Element only.** A wildcard that widened the concept or form axes would collapse the ladder,
-// so the axis is asked for rather than assumed.
+// so the axis is asked for rather than assumed. The synergy axis is a concept and an element at
+// once, and the wildcard widens its element half — see TestAWildcardJoinsOnlyItsOwnCardOnSynergy.
 func TestAWildcardIsElementOnly(t *testing.T) {
 	c := wild(Slice, Ice)
 	for _, a := range AllAxes {
 		got := c.Wild(a)
-		want := a == AxisElement
+		want := a == AxisElement || a == AxisSynergy
 		if got != want {
 			t.Errorf("Wild(%v) is %v, want %v", a, got, want)
 		}

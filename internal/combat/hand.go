@@ -114,6 +114,17 @@ const (
 
 	// AxisElement counts cards of the same color. `Basic` never counts, for the same reason.
 	AxisElement
+
+	// AxisSynergy counts copies of the same card *in the same color* — three fire Jabs, never a
+	// fire Jab beside an ice one. It is the narrowest axis of all, since a value is a concept and
+	// an element at once, and **it is last in the enum anyway**: the zero value has to stay
+	// `AxisConcept`, which every `Hand{}` built without a `Match` relies on. The tie-break never
+	// reaches it, because a synergy rung contains the card rung and the elemental rung of its own
+	// shape and is priced above both — `TestASynergyHandPaysMoreThanTheHandsInsideIt`.
+	//
+	// The starting deck ships one copy of each card per color, so nothing here is reachable until
+	// the run has altered the deck.
+	AxisSynergy
 )
 
 // axisNames are the strings hands.json writes. Index by Axis.
@@ -121,11 +132,12 @@ var axisNames = [...]string{
 	AxisConcept: "concept",
 	AxisForm:    "form",
 	AxisElement: "element",
+	AxisSynergy: "synergy",
 }
 
-// AllAxes is every axis, in tie-break order. It exists so a test and a reference screen can walk
+// AllAxes is every axis, in enum order. It exists so a test and a reference screen can walk
 // them without knowing how many there are.
-var AllAxes = []Axis{AxisConcept, AxisForm, AxisElement}
+var AllAxes = []Axis{AxisConcept, AxisForm, AxisElement, AxisSynergy}
 
 func (a Axis) String() string {
 	if int(a) < 0 || int(a) >= len(axisNames) {
@@ -168,10 +180,19 @@ func MatchValue(c Card, a Axis) (int, bool) {
 	case AxisElement:
 		e := c.Element
 		return int(e), e != Basic
+	case AxisSynergy:
+		e := c.Element
+		return synergyValue(c.Concept, e), e != Basic
 	default:
 		return int(c.Concept), true
 	}
 }
+
+// synergyValue is one value on the synergy axis: a concept and an element packed into one int, so
+// the matcher can tally it like any other axis. synergyConcept reads the concept back out.
+func synergyValue(id ConceptID, e Element) int { return int(id)*ElementCount + int(e) }
+
+func synergyConcept(v int) ConceptID { return ConceptID(v / ElementCount) }
 
 // spread is how many different values a hand can spread its groups across on this axis, or 0 for
 // an axis wide enough that the question cannot bite.
@@ -640,6 +661,35 @@ func matchGroupsOf(turn []Slot, h Hand) ([][]int, int, bool) {
 			at = len(tallies) - 1
 		}
 		tallies[at].members = append(tallies[at].members, i)
+	}
+
+	// **On the synergy axis a wildcard is still its own card**, so wildcards of a concept no tally
+	// holds group with each other and with nothing else: three every-element Jabs are a synergy
+	// three, an every-element Jab and an every-element Cut are not a pair of anything. A wildcard
+	// whose concept a tally does hold stays a wildcard and tops that tally up below.
+	if h.Match == AxisSynergy {
+		var kept []int
+		for _, w := range wilds {
+			id := turn[w].Card.Concept
+			held := false
+			for _, t := range tallies {
+				if synergyConcept(t.value) == id {
+					held = true
+					break
+				}
+			}
+			if held {
+				kept = append(kept, w)
+				continue
+			}
+			// The first wildcard of a concept nothing holds seeds a tally under its own card and
+			// color; every later one of that concept is then held, and joins it as a wildcard.
+			tallies = append(tallies, tally{
+				value:   synergyValue(id, turn[w].Card.Element),
+				members: []int{w},
+			})
+		}
+		wilds = kept
 	}
 
 	// **A turn of nothing but wildcards forms a group among themselves.** They all match each

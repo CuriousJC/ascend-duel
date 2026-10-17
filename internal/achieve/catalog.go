@@ -335,7 +335,7 @@ func parseClause(c data.ClauseData) (clause, error) {
 	case data.ModeDistinct, data.ModeSame:
 		axis, ok := combat.ParseAxis(c.Axis)
 		if !ok {
-			return clause{}, fmt.Errorf("no axis %q; the three are %v", c.Axis, combat.AllAxes)
+			return clause{}, fmt.Errorf("no axis %q; the axes are %v", c.Axis, combat.AllAxes)
 		}
 		out.axis = axis
 		if c.Mode == data.ModeDistinct && c.N < 2 {

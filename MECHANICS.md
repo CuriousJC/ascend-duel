@@ -832,13 +832,14 @@ four:
 | `concept` | the same card | ice Thump + fire Thump | Thump + Bash |
 | `form` | stab, slash, crush or defend | Thump + Smash (both crush) | Thump + Thrust |
 | `element` | fire, ice, lightning, earth or arcane | ice Thump + ice Thrust | ice Thump + fire Thump |
-| `cost` | the same action points | Thump + Cut (both 1 AP) | Thump + Thrust |
+| `synergy` | the same card in the same color | fire Thump + fire Thump | fire Thump + ice Thump |
 
-**`cost` is the fourth axis.** It is genuinely
-orthogonal to the other three in the player's deck — every cost tier holds three or four forms, and
-every form spans all three costs — so a hand counting cost is not a hand counting form under
-another name. **Every card carries a cost and a form, so neither axis has an absence**, unlike
-`Basic`.
+**`synergy` is the fourth axis, and the starting deck cannot climb it.** The deck ships one copy of
+each card per color, so two cards agreeing on concept *and* element exist only once the run has
+altered the deck — an essence recoloring a card or copying one. It carries no ladder below three:
+a synergy pair is two copies of one card, which is already a Card Pair. **Every card carries a
+form, so the form axis has no absence**, unlike `Basic`, which counts on neither the element axis
+nor the synergy one.
 
 **The of-a-kind ladder exists once per axis on the first three above the Pair**, as its own
 catalog entry rather than as one entry with three readings — so a Card Three of a Kind and an
@@ -849,8 +850,10 @@ the argument for keeping the rest apart is written down.
 
 **The axes are not parallel, and the nesting is the thing to hold onto.** A concept fixes a form,
 so **every card hand is also a form hand**; element is independent of both, which is why an ice
-Thump beside a fire Thump is a card hand and no kind of elemental one. That asymmetry is what the
-tie-break and the multiplier ordering below both exist to answer.
+Thump beside a fire Thump is a card hand and no kind of elemental one. **A synergy hand is all three
+at once** — three fire Thumps are a Card, a Form and an Elemental Three of a Kind — so it contains
+every rung of its own shape and must outpay each of them. That asymmetry is what the tie-break and
+the multiplier ordering below both exist to answer.
 
 **A card with no value on an axis matches nothing on it.** `Basic` is an absence rather than a
 value, so a creature's deck dealt with no realm behind it — a test fixture — cannot build an
@@ -860,9 +863,11 @@ The player's defenses carry a color like everything else, and it is inert for th
 
 **Exactly one hand still applies, and a tie goes to the narrowest axis.** Two Thumps and two
 Cleaves satisfy the Card Two Pair and the Form Two Pair at once; the narrower one is what the
-player aimed at, so `concept` beats `form` beats `element` beats `cost` whenever the multipliers
+player aimed at, so `concept` beats `form` beats `element` whenever the multipliers
 are level. `combat.Axis` is written in that order for exactly this reason and is never
-serialized, so the order is free to mean something.
+serialized, so the order is free to mean something. **`synergy` is the narrowest and sits last
+anyway**, because the zero value has to stay `concept`; the tie-break never reaches it, since a
+synergy rung is priced above everything it contains — `TestASynergyHandPaysMoreThanTheHandsInsideIt`.
 
 **Exactly one hand applies.** It wins on its multiplier — four Bashes are a Four of a Kind rather
 than also the pair and the trips inside it — so a turn produces one hand with no ranking
@@ -871,7 +876,7 @@ machinery beyond that comparison.
 **A lone attack forms no hand.** That is the fallback: when nothing counts, the turn is the No Hand,
 named after its hardest-hitting attack card, ties going to the card queued first.
 
-**The fallback rarely fires, and that is what having four axes buys.** Two attacks need only
+**The fallback rarely fires, and that is what having the wide axes buys.** Two attacks need only
 share a form or a color to count together, so Smash + Bash at DMG 10 lands **33** as a Form Pair
 rather than the Smash's **20** alone — and none of that comes from the multiplier being generous,
 since 1.1x of two cards beats 1.0x of one. Two attacks that agree on nothing at all are the rare
@@ -1015,8 +1020,8 @@ rung.
 
 ### The catalog's shape
 
-`data/hands.json` holds one list: the of-a-kind rungs on each of three axes, the merged Pair,
-the Elementalist, plus the one No Hand they all fall back to. **A hand
+`data/hands.json` holds one list: the of-a-kind rungs on each of three axes, the three synergy
+rungs, the merged Pair, the Elementalist, plus the one No Hand they all fall back to. **A hand
 carries a key, an ID, a name, a `match`, `groups` and a `multiplier` in percent** — nothing
 else. `groups` naming *distinct values on the hand's own axis* is why `[3,2]` is
 a full house and can never be satisfied by five cards sharing one value.
@@ -1052,7 +1057,9 @@ could climb and would otherwise fail silently.
 **A hand names one axis to count on, not one per group.** A mixed hand — three ice cards *and* a
 pair of Thumps — is deliberately not expressible; reopening it is a schema change and should be
 argued for here first. **`"match": "any"` is not that door**: a merged rung is the *same* groups
-read on one axis at a time, and whichever reading it satisfies it satisfies whole.
+read on one axis at a time, and whichever reading it satisfies it satisfies whole. **Nor is
+`synergy`**: it is one axis whose value is a card and a color together, so every group still agrees
+on one thing.
 
 ### Counting difference, not copies
 
@@ -1068,8 +1075,9 @@ five distinct values on the hand's own axis.
 for three or four colors out of five scores at or beside the identity, and a rung the curve has
 nowhere to put is a rung nobody can aim at.
 
-**The grammar is three axes and nothing else**: `concept`, `form`,
-`element`, plus `any` for a rung read on whichever of them the turn satisfies. A hand says what its
+**The grammar is four axes and nothing else**: `concept`, `form`,
+`element` and `synergy`, plus `any` for a rung read on whichever of the first three the turn
+satisfies. A hand says what its
 cards must *agree* on and there is no way to say what they must differ on, beyond `[1,1,1]` on the
 hand's own axis. Anything wanting more than that is a schema change and belongs in the paragraph
 above.
@@ -1149,7 +1157,7 @@ refuses one that is not a multiple of 10, so the ladder reads 1.8x and never 1.7
 suggestion is rounded to the same grid.
 
 `go run ./tools/handodds -price` prints what the curve would charge beside what the file charges,
-and marks every row where they differ. **Seven rows are marked and every one is deliberate**
+and marks every row where they differ. **Ten rows are marked and every one is deliberate**
 *(owner's call)*:
 
 - **The Pair**: the curve would charge 110 for a 100% hand and the file charges 100, because the
@@ -1158,8 +1166,11 @@ and marks every row where they differ. **Seven rows are marked and every one is 
   element rungs open above the form rungs beside them.
 - **Card Full House, Form Five of a Kind, Elemental Five of a Kind and Card Five of a Kind** sit a
   tenth or two above it, on round figures: 3.5x, 4.5x, 5.5x and 8x.
+- **The three synergy rungs** score 0% against the starting deck, so the curve has no figure for
+  them; they are priced against the deck that first holds them — see *Synergy is priced against the
+  first deck that can deal it* below.
 
-Any eighth mark is a real signal rather than accumulated drift.
+Any eleventh mark is a real signal rather than accumulated drift.
 
 From a two-million-hand simulation of round one:
 
@@ -1185,6 +1196,30 @@ From a two-million-hand simulation of round one:
 
 **Every row is measurement.** Nothing in the table is hand-set and nothing is forced to climb
 within its ladder: the curve is monotone in the score by construction.
+
+#### Synergy is priced against the first deck that can deal it
+
+The starting deck holds one copy of each card per color, so a synergy rung is dealt in no hand at
+all and the curve has nothing to price. **It is priced on the same curve against the cheapest
+altered deck that can deal it**: one 1 AP card recolored until the deck holds exactly as many
+copies of it as the rung wants, the deck still 55 cards. Copying the card instead of recoloring one
+lands within a tenth of the same figures.
+
+| Rung | Copies held | Dealt | Playable | Score | Pays |
+|---|---|---|---|---|---|
+| Synergy Three of a Kind | 3 | 0.21% | 0.21% | 0.21% | 560 |
+| Synergy Four of a Kind | 4 | 0.021% | 0.021% | 0.021% | 730 |
+| Synergy Five of a Kind | 5 | 0.0016% | 0.0016% | 0.0016% | 920 |
+
+- **The card has to be a 1 AP card for the four and the five.** Four 2 AP copies are 8 AP against a
+  6 AP round, so a synergy four or five built on anything dearer is dealt and never played — the
+  same reason the wide five-of-a-kind rungs are built from the cheapest cards of a color.
+- **A deck that has invested further deals it more often.** That is true of every rung once
+  essences are spent, and the ladder is priced on the first deck that can reach a rung, not on how
+  far a run takes it.
+- **Containment is the floor the curve has to clear, and it clears it.** Each synergy rung contains
+  the Card, the Form and the Elemental rung of its shape, so it must pay more than all three — 560
+  over 240, 730 over 480, 920 over 800.
 
 **Poker's shape order does not survive this deck, and the ladder does not pretend it does.**
 Poker's ordering comes from thirteen ranks; here the form axis has four values and the element
@@ -1227,8 +1262,8 @@ loses nothing to the multiplier — what can still cost them is which cards the 
 
 **Hand IDs are written in the file, never derived.** There is **one ID per catalog key**, so
 reordering the cards cannot renumber a hand. **They are banded by axis**: 1 for the No Hand, 10 for
-the merged Pair, 11–15 concept, 21–25 form, 31–38 element. The gaps are deliberate, so a new rung
-lands in its own band without moving anything.
+the merged Pair, 11–15 concept, 21–25 form, 31–38 element, 42–45 synergy. The gaps are deliberate,
+so a new rung lands in its own band without moving anything.
 
 **Straights are dropped rather than invented** — the concepts have no natural order to be
 consecutive in, and the grammar has no notion of consecutiveness for one to be written in.

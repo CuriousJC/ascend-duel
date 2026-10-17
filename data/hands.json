@@ -149,6 +149,31 @@
       "match": "element",
       "groups": [1, 1, 1, 1, 1],
       "multiplier": 260
+    },
+
+    {
+      "key": "synergy-three-of-a-kind",
+      "id": 42,
+      "name": "Synergy Three of a Kind",
+      "match": "synergy",
+      "groups": [3],
+      "multiplier": 560
+    },
+    {
+      "key": "synergy-four-of-a-kind",
+      "id": 44,
+      "name": "Synergy Four of a Kind",
+      "match": "synergy",
+      "groups": [4],
+      "multiplier": 730
+    },
+    {
+      "key": "synergy-five-of-a-kind",
+      "id": 45,
+      "name": "Synergy Five of a Kind",
+      "match": "synergy",
+      "groups": [5],
+      "multiplier": 920
     }
   ]
 }

@@ -6,7 +6,7 @@ package ui
 //
 // Both are masks over the relic's own finished card, so it composes with everything else a worn
 // relic can be: a weightless one is the same faded, broken face, lifted and drifting — see
-// DrawWeightless. A cantrip's relic is both.
+// DrawAloft. A cantrip's relic is both.
 //
 // **The breaks are derived from the outline, never rolled** — the crack pattern's rule. Every
 // ephemeral card breaks in the same places, through a resize, a re-entry or a replay.

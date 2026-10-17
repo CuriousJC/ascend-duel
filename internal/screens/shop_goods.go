@@ -118,12 +118,13 @@ type goods struct {
 	good  session.Good
 	stage goodsStage
 
-	// stones, essences, runes and cantrips are what was drawn, and only the one matching kind is
-	// filled.
+	// stones, essences, runes, cantrips and actions are what was drawn, and only the one matching
+	// kind is filled. actions are an action bundle's playing cards, traits already rolled onto them.
 	stones   []session.Stone
 	essences []session.Essence
 	runes    []session.Rune
 	cantrips []session.Cantrip
+	actions  []combat.Card
 
 	// row is the cards an essence may be aimed at — `offer` by index into the run's deck, `selected`
 	// as row slots — and the sort and the drag over them: the row every screen dealing the player's
@@ -146,11 +147,14 @@ type goods struct {
 	applyNow func(*session.Session)
 
 	// What a taken rune or cantrip looks like on its way to the pane, through goodsCarrying: its
-	// face, the seat it left, the pane seat it is landing in, and the clock.
-	carryFace cards.Spec
-	carryFrom image.Rectangle
-	carrySeat int
-	carryTrip ui.Travel
+	// face, the seat it left, the pane seat it is landing in, and the clock. **A taken playing card
+	// flies to the deck pile instead** — carryTo is the pile and carrySeat is -1 — in the hand's style.
+	carryFace  cards.Spec
+	carryStyle cards.Style
+	carryFrom  image.Rectangle
+	carryTo    image.Rectangle
+	carrySeat  int
+	carryTrip  ui.Travel
 
 	// use is a card being used up: a stone taken from a bag, through goodsUsing, or a vial's
 	// essence absorbed in its own seat, through goodsShowing.
@@ -165,7 +169,7 @@ type goods struct {
 // bag.
 func (g *goods) open(gs *state.GlobalState, good session.Good) {
 	g.good, g.stage = good, goodsPick
-	g.stones, g.essences, g.runes, g.cantrips = nil, nil, nil, nil
+	g.stones, g.essences, g.runes, g.cantrips, g.actions = nil, nil, nil, nil, nil
 	g.row.initRow(gs, func(gs *state.GlobalState) int { return gs.PctY(goodsOfferRowPct) })
 	g.tip = models.Tooltip{DwellTicks: ui.TipDwell()}
 
@@ -179,6 +183,8 @@ func (g *goods) open(gs *state.GlobalState, good session.Good) {
 		g.runes = dealSackRunes(gs, good.Record, good.Size)
 	case session.ContentsCantrips:
 		g.cantrips = dealScrolls(gs, good.Record, good.Size)
+	case session.ContentsCards:
+		g.actions = dealActionCards(gs, good.Record, good.Size)
 	}
 }
 
@@ -201,6 +207,7 @@ func (g *goods) reset() {
 	g.lands = nil
 	g.removes, g.copied, g.held, g.applyNow = false, false, 0, nil
 	g.carryFace, g.carryFrom, g.carrySeat, g.carryTrip = cards.Spec{}, image.Rectangle{}, -1, ui.Travel{}
+	g.carryStyle, g.carryTo = cards.Style{}, image.Rectangle{}
 	g.use = ui.Consume{}
 	g.tip.Forget()
 }
@@ -221,6 +228,17 @@ func (g *goods) carry(gs *state.GlobalState, i int, face cards.Spec, kind sessio
 		return
 	}
 	g.stage, g.carryFace, g.carryFrom = goodsCarrying, face, g.slot(gs, i)
+	g.carryStyle, g.carryTo = cards.EssenceStyle, heldSeat(gs, g.carrySeat)
+	g.carryTrip = ui.NewTravel(0, flightTicks())
+	g.tip.Forget()
+}
+
+// carryToDeck sends the playing card taken from seat i into the deck pile — **it travels**, because a
+// card never simply appears in a place, and the pile is where the deck is on this screen.
+func (g *goods) carryToDeck(gs *state.GlobalState, i int, face cards.Spec) {
+	g.carrySeat = -1
+	g.stage, g.carryFace, g.carryStyle = goodsCarrying, face, cards.Hand
+	g.carryFrom, g.carryTo = g.slot(gs, i), deckStackRect(gs)
 	g.carryTrip = ui.NewTravel(0, flightTicks())
 	g.tip.Forget()
 }
@@ -233,16 +251,16 @@ func (g *goods) landingSeat(i int) bool {
 
 // drawCarry is the taken card mid-flight, shrinking from the size it was offered at to the pane's.
 func (g *goods) drawCarry(gs *state.GlobalState, screen *ebiten.Image) {
-	to := heldSeat(gs, g.carrySeat)
+	to, st := g.carryTo, g.carryStyle
 	at := ui.FlyingTo(g.carryFrom, to, g.carryTrip)
 	p := ui.EaseOut(g.carryTrip.Progress())
 	w := float64(g.carryFrom.Dx()) + float64(to.Dx()-g.carryFrom.Dx())*p
 	h := float64(g.carryFrom.Dy()) + float64(to.Dy()-g.carryFrom.Dy())*p
 
 	var geo ebiten.GeoM
-	geo.Scale(w/float64(cards.EssenceStyle.Width), h/float64(cards.EssenceStyle.Height))
+	geo.Scale(w/float64(st.Width), h/float64(st.Height))
 	geo.Translate(float64(at.X), float64(at.Y))
-	ui.DrawFlyingCard(gs, screen, g.carryFace, cards.EssenceStyle, geo)
+	ui.DrawFlyingCard(gs, screen, g.carryFace, st, geo)
 }
 
 // count is how many cards are in the row that is taken from: the stones, the runes, or the
@@ -255,6 +273,8 @@ func (g *goods) count() int {
 		return len(g.runes)
 	case session.ContentsCantrips:
 		return len(g.cantrips)
+	case session.ContentsCards:
+		return len(g.actions)
 	default:
 		return len(g.essences)
 	}
@@ -340,6 +360,37 @@ func dealScrolls(gs *state.GlobalState, seat string, size int) []session.Cantrip
 	out := make([]session.Cantrip, size)
 	for i := range out {
 		out[i] = all[rng.Intn(len(all))]
+	}
+	return out
+}
+
+// dealActionCards is what an action bundle holds: `size` of the duelist's card pool, without repeats,
+// each rolled for every card trait the file prices.
+//
+// **Two streams of its own.** `seeds.ActionStock` deals the cards and `seeds.ActionTraits` rolls the
+// traits, each split by the bundle's own record — and the traits split again by trait — so a trait's
+// odds moving rerolls no card, and one bundle's contents are not the first cards of a bigger one's.
+// **Flat, not weighted**, like the bag of rocks: a playing card has no rarity.
+func dealActionCards(gs *state.GlobalState, seat string, size int) []combat.Card {
+	pool := session.ActionPool()
+	if len(pool) == 0 || gs.Run == nil {
+		return nil
+	}
+	rng := rand.New(rand.NewSource(seeds.ForFightSeat(gs.RunSeed, seeds.ActionStock, gs.Run.Fight(), seat)))
+	rng.Shuffle(len(pool), func(i, j int) { pool[i], pool[j] = pool[j], pool[i] })
+	out := pool[:min(size, len(pool))]
+
+	for _, t := range session.CardTraitCatalog() {
+		if t.Percent <= 0 {
+			continue
+		}
+		roll := rand.New(rand.NewSource(seeds.ForFightSeat(gs.RunSeed, seeds.ActionTraits,
+			gs.Run.Fight(), seat+"/"+t.Trait.String())))
+		for i := range out {
+			if roll.Intn(100) < t.Percent {
+				out[i] = out[i].WithTrait(t.Trait, true)
+			}
+		}
 	}
 	return out
 }
@@ -588,6 +639,10 @@ func (g *goods) hover(gs *state.GlobalState) {
 		case session.ContentsCantrips:
 			c := g.cantrips[i]
 			g.tip.Point(g.slot(gs, i), ui.TipLine(c.Name), ui.TipLines(cantripTipLines(c)))
+		case session.ContentsCards:
+			c := g.actions[i]
+			title, lines := ui.CardTip(c, ui.HeldByRun(gs, c))
+			g.tip.Point(g.slot(gs, i), ui.TipLine(title), ui.TipLines(lines))
 		}
 		return
 	}
@@ -675,6 +730,16 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 		gs.Journal.Write(journal.Record{Kind: journal.KindTake, Key: c.Record, Seat: i})
 		trace.Logf("shop", "bundle of scrolls: %s held, %d in the case", c.Record, gs.Run.ScrollCount())
 		g.carry(gs, i, ui.CantripSpec(gs, c, true), session.ConsumableCantrip, c.Record)
+
+	case session.ContentsCards:
+		// **A playing card goes straight into the deck** and flies to the pile — nothing is carried
+		// and nothing waits for a fight, so the card the player picked is in the run before it lands.
+		c := g.actions[i]
+		face := ui.CardSpec(c, ui.HeldByRun(gs, c), true, false)
+		gs.Run.TakeActionCard(c)
+		gs.Journal.Write(journal.Record{Kind: journal.KindTake, Key: combat.ConceptOf(c.Concept).Key, Seat: i})
+		trace.Logf("shop", "action bundle: %s %s taken, traits %v", c.Element, c.Label(), c.Traits.Names())
+		g.carryToDeck(gs, i, face)
 	}
 }
 
@@ -821,6 +886,12 @@ func (g *goods) drawCards(gs *state.GlobalState, screen *ebiten.Image) {
 			ui.DrawRuneCard(gs, screen, at, g.runes[i], !g.roomFull(gs), false)
 		case session.ContentsCantrips:
 			ui.DrawCantripCard(gs, screen, at, g.cantrips[i], !g.roomFull(gs))
+		case session.ContentsCards:
+			// **An effortless card is drawn aloft here too**, so the bundle says what the card is
+			// before it is taken; a mirrored one carries its echo in its face.
+			c := g.actions[i]
+			ui.DrawSeatedCard(gs, screen, at, i, ui.CardSpec(c, ui.HeldByRun(gs, c), true, false),
+				cards.Hand, !c.Counted())
 		default:
 			// **An essence is lit only for the cards that are selected.** With nothing selected the
 			// whole row is dim, which is what says the gesture starts underneath — the reward

@@ -387,6 +387,55 @@ card is a thing near the card; a tinted card is the card answering — and where
 several cards, a frame each is a row of loose rectangles while a tint each is just the cards.
 Relics and essences are expected to take marks too.
 
+### Traits — what a card or a wearing is besides itself
+
+**A trait is a property that composes with everything else a thing is.** A card is a form, an
+element, an action and one upgrade, and a second upgrade replaces the first; a trait takes no seat,
+so a golden fire Bash can also be mirrored and a rune writing a new upgrade leaves the trait alone. A
+worn relic is the same shape: its rules are the relic, and its traits are facts about this wearing.
+**Both are bitmasks** — `combat.CardTrait` on `Card.Traits`, `combat.RelicTrait` on
+`WornRelic.Traits` — written by name in a save and a scenario, never by number.
+
+**A trait is a record in a grammar, like every other catalog** *(owner's call, 2026-10-17)*.
+
+- **`data/card_traits.json`**: a `Name`, a tooltip `Text`, and two closed properties —
+  `Counted: false` takes the card out of the five, `Landings: n` lands it n times. Read by
+  `internal/combat` at init, as the deck is.
+- **`data/relic_traits.json`**: a `Name` (the tooltip line), a shelf `Percent`, and three ways to say
+  what it does — `Slot: false` takes no relic slot, `Lasts: "fight"` lasts one fight, and `Rules` in
+  the relic grammar, worn after the relic's own and firing at the same moments. **A trait's rules
+  never grow**: a growing relic's accumulator feeds its own effects only, and a growth verb on a
+  trait is refused. Parsed in `internal/session`, as `relics.json` is.
+
+A trait that changes nothing is refused at load, and so is every trait the code names but the file
+does not hold — a cantrip-relic is worn `weightless` and `ephemeral` by key.
+
+| Trait | On | Does | Drawn |
+|---|---|---|---|
+| **Effortless** | a card | not counted against the turn's five; still costs its AP and still joins the hand — see §A round is bounded twice | aloft in the hand: lifted, drifting, shimmering — the weightless relic's picture, because it means the same thing |
+| **Mirrored** | a card | lands twice: an attack throws one more full-strength hit, ahead of any relic's repeats, which add to it; a defense raises its shields twice | an offset, softened, see-through echo of its picture over the picture, inside the card's own frame |
+| **Weightless** | a wearing | takes no relic slot | aloft on the band |
+| **Ephemeral** | a wearing | lasts the fight it was put on in | faded toward its foot, its border broken |
+| **Armored** | a wearing | a turn-start `raise-shield` of `Element: "random"`: **one shield of a rolled color** at the top of each of the wearer's turns, after that relic's own wards | its shield heaps over the ring, as a helm's does; the tooltip ends on *Armored* |
+
+**The shelf sells a relic with a trait at the trait's `Percent`.** Every seat rolls every priced
+trait after its relic is picked, each off its own split of `seeds.ShelfTraits` keyed by the trait,
+so moving one trait's odds or adding a trait rerolls no other trait and no relic. An offer's tooltip
+names its traits, since armored has no picture of its own. **A trait lasting one fight may not be
+priced above zero** — a bought relic gone after one fight is vitae spent on nothing.
+
+**A card trait comes from an action bundle** — see §The sealed packs. A scenario can also put one on
+(`DUELLO_SCENARIO=traits`).
+
+**Armored's element is a roll, and that is a second roll inside a resolved round** *(owner's call,
+2026-10-17)*. The deterministic alternatives were declined: the creature's own element (always the
+right shield, so a pure purchase) and a fixed cycle (a pattern a player plans around rather than a
+guard that may or may not match). It is written as `raise-shield` with `Element: "random"`, which
+any relic may use. What it costs: one sample per random raise per turn off its own stream,
+`seeds.ShieldRoll`, injected as `Sources.Shield` — never a share of the gold-and-silver `Luck`
+stream, so buying an armored relic rerolls no gamble. A nil source rolls nothing and raises
+nothing. The shield is one of the five colors, never basic.
+
 ### Concepts and deck composition
 
 **An attack concept ships as five cards: one per primary element.** That is the rule for adding an
@@ -1251,6 +1300,14 @@ and a cap enforced only by the screen was a cap the enemy ignored.
 A card that wanted to buy capacity could therefore only buy *points*, never slots — anything
 reaching for six- and seven-card hands is the dilution above and is refused.
 
+**An effortless card is the one exception, and it is a property of the card rather than a raised
+cap** *(owner's call, 2026-10-17)*. `MaxActions` stays five and counts only the cards that are not
+effortless (`combat.CountedActions`, `Duelist.RoomFor`), so a turn may hold five counted cards and any
+number of effortless ones the budget can pay for — and **an effortless card joins the hand**, so a
+turn of six cards reads its rung from six. That is the dilution above, taken knowingly and bounded by
+how many effortless cards a run holds rather than by a number that grows. The rungs themselves are
+still at most five cards, and the loader still refuses one asking for more. See §Traits.
+
 Discounts **can take a card to free**, which is what makes the count bound load-bearing rather
 than incidental — and with the cap frozen, a discount relic's ceiling is five free cards rather
 than an ever-widening round.
@@ -1330,7 +1387,8 @@ an argument for a headless duel simulator rather than against the clock.
 - **Five at once**, and a Collector's Tonic makes it six — see §Tonics.
 - **The cap is never displayed.** It surfaces naturally when you try to buy a sixth.
 - **No relic changes how many cards can be played.** `MaxActions` is frozen at five — see *A
-  round is bounded twice*. A relic may make five cards cheaper, never make it six.
+  round is bounded twice*. A relic may make five cards cheaper, never make it six. An effortless
+  *card* is not counted against the five, which is a property of that card — see §Traits.
 - **Relics are the duelist's only**. An enemy wears none; affixes are the
   enemy-side counterpart.
 
@@ -1749,9 +1807,10 @@ knows what comes after the shop — `session.PhaseShop` is a station of the run 
   mythic the run is not wearing; otherwise it draws on tickets from everything else. A share of the
   tickets would move every time a common was authored; a flat 0.1% a seat does not. **A mythic
   wears a near-black border** so the art is the loudest thing on the card.
-- **One shelf relic in twenty is sold weightless** *(owner's call, 2026-10-11)*. Every seat rolls
-  one in twenty (`data.WeightlessOdds`) on its own stream, `seeds.ShelfWeightless`, after its relic
-  is picked and whatever its rarity, and a hit is drawn floating on the shelf. It costs what it
+- **A shelf relic may be sold with a trait** — weightless at 5%, armored at 1%, each its record's
+  `Percent` in `data/relic_traits.json` *(owner's call, 2026-10-11 and 2026-10-17)*. Every seat rolls
+  every priced trait after its relic is picked and whatever its rarity; see §Traits. A weightless
+  hit is drawn floating on the shelf. It costs what it
   always costs, goes on over a full row, and keeps the flag for as long as it is worn; selling it
   takes the flag off, so the same record bought again weighs what its new offer says. **A roll and
   not a rule because it is a find rather than a decision**: it never moves a price or a pick, and a
@@ -1795,17 +1854,25 @@ knows what comes after the shop — `session.PhaseShop` is a station of the run 
   without replacement**, rather than a shuffle: each seat draws on rarity tickets and the drawn
   relic leaves the pool, so the shelf never offers the same relic twice.
 
-### The sealed packs: a bag of rocks, a vial of essence, a sack of runes, a bundle of scrolls
+### The sealed packs: a bag of rocks, a vial of essence, a sack of runes, a bundle of scrolls, an action bundle
 
-**All four take the same shape**: **something inside**, and the player keeps **exactly one** — the
+**All five take the same shape**: **something inside**, and the player keeps **exactly one** — the
 rest are gone. Each comes in three sizes, three, four or five inside, and the bigger one costs more. Each draws on its own per-fight stream
-(`seeds.BagStock`, `seeds.VialStock`, `seeds.SackStock`, `seeds.ScrollStock`), and a visit offers
-two of them. **The bundle of scrolls is the one that repeats**: it draws with replacement while the
+(`seeds.BagStock`, `seeds.VialStock`, `seeds.SackStock`, `seeds.ScrollStock`, `seeds.ActionStock`),
+and a visit offers two of them. **The bundle of scrolls is the one that repeats**: it draws with replacement while the
 cantrip catalog is shorter than the smallest bundle — see §Cantrips.
 
 - **What is bought is the choice, not the thing.** A relic is read and then paid for; a good is paid
   for and then read. That is the whole design, and it is why neither card names its contents: the
   face says the shape of the offer ("4 stones, keep 1") and nothing about which ones.
+- **An action bundle holds playing cards, and it is where a card trait comes from**
+  *(owner's call, 2026-10-17)*. The cards are drawn without repeats from the duelist's own pool —
+  one of every card the starting deck is built from, every concept in every color, so a concept the
+  deck holds three copies of is no likelier than one it holds once — and the one taken goes
+  straight into the run's deck with a fresh identity, flying to the deck pile. **Every card rolls
+  every card trait** at its `Percent` in `data/card_traits.json`, off `seeds.ActionTraits` split by
+  the bundle and the trait, so a trait's odds moving rerolls no card. An effortless card is drawn
+  aloft in the bundle and a mirrored one carries its echo, so what is offered says what it is.
 - **A bag holds stones; a vial holds essences.** See the stones section below. The vial is the
   reward screen's mechanic bought rather than won — pick one of several, then pick the card it
   eats — and what the vitae buys over the free offer of two is more of the choice, at the shop
@@ -3066,8 +3133,8 @@ cantrip-relic is worn **after the run's relics**, and every one is:
 - **weightless** — it takes no relic slot, so a full hand still takes a cast;
 - **ephemeral** — it lasts the fight it was cast in and is never the run's.
 
-Both are properties of the *wearing* — `combat.WornRelic.Weightless` and `.Ephemeral` — not of a
-relic, so the same two can be put on other relics later without a cantrip being involved.
+Both are traits of the *wearing* — `combat.WornRelic.Traits` — not of a relic, so the same two can
+be put on other relics without a cantrip being involved. See §Traits.
 
 | | |
 |---|---|

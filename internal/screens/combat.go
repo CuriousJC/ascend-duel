@@ -290,6 +290,10 @@ type CombatScene struct {
 	// own sequence to advance instead.
 	luckRNG *rand.Rand
 
+	// The source a random shield's element is rolled from, injected as combat.Sources.Shield.
+	// **Its own stream, and per fight** — see seeds.ShieldRoll.
+	shieldRNG *rand.Rand
+
 	// The opponent's deck, in the same three piles. It lives in internal/decks rather than
 	// here so an enemy deck can be built without a window — see that package's header.
 	//
@@ -625,6 +629,7 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	playerSeed, enemySeed := s.shuffleSeeds(gs)
 	s.rng = rand.New(rand.NewSource(playerSeed))
 	s.luckRNG = rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.LuckRoll, fightIndex(gs.Run))))
+	s.shieldRNG = rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.ShieldRoll, fightIndex(gs.Run))))
 	s.resetDeck(gs.Run)
 
 	// **The `fight-begun` moment**: an Eternity Pearl copies something carried, weightless, before
@@ -1316,7 +1321,7 @@ func (s *CombatScene) startRound() {
 		s.fighterActions, s.enemyActions,
 		s.heldCards(), nil,
 		s.round,
-		combat.Sources{Luck: s.luckRNG},
+		combat.Sources{Luck: s.luckRNG, Shield: s.shieldRNG},
 	)
 
 	s.fighterAfter = fighterAfter

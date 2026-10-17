@@ -189,6 +189,23 @@ func TestEveryRiderKindHasTipLines(t *testing.T) {
 	}
 }
 
+func TestEveryCardTraitHasATipLine(t *testing.T) {
+	for _, tr := range combat.CardTraits() {
+		c := combat.Plain(combat.Bash).WithTrait(tr, true)
+		if lines := carddesc.TraitLines(c); len(lines) != 1 || lines[0] == "" {
+			t.Errorf("trait %s says %v in a card's tooltip, want one line", tr, lines)
+		}
+	}
+}
+
+func TestEveryRelicTraitHasATipLine(t *testing.T) {
+	for _, tr := range combat.RelicTraits() {
+		if tr.Name() == "" {
+			t.Errorf("relic trait %s ends a worn relic's tooltip on nothing", tr)
+		}
+	}
+}
+
 // **The two examples the owner wrote out**, held against what the panel actually builds. They are
 // the specification for the format and this is the one place they exist as one.
 func TestTheTooltipReadsTheWayItWasSpecified(t *testing.T) {

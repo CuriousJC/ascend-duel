@@ -192,6 +192,14 @@ var sheets = []sheet{
 			"once. Two stand on a shelf at a time, one catalog each.",
 	},
 	{
+		Dir:   "traitsheet",
+		Tool:  "./tools/traitsheet",
+		Title: "Trait sheet",
+		Blurb: "Every relic trait and card trait: its card, its sentence, what it does as the " +
+			"file writes it, and how often a run meets one — per shelf seat and per shop, per " +
+			"bundled card and per bundle. A real card drawn plain and mirrored.",
+	},
+	{
 		Dir:   "artsheet",
 		Tool:  "./tools/artsheet",
 		Title: "All art",

@@ -117,7 +117,7 @@ func playTurn(
 
 	// **A helm's shield goes up after the expiry**, or the turn arriving would take away the shield
 	// it had just been handed. See DoRaiseShield.
-	events, actor = wardAtTurnStart(events, side, actor, round)
+	events, actor = wardAtTurnStart(events, side, actor, round, src.Shield)
 
 	// **Riders fire here, before the blow.** A rider belongs to one card rather than to the
 	// duelist, so the moment it wants is "this card was played". Putting it in front of the attack
@@ -178,7 +178,7 @@ func playTurn(
 // order. See DoShieldPerCard.
 func staggerAtTurnEnd(events []Event, side Side, actor Duelist, turn []Slot, round int) ([]Event, Duelist) {
 	for _, w := range actor.WornRelics() {
-		for _, rule := range RelicOf(w.Relic).Rules {
+		for _, rule := range w.Rules() {
 			if rule.When != MomentTurnTaken {
 				continue
 			}
@@ -251,20 +251,24 @@ func resolveDefend(
 		if ShieldsMatchFoe(actor.WornRelics()) && target.Element != Basic {
 			shield = target.Element
 		}
-		actor = actor.raiseShields(shield, card.Amount())
-		// **`Slot` names the card that raised them.** The defenses fire as one bundle and nothing
-		// lifts, so the event is the only thing that can say which card the pips come out of.
-		// **`Element` is the shields'**, which is what the pips land wearing.
-		events = append(events, Event{
-			Kind:    KindRaised,
-			Side:    side,
-			Action:  card.Concept,
-			Element: shield,
-			Slot:    at,
-			Amount:  card.Amount(),
-			Life:    actor.Shields.Count(),
-			Round:   round,
-		})
+		// **A mirrored defense raises its shields twice**, a raise per landing, so no one raise is
+		// past the cap a card is held to. See CardMirrored.
+		for range card.Landings() {
+			actor = actor.raiseShields(shield, card.Amount())
+			// **`Slot` names the card that raised them.** The defenses fire as one bundle and
+			// nothing lifts, so the event is the only thing that can say which card the pips come
+			// out of. **`Element` is the shields'**, which is what the pips land wearing.
+			events = append(events, Event{
+				Kind:    KindRaised,
+				Side:    side,
+				Action:  card.Concept,
+				Element: shield,
+				Slot:    at,
+				Amount:  card.Amount(),
+				Life:    actor.Shields.Count(),
+				Round:   round,
+			})
+		}
 	}
 
 	return events, actor, target
@@ -302,9 +306,9 @@ func expireDefenses(events []Event, side Side, d Duelist, round int) ([]Event, D
 }
 
 // wardAtTurnStart is every worn relic that raises shields firing, at the top of its wearer's own
-// turn — the helms. See DoRaiseShield.
-func wardAtTurnStart(events []Event, side Side, actor Duelist, round int) ([]Event, Duelist) {
-	for _, w := range actor.wardsFrom() {
+// turn — the helms, and a trait's raise worn with any relic. See DoRaiseShield.
+func wardAtTurnStart(events []Event, side Side, actor Duelist, round int, roll *rand.Rand) ([]Event, Duelist) {
+	for _, w := range actor.wardsFrom(roll) {
 		actor = actor.raiseShields(w.Element, w.Count)
 		events = append(events, Event{
 			Kind:    KindWarded,

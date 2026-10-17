@@ -30,6 +30,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
+	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
@@ -81,10 +82,10 @@ type shelfItem struct {
 	// the shelf you are reading must not rearrange itself under your hand. The seat is drawn empty.
 	bought bool
 
-	// weightless says this seat sells its relic weightless — worn without taking a finger. Rolled
-	// per seat off `seeds.ShelfWeightless`, one in data.WeightlessOdds. It is drawn floating on
-	// the shelf exactly as it will float in the band.
-	weightless bool
+	// traits are what this seat sells its relic wearing — weightless, armored. Each is rolled per
+	// seat at the chance data/relic_traits.json gives it; see rollTraits. A weightless offer is drawn
+	// floating on the shelf exactly as it will float in the band.
+	traits combat.RelicTrait
 }
 
 // ShopScene sells relics and buys them back.
@@ -147,10 +148,10 @@ type ShopScene struct {
 
 	// stockRNG and packRNG are the visit's two streams, kept so a reroll advances a cursor rather
 	// than starting a second sequence. See Init.
-	stockRNG  *rand.Rand
-	packRNG   *rand.Rand
-	mythicRNG *rand.Rand
-	floatRNG  *rand.Rand
+	stockRNG   *rand.Rand
+	packRNG    *rand.Rand
+	mythicRNG  *rand.Rand
+	traitRolls []traitRoll
 
 	// relicReroll and packReroll are the two buttons under those panes. **Two buttons rather than
 	// one moved between two places**, unlike the worn row's sell tab, because both are up at once.
@@ -239,11 +240,11 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	s.stockRNG = shopRNG(gs, seeds.ShopStock)
 	s.packRNG = shopRNG(gs, seeds.PackOffer)
 	s.mythicRNG = shopRNG(gs, seeds.MythicRoll)
-	s.floatRNG = shopRNG(gs, seeds.ShelfWeightless)
+	s.traitRolls = shelfTraitRolls(gs)
 	s.rerolls = map[shopPane]int{}
 	s.drunk = map[string]bool{}
 	s.offered = dealPacks(s.packRNG)
-	s.shelf = dealShelf(gs, s.stockRNG, s.mythicRNG, s.floatRNG)
+	s.shelf = dealShelf(gs, s.stockRNG, s.mythicRNG, s.traitRolls)
 
 	// **The realm's tonic is settled at its first shop** and every later shop in the realm shows
 	// the same one, or an empty seat once it is drunk. See session/tonic.go.
@@ -299,7 +300,7 @@ func shelfKeys(items []shelfItem) []string {
 // **A mythic is never on the tickets.** Each seat first rolls one in data.MythicOdds on `mythic`
 // (`seeds.MythicRoll`) and, on a hit, takes a mythic the run is not wearing; otherwise it draws
 // from everything else. A nil `mythic` rolls nothing.
-func dealShelf(gs *state.GlobalState, rng, mythic, float *rand.Rand) []shelfItem {
+func dealShelf(gs *state.GlobalState, rng, mythic *rand.Rand, traits []traitRoll) []shelfItem {
 	if gs.Run == nil || rng == nil {
 		return nil
 	}
@@ -324,7 +325,7 @@ func dealShelf(gs *state.GlobalState, rng, mythic, float *rand.Rand) []shelfItem
 	for len(out) < shelfSize && (len(pool) > 0 || len(mythics) > 0) {
 		if mythic != nil && mythic.Intn(data.MythicOdds) == 0 && len(mythics) > 0 {
 			at := mythic.Intn(len(mythics))
-			out = append(out, shelfItem{key: mythics[at], weightless: rollWeightless(float)})
+			out = append(out, shelfItem{key: mythics[at], traits: rollTraits(traits)})
 			mythics = append(mythics[:at], mythics[at+1:]...)
 			continue
 		}
@@ -332,16 +333,50 @@ func dealShelf(gs *state.GlobalState, rng, mythic, float *rand.Rand) []shelfItem
 			break
 		}
 		at := drawWeighted(pool, rng)
-		out = append(out, shelfItem{key: pool[at], weightless: rollWeightless(float)})
+		out = append(out, shelfItem{key: pool[at], traits: rollTraits(traits)})
 		pool = append(pool[:at], pool[at+1:]...)
 	}
 	return out
 }
 
-// rollWeightless is one seat's roll for being sold weightless, one in data.WeightlessOdds. A nil
-// stream rolls nothing.
-func rollWeightless(float *rand.Rand) bool {
-	return float != nil && float.Intn(data.WeightlessOdds) == 0
+// traitRoll is one relic trait's shelf roll: the trait, its chance out of 100, and the stream it is
+// rolled off.
+type traitRoll struct {
+	trait   combat.RelicTrait
+	percent int
+	rng     *rand.Rand
+}
+
+// shelfTraitRolls is a roll for every trait data/relic_traits.json prices above zero, in file order.
+//
+// **Each trait rolls off its own split of `seeds.ShelfTraits`**, by the trait's key, so a trait's
+// odds moving or a trait being added rerolls no other trait and no relic — the reason the weightless
+// roll was never on the stock's cursor, held for every trait the file can name.
+func shelfTraitRolls(gs *state.GlobalState) []traitRoll {
+	if gs.Run == nil {
+		return nil
+	}
+	var out []traitRoll
+	for _, st := range session.ShelfTraits() {
+		if st.Percent <= 0 {
+			continue
+		}
+		seed := seeds.ForFightSeat(gs.RunSeed, seeds.ShelfTraits, gs.Run.Fight(), st.Trait.String())
+		out = append(out, traitRoll{trait: st.Trait, percent: st.Percent, rng: rand.New(rand.NewSource(seed))})
+	}
+	return out
+}
+
+// rollTraits is one seat's rolls, every trait once whether or not it hits, so how often one hits
+// moves nothing after it. A nil stream rolls nothing.
+func rollTraits(rolls []traitRoll) combat.RelicTrait {
+	var out combat.RelicTrait
+	for _, r := range rolls {
+		if r.rng != nil && r.rng.Intn(100) < r.percent {
+			out |= r.trait
+		}
+	}
+	return out
 }
 
 // drawWeighted picks one index out of the pool, each key holding as many tickets as its rarity is
@@ -457,7 +492,7 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 		return s.shelfSlot(gs, i)
 	}); i >= 0 {
 		if record, ok := gs.Relics[s.shelf[i].key]; ok {
-			title, lines := ui.ShopRelicTip(record, gs.Run)
+			title, lines := ui.ShopRelicTip(record, gs.Run, s.shelf[i].traits)
 			s.tip.Point(s.shelfSlot(gs, i), ui.TipLine(title), ui.TipLines(lines))
 		}
 		return
@@ -568,8 +603,8 @@ func (s *ShopScene) click(gs *state.GlobalState) {
 // in the game follows. A refused purchase raises nothing, which is what makes an unaffordable card
 // read as unavailable rather than as broken.
 func (s *ShopScene) buy(gs *state.GlobalState, i int) {
-	key, weightless := s.shelf[i].key, s.shelf[i].weightless
-	if !gs.Run.CanBuyAs(key, weightless) {
+	key, traits := s.shelf[i].key, s.shelf[i].traits
+	if !gs.Run.CanBuyAs(key, traits) {
 		return
 	}
 
@@ -578,7 +613,7 @@ func (s *ShopScene) buy(gs *state.GlobalState, i int) {
 	// the card they were looking at.
 	seats[key] = s.shelfSlot(gs, i)
 
-	if !gs.Run.BuyAs(key, weightless) {
+	if !gs.Run.BuyAs(key, traits) {
 		return
 	}
 	s.shelf[i].bought = true
@@ -710,7 +745,7 @@ func (s *ShopScene) drawShelf(gs *state.GlobalState, screen *ebiten.Image) {
 		if !ok {
 			continue
 		}
-		affordable := gs.Run.CanBuyAs(item.key, item.weightless)
+		affordable := gs.Run.CanBuyAs(item.key, item.traits)
 		price, _ := session.RelicPrice(item.key)
 		price = shopPrice(gs, price)
 
@@ -719,10 +754,10 @@ func (s *ShopScene) drawShelf(gs *state.GlobalState, screen *ebiten.Image) {
 		// had its number reset, so there is nothing to show there either.
 		//
 		// **A weightless offer floats on the shelf as it will in the band**, so what is for sale is
-		// said by the same picture as what it will be. See ui.DrawWeightless.
-		if item.weightless {
+		// said by the same picture as what it will be. See ui.DrawAloft.
+		if item.traits.TakesNoSlot() {
 			face := ui.CardImage(gs, ui.RelicSpec(gs, record, "", affordable, false), cards.RelicStyle)
-			ui.DrawWeightless(screen, face, at.Min, 1, float64(gs.Count), float64(i)*2.1)
+			ui.DrawAloft(screen, face, at.Min, 1, float64(gs.Count), float64(i)*2.1)
 		} else {
 			ui.DrawRelicCard(gs, screen, at.Min, record, "", affordable, false)
 		}
@@ -922,6 +957,8 @@ func goodArt(gs *state.GlobalState, good session.Good) image.Image {
 		return ui.Artwork(gs, data.DefaultRuneArt)
 	case session.ContentsCantrips:
 		return ui.Artwork(gs, data.DefaultCantripArt)
+	case session.ContentsCards:
+		return ui.Artwork(gs, data.PlaceholderArt)
 	default:
 		return ui.Artwork(gs, data.DefaultEssenceArt)
 	}

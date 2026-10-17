@@ -305,6 +305,46 @@ func goodsDialog(gs *state.GlobalState) *compendiumDialog {
 	return catalogDialog("SEALED GOODS", out)
 }
 
+// traitsDialog is every trait: the relic traits, then the card traits, each in its file's order. A
+// relic trait is had once a relic has been worn with it — bought so, or a cantrip's relic cast — and a
+// card trait once a card carrying it has been taken out of an action bundle.
+//
+// **The tooltip is the trait's own sentence and its odds**, so the book is also where a player reads
+// how rare each one is.
+func traitsDialog(gs *state.GlobalState) *compendiumDialog {
+	all := everything(gs)
+	var out []compendiumEntry
+	for _, t := range session.ShelfTraits() {
+		r := t.Record
+		out = append(out, entry(traitSpec(gs, r.Name, r.ArtKey()), bleedStyle(false),
+			all.Total(session.StatRelicTrait+r.RelicTrait), "WORN", r.Name,
+			[]string{"RELIC TRAIT", r.Text, traitOdds(t.Percent, "relics on the shelf")}))
+	}
+	for _, t := range session.CardTraitCatalog() {
+		r := t.Record
+		out = append(out, entry(traitSpec(gs, r.Name, r.ArtKey()), bleedStyle(false),
+			all.Total(session.StatCardTrait+r.CardTrait), "TAKEN", r.Name,
+			[]string{"CARD TRAIT", r.Text, traitOdds(t.Percent, "cards in an action bundle")}))
+	}
+	return catalogDialog("TRAITS", out)
+}
+
+// traitSpec is a trait's card: its picture, or the placeholder while it has none.
+func traitSpec(gs *state.GlobalState, name, art string) cards.Spec {
+	return cards.Spec{
+		Name: name, Form: cards.FormNone, Element: ui.ArtFor(combat.Basic),
+		Art: ui.Artwork(gs, art), Enabled: true,
+	}
+}
+
+// traitOdds is how often a trait turns up, said where it turns up — or that it is never sold.
+func traitOdds(pct int, where string) string {
+	if pct <= 0 {
+		return "never sold"
+	}
+	return strconv.Itoa(pct) + "% of " + where
+}
+
 // creaturesDialog is the bestiary: every creature and boss on the roster, motif by motif, in each
 // motif file's own order — **once per element it can be dealt as**, in the record's own order of
 // affinities, since a fire goblin and an ice goblin are two drawings and two decks.

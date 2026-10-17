@@ -104,7 +104,7 @@ func TestAWeightlessRelicGoesOnOverAFullRow(t *testing.T) {
 		t.Errorf("the row weighs %d, want %d — the weightless relic is counted", got, combat.DefaultRelicSlots)
 	}
 	worn := run.WornRelics()
-	if last := worn[len(worn)-1]; !last.Weightless {
+	if last := worn[len(worn)-1]; !last.Weightless() {
 		t.Error("the duelist is handed the relic with weight")
 	}
 

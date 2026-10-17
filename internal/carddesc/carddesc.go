@@ -131,7 +131,20 @@ func Lines(c combat.Card, cost, dmg, scale, rolls int) []string {
 	if effect := EffectLine(c, dmg, scale); effect != "" {
 		lines = append(lines, effect)
 	}
-	return append(lines, RiderLines(c, rolls)...)
+	lines = append(lines, RiderLines(c, rolls)...)
+	return append(lines, TraitLines(c)...)
+}
+
+// TraitLines is a line per trait the card carries, after its upgrade's — `MIRRORED: LANDS TWICE`,
+// the trait's own Name and Text out of data/card_traits.json.
+func TraitLines(c combat.Card) []string {
+	var out []string
+	for _, t := range combat.CardTraits() {
+		if c.HasTrait(t) {
+			out = append(out, upper(t.Name())+": "+t.Text())
+		}
+	}
+	return out
 }
 
 // EffectLine is the one line saying what the card is worth, in the terms its verb is measured in.

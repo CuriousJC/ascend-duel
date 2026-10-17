@@ -416,6 +416,12 @@ type Spec struct {
 	// See mark.go, which also holds the transition half of this and why it is not here.
 	Mark Mark
 
+	// Mirrored lays an offset, softened echo of the card's picture over the picture itself, inside
+	// the card's own frame — a card that lands twice. **It is what the card is**, like Upgrade, so
+	// it goes into the face; and it composes with an upgrade rather than taking its seat, as the
+	// trait does in the rules. See mirror.go.
+	Mirrored bool
+
 	// Text is what the card does, in words, wrapped across the band under the left column.
 	//
 	// **Every action card carries one** *(2026-08-14)*. Half the deck could not be understood from

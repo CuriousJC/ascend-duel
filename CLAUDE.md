@@ -98,7 +98,7 @@ skill that does not exist.
 | Skill | Load it before |
 |---|---|
 | [`github-workflow`](.claude/skills/github-workflow/SKILL.md) | any `git` or `gh` command — branching, committing, pushing, opening or merging a PR, cleaning up after one, or when a merge is refused |
-| [`data`](.claude/skills/data/SKILL.md) | adding a file to `data/`, adding or changing a field on one, authoring cards / enemies / relics / essences, or writing a loader |
+| [`data`](.claude/skills/data/SKILL.md) | adding a file to `data/`, adding or changing a field on one, authoring cards / enemies / relics / essences, writing a loader, or checking a catalog against the catalog contract (`python .claude/skills/data/contract.py`) |
 | [`randomness`](.claude/skills/randomness/SKILL.md) | adding any roll, adding or seeding a stream, touching a salt or a seed, writing a shuffle, or deciding whether a mechanic should be random at all |
 | [`combat-screen`](.claude/skills/combat-screen/SKILL.md) | touching any `internal/screens/combat*.go`, `internal/combat`, or anything about how a round is drawn or played back |
 | [`enemy-cards`](.claude/skills/enemy-cards/SKILL.md) | authoring or renaming a creature card, adding or changing an attack flavor in `data/enemy_card_art.json`, deciding a motif's form lean, or generating and installing enemy card art |
@@ -167,6 +167,7 @@ go run ./tools/stonesheet   # every stone against the rungs it raises, walked by
 go run ./tools/runesheet # every rune: the line it prints against the rule that fires
 go run ./tools/cantripsheet  # every cantrip: the scroll beside its cantrip-relic, the rules, and the relic worn by the duelist
 go run ./tools/tonicsheet    # every tonic: its rule, its tooltip, and the realm-by-realm offer for sample runs
+go run ./tools/traitsheet    # every relic and card trait: its sentence, what it does, how often a run meets it
 go run ./tools/achievementsheet  # every achievement's Steam fields and icon pair, at 256 and 64: the upload set
 go run ./tools/upgradesheet  # every visible card upgrade, on every form mark, in every upgrade style
 go run ./tools/goodsheet     # every sealed good beside the offer it actually makes
@@ -403,7 +404,7 @@ of it:
   `matchCountOf` rather than in `playRiders` — the one rider that does. `combat.RiderWildElement`.
 - **Gold and silver gamble on every play, and the roll is in the resolver.**
   `combat.RiderGolden` and `RiderSilver`; `combat.Sources` is the struct carrying the round's
-  streams into `ResolveRound` — `Luck` for the gamble — and a second roll is a second field, never
+  streams into `ResolveRound` — `Luck` for the gamble, `Shield` for a random shield's element — and a new roll is a new field, never
   a share of this one. The grant moves the fighting duelist *and* announces `KindGrantedDMG` /
   `KindGrantedLife` for `screens.settleGrants` to make permanent on the run; silver goes through the
   purse and needs no event. **A card that gambles on every play is worth however often it is

@@ -25,6 +25,7 @@ package combat
 
 import (
 	"fmt"
+	"math/rand"
 	"sort"
 )
 
@@ -913,6 +914,15 @@ func (e RelicEffect) DamagePct(vitae int) int {
 	return e.Amount
 }
 
+// grows reports whether the verb steps or resets an accumulator.
+func (v RelicVerb) grows() bool {
+	switch v {
+	case DoGrowOnWin, DoGrowOnTurn, DoGrowOnHit, DoGrowPerCard, DoResetGrowth:
+		return true
+	}
+	return false
+}
+
 // RelicEffect is one entry in a rule's `Then`. Which fields mean anything depends on the verb, the
 // same way a card's Amount is read against its verb.
 type RelicEffect struct {
@@ -923,8 +933,12 @@ type RelicEffect struct {
 	// a quantity.
 	Amount int
 
-	// Element is what set-element recolors a card to.
+	// Element is what set-element recolors a card to, and what raise-shield raises.
 	Element Element
+
+	// RandomElement is raise-shield's "random": each raise rolls one of the five colors off
+	// `Sources.Shield`, never basic. See rollShieldElement.
+	RandomElement bool
 
 	// Form is what set-form turns a card into: its Counterpart on that form's ladder.
 	Form Form
@@ -935,6 +949,10 @@ type RelicRule struct {
 	When Moment
 	If   RelicCondition
 	Then []RelicEffect
+
+	// ungrown says the rule is a trait's rather than the relic's own, so the wearing's accumulator
+	// is not added to its figures. See WornRelic.grown.
+	ungrown bool
 }
 
 // Relic is one relic's rules, whole. The art key and the long-press text stay in `data` — see the file
@@ -997,6 +1015,11 @@ func CheckRelic(key string, rules []RelicRule) error {
 	for _, rule := range rules {
 		if len(rule.Then) == 0 {
 			return fmt.Errorf("%s has a %s rule with nothing in its Then", key, rule.When)
+		}
+		for _, e := range rule.Then {
+			if e.RandomElement && e.Do != DoRaiseShield {
+				return fmt.Errorf("%s does %s with a random element, and only raise-shield rolls one", key, e.Do)
+			}
 		}
 		if rule.If.Any() && !rule.When.readsACard() {
 			return fmt.Errorf("%s has a %s rule with an If, and %s has no card to match one against",
@@ -1182,16 +1205,12 @@ type WornRelic struct {
 	Relic RelicID
 	Grown int
 
-	// Weightless and Ephemeral are properties of **this one wearing**, never of the relic: the same
-	// rules may be worn plain on one duelist and weightless on another, so they sit here beside the
-	// accumulator rather than on the registered Relic.
-	//
-	// A weightless relic takes no slot — relicSlots counts only the relics that weigh something, so
-	// it is worn on top of a full hand. An ephemeral one lasts the fight it was put on in: nothing
-	// outside the fight's own duelist holds it, so it is not there when the next fight's fighter is
-	// built. A cantrip-relic is both.
-	Weightless bool
-	Ephemeral  bool
+	// Traits are properties of **this one wearing**, never of the relic: the same rules may be worn
+	// plain on one duelist and weightless on another, so they sit here beside the accumulator
+	// rather than on the registered Relic. See RelicTrait — weightless takes no slot, ephemeral
+	// lasts the fight it was put on in, armored raises a rolled shield every turn. A cantrip-relic
+	// is weightless and ephemeral.
+	Traits RelicTrait
 }
 
 // relicSlots is how many relics this duelist may wear, with the two ways the field can be wrong
@@ -1227,7 +1246,7 @@ func (d Duelist) WornRelics() []WornRelic {
 	}
 	slots, weighted := d.relicSlots(), 0
 	for _, w := range d.Relics {
-		if !w.Weightless {
+		if !w.Weightless() {
 			weighted++
 		}
 	}
@@ -1238,7 +1257,7 @@ func (d Duelist) WornRelics() []WornRelic {
 	out := make([]WornRelic, 0, len(d.Relics))
 	weighted = 0
 	for _, w := range d.Relics {
-		if !w.Weightless {
+		if !w.Weightless() {
 			if weighted == slots {
 				continue
 			}
@@ -1253,7 +1272,7 @@ func (d Duelist) WornRelics() []WornRelic {
 func (d Duelist) weightedRelics() int {
 	n := 0
 	for _, w := range d.Relics {
-		if !w.Weightless {
+		if !w.Weightless() {
 			n++
 		}
 	}
@@ -1264,7 +1283,7 @@ func (d Duelist) weightedRelics() int {
 // copy like everything else in this package. **A weightless relic is never refused**, since it takes
 // no slot.
 func (d Duelist) Wearing(w WornRelic) Duelist {
-	if !w.Weightless && d.weightedRelics() >= d.relicSlots() {
+	if !w.Weightless() && d.weightedRelics() >= d.relicSlots() {
 		return d
 	}
 	// **Cloned rather than appended in place.** append may write into the backing array this
@@ -1346,12 +1365,12 @@ type RelicContribution struct {
 func RelicContributionsAt(worn []WornRelic, m Moment, card Card) []RelicContribution {
 	var out []RelicContribution
 	for _, w := range worn {
-		for _, rule := range RelicOf(w.Relic).Rules {
+		for _, rule := range w.Rules() {
 			if rule.When != m || !rule.If.Matches(card) {
 				continue
 			}
 			for _, e := range rule.Then {
-				e.Amount += w.Grown
+				e.Amount += w.grown(rule)
 				out = append(out, RelicContribution{Relic: w.Relic, Effect: e})
 			}
 		}
@@ -1454,7 +1473,7 @@ func (d Duelist) drainsFrom(cards []Card) []relicDrain {
 
 	for _, w := range d.WornRelics() {
 		pct := 0
-		for _, rule := range RelicOf(w.Relic).Rules {
+		for _, rule := range w.Rules() {
 			if rule.When != MomentAttackLands {
 				continue
 			}
@@ -1470,7 +1489,7 @@ func (d Duelist) drainsFrom(cards []Card) []relicDrain {
 			}
 			for _, e := range rule.Then {
 				if e.Do == DoDrainDamage {
-					pct += e.Amount + w.Grown
+					pct += e.Amount + w.grown(rule)
 				}
 			}
 		}
@@ -1494,13 +1513,13 @@ func (d Duelist) healsFrom() []relicDrain {
 
 	for _, w := range d.WornRelics() {
 		pct := 0
-		for _, rule := range RelicOf(w.Relic).Rules {
+		for _, rule := range w.Rules() {
 			if rule.When != MomentTurnStart {
 				continue
 			}
 			for _, e := range rule.Then {
 				if e.Do == DoHealShare {
-					pct += e.Amount + w.Grown
+					pct += e.Amount + w.grown(rule)
 				}
 			}
 		}
@@ -1512,25 +1531,44 @@ func (d Duelist) healsFrom() []relicDrain {
 }
 
 // wardsFrom is every shield this duelist's relics raise at the top of a turn, in worn order — the
-// helms. One entry per effect rather than per relic, since a relic raising two colors is two raises.
+// helms, and a trait's raise worn with any relic. One entry per effect rather than per relic, since a
+// relic raising two colors is two raises.
+//
+// **A raise naming "random" rolls its element off `roll`**, once per raise in worn order. A nil source
+// rolls nothing and raises nothing — the determinism contract every field of Sources is under.
 //
 // **No predicate is read**, for healsFrom's reason: the moment has none to read.
-func (d Duelist) wardsFrom() []relicWard {
+func (d Duelist) wardsFrom(roll *rand.Rand) []relicWard {
 	var out []relicWard
 	for _, w := range d.WornRelics() {
-		for _, rule := range RelicOf(w.Relic).Rules {
+		for _, rule := range w.Rules() {
 			if rule.When != MomentTurnStart {
 				continue
 			}
 			for _, e := range rule.Then {
-				if e.Do == DoRaiseShield {
-					out = append(out, relicWard{Relic: w.Relic, Element: e.Element, Count: e.Amount + w.Grown})
+				if e.Do != DoRaiseShield {
+					continue
 				}
+				element := e.Element
+				if e.RandomElement {
+					if roll == nil {
+						continue
+					}
+					element = rollShieldElement(roll)
+				}
+				out = append(out, relicWard{Relic: w.Relic, Element: element, Count: e.Amount + w.grown(rule)})
 			}
 		}
 	}
 	return out
 }
+
+// ShieldElements is what a random shield may be rolled in: the five colors, never basic. Declaration
+// order, so a roll's face is a fixed element.
+var ShieldElements = []Element{Fire, Ice, Lightning, Earth, Arcane}
+
+// rollShieldElement is one random shield's element: one sample, a face per color.
+func rollShieldElement(rng *rand.Rand) Element { return ShieldElements[rng.Intn(len(ShieldElements))] }
 
 // relicWard is one worn relic's shields for the turn: which ring, which element, how many.
 type relicWard struct {
@@ -1591,18 +1629,18 @@ func (d Duelist) blockRewardsFrom(card Card) []blockReward {
 	var out []blockReward
 	for _, w := range d.WornRelics() {
 		r := blockReward{Relic: w.Relic}
-		for _, rule := range RelicOf(w.Relic).Rules {
+		for _, rule := range w.Rules() {
 			if rule.When != MomentHitBlocked || !rule.If.Matches(card) {
 				continue
 			}
 			for _, e := range rule.Then {
 				switch e.Do {
 				case DoReflectDamage:
-					r.Reflect += e.Amount + w.Grown
+					r.Reflect += e.Amount + w.grown(rule)
 				case DoHealOnBlock:
-					r.Heal += e.Amount + w.Grown
+					r.Heal += e.Amount + w.grown(rule)
 				case DoVitaeOnBlock:
-					r.Vitae += e.Amount + w.Grown
+					r.Vitae += e.Amount + w.grown(rule)
 				}
 			}
 		}
@@ -1705,7 +1743,7 @@ func LandingSeats(worn []WornRelic, card Card, lead bool, rungs []HandID) []bool
 	out := make([]bool, len(worn))
 
 	for seat, w := range worn {
-		for _, rule := range RelicOf(w.Relic).Rules {
+		for _, rule := range w.Rules() {
 			if rule.When != MomentBlowFormed || !rule.If.Matches(card) {
 				continue
 			}
@@ -1716,7 +1754,7 @@ func LandingSeats(worn []WornRelic, card Card, lead bool, rungs []HandID) []bool
 				continue
 			}
 			for _, e := range rule.Then {
-				if e.Amount+w.Grown < 2 {
+				if e.Amount+w.grown(rule) < 2 {
 					continue
 				}
 				switch e.Do {
@@ -1766,7 +1804,7 @@ func DMGPerVitae(worn []WornRelic) int {
 func DMGPerVitaeBySeat(worn []WornRelic) []int {
 	by := make([]int, len(worn))
 	for seat, w := range worn {
-		for _, rule := range RelicOf(w.Relic).Rules {
+		for _, rule := range w.Rules() {
 			if rule.When != MomentEquipped {
 				continue
 			}
@@ -1785,7 +1823,7 @@ func DMGPerVitaeBySeat(worn []WornRelic) []int {
 func seatsDoing(worn []WornRelic, do RelicVerb) []bool {
 	seats := make([]bool, len(worn))
 	for seat, w := range worn {
-		for _, rule := range RelicOf(w.Relic).Rules {
+		for _, rule := range w.Rules() {
 			for _, e := range rule.Then {
 				if e.Do == do {
 					seats[seat] = true
@@ -1818,7 +1856,7 @@ func HandScale(worn []WornRelic, satisfied []HandID, cards []Card) (int, []bool,
 		return pct, seats, by
 	}
 	for seat, w := range worn {
-		for _, rule := range RelicOf(w.Relic).Rules {
+		for _, rule := range w.Rules() {
 			if rule.When != MomentBlowFormed {
 				continue
 			}
@@ -1872,7 +1910,7 @@ func AwakenBonus(worn []WornRelic, first Card) (int, []bool, []int) {
 	by := make([]int, len(worn))
 	total := 0
 	for seat, w := range worn {
-		for _, rule := range RelicOf(w.Relic).Rules {
+		for _, rule := range w.Rules() {
 			if rule.When != MomentBlowFormed || !rule.If.First || !rule.If.Matches(first) {
 				continue
 			}
@@ -1897,7 +1935,7 @@ func HandBonus(worn []WornRelic, satisfied []HandID) (int, []bool, []int) {
 		return 0, seats, by
 	}
 	for seat, w := range worn {
-		for _, rule := range RelicOf(w.Relic).Rules {
+		for _, rule := range w.Rules() {
 			if rule.When != MomentBlowFormed || !rule.If.HasHand() || !rule.If.onHand(satisfied) {
 				continue
 			}
@@ -1938,7 +1976,7 @@ func HeldDMG(worn []WornRelic, held []Card) (total, cards int, seats []bool, by 
 	by = make([]int, len(worn))
 
 	for seat, w := range worn {
-		for _, rule := range RelicOf(w.Relic).Rules {
+		for _, rule := range w.Rules() {
 			if rule.When != MomentBlowFormed {
 				continue
 			}
@@ -1974,9 +2012,15 @@ func HeldDMG(worn []WornRelic, held []Card) (total, cards int, seats []bool, by 
 // `lead` says whether this is the blow's first attack card, which is the only thing the `Lead`
 // predicate reads.
 func LandingsOf(worn []WornRelic, card Card, lead bool, rungs []HandID) LandingShape {
+	// **A card's own landings come first**, before any relic's: a trait landing it twice is one more
+	// full-strength landing, and the relics' copies add to it. A defense's landing is its raise, so a
+	// defense lands its second in the defend phase rather than here. See Card.Landings.
 	copies, echoes := 0, 0
+	if card.Spec().Verb == VerbAttack {
+		copies = card.Landings() - 1
+	}
 	for _, w := range worn {
-		for _, rule := range RelicOf(w.Relic).Rules {
+		for _, rule := range w.Rules() {
 			if rule.When != MomentBlowFormed || !rule.If.Matches(card) {
 				continue
 			}
@@ -1990,7 +2034,7 @@ func LandingsOf(worn []WornRelic, card Card, lead bool, rungs []HandID) LandingS
 				continue
 			}
 			for _, e := range rule.Then {
-				amount := e.Amount + w.Grown
+				amount := e.Amount + w.grown(rule)
 				if amount < 2 {
 					continue
 				}
@@ -2086,7 +2130,7 @@ func sumAmounts(worn []WornRelic, m Moment, do RelicVerb) int {
 // because each relic grows its own — see WornRelic.
 func Growth(w WornRelic) int {
 	total := 0
-	for _, rule := range RelicOf(w.Relic).Rules {
+	for _, rule := range w.Rules() {
 		if rule.When != MomentFightWon {
 			continue
 		}
@@ -2244,7 +2288,7 @@ func CardScaleBySeat(worn []WornRelic, card Card, vitae int) []int {
 	out := make([]int, len(worn))
 
 	for seat, w := range worn {
-		for _, rule := range RelicOf(w.Relic).Rules {
+		for _, rule := range w.Rules() {
 			if rule.When != MomentCardDamage || !rule.If.Matches(card) {
 				continue
 			}
@@ -2252,7 +2296,7 @@ func CardScaleBySeat(worn []WornRelic, card Card, vitae int) []int {
 				if e.Do != DoScaleDamage && e.Do != DoScaleDamagePerVitae {
 					continue
 				}
-				e.Amount += w.Grown
+				e.Amount += w.grown(rule)
 				if out[seat] == 0 {
 					out[seat] = 100
 				}
@@ -2363,7 +2407,7 @@ func DealSteps(worn []WornRelic, card Card) []DealStep {
 	running := card
 	for _, w := range worn {
 		next := running
-		for _, rule := range RelicOf(w.Relic).Rules {
+		for _, rule := range w.Rules() {
 			if rule.When != MomentCardDrawn || !rule.If.Matches(running) {
 				continue
 			}
@@ -2448,14 +2492,14 @@ func GrowthEffect(w WornRelic) (RelicEffect, bool) {
 	if !Grows(w.Relic) {
 		return RelicEffect{}, false
 	}
-	for _, rule := range RelicOf(w.Relic).Rules {
+	for _, rule := range w.Rules() {
 		for _, e := range rule.Then {
 			switch e.Do {
 			case DoGrowOnWin, DoGrowOnTurn, DoGrowOnHit, DoGrowPerCard, DoResetGrowth,
 				DoSetElement:
 				continue
 			}
-			e.Amount += w.Grown
+			e.Amount += w.grown(rule)
 			return e, true
 		}
 	}

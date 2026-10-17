@@ -53,6 +53,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -191,34 +192,36 @@ func load(src string) ([]record, error) {
 // record is this tool's view of one fixture. **A duplicate of internal/scenario's, knowingly**,
 // held honest by DisallowUnknownFields above.
 type record struct {
-	ScenarioRecord string     `json:"ScenarioRecord"`
-	Note           string     `json:"Note"`
-	Relics         []string   `json:"Relics"`
-	Weightless     []string   `json:"Weightless"`
-	Hand           []handCard `json:"Hand"`
-	Runes          []string   `json:"Runes"`
-	Stones         []string   `json:"Stones"`
-	Essences       []string   `json:"Essences"`
-	Cantrips       []string   `json:"Cantrips"`
-	Enemy          string     `json:"Enemy"`
-	EnemyElement   string     `json:"EnemyElement"`
-	Screen         string     `json:"Screen"`
-	Fight          int        `json:"Fight"`
-	Vitae          int        `json:"Vitae"`
-	Life           int        `json:"Life"`
-	Deck           []deckLine `json:"Deck"`
-	Seed           string     `json:"Seed"`
-	Dummy          bool       `json:"Dummy"`
-	Actions        int        `json:"Actions"`
-	RoundLimit     int        `json:"RoundLimit"`
-	RelicSlots     int        `json:"RelicSlots"`
-	Teach          bool       `json:"Teach"`
+	ScenarioRecord string              `json:"ScenarioRecord"`
+	Note           string              `json:"Note"`
+	Relics         []string            `json:"Relics"`
+	Weightless     []string            `json:"Weightless"`
+	RelicTraits    map[string][]string `json:"RelicTraits"`
+	Hand           []handCard          `json:"Hand"`
+	Runes          []string            `json:"Runes"`
+	Stones         []string            `json:"Stones"`
+	Essences       []string            `json:"Essences"`
+	Cantrips       []string            `json:"Cantrips"`
+	Enemy          string              `json:"Enemy"`
+	EnemyElement   string              `json:"EnemyElement"`
+	Screen         string              `json:"Screen"`
+	Fight          int                 `json:"Fight"`
+	Vitae          int                 `json:"Vitae"`
+	Life           int                 `json:"Life"`
+	Deck           []deckLine          `json:"Deck"`
+	Seed           string              `json:"Seed"`
+	Dummy          bool                `json:"Dummy"`
+	Actions        int                 `json:"Actions"`
+	RoundLimit     int                 `json:"RoundLimit"`
+	RelicSlots     int                 `json:"RelicSlots"`
+	Teach          bool                `json:"Teach"`
 }
 
 type handCard struct {
 	Card    string   `json:"Card"`
 	Element string   `json:"Element"`
 	Riders  []string `json:"Riders"`
+	Traits  []string `json:"Traits"`
 }
 
 type deckLine struct {
@@ -226,6 +229,7 @@ type deckLine struct {
 	Element string   `json:"Element"`
 	Copies  int      `json:"Copies"`
 	Riders  []string `json:"Riders"`
+	Traits  []string `json:"Traits"`
 }
 
 // copies is how many cards one deck line actually is. Absent or zero is one, exactly as
@@ -471,6 +475,9 @@ func factsOf(r record) []string {
 	if r.Dummy {
 		out = append(out, "DUMMY -- nothing dies")
 	}
+	for _, key := range sortedTraitKeys(r.RelicTraits) {
+		out = append(out, key+": "+strings.Join(r.RelicTraits[key], ", "))
+	}
 	if len(r.Weightless) > 0 {
 		out = append(out, "weightless: "+strings.Join(r.Weightless, ", "))
 	}
@@ -549,7 +556,7 @@ func handLines(r record) []line {
 	for _, c := range r.Hand {
 		out = append(out, line{
 			Card: c.Card, Element: c.Element, Copies: 1,
-			Riders: strings.Join(c.Riders, ", "), Cost: costOf(c.Card),
+			Riders: strings.Join(append(append([]string(nil), c.Riders...), c.Traits...), ", "), Cost: costOf(c.Card),
 		})
 	}
 	return out
@@ -560,7 +567,7 @@ func deckLines(in []deckLine) []line {
 	for _, l := range in {
 		out = append(out, line{
 			Card: l.Card, Element: l.Element, Copies: l.copies(),
-			Riders: strings.Join(l.Riders, ", "), Cost: costOf(l.Card),
+			Riders: strings.Join(append(append([]string(nil), l.Riders...), l.Traits...), ", "), Cost: costOf(l.Card),
 		})
 	}
 	return out
@@ -633,4 +640,15 @@ func formOf(f combat.Form) cards.Form {
 	default:
 		return cards.FormNone
 	}
+}
+
+// sortedTraitKeys is a scenario's trait-carrying relics in key order, so the page is the same on
+// every run.
+func sortedTraitKeys(m map[string][]string) []string {
+	out := make([]string, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
 }

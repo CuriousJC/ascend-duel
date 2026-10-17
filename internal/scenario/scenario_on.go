@@ -57,6 +57,11 @@ type record struct {
 	// way to see a relic with real art worn that way. Every key must also be in Relics.
 	Weightless []string `json:"Weightless"`
 
+	// RelicTraits is which of Relics the run wears with which traits, by the keys
+	// data/relic_traits.json writes — `{"dmg-all-slash": ["armored"]}`. Every relic must also be in
+	// Relics; a trait key the catalog does not hold fails the launch when the run is built.
+	RelicTraits map[string][]string `json:"RelicTraits"`
+
 	// Hand is the opening hand, dealt over whatever the shuffle produced.
 	Hand []handCard `json:"Hand"`
 
@@ -208,6 +213,9 @@ type handCard struct {
 	Card    string   `json:"Card"`
 	Element string   `json:"Element"`
 	Riders  []string `json:"Riders"`
+
+	// Traits are the card's traits by the names combat.CardTrait writes — "effortless", "mirrored".
+	Traits []string `json:"Traits"`
 }
 
 // deckLine is one line of a replacement deck: a card, a color, and how many copies.
@@ -235,6 +243,30 @@ type deckLine struct {
 	// that does not writes the bare name. The vocabulary and which of them take a figure are
 	// `internal/combat`'s, so a misspelling fails the launch like every other word here.
 	Riders []string `json:"Riders"`
+
+	// Traits are the traits these cards arrive carrying, as a hand card's are.
+	Traits []string `json:"Traits"`
+}
+
+// traits resolves the trait names on one line into a set, and reports the first it cannot.
+func traits(names []string) (combat.CardTrait, error) {
+	var out combat.CardTrait
+	for _, name := range names {
+		t, ok := combat.ParseCardTrait(name)
+		if !ok {
+			return 0, fmt.Errorf("%q is not a card trait the rules have", name)
+		}
+		out |= t
+	}
+	return out, nil
+}
+
+// built is a fixture's card: its upgrade on it and its traits with it.
+func built(c combat.Card, riderNames, traitNames []string) combat.Card {
+	c = ridden(c, riderNames)
+	set, _ := traits(traitNames) // check() has already refused anything traits() would reject
+	c.Traits = set
+	return c
 }
 
 // riders resolves the names on one line into real riders, and reports the first it cannot.
@@ -387,6 +419,9 @@ func check(r *record) error {
 		if _, err := riders(c.Riders); err != nil {
 			return fmt.Errorf("deck: %q: %v", c.Card, err)
 		}
+		if _, err := traits(c.Traits); err != nil {
+			return fmt.Errorf("deck: %q: %v", c.Card, err)
+		}
 	}
 	if r.Screen != "" && r.Screen != screenCombat && r.Screen != screenReward && r.Screen != screenShop && r.Screen != screenPortal {
 		return fmt.Errorf("%q is not a screen (want %q, %q, %q or %q)",
@@ -404,6 +439,11 @@ func check(r *record) error {
 	for _, key := range r.Weightless {
 		if !slices.Contains(r.Relics, key) {
 			return fmt.Errorf("weightless names %q, which it does not wear", key)
+		}
+	}
+	for key := range r.RelicTraits {
+		if !slices.Contains(r.Relics, key) {
+			return fmt.Errorf("relic traits name %q, which it does not wear", key)
 		}
 	}
 	// **Only the relics that weigh something need a finger.**
@@ -435,6 +475,9 @@ func check(r *record) error {
 		if _, err := riders(c.Riders); err != nil {
 			return fmt.Errorf("hand: %q: %v", c.Card, err)
 		}
+		if _, err := traits(c.Traits); err != nil {
+			return fmt.Errorf("hand: %q: %v", c.Card, err)
+		}
 	}
 	return nil
 }
@@ -453,6 +496,9 @@ func Relics() []string { return current.Relics }
 
 // Weightless is which of those the fight's duelist wears weightless.
 func Weightless() []string { return current.Weightless }
+
+// RelicTraits is which of those the run wears with which traits, by trait key.
+func RelicTraits() map[string][]string { return current.RelicTraits }
 
 // Runes is what the run opens holding in its sack, by record key. The caller resolves them,
 // for the reason it resolves the relics.
@@ -474,7 +520,7 @@ func Hand() []combat.Card {
 	for _, c := range current.Hand {
 		id, _ := combat.ConceptByKey(c.Card)
 		e, _ := combat.ParseElement(c.Element)
-		out = append(out, ridden(combat.Of(id, e), c.Riders))
+		out = append(out, built(combat.Of(id, e), c.Riders, c.Traits))
 	}
 	return out
 }
@@ -506,7 +552,7 @@ func Deck() []combat.Card {
 			n = 1
 		}
 		for i := 0; i < n; i++ {
-			out = append(out, ridden(combat.Of(id, e), line.Riders))
+			out = append(out, built(combat.Of(id, e), line.Riders, line.Traits))
 		}
 	}
 	return out

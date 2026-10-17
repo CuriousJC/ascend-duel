@@ -147,22 +147,19 @@ func RelicTip(record data.RelicData) (string, []string) {
 	return relicTitle(record), strings.Split(record.Text, "\n")
 }
 
-// The lines a worn relic's tooltip ends on when it is worn weightless or ephemeral — **the word and
-// nothing else** *(owner's call)*. Properties of the wearing, not of the relic, so they are said
-// where it is worn and never on a shelf.
-const (
-	WeightlessTipLine = "Weightless"
-	EphemeralTipLine  = "Ephemeral"
-)
+// WeightlessTipLine is the line a weightless consumable's tooltip ends on — the word and nothing else
+// *(owner's call)*, as a worn relic's traits are said. Properties of the carrying, not of the thing,
+// so they are said where it is held and never on a shelf.
+const WeightlessTipLine = "Weightless"
 
-// WornRelicTip is RelicTip for a relic being worn, with a line for each property of the wearing.
+// WornRelicTip is RelicTip for a relic being worn, ending on a line per trait of the wearing — each
+// trait's own Name out of data/relic_traits.json.
 func WornRelicTip(record data.RelicData, w combat.WornRelic) (string, []string) {
 	title, lines := RelicTip(record)
-	if w.Weightless {
-		lines = append(lines, WeightlessTipLine)
-	}
-	if w.Ephemeral {
-		lines = append(lines, EphemeralTipLine)
+	for _, t := range combat.RelicTraits() {
+		if w.Traits.Has(t) {
+			lines = append(lines, t.Name())
+		}
 	}
 	return title, lines
 }
@@ -186,8 +183,15 @@ func relicTitle(record data.RelicData) string {
 
 // ShopRelicTip is relicTip with the price under it, for a relic on the shelf. **run is who is
 // buying**, so the price quoted is the one charged; nil quotes the list price.
-func ShopRelicTip(record data.RelicData, run *session.Session) (string, []string) {
+func ShopRelicTip(record data.RelicData, run *session.Session, traits combat.RelicTrait) (string, []string) {
 	title, lines := RelicTip(record)
+	// **An offer says the traits it is sold with**, since one like armored has no picture of its
+	// own and would otherwise be bought blind.
+	for _, t := range combat.RelicTraits() {
+		if traits.Has(t) {
+			lines = append(lines, t.Name())
+		}
+	}
 
 	if price, ok := session.RelicPrice(record.RelicRecord); ok {
 		if run != nil {

@@ -200,6 +200,7 @@ func main() {
 		session.StartingRelicSlots = scenario.RelicSlots()
 		session.StartingRelics = scenario.Relics()
 		session.StartingWeightless = scenario.Weightless()
+		session.StartingRelicTraits = scenario.RelicTraits()
 
 		// **A chosen deck, where the relics are a chosen row.** Nil unless the fixture says
 		// otherwise, so this is the authored deck for every scenario that does not care.

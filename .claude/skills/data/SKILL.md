@@ -32,11 +32,46 @@ is what lets every layer above read it, and it **must never import upward**.
 | `screen_art.json` | `LoadScreenArt` | the backdrops behind every screen that is not a duel: one record per picture, the `Screens` it stands behind, a `Draw` brief pasted after `docs/art/screen_art_prompt.MD`, and optional `Anchors` — a card, a button or a painted place a brief positions something against, held to the layout by tests in `internal/screens`. Screen names are checked against `state.ActiveScreen` in `internal/state`, which `data` cannot import |
 | `achievements.json` | `LoadAchievements` | what the player has done: Steamworks' own achievement fields under Steamworks' own names, an icon and its brief, what is said when it lands, and a trigger |
 | `tutorial.json` | `LoadTutorial` | the tutorial script: what Bob says, what he points at, what moves him on |
+| `card_traits.json` | `LoadCardTraits` | the card traits: a `Name`, a tooltip `Text`, and two closed properties the rules read — `Counted` and `Landings`. Read by `internal/combat` at init |
+| `relic_traits.json` | `LoadRelicTraits` | the relic traits: a `Name`, a shelf `Percent`, and `Slot`, `Lasts` and `Rules` in the relic grammar. Parsed and registered in `internal/session` — see MECHANICS.md §Traits |
 | `wording.json` | `LoadWording` | the sentences the fight log and the reward screen say, as templates by `section.key` — `{hole}` filled by code, `{ink:word}` colored, `{mark:word}` marked. Read only by `internal/ui/wording.go`, which declares each sentence's holes and refuses a mismatch at launch |
+
+## The catalog contract — one concept shape for every catalog
+
+**Every catalog the player meets is the same kind of thing**, and a new one is held to the same
+shape: not every catalog fills every part, but every part is a question a new catalog answers out
+loud. `python .claude/skills/data/contract.py` reads the repo and prints which catalogs have which
+parts; `--gaps` prints only what is missing. **Run it before calling a catalog done, and after
+adding one** — a new catalog is a row in its `CATALOGS` table.
+
+| Part | What it is | Where it lives |
+|---|---|---|
+| **Record** | a key field, `<Thing>Record` or the trait's own name, kebab-case | the JSON file, with a `Load…` beside it |
+| **Words** | `Name` — what it is called; `Text` (or `Tip`) — what it says, in a line | the record |
+| **Picture** | `Art`, an assets key, empty for the placeholder through `ArtKey()`; `Draw`, the brief | the record; the prompt in `docs/art/` |
+| **Family** | the motif it was authored beside, for its sheet to group by | the record |
+| **Grammar** | what it *does*, in closed vocabularies resolved at load and refused when wrong | parsed by whoever consumes it — see below |
+| **Source and odds** | where a run meets it — a shelf, a pack, a reward — and its price or chance, **written in data** | the record, or the good holding it |
+| **Its own stream** | any roll that deals or decorates it, salted and split per the `randomness` skill | `internal/seeds` |
+| **Saved by name** | a run writes its key, never an ordinal | `internal/profile`, `internal/session/save.go` |
+| **Scenario hook** | a fixture can put it on without playing to it | `internal/scenario` |
+| **Review sheet** | every record on one page, its words against its rule, its art and brief, the backlog in pink | `tools/<x>sheet` → `docs/sheets/`, registered in `tools/sheets` |
+| **Compendium** | a book of its cards, found or not, with a count under each | `internal/screens/compendium*.go`, and a `Stat…` family in `internal/session/stats.go` |
+| **Design** | the rule, stated forward | a `MECHANICS.md` section |
+
+**A part a catalog goes without is written down with its reason** — in `contract.py`'s `why`
+column — so the next reader sees a decision rather than a gap. A hand has no picture of its own; a
+potion is drunk on the spot and has nothing to carry into a scenario. A dash with no reason beside
+it is work or a reason still to write.
+
+**The two trait catalogs are the worked example of the whole shape**: `relic_traits.json` and
+`card_traits.json` each carry Name, Text, Art, Draw, Family and a Percent, a grammar (`Slot`, `Lasts`
+and relic `Rules`; `Counted` and `Landings`), their own streams (`ShelfTraits`, `ActionTraits`), a
+save by name, a scenario field, `tools/traitsheet`, and the Compendium's TRAITS book.
 
 ## Who may read what, and why it is not "whether it is data"
 
-**Two files are read by `internal/combat` itself**: `hands.json` and `duelist_cards.json`. The
+**Three files are read by `internal/combat` itself**: `hands.json`, `duelist_cards.json` and `card_traits.json`. The
 rest are consumed by `screens`, `decks`, `session` or `entities`.
 
 **`relics.json` is the counter-example, and it is read by `internal/session`.** A relic's rules *are*
@@ -290,7 +325,7 @@ the rules have never heard of a shop.
   `dmg`, `life` — is closed and lives in Go. See `internal/session/potion.go`.
 - **`goods.json` is what the shop sells sight-unseen**: a `Contains` naming which catalog is
   inside, a `Size` saying how many are drawn, and a `Price`. **`Contains` is the closed vocabulary**
-  — `stones`, `essences`, `runes`, `cantrips` — and it is read twice over: it decides which stream the contents
+  — `stones`, `essences`, `runes`, `cantrips`, `cards` — and it is read twice over: it decides which stream the contents
   are dealt from and what happens when one is chosen, *and* it is the noun the card's own face
   writes, so a face and a dialog cannot name different catalogs.
 - **One good per catalog *per size*** *(owner's call, 2026-09-15)*, refused at load. Two goods

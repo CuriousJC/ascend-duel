@@ -88,6 +88,12 @@ type Game struct {
 	// rather than a second report**: the only thing left running after the first is the screen
 	// written to report it. See crash.go.
 	crashed bool
+
+	// sceneUpdated is the tick the active scene's Update last ran on. **A crash report reads it
+	// against the tick it panicked on**: an overlay that takes a tick skips the scene's Update but
+	// not its Draw, so a scene drawn on a tick it was never updated on is a scene drawing state its
+	// Update has not built. See crash.go.
+	sceneUpdated int
 }
 
 func NewGame() *Game {
@@ -265,6 +271,7 @@ func (g *Game) update() error {
 	// Scene errors propagate rather than being discarded. Ebitengine stops the loop
 	// on any non-nil error from Update, so a scene returning one is fatal by design —
 	// which is the only sensible reading of an error a scene cannot handle itself.
+	g.sceneUpdated = g.GlobalState.Count
 	if err := scene.Update(g.GlobalState); err != nil {
 		return err
 	}

@@ -118,6 +118,8 @@ func (g *Game) crash(cause any, stack []byte, shot []byte) {
 		Run:       runSnapshot(gs),
 		Ledger:    runLedger(gs),
 		Scene:     sceneState(g.scene()),
+		Frame:     g.frameState(),
+		Tutorial:  tutorialStep(gs),
 	}, cause, stack)
 
 	// **The journal goes with it.** There is one journal and the next run truncates it, so the run
@@ -216,6 +218,46 @@ func sceneState(scene ui.Scene) (m map[string]any) {
 		return nil
 	}
 	return r.Report()
+}
+
+// frameState is what the frame was doing around the scene on the tick it panicked.
+//
+// **The question it answers is whether the scene was being run at all.** Update hands the tick to
+// the toast, the notice or the ledger before the scene when one is up, and Draw still draws the
+// scene under it — so "which overlay held the tick" and "when did the scene last update" are what
+// separate a fault in a scene from a scene drawn before its Update had built anything.
+//
+// **Read before crash() stands the overlays down**, or every report would say none was open.
+func (g *Game) frameState() (m map[string]any) {
+	defer func() {
+		if r := recover(); r != nil {
+			m = nil
+		}
+	}()
+	gs := g.GlobalState
+	return map[string]any{
+		"sceneUpdated": g.sceneUpdated,
+		"newScreen":    gs.NewScreen,
+		"modalOpen":    gs.ModalOpen,
+		"busy":         gs.Busy,
+		"inputGated":   gs.InputGated,
+		"toast":        g.toast.IsOpen(gs),
+		"notice":       g.notice.Waiting() && noticeAllowed(gs),
+		"ledger":       g.ledger.IsOpen(),
+	}
+}
+
+// tutorialStep is the key of the lesson step on screen, or "" with no lesson running.
+func tutorialStep(gs *state.GlobalState) (key string) {
+	defer func() { _ = recover() }()
+	if gs.Run == nil {
+		return ""
+	}
+	step, ok := gs.Run.Tutorial().Current()
+	if !ok {
+		return ""
+	}
+	return step.Key
 }
 
 // installID is what groups several reports from one player, or "" on a machine with no profile.

@@ -14,6 +14,7 @@
 //	go run ./tools/relicart -kind essence         # the essences instead
 //	go run ./tools/relicart -kind rune     # the runes instead
 //	go run ./tools/relicart -kind stone    # the stones instead
+//	go run ./tools/relicart -kind cantrip-relic  # <record>-relic.png, transparent: makes the relic and the scroll
 //	go run ./tools/relicart -kind card     # the playing cards instead
 //	go run ./tools/relicart -kind upgrade  # the upgrade art an altered card wears over its face
 //	go run ./tools/relicart -kind deck     # the card backs, one per deck
@@ -95,6 +96,18 @@ type catalog struct {
 	// that strays under those makes them unreadable. docs/art/enemy_card_art_prompt.MD asks for the
 	// same box; this is what holds it when a generator does not.
 	field image.Rectangle
+
+	// suffix, when set, is on the end of every file's stem and not on the record's key: a file is
+	// `<record><suffix>.png`, it is committed under that name, and the whole stem is what is written
+	// into the art field. **Only the cantrip-relics set it**, because a cantrip record carries two
+	// pictures — the scroll and the relic it casts — and both are filed into one flat directory.
+	suffix string
+
+	// scroll, when set, makes one transparent picture into **both of a cantrip's faces**: the relic,
+	// cut and laid on the near-black ground, and the scroll, the blank parchment with the same cut
+	// spirit laid on its sheet. **Only the cantrip-relics set it**, so a cantrip has one picture
+	// and its scroll is generated from it — see cantripFaces.
+	scroll bool
 }
 
 // size is what a picture in this catalog is reduced to.
@@ -118,6 +131,11 @@ type source struct {
 	// art is the field the picture's stem is written into, and empty means `Art`. **Only the
 	// achievements differ**, whose field is `AchievedIcon` because the file wears Steamworks' names.
 	art string
+
+	// block, when set, is the object inside the record the art field lives in. **Only the
+	// cantrip-relics set it**: their picture is the `Art` inside a cantrip's `Relic` block, not the
+	// scroll's own `Art` above it.
+	block string
 }
 
 // artField is the name of the field this file records a picture in.
@@ -139,10 +157,12 @@ var catalogs = map[string]catalog{
 		out:     filepath.Join("assets", "essence"),
 		sources: []source{{json: "data/essences.json", key: "EssenceRecord"}},
 	},
-	"cantrip": {
-		inbox:   filepath.Join(".scratch", "to-process-cantrip-art"),
+	"cantrip-relic": {
+		inbox:   filepath.Join(".scratch", "to-process-cantrip-relic-art"),
 		out:     filepath.Join("assets", "cantrip"),
-		sources: []source{{json: "data/cantrips.json", key: "CantripRecord"}},
+		sources: []source{{json: "data/cantrips.json", key: "CantripRecord", block: "Relic"}},
+		suffix:  "-relic",
+		scroll:  true,
 	},
 	"rune": {
 		inbox:   filepath.Join(".scratch", "to-process-rune-art"),
@@ -269,7 +289,16 @@ func main() {
 		if _, weight := cat.split(key); weight != "" {
 			field = data.EnemyCardFieldFor(weight)
 		}
-		img, size, err := reduce(src, w, h, *blocky, field)
+		var (
+			img, scrollFace image.Image
+			size            string
+			err             error
+		)
+		if cat.scroll {
+			img, scrollFace, size, err = cantripFaces(src, w, h)
+		} else {
+			img, size, err = reduce(src, w, h, *blocky, field)
+		}
 		if err != nil {
 			log.Fatalf("%s: %v", key, err)
 		}
@@ -279,6 +308,11 @@ func main() {
 		}
 		if err := writePNG(filepath.Join(*out, key+".png"), img); err != nil {
 			log.Fatal(err)
+		}
+		if scrollFace != nil {
+			if err := writePNG(filepath.Join(*out, cat.recordOf(key)+".png"), scrollFace); err != nil {
+				log.Fatal(err)
+			}
 		}
 		if err := os.MkdirAll(*done, 0o755); err != nil {
 			log.Fatal(err)
@@ -300,8 +334,23 @@ func main() {
 		if err := setWeights(cat.sources[0].json, finished); err != nil {
 			log.Fatal(err)
 		}
-	} else if err := setArt(records, stems); err != nil {
+	} else if err := setArt(records, stems, cat.suffix); err != nil {
 		log.Fatal(err)
+	}
+	// **The scroll each picture made is recorded on the cantrip's own Art**, by the same rewrite, as
+	// a record with no suffix and no block.
+	if cat.scroll {
+		scrolls := map[string]source{}
+		var recs []string
+		for _, stem := range stems {
+			rec := cat.recordOf(stem)
+			src := records[rec]
+			scrolls[rec] = source{json: src.json, key: src.key}
+			recs = append(recs, rec)
+		}
+		if err := setArt(scrolls, recs, ""); err != nil {
+			log.Fatal(err)
+		}
 	}
 	left, err := undrawn(cat)
 	if *kind == "achievement" {
@@ -325,6 +374,13 @@ func (c catalog) recordOf(stem string) string {
 // split is recordOf plus the weight it took off, "" for a catalog without weights.
 func (c catalog) split(stem string) (record, weight string) {
 	if c.elements == nil {
+		if c.suffix != "" {
+			rec, ok := strings.CutSuffix(stem, c.suffix)
+			if !ok {
+				return "", ""
+			}
+			return rec, ""
+		}
 		return stem, ""
 	}
 	for _, el := range c.elements {
@@ -647,12 +703,15 @@ func (c catalog) files() string {
 // would reflow all of it, burying a six-line change in a twelve-hundred-line diff. The essence and
 // rune files are machine-formatted today and would survive a round-trip, but one path through
 // this function is worth more than the difference.
-func setArt(records map[string]source, keys []string) error {
+//
+// Each stem is written whole; the record it lands on is the stem with suffix taken off, which for
+// every catalog but the cantrip-relics is the stem itself.
+func setArt(records map[string]source, stems []string, suffix string) error {
 	// Grouped by file so each one is read once and written once, however a batch was mixed.
 	byFile := map[source][]string{}
-	for _, key := range keys {
-		src := records[key]
-		byFile[src] = append(byFile[src], key)
+	for _, stem := range stems {
+		src := records[strings.TrimSuffix(stem, suffix)]
+		byFile[src] = append(byFile[src], stem)
 	}
 	for src, keys := range byFile {
 		raw, err := os.ReadFile(src.json)
@@ -660,20 +719,28 @@ func setArt(records map[string]source, keys []string) error {
 			return err
 		}
 		s := string(raw)
-		for _, key := range keys {
+		for _, stem := range keys {
+			key := strings.TrimSuffix(stem, suffix)
 			// **Bounded and lazy, so it cannot walk into the next record.** The header fields between
 			// RelicRecord and Art are authored and have grown once already — Family landed between Name
 			// and Art on 2026-09-12, and a pattern allowing exactly one intervening line then matched no
 			// record in the file. Four is headroom for the next one; an unbounded `*` would silently
 			// retarget a record whose own Art was missing.
-			re := regexp.MustCompile(`("` + src.key + `": "` + regexp.QuoteMeta(key) + `",
-(?:[^
-]*
-){0,4}?[ 	]*"` + src.artField() + `": )"[^"]*"`)
+			// **A nested field skips into its block first**, by the same bounded, lazy walk: the
+			// cantrip's own header — Name, Family, Art, Draw, Text — then the block's opening line,
+			// then the block's own header up to its Art. Without the block step the scroll's Art,
+			// which comes first, is the one rewritten.
+			lines := func(n int) string { return `(?:[^\n]*\n){0,` + fmt.Sprint(n) + `}?` }
+			pat := `("` + src.key + `": "` + regexp.QuoteMeta(key) + `",\n`
+			if src.block != "" {
+				pat += lines(8) + `[ \t]*"` + src.block + `": \{\n`
+			}
+			pat += lines(4) + `[ \t]*"` + src.artField() + `": )"[^"]*"`
+			re := regexp.MustCompile(pat)
 			if !re.MatchString(s) {
 				return fmt.Errorf("%s: found no %s field on record %q", src.json, src.artField(), key)
 			}
-			s = re.ReplaceAllString(s, "${1}\""+key+"\"")
+			s = re.ReplaceAllString(s, "${1}\""+stem+"\"")
 		}
 		if err := os.WriteFile(src.json, []byte(s), 0o644); err != nil {
 			return err
@@ -697,6 +764,13 @@ func undrawn(cat catalog) (int, error) {
 			return 0, fmt.Errorf("%s: %w", src.json, err)
 		}
 		for _, r := range file {
+			if src.block != "" {
+				var inner map[string]json.RawMessage
+				if err := json.Unmarshal(r[src.block], &inner); err != nil {
+					return 0, fmt.Errorf("%s: a %s is not an object: %w", src.json, src.block, err)
+				}
+				r = inner
+			}
 			var art string
 			if v, ok := r[src.artField()]; ok {
 				if err := json.Unmarshal(v, &art); err != nil {
@@ -709,4 +783,96 @@ func undrawn(cat catalog) (int, error) {
 		}
 	}
 	return left, nil
+}
+
+// scrollBlank is the blank parchment every cantrip's scroll is generated on, committed beside this
+// tool because nothing else reads it. scrollSheet is its open sheet, as a share of the blank's size:
+// where the spirit is laid.
+const scrollBlank = "tools/relicart/cantrip-scroll-blank.png"
+
+var scrollSheet = [4]float64{130.0 / 1060, 330.0 / 1484, 930.0 / 1060, 1080.0 / 1484}
+
+// scrollFill is how much of the sheet the spirit fills, at most, along whichever side binds first.
+const scrollFill = 0.95
+
+// cutLow and cutHigh are the hard cut every cantrip spirit takes before it is laid on either
+// ground: alpha below cutLow is gone, above cutHigh is solid, a ramp between. **It drops the faint
+// haze a generator leaves round a glowing figure**, which reads as a smudge on the parchment, and
+// keeps the figure itself solid at card size.
+const cutLow, cutHigh = 18, 70
+
+// cantripGround is the near-black a cantrip-relic's spirit is laid on: the ground every relic
+// picture is drawn on.
+var cantripGround = color.NRGBA{R: 20, G: 22, B: 28, A: 255}
+
+// cantripFaces makes both of a cantrip's faces out of one transparent picture of its spirit: the
+// relic, the cut spirit on the near-black ground, and the scroll, the blank parchment with the same
+// cut spirit laid on its sheet. Both come back at the card's own size.
+//
+// **A picture with no transparency is refused**: there is nothing to cut, and laying an opaque
+// rectangle on the parchment would put a dark box on the scroll.
+func cantripFaces(path string, w, h int) (relic, scroll image.Image, size string, err error) {
+	src, err := decodePNG(path)
+	if err != nil {
+		return nil, nil, "", err
+	}
+	b := src.Bounds()
+	size = fmt.Sprintf("%dx%d", b.Dx(), b.Dy())
+	if _, _, _, a := src.At(b.Min.X, b.Min.Y).RGBA(); a != 0 {
+		return nil, nil, "", fmt.Errorf("%s has no transparent ground; the cantrip prompt asks for one", filepath.Base(path))
+	}
+
+	spirit := image.NewNRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			c := color.NRGBAModel.Convert(src.At(x, y)).(color.NRGBA)
+			switch {
+			case c.A < cutLow:
+				c.A = 0
+			case c.A > cutHigh:
+				c.A = 255
+			default:
+				c.A = uint8((int(c.A) - cutLow) * 255 / (cutHigh - cutLow))
+			}
+			spirit.SetNRGBA(x-b.Min.X, y-b.Min.Y, c)
+		}
+	}
+
+	// The relic: the spirit on the near-black, reduced to the card.
+	full := image.NewRGBA(spirit.Bounds())
+	xdraw.Draw(full, full.Bounds(), &image.Uniform{C: cantripGround}, image.Point{}, xdraw.Src)
+	xdraw.Draw(full, full.Bounds(), spirit, image.Point{}, xdraw.Over)
+	relicFace := image.NewRGBA(image.Rect(0, 0, w, h))
+	xdraw.CatmullRom.Scale(relicFace, relicFace.Bounds(), full, full.Bounds(), xdraw.Src, nil)
+
+	// The scroll: the spirit fitted into the blank's sheet, then the whole reduced to the card.
+	blank, err := decodePNG(scrollBlank)
+	if err != nil {
+		return nil, nil, "", err
+	}
+	bb := blank.Bounds()
+	page := image.NewRGBA(image.Rect(0, 0, bb.Dx(), bb.Dy()))
+	xdraw.Draw(page, page.Bounds(), blank, bb.Min, xdraw.Src)
+	sheet := image.Rect(int(scrollSheet[0]*float64(bb.Dx())), int(scrollSheet[1]*float64(bb.Dy())),
+		int(scrollSheet[2]*float64(bb.Dx())), int(scrollSheet[3]*float64(bb.Dy())))
+	sb := spirit.Bounds()
+	k := scrollFill * min(float64(sheet.Dx())/float64(sb.Dx()), float64(sheet.Dy())/float64(sb.Dy()))
+	sw, sh := int(float64(sb.Dx())*k), int(float64(sb.Dy())*k)
+	min0 := image.Pt(sheet.Min.X+(sheet.Dx()-sw)/2, sheet.Min.Y+(sheet.Dy()-sh)/2)
+	xdraw.CatmullRom.Scale(page, image.Rectangle{Min: min0, Max: min0.Add(image.Pt(sw, sh))},
+		spirit, sb, xdraw.Over, nil)
+	scrollFace := image.NewRGBA(image.Rect(0, 0, w, h))
+	xdraw.CatmullRom.Scale(scrollFace, scrollFace.Bounds(), page, page.Bounds(), xdraw.Src, nil)
+
+	return relicFace, scrollFace, size + ", cut, laid on near-black and on the scroll", nil
+}
+
+// decodePNG reads one PNG off disk.
+func decodePNG(path string) (image.Image, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	return png.Decode(f)
 }

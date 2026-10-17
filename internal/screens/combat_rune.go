@@ -64,47 +64,6 @@ func heldRunes(gs *state.GlobalState) []session.Rune {
 	return out
 }
 
-// consumableRowGap is the air between two cards in a row of them. The same gap the shop's shelf
-// takes, so a row of cards reads the same wherever it stands.
-const consumableRowGap = 18
-
-// consumableRowSlots is the left edges of n cards laid out in a centered row.
-//
-// **It tightens rather than overflowing**: the pitch closes up exactly as the hand's does rather
-// than the row running off both edges of the panel.
-//
-// **Its one caller is the shop's pouch now** *(2026-09-06)*, the rune dialog this was written
-// for having gone. It stays here rather than moving because the pouch's row is the same row of
-// full-size cards in a modal, and a second copy is what would drift.
-func consumableRowSlots(r image.Rectangle, n int) []int {
-	if n <= 0 {
-		return nil
-	}
-
-	pitch := cards.Hand.Width + consumableRowGap
-	if width := r.Dx() - 2*consumableRowGap; n*pitch > width {
-		pitch = width / n
-	}
-
-	left := r.Min.X + r.Dx()/2 - (n*pitch-consumableRowGap)/2
-	out := make([]int, n)
-	for i := range out {
-		out[i] = left + i*pitch
-	}
-	return out
-}
-
-// runeCardRects is where each card of a row stands.
-func runeCardRects(r image.Rectangle, n, centerY int) []image.Rectangle {
-	slots := consumableRowSlots(r, n)
-	out := make([]image.Rectangle, len(slots))
-	for i, x := range slots {
-		top := centerY - cards.Hand.Height/2
-		out[i] = image.Rect(x, top, x+cards.Hand.Width, top+cards.Hand.Height)
-	}
-	return out
-}
-
 // canSpendRunes is the one predicate for "a rune may be spent at all".
 //
 // **`planning()` is the whole of it now.** It used to also ask whether the sack had anything in

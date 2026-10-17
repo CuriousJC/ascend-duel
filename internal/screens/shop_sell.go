@@ -60,9 +60,9 @@ func (a shopSale) any() bool { return a.kind != saleNone }
 // **Every screen that shows the band holds one**, through bandControls, so there is one gesture and
 // one tab wherever a relic or a carried card is sold.
 //
-// **A carried card on a screen that can spend it hangs two tabs**, USE over SELL *(owner's call,
-// 2026-10-04)* — the stone pouch's shape. canUse is that screen's answer for one seat, and nil where
-// nothing carried is ever spent; it is set by the band every frame.
+// **A carried card hangs two tabs**, USE over SELL *(owner's call, 2026-10-04)*, on every screen.
+// canUse is that screen's answer for one seat — it lights USE or leaves it dark, and never takes it
+// away — and it is set by the band every frame.
 type sellTab struct {
 	armed      shopSale
 	sellButton *models.Button
@@ -138,8 +138,9 @@ func (s *sellTab) takeUse() (int, bool) {
 	return a.seat, true
 }
 
-// showsUse is whether the armed thing hangs a USE tab: a carried card, on a screen that spends one.
-func (s *sellTab) showsUse() bool { return s.armed.kind == saleHeld && s.canUse != nil }
+// showsUse is whether the armed thing hangs a USE tab: any carried card, whether or not it can be
+// spent here — see canUse, which only decides whether the tab is lit.
+func (s *sellTab) showsUse() bool { return s.armed.kind == saleHeld }
 
 // armedSeat is where the armed thing is sitting, and whether it is still there.
 func (s *sellTab) armedSeat(gs *state.GlobalState) (image.Rectangle, bool) {
@@ -241,7 +242,7 @@ func (s *sellTab) updateSellTab(gs *state.GlobalState) {
 	place(s.sellButton, s.sellTabRect(gs))
 	if s.showsUse() {
 		place(s.useButton, s.useTabRect(gs))
-		ui.SetEnabled(s.useButton, s.canUse(s.armed.seat))
+		ui.SetEnabled(s.useButton, s.canUse != nil && s.canUse(s.armed.seat))
 	}
 
 	// **A tab answers only once the paper has reached it**, so nothing is sold by a click on a tab

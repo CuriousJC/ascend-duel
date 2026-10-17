@@ -280,7 +280,7 @@ catalogs carry all three; every record under `data/motifs/` carries `Art` and `D
   all. **Empty means nobody has written one**, which — read against an empty `Art` — is
   the backlog each sheet marks in pink. **Every enemy and boss `Draw`** is the
   brief its portraits are generated from.
-- **`go run ./tools/relicart -kind relic|essence|rune|stone|cantrip|card|upgrade|other|achievement`** files a generated picture into
+- **`go run ./tools/relicart -kind relic|essence|rune|stone|cantrip-relic|card|upgrade|other|achievement`** files a generated picture into
   any of them: reduce to the card's size, commit under the family's asset directory, write `Art` on
   the record. **`other` is the one kind spanning two files** — the potions and the sealed goods
   share a prompt and an inbox, and the tool writes each record's `Art` back into whichever of

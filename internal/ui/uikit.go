@@ -144,8 +144,8 @@ const FightsPerRealm = journey.FightsPerRealm
 // selecting a card would be a coin toss.
 const dragThreshold = 4
 
-// The slot beside the draw pile: a square sharing the pile's bottom edge. The deck, hands and
-// pouch toggles are all sized from it, which is why the measurements are here rather than on the
+// The slot beside the draw pile: a square sharing the pile's bottom edge. The deck and hands
+// toggles are both sized from it, which is why the measurements are here rather than on the
 // screen that happens to draw the pile.
 const (
 	PileSlotSize = 44

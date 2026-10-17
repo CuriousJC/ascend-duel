@@ -143,6 +143,7 @@ func (g *Game) crash(cause any, stack []byte, shot []byte) {
 	}
 	gs.EarnedThisSession = nil
 	gs.ModalOpen = false
+	gs.Busy = false
 	gs.InputGated = false
 	gs.InputFocus = nil
 

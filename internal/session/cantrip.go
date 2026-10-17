@@ -44,16 +44,12 @@ type Cantrip struct {
 	Family string
 	Art    string
 
-	// Draw is the scroll's art brief, carried for the review sheet; nothing that plays the game reads
-	// it.
-	Draw string
-
 	// Text is the scroll's authored line, which the tooltip says.
 	Text string
 
 	// Relic is the cantrip-relic a cast puts on, registered with the rules under the cantrip's own
-	// record key. RelicName, RelicArt, RelicDraw and RelicText are its face, as Name, Art, Draw and
-	// Text are the scroll's — RelicArt already resolved through data.CantripRelicData.ArtKey.
+	// record key. RelicName, RelicArt, RelicDraw and RelicText are its face, as Name, Art and Text
+	// are the scroll's — RelicArt already resolved through data.CantripRelicData.ArtKey.
 	Relic     combat.RelicID
 	RelicName string
 	RelicArt  string
@@ -149,7 +145,6 @@ func resolveCantrip(rec data.CantripData) (Cantrip, error) {
 		Name:      rec.Name,
 		Family:    rec.Family,
 		Art:       rec.ArtKey(),
-		Draw:      rec.Draw,
 		Text:      rec.Text,
 		Relic:     id,
 		RelicName: rec.Relic.Name,

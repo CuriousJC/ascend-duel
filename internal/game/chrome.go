@@ -207,19 +207,19 @@ func (g *Game) updateChrome(gs *state.GlobalState) {
 	g.settingsButton.ScreenX = r.Min.X + r.Dx()/2
 	g.settingsButton.ScreenY = r.Min.Y + r.Dy()/2
 
-	// **Never disabled.** The mute button that used to live here was, on a machine whose audio
-	// device would not open, because a control that silently did nothing would be worse than one
-	// saying it cannot. This one opens a screen, which always works — the volume bar on that
-	// screen is what goes dead when there is nothing to hear.
+	// **Disabled only while the scene is busy**, on the same flag as every other opener — see
+	// state.Busy. Otherwise it opens a screen, which always works: the volume bar on that screen
+	// is what goes dead when there is nothing to hear.
 	if !chromeShowing(gs) {
 		return
 	}
+	setChromeEnabled(g.settingsButton, !gs.Busy)
 	systems.UpdateButton(gs, g.settingsButton)
 
-	// **Escape presses the cog.** Gated on the tutorial's shield as well as on the button being
-	// drawn — the lesson makes one rectangle clickable, and a key that walked past that would be a
-	// way out of a step the player is being held on.
-	if !gs.InputGated && inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+	// **Escape presses the cog.** Gated on the tutorial's shield and on the cog being live as well
+	// as drawn — the lesson makes one rectangle clickable, and a key that walked past that would be
+	// a way out of a step the player is being held on.
+	if !gs.InputGated && !gs.Busy && inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		g.openSettings()
 		return
 	}
@@ -276,6 +276,7 @@ func (g *Game) updateAnimButton(gs *state.GlobalState) {
 	r := ui.ChromeCornerSlot(gs, ui.ChromeSlotAnimations)
 	g.animButton.ScreenX = r.Min.X + r.Dx()/2
 	g.animButton.ScreenY = r.Min.Y + r.Dy()/2
+	setChromeEnabled(g.animButton, !gs.Busy)
 	systems.UpdateButton(gs, g.animButton)
 }
 
@@ -295,8 +296,9 @@ func (g *Game) updateLedgerButton(gs *state.GlobalState) {
 	g.ledgerButton.ScreenY = r.Min.Y + r.Dy()/2
 
 	// **Dead with no run to account for.** The title screen and the credits have none, and a
-	// panel that opened onto "no run" would be a control that works and says nothing.
-	setChromeEnabled(g.ledgerButton, gs.Run != nil)
+	// panel that opened onto "no run" would be a control that works and says nothing. **And dead
+	// while the scene is busy**, with every other opener — see state.Busy.
+	setChromeEnabled(g.ledgerButton, gs.Run != nil && !gs.Busy)
 	systems.UpdateButton(gs, g.ledgerButton)
 }
 

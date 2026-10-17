@@ -948,6 +948,7 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	// live exits is two. **The sack used to be the fourth dialog** and is now a pane on the top
 	// row — see combat_rune.go.
 	s.hands.Block(s.showDeck)
+	gs.Busy = s.resolving()
 	s.hands.Update(gs)
 
 	s.updateBand(gs)
@@ -1961,6 +1962,16 @@ func (s *CombatScene) drawWorking(gs *state.GlobalState, screen *ebiten.Image) {
 // drawn over the table and the working is part of the table.
 func (s *CombatScene) workingOverChrome(gs *state.GlobalState) bool {
 	return !s.modalUp() && !runOf(gs).Active()
+}
+
+// resolving reports a round still being played out on screen: the log not yet walked, a figure or
+// a shield still moving, the working still written on its scrolls. **While it holds, every opener
+// stands inactive** — the hands button here and the frame's cog, ledger and gallery door — because
+// the working runs over the frame's buttons and a panel opened under it would be read through a
+// sum still being added up. See state.Busy.
+func (s *CombatScene) resolving() bool {
+	return s.cursor < len(s.log) || s.Theater.Running() || s.Theater.mathBox.active ||
+		len(s.Theater.scrolls) > 0
 }
 
 // DrawOverChrome is the working, over the game's frame: a line of arithmetic long enough to reach

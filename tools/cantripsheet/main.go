@@ -127,7 +127,6 @@ func run(dir string) error {
 			Rules:        ruleLines(records[key].Relic.Rules),
 			Examples:     examples(c, body),
 			Family:       c.Family,
-			Draw:         c.Draw,
 			Art:          c.Art,
 			Default:      c.Art == data.DefaultCantripArt,
 			RelicDraw:    c.RelicDraw,
@@ -139,9 +138,6 @@ func run(dir string) error {
 		}
 		if c.RelicArt == data.DefaultCantripRelicArt {
 			page.RelicUndrawn++
-		}
-		if c.Draw == "" {
-			page.Unwritten++
 		}
 		if c.RelicDraw == "" {
 			page.RelicUnwritten++
@@ -468,10 +464,9 @@ type plate struct {
 	Rules     []string
 	Examples  []string
 
-	// Family, Draw and Art are the fields the engine ignores, for the scroll and then the relic.
-	// Default says the picture is the placeholder rather than one of its own.
+	// Family, Art and RelicDraw are the fields the engine ignores. Default says the picture is the
+	// placeholder rather than one of its own.
 	Family       string
-	Draw         string
 	Art          string
 	Default      bool
 	RelicDraw    string
@@ -498,7 +493,6 @@ type page struct {
 	Cap            int
 	Body           string
 	Undrawn        int
-	Unwritten      int
 	RelicUndrawn   int
 	RelicUnwritten int
 	Effects        []effectCount

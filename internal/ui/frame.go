@@ -129,9 +129,6 @@ const (
 	// ChromeSlotSettings is the frame's cog, in the corner itself.
 	ChromeSlotSettings = iota
 
-	// ChromeSlotStones is the shop's pouch button, next to it.
-	ChromeSlotStones
-
 	// ChromeSlotAnimations is the animation gallery's door, and it is **the last slot on purpose**:
 	// it is drawn only while state.DebugAnimations is on, so with the flag off the strip ends where
 	// it always did and nothing moves. A debug square taking a seat between two real controls would

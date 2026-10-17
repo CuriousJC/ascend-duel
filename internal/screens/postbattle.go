@@ -453,6 +453,11 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 	// offer behind it.
 	s.deck.Block(s.hands.IsOpen())
 	s.hands.Block(s.deck.IsOpen())
+
+	// **The settled stage is busy**: the essence is changing cards where they stand and the deck has
+	// not taken the change yet, so the openers stand inactive until the screen moves on. See
+	// state.Busy.
+	gs.Busy = s.stage == settled
 	if s.deck.Update(gs, ui.OwnedContents(gs)) {
 		return nil
 	}
@@ -1011,9 +1016,13 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	defer systems.DrawTooltip(gs, screen, &s.tip)
 	defer drawBandOverlay(gs, screen, &s.band)
 
+	// **The settled stage still draws the deck and hands buttons**, inactive — see state.Busy. A
+	// button that vanished on the click that used the essence read as a button that had gone.
 	switch s.stage {
 	case settled:
 		s.drawSettled(gs, screen)
+		s.deck.Draw(gs, screen, ui.OwnedContents(gs))
+		s.hands.Draw(gs, screen, ui.OwnedHands(gs))
 		return
 	}
 

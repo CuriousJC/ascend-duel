@@ -701,7 +701,8 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 			stone.Record, stone.Shape, gs.Run.StonesOn(stone.Hands()[0]))
 
 		// **It is used up in front of the player**: lifted out of the bag, crumbled in the middle,
-		// its dust carried to the hands button — the ladder it raised — as one spent from the pouch.
+		// its dust carried to the hands button — the ladder it raised — as one used from the
+		// consumables pane.
 		g.use = stoneUseFrom(gs, ui.StoneSpec(gs, stone, true), g.slot(gs, i))
 		g.stage = goodsUsing
 		g.tip.Forget()
@@ -962,11 +963,12 @@ func stoneTipLines(gs *state.GlobalState, st session.Stone) []string {
 		worth := session.StoneWorth(hand, have)
 		line := fmt.Sprintf("%s +%s", stoneHandName(hand), stoneMultiplier(worth))
 		if gs.Run != nil {
-			// **The level the rung reaches with this stone**, counted as the hands panel counts it:
-			// level 1 is the rung as shipped, so a rung with no stones goes to level 2.
+			// **The rung this stone makes, and what it adds to get there**: the level counted as the
+			// hands panel counts it — level 1 is the rung as shipped, so a stone never shows it — and
+			// the multiplier at that level, with the stone's share beside it.
 			if now, ok := gs.Run.HandMultiplier(hand); ok {
-				line = fmt.Sprintf("%s Level %d: %s -> %s", stoneHandName(hand), have+2,
-					stoneMultiplier(now), stoneMultiplier(now+worth))
+				line = fmt.Sprintf("%s Level %d: %s (+%s)", stoneHandName(hand), have+2,
+					stoneMultiplier(now+worth), stoneMultiplier(worth))
 			}
 		}
 		out = append(out, line)

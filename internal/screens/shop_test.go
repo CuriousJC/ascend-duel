@@ -1,7 +1,6 @@
 package screens
 
 import (
-	"image"
 	"math/rand"
 	"testing"
 
@@ -210,8 +209,11 @@ func TestClickingAWornRelicOnlyArmsIt(t *testing.T) {
 	}
 }
 
-// The tab hangs under the armed relic or carried card, so it has to clear the shelf under the band
-// whichever pane it is in.
+// The tab hangs under the armed relic or carried card. **A relic's one tab clears the shelf under
+// the band; a carried card's two may hang over it** *(owner's call)* — USE over SELL is taller than
+// the gap, and the band takes the press before the shelf does (see ShopScene.Update), so a tab over
+// the shelf can never buy what is under it. What holds for both is that a tab hangs below its own
+// card and no wider than it.
 func TestTheSellTabClearsTheShelf(t *testing.T) {
 	gs := shopState(t)
 	if !gs.Run.Hold(session.Runes()[0].Record) {
@@ -227,7 +229,7 @@ func TestTheSellTabClearsTheShelf(t *testing.T) {
 			t.Fatalf("%+v is armed and has no seat", sale)
 		}
 		tab := shop.band.sale.sellTabRect(gs)
-		if shelf := shopPaneBackRect(gs, shopPaneRelics).Min.Y; tab.Max.Y >= shelf {
+		if shelf := shopPaneBackRect(gs, shopPaneRelics).Min.Y; sale.kind == saleRelic && tab.Max.Y >= shelf {
 			t.Errorf("%+v: the tab ends at %d and the shelf starts at %d", sale, tab.Max.Y, shelf)
 		}
 		if tab.Min.Y < seat.Max.Y {
@@ -282,15 +284,15 @@ func TestTheCornerControlsDoNotOverlap(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
 	settings := ui.ChromeCornerSlot(gs, ui.ChromeSlotSettings)
-	stones := ui.ChromeCornerSlot(gs, ui.ChromeSlotStones)
+	gallery := ui.ChromeCornerSlot(gs, ui.ChromeSlotAnimations)
 
-	if !stones.Intersect(settings).Empty() {
-		t.Errorf("the bottom line overlaps: settings %v, stones %v", settings, stones)
+	if !gallery.Intersect(settings).Empty() {
+		t.Errorf("the bottom line overlaps: settings %v, gallery %v", settings, gallery)
 	}
-	if stones.Min.X < 0 || settings.Max.X > gs.ScreenWidth || settings.Max.Y > gs.ScreenHeight {
-		t.Errorf("the bottom line runs off the screen: %v to %v", stones, settings)
+	if gallery.Min.X < 0 || settings.Max.X > gs.ScreenWidth || settings.Max.Y > gs.ScreenHeight {
+		t.Errorf("the bottom line runs off the screen: %v to %v", gallery, settings)
 	}
-	if stones.Min.Y != settings.Min.Y {
+	if gallery.Min.Y != settings.Min.Y {
 		t.Error("the two squares are not on one line")
 	}
 
@@ -301,37 +303,6 @@ func TestTheCornerControlsDoNotOverlap(t *testing.T) {
 		if !rung.Intersect(settings).Empty() {
 			t.Errorf("column slot %d at %v stands on the settings button at %v",
 				i, rung, settings)
-		}
-	}
-}
-
-// TestTheTabsUnderAnArmedStoneStayInsideThePanel holds the two confirm tabs against the frame they
-// hang in. A tab drawn outside the modal panel is a control on a scrim.
-func TestTheTabsUnderAnArmedStoneStayInsideThePanel(t *testing.T) {
-	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
-
-	run := session.New(combat.PlainCards(combat.Bash))
-	for _, key := range []string{"agate", "jasper", "onyx"} {
-		if !run.Carry(key) {
-			t.Fatalf("the catalog has no stone %q", key)
-		}
-	}
-	gs.Run = run
-
-	s := &ShopScene{}
-	s.pouch.init()
-
-	panel := ui.ModalPanelRect(gs)
-	for i := range run.Carried() {
-		s.pouch.armed = i
-		use, sell := s.pouch.tabRects(gs)
-		for _, tab := range []image.Rectangle{use, sell} {
-			if !tab.In(panel) {
-				t.Errorf("seat %d hangs a tab at %v, outside the panel %v", i, tab, panel)
-			}
-		}
-		if use.Max.X >= sell.Min.X {
-			t.Errorf("seat %d overlaps its own two tabs: %v and %v", i, use, sell)
 		}
 	}
 }

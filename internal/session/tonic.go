@@ -56,6 +56,10 @@ const (
 
 	// TonicRelicSlots lets the run wear Amount more relics.
 	TonicRelicSlots
+
+	// TonicBundleUpgrades gives every card an action bundle deals an Amount percent chance of coming
+	// with an upgrade, picked evenly from every upgrade rune. See BundleUpgradePercent.
+	TonicBundleUpgrades
 )
 
 // pressureRounds is how many rounds a Pressure tonic takes off the clock.
@@ -150,6 +154,8 @@ func resolveTonic(rec data.TonicData) (Tonic, error) {
 	switch {
 	case effect == TonicDiscount && rec.Amount >= 100:
 		return Tonic{}, fmt.Errorf("%s: %d%% off is not a discount the shop can give", rec.TonicRecord, rec.Amount)
+	case effect == TonicBundleUpgrades && rec.Amount > 100:
+		return Tonic{}, fmt.Errorf("%s: a %d%% chance is not a chance", rec.TonicRecord, rec.Amount)
 	case effect == TonicPressure && rec.Amount < 2:
 		return Tonic{}, fmt.Errorf("%s: a pressure tonic multiplying vitae by %d pays nothing for the round it takes",
 			rec.TonicRecord, rec.Amount)
@@ -184,6 +190,8 @@ func (e TonicEffect) String() string {
 		return "discards"
 	case TonicRelicSlots:
 		return "relic-slots"
+	case TonicBundleUpgrades:
+		return "bundle-upgrades"
 	default:
 		return fmt.Sprintf("TonicEffect(%d)", int(e))
 	}
@@ -193,7 +201,7 @@ func (e TonicEffect) String() string {
 // ones the catalog reaches for.
 func TonicEffects() []TonicEffect {
 	return []TonicEffect{TonicDiscount, TonicCostCut, TonicPressure, TonicHandSize, TonicDiscards,
-		TonicRelicSlots}
+		TonicRelicSlots, TonicBundleUpgrades}
 }
 
 func parseTonicEffect(name string) (TonicEffect, error) {
@@ -210,6 +218,8 @@ func parseTonicEffect(name string) (TonicEffect, error) {
 		return TonicDiscards, nil
 	case "relic-slots":
 		return TonicRelicSlots, nil
+	case "bundle-upgrades":
+		return TonicBundleUpgrades, nil
 	default:
 		return 0, fmt.Errorf("%q is not an effect a tonic has", name)
 	}
@@ -393,6 +403,11 @@ func (s *Session) HandSize(base int) int { return base + s.tonicTotal(TonicHandS
 
 // Discards is how many discards a round of this run allows: base plus every discards tonic.
 func (s *Session) Discards(base int) int { return base + s.tonicTotal(TonicDiscards) }
+
+// BundleUpgradePercent is the chance, out of 100, that a card an action bundle deals comes with an
+// upgrade: every bundle-upgrades tonic drunk, summed, and never past 100. Zero for a run that has
+// drunk none, which deals plain cards.
+func (s *Session) BundleUpgradePercent() int { return min(s.tonicTotal(TonicBundleUpgrades), 100) }
 
 // tonicRounds is what the drunk tonics do to the round limit.
 func (s *Session) tonicRounds() int {

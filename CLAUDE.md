@@ -842,9 +842,11 @@ than a drift.
   destructive answer takes `ui.ModalCloseColor` — the only red in the game. It does **not** borrow
   the X: an X means "put this away", and a question with one has three answers where it should
   have two.
-- **The callbacks are rebound every frame**, because one dialog serves two callers and a callback
-  wired once at build time answers the previous caller's question.
-- **Cancel is the safe answer and it is on the left.**
+- **The callbacks and labels are rebound every frame**, because one dialog serves several callers
+  — abandoning a run, and EXIT on the title and settings screens (`askExit`) — and a callback wired
+  once at build time answers the previous caller's question.
+- **The safe answer is on the left.** `Ask` names it CANCEL; `AskAnswers` lets a caller name both,
+  which is how the exit question reads YES and NO. **EXIT never closes the program on one click.**
 
 ### The settings screen, and the second widget in the game
 

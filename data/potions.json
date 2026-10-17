@@ -6,7 +6,7 @@
     "Art": "heal-life",
     "Draw": "a heavy glass flask of dark red draught, a broad cork driven into its short neck, the liquid glowing faintly at its heart",
     "Effect": "heal",
-    "Amount": 15,
+    "Amount": 25,
     "Price": 4
   },
   {

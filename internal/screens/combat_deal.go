@@ -93,6 +93,12 @@ type handDeal struct {
 
 	// hold is the beat one ring's toast runs for.
 	hold ui.Travel
+
+	// returns are the discard folding back into the pile when this deal ran it dry, one card back
+	// each, and nil for a deal that did not. emptyAfter is the dealt card whose departure leaves
+	// the pile empty — -1 when it was empty before the deal began. See combat_reshuffle.go.
+	returns    []ui.Travel
+	emptyAfter int
 }
 
 // dealRing is one relic in the cascade.
@@ -208,6 +214,7 @@ func (s *CombatScene) startDeal(from int, pile []combat.Card) {
 	}
 
 	count := len(s.hand)
+	delay := s.reshuffleDelays(&deal, len(pile))
 	for i, raw := range pile {
 		faces := []dealFace{{ring: -1, spec: s.dealFace(raw)}}
 
@@ -220,7 +227,7 @@ func (s *CombatScene) startDeal(from int, pile []combat.Card) {
 
 		deal.cards = append(deal.cards, dealtHandCard{
 			index: from + i, Count: count,
-			flight: ui.NewTravel(i*flightStaggerPer(), flightTicks()),
+			flight: ui.NewTravel(delay(i), flightTicks()),
 			faces:  faces,
 		})
 	}
@@ -267,6 +274,9 @@ func (s *CombatScene) tickDeal() {
 	}
 	for i := range d.rings {
 		d.rings[i].shake.Tick()
+	}
+	for i := range d.returns {
+		d.returns[i].Tick()
 	}
 
 	switch d.stage {
@@ -390,6 +400,7 @@ func (s *CombatScene) dealRingClock(key string) (ui.Travel, bool) {
 // drawDeal draws the cards the sequence owns: flying out of the pile, standing in the row wearing
 // whichever face the cascade has reached, or coming apart into the next one.
 func (s *CombatScene) drawDeal(gs *state.GlobalState, screen *ebiten.Image) {
+	s.drawReturns(gs, screen)
 	for _, c := range s.Theater.deal.cards {
 		if c.flight.Waiting() {
 			continue

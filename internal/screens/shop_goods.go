@@ -371,6 +371,10 @@ func dealScrolls(gs *state.GlobalState, seat string, size int) []session.Cantrip
 // traits, each split by the bundle's own record — and the traits split again by trait — so a trait's
 // odds moving rerolls no card, and one bundle's contents are not the first cards of a bigger one's.
 // **Flat, not weighted**, like the bag of rocks: a playing card has no rarity.
+//
+// **A bundle-upgrades tonic adds a third**, `seeds.ActionUpgrades`, split by the bundle: each card
+// rolls once for one upgrade, picked evenly from every upgrade rune. A run that has drunk none draws
+// nothing from it.
 func dealActionCards(gs *state.GlobalState, seat string, size int) []combat.Card {
 	pool := session.ActionPool()
 	if len(pool) == 0 || gs.Run == nil {
@@ -390,6 +394,13 @@ func dealActionCards(gs *state.GlobalState, seat string, size int) []combat.Card
 			if roll.Intn(100) < t.Percent {
 				out[i] = out[i].WithTrait(t.Trait, true)
 			}
+		}
+	}
+
+	if pct := gs.Run.BundleUpgradePercent(); pct > 0 {
+		roll := rand.New(rand.NewSource(seeds.ForFightSeat(gs.RunSeed, seeds.ActionUpgrades, gs.Run.Fight(), seat)))
+		for i := range out {
+			out[i] = session.RollBundleUpgrade(out[i], pct, roll)
 		}
 	}
 	return out

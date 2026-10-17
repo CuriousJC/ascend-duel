@@ -131,8 +131,9 @@ inside the same blow.
 | `Tier` | **the rung of its form's ladder** a card sits on — its *declared* cost, 1/2/3 | `{ "Tier": 3 }` — Atrophy |
 | `Lead` | **the turn's first attack card**, not a fact about the card | `{ "Lead": true }` — Echo. `blow-formed` only; refused elsewhere |
 | `Hand` | **the rung the turn formed**, by its `hands.json` key | `{ "Hand": "concept-full-house" }` — the rung relics. `blow-formed` only, and refused alongside any card predicate |
-| `First` | **the turn's first card as queued**, defenses included — and the rule's card predicates are read against that card | `{ "First": true, "Element": "fire" }` — the Awakenings. `blow-formed` with `awaken` only, and refused beside `Lead`, `Hand` or `MinForms` |
+| `Preceding` | **every card queued ahead of each attack**, defenses included — and the rule's card predicates are read against each of them | `{ "Preceding": true, "Element": "fire" }` — the Awakenings. `blow-formed` with `awaken` only, and refused beside `Lead`, `Hand` or `MinForms` |
 | `MinForms` | **how many distinct forms the turn's scoring cards cover** | `{ "Hand": "pair", "MinForms": 2 }` — Dual Wield. `blow-formed` only. Legal beside `Hand`, since both narrow the same set |
+| `Favored` | **whatever the run has attacked with most** on one axis — `element` or `form` — read off `Duelist.FavoredElement` / `FavoredForm`, which `Session.EquipWorn` sets from `Session.Favorites`. No single favorite (a tie, or no attacks yet) leaves the rule asleep | `{ "Favored": "element" }` — the Torrents. `turn-taken` with `grow-on-streak` only, and refused beside a card predicate on the same axis |
 | *(absent)* | always | Banker, Hungry, the stat relics |
 
 **`Tier` reads the declared cost, never the wearer's.** A discount relic makes a Skewer cost 2 to the
@@ -184,6 +185,7 @@ not ignored.
 | `add-dmg-per-vitae` | `equipped` | `Amount` | adds `Amount` to the duelist's **DMG per vitae the run holds** — Rampant. Folded into the DMG a blow is swung at beside `add-hand-dmg`'s raise, so every hit grows by its card's own multiplier. The verb declares a *rate*; the product is re-read at **every blow** against `Duelist.Vitae`, which moves inside a fight |
 | `scale-hand-damage` | `blow-formed` | `Amount` | scales **every hit**, after the hand's own multiplier (the HAND RELICS step), when it formed the named rung — the Pairing / Oak / Pentacle family. A **second multiplier**: `Event.Multiplier` stays the ladder's figure, because that is what the banner and hand row show |
 | `scale-damage-per-vitae` | `card-damage` | `Amount` | scales a matching card by **Amount percentage points per vitae held** — Fire of Life. 1 is +1% a vitae |
+| `grow-on-streak` | `turn-taken` | `Amount` | the accumulator, **once per turn whose attack cards all match**, and **back to zero on a turn holding an attack that does not**; a turn with no attack does neither. Refused with no `If`. Reads as a resetting relic, so the run takes its figure back outright — the Torrents |
 | `reset-growth` | `turn-taken` | *nothing* | puts the accumulator back to zero. **Growth is applied first and resets second**, so a turn cannot both bank and lose the same step |
 | `grow-on-hit` | `attack-lands` | `Amount` | the same accumulator, **once per matching hit that connects** — so the card queued first is counted bare and pays for the one behind it to be counted bigger. Echoes and repeats each count; a fizzle or a block does not |
 | `scale-propagation` | `fight-won` | `Amount` percent | scales vitae propagation, *after* its cap |
@@ -203,10 +205,11 @@ not ignored.
 | `reflect-damage` | `hit-blocked` | `Amount` percent | sends that share of the eaten hit, **as it would have landed** and rounded down, back at the thrower as plain damage — no drain, no growth. A thrower it kills falls there and the rest of their turn is not thrown. The Thorned Shield |
 | `heal-on-block` | `hit-blocked` | `Amount` flat | restores that much life to the wearer per block, capped at full. The Mending Shield |
 | `vitae-on-block` | `hit-blocked` | `Amount` flat | pays the wearer that much vitae per block, stepping `Duelist.Vitae`. The Tithe Shield |
+| `surge-on-block` | `hit-blocked` | `Amount` points | banks `Amount` AP on `Duelist.Surge` per block of a matching hit, **on top of** a matched block's own surge, and sets the block's `Surged` so the screen writes SURGE. The form shields — Spiked, Razor, Rock |
 | `pierce-element` | `equipped` | `Element` | the wearer's cards of that element **land on a creature of it** instead of fizzling — the Attunements. Read off the thrower in `fizzles`. Basic refused |
 | `surge-per-card` | `turn-taken` | `Amount` points | banks `Amount` AP on `Duelist.Surge` **for every matching card of the turn**, whatever its hit did — the form Attunements. Spent like a block's surge. Refused with no `If` |
 | `shield-per-card` | `turn-taken` | `Amount` shields | raises `Amount` shields **for every matching card of the turn**, each in that card's element and heaped over that card, as the turn closes — the staggers. Whatever its hit did. Refused with no `If`; bounded per card at `MaxShields` |
-| `awaken` | `blow-formed` | `Amount` flat | every **attack** queued after the first card is swung at `Amount` more DMG — **before the card's own multiplier**, so the card, its riders and the relics that price it all multiply it — the Awakenings. Needs `First`. Two that wake add. `Event.HandAwaken` |
+| `awaken` | `blow-formed` | `Amount` flat | every **attack** is swung at `Amount` more DMG **for each matching card queued ahead of it** — **before the card's own multiplier**, so the card, its riders and the relics that price it all multiply it — the Awakenings. Needs `Preceding`. A card never counts itself; two that wake add. `Event.HandAwaken`, `HandAwakenBy` |
 | `copy-consumable` | `fight-begun` | `Amount` copies | a weightless copy of one carried consumable picked off `seeds.PearlCopy`, weightless copies included — the Eternity Pearl |
 | `adjust-essence-targets` | `essence-spent` | `Amount` cards, **signed** | moves how many cards one essence is spent on. 1 is two where the mechanic gives one; **every delta sums and worn order decides nothing**, because addition commutes, so two relics are three cards. **Floored at one card, never at none** |
 

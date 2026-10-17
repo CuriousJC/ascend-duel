@@ -51,6 +51,11 @@ type JourneyData struct {
 	// the journey at 4. The cut evens out to the dial's figure as the curve lifts the numbers.
 	HPScale  int `json:"HPScale"`
 	DMGScale int `json:"DMGScale"`
+
+	// WinHealPercent is how much of the player's max life every won fight gives back, as a whole
+	// percentage, rounded up so any heal is worth at least one life. Zero heals nothing. It comes
+	// off the wound the fight left, after the win's payout has read the life the fight ended on.
+	WinHealPercent int `json:"WinHealPercent"`
 }
 
 // LoadJourney reads the journey's numbers, refusing any that would stop the journey being a journey.
@@ -67,6 +72,9 @@ func LoadJourney() JourneyData {
 	}
 	if t.HPScale <= 0 || t.DMGScale <= 0 {
 		panic("journey.json: HPScale and DMGScale must be above zero — 10000 is the roster as authored")
+	}
+	if t.WinHealPercent < 0 || t.WinHealPercent > 100 {
+		panic("journey.json: WinHealPercent is a share of max life, 0 to 100")
 	}
 	return t
 }

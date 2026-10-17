@@ -178,3 +178,36 @@ func TestAMendingShieldHealsPerBlockAndATitheShieldPays(t *testing.T) {
 		t.Errorf("wanted two tithe announcements, got %d", count(events, KindTithed))
 	}
 }
+
+// TestAFormShieldSurgesPerBlockOfItsForm. Two fire shields eat an ice crush and an ice stab: the
+// Rock Shield banks one AP for the crush and nothing for the stab, and the block says it surged.
+// An ice shield eating the crush banks the matched block's point beside the relic's.
+func TestAFormShieldSurgesPerBlockOfItsForm(t *testing.T) {
+	rock := relic(t, "surge-block-crush", RelicRule{
+		When: MomentHitBlocked,
+		If:   RelicCondition{Form: FormCrush, HasForm: true},
+		Then: []RelicEffect{{Do: DoSurgeOnBlock, Amount: 1}},
+	})
+	a := duelist(10, 6, 500).Wearing(WornRelic{Relic: rock})
+
+	events, a1, _ := resolve(a, creature(Ice, 10, 6, 5000),
+		[]Card{Of(Block, Fire)}, []Card{Of(Bash, Ice), Of(Jab, Ice)}, 1)
+	if a1.Surge != 1 {
+		t.Errorf("a crush and a stab blocked banked %d AP, want 1", a1.Surge)
+	}
+	surged := 0
+	for _, e := range events {
+		if e.Kind == KindBlocked && e.Surged {
+			surged++
+		}
+	}
+	if surged != 1 {
+		t.Errorf("%d blocks said they surged, want the crush's alone", surged)
+	}
+
+	_, a2, _ := resolve(a, creature(Ice, 10, 6, 5000),
+		[]Card{Of(Brace, Ice)}, []Card{Of(Bash, Ice)}, 1)
+	if a2.Surge != 2 {
+		t.Errorf("an ice shield eating an ice crush banked %d AP, want the match and the relic: 2", a2.Surge)
+	}
+}

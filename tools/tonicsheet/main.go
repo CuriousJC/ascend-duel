@@ -250,6 +250,8 @@ func tipLines(t session.Tonic) []string {
 		return []string{fmt.Sprintf("%d more discard every round", t.Amount)}
 	case session.TonicRelicSlots:
 		return []string{fmt.Sprintf("wear %d more relic", t.Amount)}
+	case session.TonicBundleUpgrades:
+		return []string{fmt.Sprintf("action bundle cards have a %d%% chance", t.Amount), "of coming with an upgrade"}
 	}
 	return nil
 }

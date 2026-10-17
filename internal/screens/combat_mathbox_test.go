@@ -573,9 +573,9 @@ func TestAnAwakeningIsARowUnderTheDMG(t *testing.T) {
 	e.HandDMG = 10
 	e.HandCardPct[1], e.HandCardBase[1] = 200, 40
 	e.HandAwaken[1] = 10
-	e.Awaken, e.AwakenSeats, e.AwakenBy = 10, []bool{true}, []int{10}
+	e.AwakenSeats, e.HandAwakenBy[1] = []bool{true}, []int{10}
 
-	sameLines(t, "a Pair behind a fire opener", linesOf(e),
+	sameLines(t, "a Pair behind a fire card", linesOf(e),
 		[]string{"20 x 1.5 = 30", "+ 10 + 10 x 2 x 1.5 = 60"})
 
 	// The DMG, then the woken 10 on its own row, then the card's multiplier under both, since it
@@ -595,7 +595,7 @@ func TestTwoAwakeningsAreTwoRows(t *testing.T) {
 	e.HandDMG = 15
 	e.HandCardPct[1], e.HandCardBase[1] = 200, 70
 	e.HandAwaken[1] = 20
-	e.Awaken, e.AwakenSeats, e.AwakenBy = 20, []bool{true, false, true}, []int{10, 0, 10}
+	e.AwakenSeats, e.HandAwakenBy[1] = []bool{true, false, true}, []int{10, 0, 10}
 
 	rows := scriptRows(hitScript(e, 1, false))
 	if len(rows) < 4 || rows[0] != "+ 15" || rows[1] != "+ 10" || rows[2] != "+ 10" || rows[3] != "x 2" {

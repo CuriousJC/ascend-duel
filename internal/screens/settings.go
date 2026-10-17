@@ -189,7 +189,7 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 		s.abandon.BaseColor = ui.ModalCloseColor
 		s.abandon.TextSize = 40
 
-		s.exit = models.NewButton(760, ui.ButtonLarge, settingsExitLabel, func() { actions.QuitGame(gs) })
+		s.exit = models.NewButton(760, ui.ButtonLarge, settingsExitLabel, func() { askExit(gs, &s.confirm) })
 		s.exit.TextSize = 40
 	}
 

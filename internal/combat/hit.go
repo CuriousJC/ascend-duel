@@ -165,19 +165,19 @@ func strike(
 	// after it on every hit — the HAND RELICS step.
 	e.HandScale, e.HandScaleSeats, e.HandScaleBy = HandScale(worn, blow.Satisfied, scoringCards(blow, turn))
 
-	// **The turn's first card wakes the Awakenings**, and every attack after it is swung at their
-	// figure on top of the turn's DMG — before the card's own multiplier, so the card multiplies it.
+	// **Every attack is swung at what the Awakenings found ahead of it** on top of the turn's DMG —
+	// before the card's own multiplier, so the card multiplies it.
 	//
-	// **First as the player queued it**, not as the turn resolves: the defend phase goes first, so
+	// **Ahead as the player queued it**, not as the turn resolves: the defend phase goes first, so
 	// a Brace queued third is turn[0] here. A slot's Index is its place in the queue.
-	opener := firstQueued(turn)
-	e.Awaken, e.AwakenSeats, e.AwakenBy = AwakenBonus(worn, turn[opener].Card)
-	e.AwakenOpener = opener
+	var awakenBy [][]int
+	awakenBy, e.AwakenSeats, e.AwakenOpeners = AwakenBonus(worn, turn)
 	awaken := func(l landing) int {
-		if e.Awaken == 0 || l.seat == opener || turn[l.seat].Card.Spec().Verb != VerbAttack {
-			return 0
+		n := 0
+		for _, add := range awakenBy[l.seat] {
+			n += add
 		}
-		return e.Awaken
+		return n
 	}
 
 	for _, i := range blow.Rung {
@@ -245,6 +245,7 @@ func strike(
 			}
 			e.HandPlayPct[at] = card.ScaleOnPlay()
 			e.HandAwaken[at] = woke
+			e.HandAwakenBy[at] = append([]int(nil), awakenBy[l.seat]...)
 			e.HitAmounts[at] = figure
 			if l.nth > 0 {
 				// **Only the extra landings are attributed to a relic.** The card's own first
@@ -386,17 +387,6 @@ func throwHit(
 func fizzles(card Card, actor, target Duelist) bool {
 	return target.Element != Basic && card.Element == target.Element && !card.Wild(AxisElement) &&
 		!Pierces(actor.WornRelics(), card.Element)
-}
-
-// firstQueued is the turn index of the card the player queued first, whatever phase it resolves in.
-func firstQueued(turn []Slot) int {
-	at := 0
-	for i, slot := range turn {
-		if slot.Index < turn[at].Index {
-			at = i
-		}
-	}
-	return at
 }
 
 // leadSlot is the turn index of the attack the blow is named by: the earliest attack card in the

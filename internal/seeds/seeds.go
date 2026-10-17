@@ -179,6 +179,13 @@ const (
 	// **Its own stream rather than ActionStock's**: a roll on the stock's cursor would move every card
 	// after it, so a trait's odds would reroll which cards every bundle holds.
 	ActionTraits
+
+	// ActionUpgrades is which upgrade an action bundle's cards come with, once the run has drunk a
+	// bundle-upgrades tonic: two draws per card, split by the bundle. Per fight.
+	//
+	// **Its own stream rather than ActionTraits'**: sharing would make drinking the tonic reroll which
+	// traits every bundle's cards carry.
+	ActionUpgrades
 )
 
 // stream is what the package knows about each one. A table rather than four switch statements,
@@ -203,26 +210,27 @@ type stream struct {
 }
 
 var streams = [...]stream{
-	EnemySelect:  {name: "enemy-select", salt: 0x5EED_E9E3},
-	PlayerDeck:   {name: "player-deck", salt: 0x5EED_DEC4, perFight: true},
-	EnemyDeck:    {name: "enemy-deck", salt: 0x5EED_F0E5, perFight: true},
-	RewardHand:   {name: "reward-hand", salt: 0x5EED_A17E, perFight: true},
-	EssenceOffer: {name: "essence-offer", salt: 0x5EED_7A19, perFight: true},
-	ShopStock:    {name: "shop-stock", salt: 0x5EED_5403, perFight: true},
-	BagStock:     {name: "bag-stock", salt: 0x5EED_B0C5, perFight: true},
-	VialStock:    {name: "vial-stock", salt: 0x5EED_CA07, perFight: true},
-	SackStock:    {name: "sack-stock", salt: 0x5EED_B0CC, perFight: true},
-	StoneShower:  {name: "stone-shower", salt: 0x5EED_5704, perFight: true},
-	PackOffer:    {name: "pack-offer", salt: 0x5EED_9AC5, perFight: true},
-	LuckRoll:     {name: "luck-roll", salt: 0x5EED_1DCC, perFight: true},
-	ScrollStock:  {name: "scroll-stock", salt: 0x5EED_5C20, perFight: true},
-	TonicOrder:   {name: "tonic-order", salt: 0x5EED_70C1},
-	MythicRoll:   {name: "mythic-roll", salt: 0x5EED_3171, perFight: true},
-	PearlCopy:    {name: "pearl-copy", salt: 0x5EED_9EA4, perFight: true},
-	ShelfTraits:  {name: "shelf-traits", salt: 0x5EED_0E16, perFight: true},
-	ShieldRoll:   {name: "shield-roll", salt: 0x5EED_A2B0, perFight: true},
-	ActionStock:  {name: "action-stock", salt: 0x5EED_AC70, perFight: true},
-	ActionTraits: {name: "action-traits", salt: 0x5EED_AC7A, perFight: true},
+	EnemySelect:    {name: "enemy-select", salt: 0x5EED_E9E3},
+	PlayerDeck:     {name: "player-deck", salt: 0x5EED_DEC4, perFight: true},
+	EnemyDeck:      {name: "enemy-deck", salt: 0x5EED_F0E5, perFight: true},
+	RewardHand:     {name: "reward-hand", salt: 0x5EED_A17E, perFight: true},
+	EssenceOffer:   {name: "essence-offer", salt: 0x5EED_7A19, perFight: true},
+	ShopStock:      {name: "shop-stock", salt: 0x5EED_5403, perFight: true},
+	BagStock:       {name: "bag-stock", salt: 0x5EED_B0C5, perFight: true},
+	VialStock:      {name: "vial-stock", salt: 0x5EED_CA07, perFight: true},
+	SackStock:      {name: "sack-stock", salt: 0x5EED_B0CC, perFight: true},
+	StoneShower:    {name: "stone-shower", salt: 0x5EED_5704, perFight: true},
+	PackOffer:      {name: "pack-offer", salt: 0x5EED_9AC5, perFight: true},
+	LuckRoll:       {name: "luck-roll", salt: 0x5EED_1DCC, perFight: true},
+	ScrollStock:    {name: "scroll-stock", salt: 0x5EED_5C20, perFight: true},
+	TonicOrder:     {name: "tonic-order", salt: 0x5EED_70C1},
+	MythicRoll:     {name: "mythic-roll", salt: 0x5EED_3171, perFight: true},
+	PearlCopy:      {name: "pearl-copy", salt: 0x5EED_9EA4, perFight: true},
+	ShelfTraits:    {name: "shelf-traits", salt: 0x5EED_0E16, perFight: true},
+	ShieldRoll:     {name: "shield-roll", salt: 0x5EED_A2B0, perFight: true},
+	ActionStock:    {name: "action-stock", salt: 0x5EED_AC70, perFight: true},
+	ActionTraits:   {name: "action-traits", salt: 0x5EED_AC7A, perFight: true},
+	ActionUpgrades: {name: "action-upgrades", salt: 0x5EED_AC79, perFight: true},
 }
 
 // fightStride separates one fight's seed from the next within a run. A large odd number so

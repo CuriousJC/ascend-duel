@@ -156,10 +156,15 @@ type RelicIfData struct {
 	// other moment knows which card leads.
 	Lead bool `json:"Lead,omitempty"`
 
-	// First narrows the rule to **the turn's first card, whatever it is**, and reads the rule's
-	// card predicates against it — the Awakenings. Meaningful at `blow-formed` with `awaken` and
+	// Preceding narrows the rule to **the cards queued ahead of each attack**, and reads the rule's
+	// card predicates against every one of them — the Awakenings. Meaningful at `blow-formed` with
+	// `awaken` and refused anywhere else.
+	Preceding bool `json:"Preceding,omitempty"`
+
+	// Favored narrows the rule to **whatever the run has attacked with most** on one axis —
+	// "element" or "form" — the Torrents. Meaningful at `turn-taken` with `grow-on-streak` and
 	// refused anywhere else.
-	First bool `json:"First,omitempty"`
+	Favored string `json:"Favored,omitempty"`
 
 	// Concept names one card by its label — `Bash`. Resolved at load the way a deck list is,
 	// because a concept's ID is registration-ordered and must never be written in a file.

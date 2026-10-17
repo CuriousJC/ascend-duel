@@ -32,7 +32,8 @@ const (
 	// KindBlocked is a shield eating one incoming hit outright. Action is the attack that was
 	// stopped, Target is the duelist that spent the shield, Amount is how many shields are left
 	// afterwards, and Element is **the shield's** element — which pip the row loses. Surged says the
-	// shield matched the hit's own element and banked an action point for the defender's next turn.
+	// block banked action points for the defender's next turn — a shield of the hit's own element,
+	// a form shield's surge-on-block, or both.
 	//
 	// **It leaves no figure**, so a feed reading `Amount` off the two would be reading a remaining
 	// blow in one case and a remaining shield in the other.
@@ -238,8 +239,8 @@ type Event struct {
 	// shields is the card doing its own job.
 	Rider RiderKind
 
-	// Surged is set on a KindBlocked whose shield was the hit's own element, and says that block
-	// banked one action point for the defender's next turn. See Duelist.Surge.
+	// Surged is set on a KindBlocked that banked action points for the defender's next turn: one for
+	// a shield of the hit's own element, plus whatever a worn surge-on-block adds. See Duelist.Surge.
 	Surged bool
 
 	// Would is, on a KindBlocked, the hit as it would have landed — the damage the shield stopped.
@@ -394,21 +395,19 @@ type Event struct {
 	HandPlayAdd [maxHandTerms]int
 	HandPlayPct [maxHandTerms]int
 
-	// HandAwaken[i] is the DMG an Awakening added to hit i's card: to HandDMG, for this card alone,
-	// before the card's own multiplier. Zero on the turn's first card, on a defense and on every hit
-	// of a turn whose first card woke nothing. HandCardBase and HandAmounts already have it inside
-	// them, multiplied.
-	HandAwaken [maxHandTerms]int
+	// HandAwaken[i] is the DMG the Awakenings added to hit i's card: to HandDMG, for this card alone,
+	// before the card's own multiplier — their Amount once for every matching card queued ahead of
+	// it. Zero on a defense and on a card with nothing matching ahead of it. HandCardBase and
+	// HandAmounts already have it inside them, multiplied. HandAwakenBy[i] is the same figure per
+	// worn seat, so two Awakenings that both woke are written as two steps rather than one sum.
+	HandAwaken   [maxHandTerms]int
+	HandAwakenBy [maxHandTerms][]int
 
-	// Awaken is what every attack after the turn's first card gains from the Awakenings the first
-	// card woke, AwakenSeats is which worn seats woke, and AwakenBy is what each seat added — so two
-	// Awakenings that both wake are written as two steps rather than one sum. AwakenOpener is the
-	// opener's index into the turn as it resolved — the convention HandCards and Slot use — so a
-	// screen can toast the card that woke them. See combat.AwakenBonus.
-	Awaken       int
-	AwakenSeats  []bool
-	AwakenBy     []int
-	AwakenOpener int
+	// AwakenSeats is which worn seats woke anything this turn, and AwakenOpeners which cards did —
+	// indices into the turn as it resolved, the convention HandCards and Slot use — so a screen can
+	// toast them. See combat.AwakenBonus.
+	AwakenSeats   []bool
+	AwakenOpeners []int
 
 	// HitAmounts[i] is what hit i comes to: the card's term (its riders and its relics inside it),
 	// times the hand's

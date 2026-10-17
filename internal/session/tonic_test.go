@@ -1,6 +1,7 @@
 package session
 
 import (
+	"math/rand"
 	"sort"
 	"testing"
 
@@ -230,5 +231,40 @@ func TestTonicsSurviveAResume(t *testing.T) {
 	}
 	if back.RelicSlots() != s.RelicSlots() {
 		t.Errorf("fingers came back as %d, wanted %d", back.RelicSlots(), s.RelicSlots())
+	}
+}
+
+// A Tinker's Tonic is the only thing that upgrades a bundled card, and what it hands out is an
+// upgrade rune's own rider.
+func TestTheTinkersTonicUpgradesBundledCards(t *testing.T) {
+	s := tonicRun(t, "tinkers-tonic")
+	if got := s.BundleUpgradePercent(); got != 0 {
+		t.Fatalf("a run that has drunk nothing upgrades %d%% of bundled cards", got)
+	}
+	if _, ok := s.OfferTonic(); !ok || !s.DrinkTonic("tinkers-tonic") {
+		t.Fatal("could not drink the Tinker's Tonic")
+	}
+	if got := s.BundleUpgradePercent(); got != 5 {
+		t.Fatalf("one Tinker's Tonic upgrades %d%% of bundled cards, want 5", got)
+	}
+
+	ups := BundleUpgrades()
+	if len(ups) == 0 {
+		t.Fatal("no upgrade rune to deal")
+	}
+	card := ActionPool()[0]
+	rng := rand.New(rand.NewSource(1))
+	if got := RollBundleUpgrade(card, 0, rng); got != card {
+		t.Error("a 0% roll changed the card")
+	}
+	got := RollBundleUpgrade(card, 100, rng)
+	found := false
+	for _, r := range ups {
+		if got.Riders[0] == r {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("a 100%% roll gave %v, which is no upgrade rune's rider", got.Riders[0])
 	}
 }

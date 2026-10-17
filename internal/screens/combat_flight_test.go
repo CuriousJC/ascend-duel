@@ -257,3 +257,31 @@ func TestTheQueueLeavesWithTheCardsItNamed(t *testing.T) {
 		t.Errorf("the preview still names a hand whose cards have left the row")
 	}
 }
+
+// **A reshuffle holds the rest of the deal until the discard has landed.** Two cards leave on the
+// deal's own stagger, the pile stands empty, five cards fly back in, and the third card sets off
+// only after the last of them has arrived.
+func TestAReshuffleHoldsTheDealUntilTheDiscardLands(t *testing.T) {
+	s := &CombatScene{reshuffledAt: 2, reshuffled: 5}
+	var d handDeal
+	delay := s.reshuffleDelays(&d, 4)
+
+	if len(d.returns) != 5 || d.emptyAfter != 1 {
+		t.Fatalf("%d returns, empty after card %d; want 5 and card 1", len(d.returns), d.emptyAfter)
+	}
+	stagger := flightStaggerPer()
+	if delay(0) != 0 || delay(1) != stagger {
+		t.Errorf("the cards before the reshuffle left at %d and %d, want the deal's own stagger", delay(0), delay(1))
+	}
+	last := d.returns[len(d.returns)-1]
+	if landed := last.Delay + last.Ticks; delay(2) != landed || delay(3) != landed+stagger {
+		t.Errorf("the cards after the reshuffle left at %d and %d, want %d and %d",
+			delay(2), delay(3), landed, landed+stagger)
+	}
+
+	plain := &CombatScene{reshuffledAt: -1}
+	var none handDeal
+	if f := plain.reshuffleDelays(&none, 3); len(none.returns) != 0 || f(2) != 2*stagger {
+		t.Error("a deal that did not reshuffle should keep its own stagger and fly nothing back")
+	}
+}

@@ -6,6 +6,7 @@ package session
 
 import (
 	"fmt"
+	"math/rand"
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -55,4 +56,33 @@ func ActionPool() []combat.Card {
 		out = append(out, e.card)
 	}
 	return out
+}
+
+// BundleUpgrades is every upgrade an action bundle's card may come with: the rider each upgrade rune
+// writes, at the rune's own figure, in the rune catalog's sorted order. **Read off the runes rather
+// than listed here**, so a new upgrade rune is a new upgrade a bundle can deal with nothing edited.
+func BundleUpgrades() []combat.Rider {
+	var out []combat.Rider
+	for _, p := range Runes() {
+		if p.Change == RuneUpgrade {
+			out = append(out, combat.Rider{Kind: p.Rider, Amount: p.Number})
+		}
+	}
+	return out
+}
+
+// RollBundleUpgrade is one bundled card's roll for an upgrade: pct in 100 that it comes with one,
+// picked evenly from BundleUpgrades. **It draws twice on every call, hit or miss**, so a card's pick
+// does not depend on whether the cards before it hit, and moving the odds rerolls which cards are
+// upgraded without rerolling which upgrade each would have been.
+func RollBundleUpgrade(c combat.Card, pct int, rng *rand.Rand) combat.Card {
+	ups := BundleUpgrades()
+	if len(ups) == 0 {
+		return c
+	}
+	hit, pick := rng.Intn(100) < pct, rng.Intn(len(ups))
+	if !hit {
+		return c
+	}
+	return c.SetRider(ups[pick])
 }

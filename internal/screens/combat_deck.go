@@ -401,6 +401,7 @@ func (s *CombatScene) roundDiscards() int {
 // combat_deal.go.
 func (s *CombatScene) drawHand() []combat.Card {
 	var pile []combat.Card
+	s.reshuffledAt, s.reshuffled = -1, 0
 
 	for len(s.hand) < s.handTarget() {
 		if len(s.deck) == 0 {
@@ -408,6 +409,9 @@ func (s *CombatScene) drawHand() []combat.Card {
 				return pile
 			}
 			// **Put back the way they were found.** See restoreToDeck.
+			if s.reshuffledAt < 0 {
+				s.reshuffledAt, s.reshuffled = len(pile), len(s.discard)
+			}
 			for _, c := range s.discard {
 				s.deck = append(s.deck, s.restoreToDeck(c))
 			}

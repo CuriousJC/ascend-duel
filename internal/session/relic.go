@@ -284,7 +284,14 @@ func relicCondition(key string, in *data.RelicIfData) (combat.RelicCondition, er
 		cond.MinForms = in.MinForms
 	}
 	cond.Lead = in.Lead
-	cond.First = in.First
+	cond.Preceding = in.Preceding
+	if in.Favored != "" {
+		axis, ok := combat.ParseAxis(in.Favored)
+		if !ok {
+			return cond, fmt.Errorf("%s favors %q, which is not an axis", key, in.Favored)
+		}
+		cond.Favored, cond.HasFavored = axis, true
+	}
 	return cond, nil
 }
 
@@ -509,6 +516,7 @@ func (s *Session) EquipWorn(d combat.Duelist, worn []combat.WornRelic) combat.Du
 	// duelist's own count, and a fighter not yet handed the run's carries zero, which reads as the
 	// default — so a run wearing more than the default would be dealt a fighter missing the rest.
 	d.RelicSlots = s.RelicSlots()
+	d.FavoredElement, d.FavoredForm = s.Favorites()
 	for _, w := range worn {
 		d = d.Wearing(w)
 	}

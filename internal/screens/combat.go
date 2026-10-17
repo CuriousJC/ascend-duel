@@ -232,6 +232,13 @@ type CombatScene struct {
 	hand    []paletteCard
 	discard []combat.Card
 
+	// reshuffledAt is where in the last drawHand's pile the discard was folded back in, -1 when it
+	// was not, and reshuffled how many cards went back. **Written by drawHand and read by
+	// startDeal**, which is what lets the deal hold the cards after the reshuffle until the
+	// returning cards have landed. See combat_reshuffle.go.
+	reshuffledAt int
+	reshuffled   int
+
 	// playedTurn is the last turn the player actually resolved, kept for one tick so the
 	// achievements can be asked about it.
 	//

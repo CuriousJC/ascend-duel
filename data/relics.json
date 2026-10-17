@@ -2083,6 +2083,68 @@
     ]
   },
   {
+    "RelicRecord": "surge-block-stab",
+    "Name": "Spiked Shield",
+    "Family": "Form shields",
+    "Art": "surge-block-stab",
+    "Draw": "a round iron shield bristling with long steel spikes across its whole face, an ivory gem set in the boss at its center",
+    "Text": "Every stab attack a shield blocks banks +1 AP for your next turn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      { "When": "hit-blocked", "If": { "Form": "stab" }, "Then": [{ "Do": "surge-on-block", "Amount": 1 }] }
+    ]
+  },
+  {
+    "RelicRecord": "surge-block-slash",
+    "Name": "Razor Shield",
+    "Family": "Form shields",
+    "Art": "surge-block-slash",
+    "Draw": "a kite shield of polished steel whose rim is ground to a razor edge all the way round, a cool gray gem set in its center",
+    "Text": "Every slash attack a shield blocks banks +1 AP for your next turn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      { "When": "hit-blocked", "If": { "Form": "slash" }, "Then": [{ "Do": "surge-on-block", "Amount": 1 }] }
+    ]
+  },
+  {
+    "RelicRecord": "surge-block-crush",
+    "Name": "Rock Shield",
+    "Family": "Form shields",
+    "Art": "surge-block-crush",
+    "Draw": "a heavy slab of rough dark granite shaped into a round shield, bound with iron bands, a dark gray gem set in its center",
+    "Text": "Every crush attack a shield blocks banks +1 AP for your next turn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      { "When": "hit-blocked", "If": { "Form": "crush" }, "Then": [{ "Do": "surge-on-block", "Amount": 1 }] }
+    ]
+  },
+  {
+    "RelicRecord": "torrent-element",
+    "Name": "Elemental Torrent",
+    "Family": "Torrents",
+    "Art": "torrent-element",
+    "Draw": "a tall crystal flask in which five bright colored liquids spiral upward together in a tight whirlpool, the swirl lit from inside",
+    "Text": "Every turn you attack only in your most-played element adds +1 DMG from the next fight on. An attack in any other element resets it.",
+    "Rarity": "uncommon",
+    "Rules": [
+      { "When": "equipped", "Then": [{ "Do": "add-dmg", "Amount": 0 }] },
+      { "When": "turn-taken", "If": { "Favored": "element" }, "Then": [{ "Do": "grow-on-streak", "Amount": 1 }] }
+    ]
+  },
+  {
+    "RelicRecord": "torrent-form",
+    "Name": "Martial Torrent",
+    "Family": "Torrents",
+    "Art": "torrent-form",
+    "Draw": "a spear, a curved sword and a war club bound together at the middle by a whirling band of bright water, the three weapons fanned out like spokes",
+    "Text": "Every turn you attack only with your most-played form adds +1 DMG from the next fight on. An attack of any other form resets it.",
+    "Rarity": "uncommon",
+    "Rules": [
+      { "When": "equipped", "Then": [{ "Do": "add-dmg", "Amount": 0 }] },
+      { "When": "turn-taken", "If": { "Favored": "form" }, "Then": [{ "Do": "grow-on-streak", "Amount": 1 }] }
+    ]
+  },
+  {
     "RelicRecord": "cloud-helm",
     "Name": "Cloud Helm",
     "Family": "Helms",
@@ -2294,12 +2356,12 @@
     "Family": "Elemental awakenings",
     "Art": "awaken-fire",
     "Draw": "a lapis chain with a bone carved eye pendant, swirling with orange fire swirls",
-    "Text": "If your first card is a fire card, every attack after it gains +10 DMG.",
+    "Text": "ATTACK CARDS FOLLOWING FIRE CARDS GET +10 DMG",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "First": true, "Element": "fire" },
+        "If": { "Preceding": true, "Element": "fire" },
         "Then": [{ "Do": "awaken", "Amount": 10 }]
       }
     ]
@@ -2310,12 +2372,12 @@
     "Family": "Elemental awakenings",
     "Art": "awaken-ice",
     "Draw": "a lapis chain with a bone carved eye pendant, swirling with blue ice swirls",
-    "Text": "If your first card is an ice card, every attack after it gains +10 DMG.",
+    "Text": "ATTACK CARDS FOLLOWING ICE CARDS GET +10 DMG",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "First": true, "Element": "ice" },
+        "If": { "Preceding": true, "Element": "ice" },
         "Then": [{ "Do": "awaken", "Amount": 10 }]
       }
     ]
@@ -2326,12 +2388,12 @@
     "Family": "Elemental awakenings",
     "Art": "awaken-lightning",
     "Draw": "a lapis chain with a bone carved eye pendant, swirling with yellow lightning swirls",
-    "Text": "If your first card is a lightning card, every attack after it gains +10 DMG.",
+    "Text": "ATTACK CARDS FOLLOWING LIGHTNING CARDS GET +10 DMG",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "First": true, "Element": "lightning" },
+        "If": { "Preceding": true, "Element": "lightning" },
         "Then": [{ "Do": "awaken", "Amount": 10 }]
       }
     ]
@@ -2342,12 +2404,12 @@
     "Family": "Elemental awakenings",
     "Art": "awaken-earth",
     "Draw": "a lapis chain with a bone carved eye pendant, swirling with green earth swirls",
-    "Text": "If your first card is an earth card, every attack after it gains +10 DMG.",
+    "Text": "ATTACK CARDS FOLLOWING EARTH CARDS GET +10 DMG",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "First": true, "Element": "earth" },
+        "If": { "Preceding": true, "Element": "earth" },
         "Then": [{ "Do": "awaken", "Amount": 10 }]
       }
     ]
@@ -2358,12 +2420,12 @@
     "Family": "Elemental awakenings",
     "Art": "awaken-arcane",
     "Draw": "a lapis chain with a bone carved eye pendant, swirling with purple arcane swirls",
-    "Text": "If your first card is an arcane card, every attack after it gains +10 DMG.",
+    "Text": "ATTACK CARDS FOLLOWING ARCANE CARDS GET +10 DMG",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "First": true, "Element": "arcane" },
+        "If": { "Preceding": true, "Element": "arcane" },
         "Then": [{ "Do": "awaken", "Amount": 10 }]
       }
     ]
@@ -2374,12 +2436,12 @@
     "Family": "Form awakenings",
     "Art": "awaken-stab",
     "Draw": "a lapis chain with a bone carved eye pendant whose iris is ivory, swirling with rainbow swirls",
-    "Text": "If your first card is a stabbing card, every attack after it gains +10 DMG.",
+    "Text": "ATTACK CARDS FOLLOWING STAB CARDS GET +10 DMG",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "First": true, "Form": "stab" },
+        "If": { "Preceding": true, "Form": "stab" },
         "Then": [{ "Do": "awaken", "Amount": 10 }]
       }
     ]
@@ -2390,12 +2452,12 @@
     "Family": "Form awakenings",
     "Art": "awaken-slash",
     "Draw": "a lapis chain with a bone carved eye pendant whose iris is steel, swirling with rainbow swirls",
-    "Text": "If your first card is a slashing card, every attack after it gains +10 DMG.",
+    "Text": "ATTACK CARDS FOLLOWING SLASH CARDS GET +10 DMG",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "First": true, "Form": "slash" },
+        "If": { "Preceding": true, "Form": "slash" },
         "Then": [{ "Do": "awaken", "Amount": 10 }]
       }
     ]
@@ -2406,12 +2468,12 @@
     "Family": "Form awakenings",
     "Art": "awaken-crush",
     "Draw": "a lapis chain with a bone carved eye pendant whose iris is granite, swirling with rainbow swirls",
-    "Text": "If your first card is a crushing card, every attack after it gains +10 DMG.",
+    "Text": "ATTACK CARDS FOLLOWING CRUSH CARDS GET +10 DMG",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "First": true, "Form": "crush" },
+        "If": { "Preceding": true, "Form": "crush" },
         "Then": [{ "Do": "awaken", "Amount": 10 }]
       }
     ]
@@ -2420,7 +2482,7 @@
     "RelicRecord": "stagger-slash",
     "Name": "Concussive Saber",
     "Family": "Form staggers",
-    "Art": "",
+    "Art": "stagger-slash",
     "Draw": "a curved steel saber with a heavy blunted spine, a leather hilt and a jade pommel, a ring of shockwave rippling off the blade",
     "Text": "Every slashing card you play raises a shield of its element.",
     "Rarity": "uncommon",
@@ -2437,7 +2499,7 @@
     "RelicRecord": "stagger-crush",
     "Name": "Stunning Club",
     "Family": "Form staggers",
-    "Art": "",
+    "Art": "stagger-crush",
     "Draw": "a heavy granite club with a leather strap and a jade pommel, little stars of a daze circling its head",
     "Text": "Every crushing card you play raises a shield of its element.",
     "Rarity": "uncommon",
@@ -2454,7 +2516,7 @@
     "RelicRecord": "stagger-stab",
     "Name": "Surgical Spear",
     "Family": "Form staggers",
-    "Art": "",
+    "Art": "stagger-stab",
     "Draw": "a slender ivory spear with a fine needle point, a leather-wrapped shaft and a jade pommel, a single precise glint at its tip",
     "Text": "Every stabbing card you play raises a shield of its element.",
     "Rarity": "uncommon",

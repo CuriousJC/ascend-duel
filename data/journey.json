@@ -3,5 +3,6 @@
   "HPGrowth": 1000,
   "DMGGrowth": 600,
   "HPScale": 8000,
-  "DMGScale": 8000
+  "DMGScale": 8000,
+  "WinHealPercent": 5
 }

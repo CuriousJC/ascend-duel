@@ -308,6 +308,10 @@ type combatTheater struct {
 	// not the card. See combat_handmorph.go.
 	morphs []handMorph
 
+	// paneMorphs are carried cards changing in the consumables pane — a chimera becoming the rune
+	// it copies. See CombatScene.becomeLastRune.
+	paneMorphs []paneMorph
+
 	// deal is the hand arriving: cards out of the pile, the flip cascade a ring at a time over
 	// them, and the sort last. **It is a sequence rather than a list of movers** — the three stages
 	// hand over to each other, so one thing owns the order and nothing has to watch a slice empty
@@ -431,6 +435,7 @@ func (t *combatTheater) Tick() {
 	t.flights = ui.Advance(t.flights)
 	t.slides = ui.Advance(t.slides)
 	t.morphs = ui.Advance(t.morphs)
+	t.paneMorphs = ui.Advance(t.paneMorphs)
 
 	// **Neither the deal nor the settle is advanced here.** Both are sequences with stages that
 	// hand over, and the handover needs the scene — the cascade reads the run's worn relics, and

@@ -402,11 +402,11 @@ func TestADeathEndsTheRun(t *testing.T) {
 func TestTheSummaryIsTakenBeforeTheRunIsDestroyed(t *testing.T) {
 	gs := saveState(t)
 
-	gs.Run.BeginFight(1, "GiantBat")
-	gs.Run.RecordRound([]session.LedgerRecord{{Kind: session.KindDamage, Side: session.SideYou, Amount: 40}}, 40)
+	gs.Run.BeginFight(1, "Outer Room", "GiantBat")
+	gs.Run.RecordRound([]session.LedgerRecord{{Kind: session.KindDamage, Side: session.SideYou, Amount: 40}}, 40, [2]session.LedgerStats{})
 	gs.Run.EndFight(session.OutcomeWon)
-	gs.Run.BeginFight(1, "Cave Troll")
-	gs.Run.RecordRound([]session.LedgerRecord{{Kind: session.KindDamage, Side: session.SideYou, Amount: 12}}, 12)
+	gs.Run.BeginFight(1, "Outer Room", "Cave Troll")
+	gs.Run.RecordRound([]session.LedgerRecord{{Kind: session.KindDamage, Side: session.SideYou, Amount: 12}}, 12, [2]session.LedgerStats{})
 	gs.Run.EndFight(session.OutcomeLost)
 
 	EndRunInDefeat(gs)

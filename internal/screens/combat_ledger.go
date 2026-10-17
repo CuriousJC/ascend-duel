@@ -15,7 +15,15 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/ui"
 )
+
+// ledgerStats is one duelist's figures as the round about to resolve finds them.
+func ledgerStats(name string, d combat.Duelist) session.LedgerStats {
+	return session.LedgerStats{
+		Name: name, DMG: d.DMG, Life: d.CurrentLife, MaxLife: d.MaxLife, AP: d.ActionPoints(),
+	}
+}
 
 // openLedgerFight starts a record for the duel this screen is about to run.
 //
@@ -29,7 +37,7 @@ func (s *CombatScene) openLedgerFight(gs *state.GlobalState) {
 	s.ledgerWritten, s.ledgerClosed = false, false
 	// **`Realm()` is already the realm, counting from one.** It was `+1` for a few hours and made
 	// every heading name the realm above the one the fight was on.
-	gs.Run.BeginFight(gs.Run.Realm(), s.sideName(combat.SideB))
+	gs.Run.BeginFight(gs.Run.Realm(), ui.JourneyRoom(gs.Run.Fight()), s.sideName(combat.SideB))
 }
 
 // recordRound writes the round that has just been watched into the account, once.
@@ -46,7 +54,7 @@ func (s *CombatScene) recordRound() {
 		return
 	}
 	s.ledgerWritten = true
-	s.run.RecordRound(s.ledgerRecords(s.log), dealtBy(combat.SideA, s.log))
+	s.run.RecordRound(s.ledgerRecords(s.log), dealtBy(combat.SideA, s.log), s.roundStart)
 }
 
 // closeLedgerFight records the last round and says what became of the duel.

@@ -275,7 +275,7 @@ func runesDialog(gs *state.GlobalState) *compendiumDialog {
 	var out []compendiumEntry
 	for _, p := range session.Runes() {
 		out = append(out, entry(ui.RuneSpec(gs, p, true, false), bleedStyle(false),
-			all.Total(session.StatRuneUsed+p.Record), "USED", p.Name, runeTipLines(gs, p)))
+			all.Total(session.StatRuneUsed+p.Record), "USED", runeTitle(p), runeTipLines(gs, p)))
 	}
 	return catalogDialog("RUNES", out)
 }

@@ -413,6 +413,13 @@ func ledgerRows(gs *state.GlobalState, expanded map[int]bool) []ledgerRow {
 			head := ui.PlainRow(fmt.Sprintf("- Round %d -", round.Number))
 			head.Band = ground
 			rows = append(rows, ledgerRow{row: head})
+			// **Where both duelists stood as the round opened**, so a surge, a heal or a grant is
+			// read as a figure moving from one round's line to the next.
+			if line := round.StartLine(); line != "" {
+				start := ui.PlainRow(line)
+				start.Band = ground
+				rows = append(rows, ledgerRow{row: start})
+			}
 
 			for k, l := range ledgerWrap(gs, ui.PaneRowsFor(ui.LedgerLines(round.Records))) {
 				l.Band = ledgerStripe(ground, k)
@@ -466,24 +473,18 @@ func fightToggle(f session.LedgerFight, live bool) int {
 	return f.Number
 }
 
-// ledgerHeading is a fight's one line: where it was, who was in it, and how it went.
-//
-// **A summary a player can act on rather than a label.** Rounds and damage dealt are the two
-// figures that say whether a fight went the way it should have, which is what "where did my run go
-// wrong" is actually asking. The marker says whether clicking will open it.
+// ledgerHeading is a fight's one line — "Realm 1, Outer Room - Ice Cheetah - 1,160 Damage Dealt"
+// *(owner's call)*: where it was, who was in it, and what the player's blows came to. The rounds
+// are under it, each opening on both duelists' figures. The marker says whether clicking will open
+// it. A fight saved without its room names the realm alone.
 func ledgerHeading(f session.LedgerFight, open bool) string {
 	marker := "+"
 	if open {
 		marker = "-"
 	}
-
-	outcome := "fighting now"
-	switch f.Outcome {
-	case session.OutcomeWon:
-		outcome = fmt.Sprintf("won in %d, %d dealt", f.RoundCount(), f.Dealt())
-	case session.OutcomeLost:
-		outcome = fmt.Sprintf("lost in %d, %d dealt", f.RoundCount(), f.Dealt())
+	where := fmt.Sprintf("Realm %d", f.Realm)
+	if f.Room != "" {
+		where += ", " + f.Room
 	}
-
-	return fmt.Sprintf("%s  Fight %d - realm %d - %s - %s", marker, f.Number, f.Realm, f.Enemy, outcome)
+	return fmt.Sprintf("%s  %s - %s - %s Damage Dealt", marker, where, f.Enemy, thousands(f.Dealt()))
 }

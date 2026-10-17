@@ -79,26 +79,19 @@ const (
 	// are not interchangeable — see ApplyRune.
 	RuneClone
 
-	// RuneChimera fires whatever the run spent last, again.
+	// RuneChimera becomes the rune the run spent last, in its own seat in the sack.
 	//
-	// **It carries no effect of its own** and is resolved through `Session.Echoes` before anything
-	// reads it: what it costs, how many cards it names and what it does to them all come from the
-	// rune it is copying. So a chimera behind an Embermark asks for two cards and paints them
-	// fire, and a chimera behind a Hoard asks for none.
+	// **Using it is the change, and it fires nothing** *(owner's call)*. It names no cards and is
+	// never applied — `Session.BecomeLastRune` swaps its key for the copied one, and the copy is then
+	// aimed and spent like any rune. Until it is used it is a chimera, face and all, so the sack
+	// never shows a rune that is not there yet.
 	//
 	// **The memory is the run's, not the fight's** *(owner's call, 2026-09-07)*. A chimera carried
 	// out of one duel and into the next still copies what was spent in the first. It refuses only
-	// on a run where nothing has ever been spent — there is no effect to copy, and a consumable
-	// that landed and did nothing is something bought and taken away.
+	// on a run where nothing has ever been spent.
 	//
-	// **The targets are picked again rather than inherited.** The copied rune's cards are long
-	// gone from the hand by the time a chimera is spent — a different turn, sometimes a different
-	// fight — and re-firing against the same identities would be a no-op wherever the effect was
-	// idempotent, which is most of the catalog.
-	//
-	// **A chimera never becomes the thing to copy.** `lastRune` records the *resolved* record,
-	// so a chimera behind a Might leaves Might behind it, and two chimeras in a row both fire Might
-	// rather than the second one copying the first into nothing.
+	// **A chimera never becomes the thing to copy.** Becoming a rune is not spending one, so
+	// `lastRune` is untouched by it.
 	RuneChimera
 )
 
@@ -350,9 +343,8 @@ func resolveRune(r data.RuneData) (Rune, error) {
 	// card and one aimed at two are both legal, and the mistake worth catching is the mismatch: a
 	// remove that eats nothing, or a vitae that asks the player to pick a card it will not touch.
 	if target == RuneVitae || target == RuneStones || target == RuneChimera {
-		// **A chimera is in this group because its own record names no cards.** How many it
-		// actually asks for comes from the rune it copies, and is read through `Echoes` long
-		// after this — so the record itself is a zero-target one and is checked as one.
+		// **A chimera is in this group because it names no cards**: using it turns it into
+		// another rune, which then asks for its own.
 		if r.Count != 0 {
 			return Rune{}, fmt.Errorf("%s touches no card and asks for %d of them",
 				r.RuneRecord, r.Count)
@@ -581,6 +573,28 @@ func (s *Session) Drop(i int) bool {
 	return s.held.drop(i)
 }
 
+// BecomeLastRune turns the chimera at position i into the rune the run spent last, in the same
+// seat and carrying the same weight, and reports whether it did.
+//
+// Refused for anything that is not a chimera, and for a chimera on a run that has spent nothing.
+func (s *Session) BecomeLastRune(i int) bool {
+	keys := s.held.keys
+	if i < 0 || i >= len(keys) {
+		return false
+	}
+	p, ok := RuneByKey(keys[i])
+	if !ok || p.Target != RuneChimera {
+		return false
+	}
+	echoed, ok := s.Echoes(p)
+	if !ok {
+		return false
+	}
+	s.held.keys[i] = echoed.Record
+	s.count(StatRuneUsed+p.Record, 1)
+	return true
+}
+
 // ApplyRune performs a rune against the cards it names, by identity.
 //
 // **All or nothing.** A rune that ate one of its two cards and then found the second gone
@@ -608,14 +622,6 @@ func (s *Session) ApplyRuneRolling(p Rune, ids []int, rng *rand.Rand) bool {
 		return false
 	}
 	spent := p.Record
-
-	// **Resolved before anything reads it**, so a chimera is never asked what it does. From here
-	// down `p` is the rune that actually fires, and the chimera is gone — which is what keeps
-	// every case below written once. See Session.Echoes.
-	p, ok := s.Echoes(p)
-	if !ok {
-		return false
-	}
 	if p.Target == RuneStones && rng == nil {
 		return false
 	}
@@ -748,13 +754,10 @@ func (s *Session) ApplyRuneRolling(p Rune, ids []int, rng *rand.Rand) bool {
 // What is still refused is a pick the rules cannot resolve: the wrong number of targets, which is
 // what stops a two-card rune being spent on one; the same card named twice, which is a picker bug
 // and would spend a two-card rune on one card for double the effect; a card that is not in the
-// deck; and a chimera with nothing behind it to copy.
+// deck; and a chimera, which is never applied — it becomes another rune instead, see
+// BecomeLastRune.
 func (s *Session) CanApplyRune(p Rune, ids []int) bool {
-	// **The chimera is resolved first, so the count and the legality asked about below are the
-	// copied rune's.** A chimera with nothing to copy is refused here rather than lower down,
-	// which is what makes the consumables pane draw it dim.
-	p, ok := s.Echoes(p)
-	if !ok {
+	if p.Target == RuneChimera {
 		return false
 	}
 

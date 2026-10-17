@@ -1,6 +1,7 @@
 package screens
 
 import (
+	"image"
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -32,12 +33,14 @@ func spend(t *testing.T, gs *state.GlobalState, s *CombatScene, key string) {
 		t.Skipf("no %s in the catalog", key)
 	}
 	was, seats := s.handFaces(gs)
+	stood, standing := s.rowSeats(), append([]paletteCard(nil), s.hand...)
 	held := s.heldRunCards(gs)
 	if !gs.Run.ApplyRuneRolling(p, s.selectedCardIDs(), nil) {
 		t.Fatalf("%s refused the selection", key)
 	}
 	s.resyncHandFromRun(gs, held)
 	s.seatCopies(gs, held)
+	s.holdRow(standing, stood)
 	s.raiseHandMorphs(gs, was, seats)
 }
 
@@ -124,5 +127,34 @@ func TestARuneThatChangedNothingRaisesNothing(t *testing.T) {
 
 	if got := len(s.Theater.morphs); got != 0 {
 		t.Errorf("an unchanged hand raised %d morphs, want none", got)
+	}
+}
+
+// TestTheRowHoldsWhileAnEatenCardComesApart. **Destroyed in place, then sorted** — the survivors
+// stay where they stood while the eaten cards dissolve, and only the settle's last beat closes the
+// row up.
+func TestTheRowHoldsWhileAnEatenCardComesApart(t *testing.T) {
+	gs, s := morphScene(t, combat.PlainCards(combat.Bash, combat.Bash, combat.Jab))
+	s.hand[2].selected = false
+	survivor := s.hand[2].Card.ID
+	was := s.cardSlot(gs, 2)
+
+	spend(t, gs, s, "unmake")
+	s.beginSettle()
+
+	if len(s.hand) != 1 || s.hand[0].Card.ID != survivor {
+		t.Fatalf("unmake should have left the one unselected card, got %d", len(s.hand))
+	}
+	if got := s.cardSlot(gs, 0); got != was {
+		t.Errorf("the survivor moved to %v while the eaten cards came apart; it stood at %v", got, was)
+	}
+
+	runSettle(s)
+	if s.Theater.settle.held != nil {
+		t.Errorf("the row is still held after the settle")
+	}
+	if got, want := s.cardSlot(gs, 0), image.Rect(slotAt(gs, 0, 1).X, slotAt(gs, 0, 1).Y,
+		slotAt(gs, 0, 1).X+cardWidth, slotAt(gs, 0, 1).Y+cardHeight); got != want {
+		t.Errorf("after the settle the survivor sits at %v, want the closed-up row's %v", got, want)
 	}
 }

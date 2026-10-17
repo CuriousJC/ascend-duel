@@ -744,3 +744,35 @@ func TestSellingWhatIsNotCarriedPaysNothing(t *testing.T) {
 		t.Errorf("a refused sale moved the purse by %d", run.Vitae()-purse)
 	}
 }
+
+// TestAChimeraBecomesTheLastRuneInItsSeat. **Using it is the change**: it refuses with nothing to
+// copy, then takes the copied record into its own seat, fires nothing, and is never itself applied.
+func TestAChimeraBecomesTheLastRuneInItsSeat(t *testing.T) {
+	run := runWith(combat.Plain(combat.Bash))
+	chimera := anyWithTarget(t, RuneChimera)
+	purse := anyWithTarget(t, RuneVitae)
+	run.hold(chimera.Record)
+
+	if run.BecomeLastRune(0) {
+		t.Fatal("a chimera became something on a run that has spent nothing")
+	}
+	if run.ApplyRune(chimera, nil) {
+		t.Error("a chimera was applied; it should only ever become another rune")
+	}
+	if !run.ApplyRune(purse, nil) {
+		t.Fatal("the purse rune refused")
+	}
+	vitae := run.Vitae()
+	if !run.BecomeLastRune(0) {
+		t.Fatal("a chimera refused to become the rune just spent")
+	}
+	if got := run.Held(); len(got) != 1 || got[0] != purse.Record {
+		t.Errorf("the sack holds %v, want the chimera's seat holding %s", got, purse.Record)
+	}
+	if run.Vitae() != vitae {
+		t.Errorf("becoming a purse paid out %d; it should fire nothing", run.Vitae()-vitae)
+	}
+	if run.LastRune() != purse.Record {
+		t.Errorf("the last rune is %q after a chimera was used, want %q", run.LastRune(), purse.Record)
+	}
+}

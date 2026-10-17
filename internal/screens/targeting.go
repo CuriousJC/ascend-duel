@@ -28,8 +28,9 @@ package screens
 // whether a click should be allowed.
 type consumableTarget struct {
 	// needs is how many cards may be selected. **Zero is a consumable that takes no target at
-	// all** — a rock shower, a purse of vitae — and it is ready whatever is selected, because there
-	// is nothing for a selection to be wrong about.
+	// all** — a rock shower, a purse of vitae, a chimera — and it is ready whatever is selected,
+	// because there is nothing for a selection to be wrong about. **Negative is never ready**: a
+	// chimera with nothing to copy.
 	needs int
 
 	// fewest is the smallest selection this will accept, or zero for "exactly needs".
@@ -60,6 +61,11 @@ type consumableTarget struct {
 // the shop shelf does. **What `fewest` opens is a range rather than a subset**: every card selected
 // is a card the essence lands on, so nothing is being chosen on the player's behalf.
 func (c consumableTarget) satisfiedBy(ids []int) bool {
+	// **A consumable that takes no target ignores the selection**, rather than asking for an empty
+	// one: the cards picked for the round are not its business. legal is asked of no cards.
+	if c.needs == 0 {
+		return c.legal == nil || c.legal(nil)
+	}
 	least := c.fewest
 	if least <= 0 {
 		least = c.needs
@@ -67,7 +73,7 @@ func (c consumableTarget) satisfiedBy(ids []int) bool {
 	if len(ids) < least || len(ids) > c.needs {
 		return false
 	}
-	if c.needs == 0 || c.legal == nil {
+	if c.legal == nil {
 		return true
 	}
 	return c.legal(ids)

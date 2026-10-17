@@ -15,18 +15,18 @@ import (
 func ledgerRun() *session.Session {
 	run := session.New(panelDeck())
 
-	run.BeginFight(1, "Giant Bat")
+	run.BeginFight(1, "Outer Room", "Giant Bat")
 	run.RecordRound([]session.LedgerRecord{{
 		Kind: session.KindAct, Side: session.SideYou, Name: "Duelist",
 		Card: "Jab", Verb: session.InkAttack,
-	}}, 40)
+	}}, 40, [2]session.LedgerStats{})
 	run.EndFight(session.OutcomeWon)
 
-	run.BeginFight(1, "Cave Troll")
+	run.BeginFight(1, "Outer Room", "Cave Troll")
 	run.RecordRound([]session.LedgerRecord{{
 		Kind: session.KindAct, Side: session.SideFoe, Name: "Cave Troll",
 		Card: "Gnaw", Verb: session.InkAttack,
-	}}, 12)
+	}}, 12, [2]session.LedgerStats{})
 	return run
 }
 
@@ -41,7 +41,7 @@ func TestPastFightsAreOneLineAndTheLiveOneIsOpen(t *testing.T) {
 
 	var headings, lines []string
 	for _, r := range rows {
-		if r.fight != 0 || strings.HasPrefix(r.row.Text(), "-  Fight") || strings.HasPrefix(r.row.Text(), "+  Fight") {
+		if r.fight != 0 || strings.HasPrefix(r.row.Text(), "-  Realm") || strings.HasPrefix(r.row.Text(), "+  Realm") {
 			headings = append(headings, r.row.Text())
 			continue
 		}
@@ -51,11 +51,11 @@ func TestPastFightsAreOneLineAndTheLiveOneIsOpen(t *testing.T) {
 	if len(headings) != 2 {
 		t.Fatalf("the ledger has %d fight headings, want 2: %v", len(headings), headings)
 	}
-	if !strings.Contains(headings[0], "Giant Bat") || !strings.Contains(headings[0], "won in 1") {
-		t.Errorf("the finished fight's line is %q, which does not say how it went", headings[0])
+	if want := "+  Realm 1, Outer Room - Giant Bat - 40 Damage Dealt"; headings[0] != want {
+		t.Errorf("the finished fight's line is %q, want %q", headings[0], want)
 	}
-	if !strings.Contains(headings[1], "fighting now") {
-		t.Errorf("the live fight's line is %q, which does not say it is live", headings[1])
+	if !strings.HasPrefix(headings[1], "-  Realm") {
+		t.Errorf("the live fight's line is %q, which is not drawn open", headings[1])
 	}
 
 	// The folded fight's own round is not written; the live one's is.
@@ -310,7 +310,7 @@ func TestAnOpenedFightIsBanded(t *testing.T) {
 	pair := -1
 	for _, r := range rows {
 		switch {
-		case r.fight != 0 || strings.Contains(r.row.Text(), "fighting now"):
+		case r.fight != 0 || strings.HasPrefix(r.row.Text(), "-  Realm"):
 			heads++
 			pair++
 			if want := ledgerBands[pair%2]; r.row.Band != want {

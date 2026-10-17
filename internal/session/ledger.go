@@ -25,7 +25,10 @@ package session
 // voice and an ink are short closed vocabularies written as words, on the rule every other snapshot
 // is under. See save.go.
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // The voices a line can be spoken in. **A name rather than a color**, because a color in a save
 // file is a palette decision frozen into a run — the screen maps these onto its swatches, so a
@@ -163,9 +166,36 @@ type LedgerRound struct {
 	// Number is the round's place in its fight, 1-based, which is what the heading prints.
 	Number int
 
+	// Start is where both duelists stood as the round opened — the player first, then the
+	// opponent — so a surge banked, a heal or a grant shows as a figure moving between two rounds.
+	// **The zero value is a round recorded without it**, which StartLine words as nothing.
+	Start [2]LedgerStats
+
 	// Records is what happened, as flat data. The words are derived when the panel draws it — see
 	// record.go, and internal/ui/ledger_prose.go, which is the one translator.
 	Records []LedgerRecord
+}
+
+// LedgerStats is one duelist's figures at the top of a round: what the round line under its
+// heading prints.
+type LedgerStats struct {
+	Name          string
+	DMG           int
+	Life, MaxLife int
+	AP            int
+}
+
+// StartLine is the round's opening line — "Duelist: DMG - 10, Health 50/60, 6 AP vs. Ice Cheetah:
+// DMG - 15, Health 900/900, 6 AP" — or empty for a round recorded without its figures.
+func (r LedgerRound) StartLine() string {
+	if r.Start[0].Name == "" {
+		return ""
+	}
+	return r.Start[0].words() + " vs. " + r.Start[1].words()
+}
+
+func (l LedgerStats) words() string {
+	return fmt.Sprintf("%s: DMG - %d, Health %d/%d, %d AP", l.Name, l.DMG, l.Life, l.MaxLife, l.AP)
 }
 
 // LedgerFight is one duel, from the first round to the outcome.
@@ -174,10 +204,11 @@ type LedgerRound struct {
 // shuffle, and folding the two would make the run's account claim a fight was won that was lost
 // first.
 type LedgerFight struct {
-	// Number is which duel of the run this was, 1-based, counting retries. Realm is where it was
-	// fought and Enemy is who stood there.
+	// Number is which duel of the run this was, 1-based, counting retries. Realm and Room are
+	// where it was fought — the room by name — and Enemy is who stood there.
 	Number int
 	Realm  int
+	Room   string
 	Enemy  string
 
 	// Outcome is "won", "lost", or empty while it is still being fought.
@@ -231,19 +262,20 @@ func (s *Session) LedgerFights() []LedgerFight { return s.ledger.Fights }
 // **An unfought record is replaced rather than added to.** `CombatScene.Init` runs on entering the
 // screen and again on a retry, and a player who reached the room and left it without throwing a
 // round should not leave an empty heading in the run's account.
-func (s *Session) BeginFight(realm int, enemy string) {
+func (s *Session) BeginFight(realm int, room, enemy string) {
 	if n := len(s.ledger.Fights); n > 0 && len(s.ledger.Fights[n-1].Rounds) == 0 {
 		s.ledger.Fights = s.ledger.Fights[:n-1]
 	}
 	s.ledger.Fights = append(s.ledger.Fights, LedgerFight{
 		Number: len(s.ledger.Fights) + 1,
 		Realm:  realm,
+		Room:   room,
 		Enemy:  enemy,
 	})
 }
 
 // RecordRound adds a finished round to the fight in progress, with what the player's blows in it
-// came to.
+// came to and where both duelists stood as it opened.
 //
 // **A round is recorded when it finishes, not while it plays.** The screen is already drawing the
 // round in progress — the table, the cards, the hand dialog acted out — so a ledger racing playback would
@@ -252,7 +284,7 @@ func (s *Session) BeginFight(realm int, enemy string) {
 //
 // A round arriving with no fight open is dropped rather than opening one, because a record with no
 // enemy and no realm would be a heading the panel could not write.
-func (s *Session) RecordRound(recs []LedgerRecord, dealt int) {
+func (s *Session) RecordRound(recs []LedgerRecord, dealt int, start [2]LedgerStats) {
 	n := len(s.ledger.Fights)
 	if n == 0 || len(recs) == 0 {
 		return
@@ -265,7 +297,7 @@ func (s *Session) RecordRound(recs []LedgerRecord, dealt int) {
 		recs = append(append([]LedgerRecord(nil), f.used...), recs...)
 		f.used = nil
 	}
-	f.Rounds = append(f.Rounds, LedgerRound{Number: len(f.Rounds) + 1, Records: recs})
+	f.Rounds = append(f.Rounds, LedgerRound{Number: len(f.Rounds) + 1, Start: start, Records: recs})
 	f.dealt += dealt
 }
 

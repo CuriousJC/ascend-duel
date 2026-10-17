@@ -34,8 +34,8 @@ func testWords(recs []LedgerRecord) []LedgerLine {
 // the words it was handed rather than paraphrasing what the run recorded.
 func TestTheExportCarriesTheLedgersOwnWords(t *testing.T) {
 	s := New(testDeck())
-	s.BeginFight(1, "Giant Bat")
-	s.RecordRound([]LedgerRecord{noted(VoiceYou, "Duelist attacks with a fire strike")}, 40)
+	s.BeginFight(1, "Outer Room", "Giant Bat")
+	s.RecordRound([]LedgerRecord{noted(VoiceYou, "Duelist attacks with a fire strike")}, 40, [2]LedgerStats{})
 	s.RecordAfter([]LedgerRecord{noted(VoicePlain, "Took Jab")})
 	s.EndFight(OutcomeWon)
 
@@ -69,8 +69,8 @@ func TestTheExportCarriesTheLedgersOwnWords(t *testing.T) {
 // against the run it is drawing; a file read months later has nothing to read it against.
 func TestAnUnfinishedFightExportsAsFighting(t *testing.T) {
 	s := New(testDeck())
-	s.BeginFight(1, "Giant Bat")
-	s.RecordRound([]LedgerRecord{noted(VoiceYou, "Duelist attacks")}, 10)
+	s.BeginFight(1, "Outer Room", "Giant Bat")
+	s.RecordRound([]LedgerRecord{noted(VoiceYou, "Duelist attacks")}, 10, [2]LedgerStats{})
 
 	out := s.ExportLedger("0009D4", theExportMoment, testWords)
 	if len(out.Fights) != 1 || out.Fights[0].Outcome != "fighting" {
@@ -91,8 +91,8 @@ func TestTheExportIsNamedForTheRunAndTheMoment(t *testing.T) {
 // thing it may not be is a structure that needs this build to make sense of.
 func TestTheExportIsReadableJSON(t *testing.T) {
 	s := New(testDeck())
-	s.BeginFight(3, "Giant Bat")
-	s.RecordRound([]LedgerRecord{noted(VoiceHand, "Elemental Four of a Kind, 69")}, 69)
+	s.BeginFight(3, "Outer Room", "Giant Bat")
+	s.RecordRound([]LedgerRecord{noted(VoiceHand, "Elemental Four of a Kind, 69")}, 69, [2]LedgerStats{})
 	s.EndFight(OutcomeLost)
 
 	raw, err := json.MarshalIndent(s.ExportLedger("0009D4", theExportMoment, testWords), "", "  ")

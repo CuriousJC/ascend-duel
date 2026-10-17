@@ -127,6 +127,7 @@ func (s *Session) ledgerSnapshot() []profile.LedgerFightSnapshot {
 		rec := profile.LedgerFightSnapshot{
 			Number:  f.Number,
 			Realm:   f.Realm,
+			Room:    f.Room,
 			Enemy:   f.Enemy,
 			Outcome: f.Outcome,
 			Dealt:   f.dealt,
@@ -134,11 +135,35 @@ func (s *Session) ledgerSnapshot() []profile.LedgerFightSnapshot {
 		}
 		for _, r := range f.Rounds {
 			rec.Rounds = append(rec.Rounds, profile.LedgerRoundSnapshot{
-				Number: r.Number, Records: recordsSnapshot(r.Records),
+				Number: r.Number, Start: startSnapshot(r.Start), Records: recordsSnapshot(r.Records),
 			})
 		}
 		rec.After = recordsSnapshot(f.After)
 		out = append(out, rec)
+	}
+	return out
+}
+
+// startSnapshot and resumeStart are the one conversion each way for a round's opening figures.
+// A round with none writes none.
+func startSnapshot(in [2]LedgerStats) []profile.LedgerStatsSnapshot {
+	if in[0].Name == "" {
+		return nil
+	}
+	out := make([]profile.LedgerStatsSnapshot, len(in))
+	for i, l := range in {
+		out[i] = profile.LedgerStatsSnapshot{Name: l.Name, DMG: l.DMG, Life: l.Life, MaxLife: l.MaxLife, AP: l.AP}
+	}
+	return out
+}
+
+func resumeStart(in []profile.LedgerStatsSnapshot) [2]LedgerStats {
+	var out [2]LedgerStats
+	if len(in) != len(out) {
+		return out
+	}
+	for i, l := range in {
+		out[i] = LedgerStats{Name: l.Name, DMG: l.DMG, Life: l.Life, MaxLife: l.MaxLife, AP: l.AP}
 	}
 	return out
 }
@@ -254,12 +279,15 @@ func resumeLedger(snap []profile.LedgerFightSnapshot) Ledger {
 		rec := LedgerFight{
 			Number:  f.Number,
 			Realm:   f.Realm,
+			Room:    f.Room,
 			Enemy:   f.Enemy,
 			Outcome: f.Outcome,
 			dealt:   f.Dealt,
 		}
 		for _, r := range f.Rounds {
-			rec.Rounds = append(rec.Rounds, LedgerRound{Number: r.Number, Records: resumeRecords(r.Records)})
+			rec.Rounds = append(rec.Rounds, LedgerRound{
+				Number: r.Number, Start: resumeStart(r.Start), Records: resumeRecords(r.Records),
+			})
 		}
 		rec.After = resumeRecords(f.After)
 		out.Fights = append(out.Fights, rec)

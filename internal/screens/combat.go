@@ -379,6 +379,10 @@ type CombatScene struct {
 	// last round of a fight being written twice or not at all. See combat_ledger.go.
 	ledgerWritten bool
 
+	// roundStart is both duelists' figures as the round being played opened, taken at DUEL! and
+	// handed to the run's account with the round. See recordRound.
+	roundStart [2]session.LedgerStats
+
 	// ledgerClosed says the duel's outcome has been written down. **A settled duel sits on screen
 	// for as long as the player leaves it there**, so without this the account would be told the
 	// fight ended once a frame.
@@ -1243,6 +1247,9 @@ func (s *CombatScene) startRound() {
 	if s.overBudget() {
 		return
 	}
+	// **A row a rune is still holding open closes up first**, since the cards about to fly to the
+	// table set off from their seats by position. See holdRow.
+	s.releaseRow()
 
 	// **The name of the hand is captured here, while the preview can still be asked for it.**
 	// `previewAttack` is gated on `planning()`, which stops being true the moment the log below is
@@ -1297,6 +1304,11 @@ func (s *CombatScene) startRound() {
 	// stops the duelist's copy going stale; `payHeldVitae` below is what brings the change back.
 	if s.run != nil {
 		s.fighter.Duelist.Vitae = s.run.Vitae()
+	}
+
+	s.roundStart = [2]session.LedgerStats{
+		ledgerStats(s.sideName(combat.SideA), s.fighter.Duelist),
+		ledgerStats(s.sideName(combat.SideB), s.enemy.Duelist),
 	}
 
 	log, fighterAfter, enemyAfter := combat.ResolveRoundHolding(
@@ -1790,7 +1802,9 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// combat_relics.go.
 	s.drawRelicPane(gs, screen)
 	drawConsumablePane(gs, screen, s.consumablePaneRect(gs), s.consumableSpendable(gs),
-		s.band.heldSkip, s.tip.Showing(), &s.band.sale)
+		func(i int) bool { return s.band.heldSkip(i) || s.paneMorphing(i) },
+		s.tip.Showing(), &s.band.sale)
+	s.drawPaneMorphs(gs, screen)
 	s.band.drawHeldGhost(gs, screen, s.consumableSpendable(gs))
 
 	s.drawEnemyCard(gs, screen)

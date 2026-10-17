@@ -2469,6 +2469,9 @@ of the hand row anywhere in it.
   cards, because the consumable that wants them is the one that is lit.
 - **Exactly, never at least.** A rune that ate two cards out of a selection of five would be
   choosing for the player which two, and nothing on screen could say which it picked.
+- **A consumable that takes no card ignores the selection** *(owner's call)*. A Hoard, a rock
+  shower or a chimera is live whatever is selected, is handed none of it, and leaves the cards
+  picked for the round where they are.
 - **The order of a selection is the order of the row.** A rune naming a first and a second
   target — Clone — reads them left to right, and the player reorders by dragging, exactly as they
   reorder the round. There is no separate click order to learn.
@@ -2633,8 +2636,7 @@ down.
 - the wrong number of targets, which is what stops a two-card rune being spent on one
 - the same card named twice, which would spend a two-card rune on one card for double the effect
 - a card or a deck index that is not there
-- a chimera with nothing behind it to copy — there is no effect to resolve, so there is nothing to
-  waste
+- a chimera, which is never applied — using it turns it into another rune
 
 `Session.CanApply` and `Session.CanApplyRune` are the two doors, and they now answer that narrower
 question. **The consumables pane still goes dim on the count**, which is the selection being the
@@ -2670,7 +2672,7 @@ cards it takes**, and **what class of change it makes**. See `data/runes.json` a
 | `form` | normal | a form name | 1–2 | changes what cards **count as** on the form axis |
 | `stones` | normal | how many | **0** | puts that many random stones in the run's **pouch** |
 | `clone` | normal | — | **2** | the first card picked becomes the second |
-| `chimera` | normal | — | **0** | fires the run's last rune again |
+| `chimera` | normal | — | **0** | becomes the run's last rune, in its own seat |
 
 ### Normal and upgrade: the two classes of change
 
@@ -2776,33 +2778,25 @@ often the player plays it, which on a cheap card in the starting deck is dozens 
 Nothing in the repo simulates a run, so the dial to move is the denominator in `data/runes.json`
 and no code changes.
 
-### `chimera` fires the last one again
+### `chimera` becomes the last one
 
-**It carries no effect of its own.** What it costs, how many cards it names and what it does to them
-all come from the rune it is copying, resolved through `Session.Echoes` before anything reads
-it. A chimera behind an Embermark asks for two cards and paints them fire; a chimera behind a Hoard
-asks for none.
+**Using it is the change, and it fires nothing** *(owner's call)*. It names no cards; USE swaps it,
+in its own seat and carrying its own weight, for the rune the run spent last — `Session.BecomeLastRune`
+— and dissolves into it there. The copy is then aimed and spent like any rune.
 
+- **Until it is used it is a chimera.** The face is its own; the tooltip reads `BECOMES LAST RUNE`
+  and names what it would become under it — `(MIMIC)`. The sack never shows a rune that is not
+  there yet.
 - **The memory is the run's, not the fight's.** A chimera carried out of one duel and into the next
   still copies what was spent in the first. `Session.lastRune` is the record key and it is
   **saved with the run**, so a resume does not forget.
-- **It refuses only on a run that has spent nothing.** There is no effect to copy, and a consumable
-  that landed and did nothing is something bought and taken away. The consumables pane draws it dim,
-  the same courtesy an unaffordable relic gets.
-- **The targets are picked again rather than inherited.** The copied rune's cards are long gone
-  from the hand by the time a chimera is spent — a different turn, sometimes a different fight — and
-  re-firing against the same identities would be a no-op wherever the effect was idempotent, which
-  is most of the catalog.
-- **A chimera never becomes the thing to copy.** `rememberRune` records the *resolved* record, so
-  two chimeras in a row both fire the rune behind them rather than the second copying the first
-  into nothing.
+- **It refuses only on a run that has spent nothing.** There is nothing to become, and a consumable
+  that became nothing is something bought and taken away. The consumables pane draws it dim.
+- **Becoming a rune is not spending one**, so a chimera is never what the next one copies.
 - **A remembered record the catalog no longer holds is forgotten rather than refused**, which is
   the one place `Resume` is lenient and is deliberate: a *held* rune is a thing the player owns
   and would notice going missing, where this is a memory of one already spent. The worst it costs is
   a chimera with nothing to copy, which is a state the mechanic already has a rule for.
-- **The card's face says what it would fire** — `COPIES / HOARD` — because its authored line cannot.
-  A card whose whole subject is a rune named somewhere else is one the player would otherwise
-  have to remember the answer to.
 
 **The vocabulary is closed**, the posture every other one in the game takes. A bad record — an
 unknown target, a rider the rules lack, a concept this build has not registered, a `vitae` asking

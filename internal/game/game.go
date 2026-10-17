@@ -94,6 +94,10 @@ type Game struct {
 	// not its Draw, so a scene drawn on a tick it was never updated on is a scene drawing state its
 	// Update has not built. See crash.go.
 	sceneUpdated int
+
+	// boot is the startup splash while it is up, and nil after. **While it is non-nil the frame does
+	// nothing else**, because the state is still being loaded on another goroutine. See splash.go.
+	boot *splash
 }
 
 func NewGame() *Game {
@@ -170,6 +174,20 @@ func (g *Game) update() error {
 		//Would handle any saving of state or confirmation here
 		return ErrClosing
 	}
+
+	// **The splash holds the whole frame until it is over and the loader has finished**, and its
+	// last act is the loader's main-goroutine half. See splash.go.
+	if g.boot != nil {
+		if g.boot.update() {
+			after := g.boot.after
+			g.boot = nil
+			if after != nil {
+				after()
+			}
+		}
+		return nil
+	}
+
 	// Handling Mouse Position
 	g.GlobalState.MouseX, g.GlobalState.MouseY = ebiten.CursorPosition()
 
@@ -311,6 +329,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) draw(screen *ebiten.Image) {
+	if g.boot != nil {
+		g.boot.draw(screen)
+		return
+	}
 
 	// An action that switches screens sets ActiveScreen and NewScreen together, but the
 	// incoming scene's Init does not run until the next Update. Draw would otherwise

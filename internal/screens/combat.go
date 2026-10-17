@@ -898,6 +898,9 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 		// **The realm is read after WonFight**, so a win that went through a portal reports the realm
 		// arrived at rather than the one left behind.
 		earnMoment(gs, achieve.DuelWon())
+		if s.round == 1 {
+			earnMoment(gs, achieve.DuelWonFirstRound())
+		}
 		earnMoment(gs, achieve.RealmReached(gs.Run.Realm()))
 
 		// **The end of the duel, which is where the lifetime tallies are settled.** See achieve.go

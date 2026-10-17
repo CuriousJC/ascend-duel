@@ -109,6 +109,26 @@ var guide_card_png []byte
 //go:embed game/placeholder.png
 var placeholder_png []byte
 
+// THE SPLASH
+//
+// The bulb, dark and lit, at one pixel per art pixel — 16x41, scaled up whole by the caller — and
+// the studio logo at the size it is drawn. **Handed out by Splash rather than LoadAssets**, because
+// the splash is what plays while LoadAssets runs.
+//
+//go:embed game/splash-bulb-off.png
+var splashBulbOff_png []byte
+
+//go:embed game/splash-bulb-on.png
+var splashBulbOn_png []byte
+
+//go:embed game/splash-logo.png
+var splashLogo_png []byte
+
+// SplashImages is the three pictures the startup splash draws: the bulb off, the bulb on, the logo.
+func SplashImages() (bulbOff, bulbOn, logo *ebiten.Image) {
+	return loadImage(splashBulbOff_png), loadImage(splashBulbOn_png), loadImage(splashLogo_png)
+}
+
 // THE GEAR
 
 // FORM MARKS AND COST TICKS

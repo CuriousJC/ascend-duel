@@ -298,7 +298,7 @@ hit whole**. See MECHANICS.md §Shields. Six things to know before touching any 
   beat a creature's blocked attack is reached, the hit it would have landed (`Event.Would`) sets
   off on its real path and a shield leaves its heap to meet it on the way — where the path crosses
   the screen's horizontal middle — and the two break apart there, and
-  a matched block writes SURGE over the break — a fizzle is the same picture with a shield of the
+  a block writes BLOCK over the break, a matched one SURGE — a fizzle is the same picture with a shield of the
   creature's element and FIZZLE. `internal/screens/combat_shields.go` and `combat_intercept.go` are
   the screen's half and `ui/shield_heap.go` the heap's layout, which the animation gallery's
   `shield heap` and `intercept` entries share. **The

@@ -7,7 +7,7 @@ package screens
 // duelist's line — on the path and at the pace a landing figure takes into the target's card. A
 // shield sets off at the same moment to meet it — the player's out of its heap, a creature's out of
 // its own card — and reaches the path at the moment the figure gets there. The two break apart
-// there, the crumble a stone uses. A matched block writes SURGE over the break; a hit of the
+// there, the crumble a stone uses. A block writes BLOCK over the break, SURGE when it matched; a hit of the
 // creature's own element writes FIZZLE, because that is the creature shielding itself in it.
 //
 // **Where on the path they meet is one rule**, `interceptAt` — today the point the path crosses
@@ -94,7 +94,7 @@ type intercept struct {
 	shield     cards.Element
 	shieldFrom ui.ShieldPose
 
-	// label is SURGE, FIZZLE or nothing, written over the break.
+	// label is BLOCK, SURGE or FIZZLE, written over the break.
 	label string
 
 	// stopped is the seat of the opponent's attack a player's shield stopped, for the tutorial, and
@@ -135,10 +135,25 @@ func (ic intercept) met() bool { return ic.t.Age >= ic.meetTicks }
 // sinceMeeting is how many ticks the two have been breaking apart.
 func (ic intercept) sinceMeeting() int { return ic.t.Age - ic.meetTicks }
 
-// The labels' inks. SURGE is the action-point bar's amber, because what a surge banked is budget;
-// FIZZLE the attack red a line's verdict was written in.
-func surgeInk() color.RGBA  { return apSpentColor }
-func fizzleInk() color.RGBA { return ui.VerbInkFor(combat.CategoryAttack) }
+// blockLabel is the word a block writes over its break. **Every block says one**: SURGE when the
+// shield matched the hit and banked an action point, BLOCK otherwise — a surge is a block that also
+// paid, so it takes the louder word rather than both.
+func blockLabel(e combat.Event) string {
+	if e.Surged {
+		return "SURGE"
+	}
+	return "BLOCK"
+}
+
+// labelInk is the ink a word over a break is written in: **the element of the shield that broke**,
+// whichever word it is — a number wears the color of what produced it, and the word is the shield's.
+// An elementless shield has no color of its own and takes the defend blue, the verb that raised it.
+func labelInk(shield cards.Element) color.RGBA {
+	if shield == cards.Basic {
+		return ui.VerbInkFor(combat.CategoryDefend)
+	}
+	return cards.BorderOf(shield)
+}
 
 // interceptScale is the size a shield is drawn at where it meets the hit.
 const interceptScale = 1.0
@@ -166,9 +181,7 @@ func (s *CombatScene) noteBlock(gs *state.GlobalState, e combat.Event) {
 		shield: el, shieldFrom: s.spendShield(gs, e.Target, el),
 		stopped: -1,
 	}
-	if e.Surged {
-		ic.label = "SURGE"
-	}
+	ic.label = blockLabel(e)
 	if e.Target == combat.SideA {
 		ic.stopped = seat
 	}
@@ -196,9 +209,7 @@ func (s *CombatScene) interceptLine(gs *state.GlobalState, col *mathColumn, e co
 	case combat.KindBlocked:
 		ic.shield = ui.ArtFor(e.Element)
 		ic.shieldFrom = s.spendShield(gs, e.Target, ic.shield)
-		if e.Surged {
-			ic.label = "SURGE"
-		}
+		ic.label = blockLabel(e)
 	}
 	col.spent = true
 	s.raiseIntercept(gs, ic)
@@ -318,11 +329,7 @@ func drawIntercept(gs *state.GlobalState, screen *ebiten.Image, ic *intercept, o
 		}
 	}
 	if ic.label != "" {
-		ink := surgeInk()
-		if ic.label == "FIZZLE" {
-			ink = fizzleInk()
-		}
-		drawInterceptLabel(gs, screen, ic.label, ink, meet, age, interceptBreakTicks()+interceptHoldTicks())
+		drawInterceptLabel(gs, screen, ic.label, labelInk(ic.shield), meet, age, interceptBreakTicks()+interceptHoldTicks())
 	}
 }
 
@@ -336,7 +343,7 @@ func figureImage(gs *state.GlobalState, figure string, ink color.RGBA) *ebiten.I
 	return img
 }
 
-// interceptLabelSize is SURGE's and FIZZLE's type size.
+// interceptLabelSize is the type size of the words over a break.
 const interceptLabelSize = 72
 
 // drawInterceptLabel writes a word over a break, popping in as the two meet and fading over the end

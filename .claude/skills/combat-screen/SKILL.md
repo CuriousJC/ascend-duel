@@ -192,7 +192,7 @@ in `MECHANICS.md`; these are what matter to the screen.
 ### The hand dialog: every hit worked out under its card
 
 *`combat_mathbox.go`.* On the beat a hand fires, **every hit's arithmetic is played out at once**, a
-line under each card on the table, defenses included: the DMG flying off the duelist card, the card's own
+line under each card on the table that has something to show — a hit of 0, a defense's, shows nothing: the DMG flying off the duelist card, the card's own
 multiplier off the card, each relic's factor off its relic, the hand's multiplier
 off the banner, then the hit's figure. A card that lands several times — an echo, a form repeat —
 stacks its lines under itself. Every line but the first carries its `+` on the left rather than on
@@ -211,7 +211,7 @@ exist.
   event over the hits it threw and hands each line its own outcome's position. A finished line
   that **landed** flies its figure into the target (`throwColumn` moves the target's life at that
   moment and marks the event walked), a **fizzle** or a **block** flies to be met in the middle by
-  the shield that stops it (`interceptLine`, also walked), **a line whose figure is 0 is not sent at all**, fizzled or not, and a line with no outcome
+  the shield that stops it (`interceptLine`, also walked), **a line whose figure is 0 is not shown at all** — no scroll, no working, no shake (`mathColumn.silent`), though it still runs so its riders signal — and a line with no outcome
   flies into the target's card anyway when the target fell to an earlier hit (`throwOverkill`,
   moving no life) and fades where it stands when the thrower fell.
   **This is one of the two places the screen reads ahead of the cursor, beside the defend phase's bundle**, and it
@@ -622,7 +622,7 @@ eye.
   `intercept.aim` turns the share into the tick the eased figure gets there, so the hit is the one
   it would have been, cut short. They arrive together and both crumble there
   (`ui.DrawCrumble`, the stone's break). **Nothing lands on the attack card.** A matched block
-  (`Event.Surged`) writes **SURGE** over the break in the AP bar's amber. **A fizzle is the same
+  (`Event.Surged`) writes **SURGE** over the break and any other block **BLOCK** (`blockLabel`), every word over a break in the color of the shield that broke (`labelInk`). **A fizzle is the same
   picture from the other side** — the duelist's line throws its total (`interceptLine`) and a
   shield of the creature's own element leaves the creature's card, with **FIZZLE** over the break.
   **The engine never says which card's shield it spent**, so that pick is the screen's and decides

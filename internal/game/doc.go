@@ -81,7 +81,7 @@
 // matching one to put the score back would be two edits per screen, and the forgotten one leaves the
 // shop's loop playing over a duel.
 //
-//   - **Every screen is listed, including the ones that play the score.** `music.Score` is a name rather
+//   - **Every screen is listed, including the ones that play the score.** `music.Default` is a name rather
 //     than the empty string, because a zero value standing for a real thing is the pattern this project
 //     rejects everywhere else. `TestEveryScreenNamesItsMusic` walks `state.ActiveScreen`, so a new screen
 //     fails the suite rather than falling back quietly.

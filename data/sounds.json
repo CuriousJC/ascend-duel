@@ -10,5 +10,53 @@
     "Cues": [
       "relic-toast"
     ]
+  },
+  {
+    "File": "bundle-open-1.ogg",
+    "Pack": "humble-bundle-complete-rpg-creator",
+    "Source": "humble-bundle-complete-rpg-creator/bundle-open-1.wav",
+    "GainDB": 11.9,
+    "Quality": 6,
+    "Bytes": 28870,
+    "SHA256": "b89981c71f4c682152cec9aeaaef2c58168685c43477771925145db0ba49f2e1",
+    "Cues": [
+      "good-opened"
+    ]
+  },
+  {
+    "File": "bundle-open-2.ogg",
+    "Pack": "humble-bundle-complete-rpg-creator",
+    "Source": "humble-bundle-complete-rpg-creator/bundle-open-2.wav",
+    "GainDB": 5.4,
+    "Quality": 6,
+    "Bytes": 20872,
+    "SHA256": "3c22b861f0c21366e49f07f7c45851cf59d65ec5bf43f11a43621787aa925ab2",
+    "Cues": [
+      "good-opened"
+    ]
+  },
+  {
+    "File": "bundle-open-3.ogg",
+    "Pack": "humble-bundle-complete-rpg-creator",
+    "Source": "humble-bundle-complete-rpg-creator/bundle-open-3.wav",
+    "GainDB": 11.3,
+    "Quality": 6,
+    "Bytes": 16242,
+    "SHA256": "c18e361d4c31c102bbe0eaf8b59b25dea75bb10127d574e3f29cf89cd9751500",
+    "Cues": [
+      "good-opened"
+    ]
+  },
+  {
+    "File": "bundle-open-4.ogg",
+    "Pack": "humble-bundle-complete-rpg-creator",
+    "Source": "humble-bundle-complete-rpg-creator/bundle-open-4.wav",
+    "GainDB": 2.2,
+    "Quality": 6,
+    "Bytes": 21416,
+    "SHA256": "11b0dd149b065b6cb77714d0e03aec3fce018c29b97e0ee51c5a2e7a3bc9d17a",
+    "Cues": [
+      "good-opened"
+    ]
   }
 ]

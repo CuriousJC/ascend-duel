@@ -114,7 +114,10 @@ A file being present plays nothing. `internal/game/score.go` says what each scre
 frame; a name with no loaded file falls back to the score. **A record's `Screens` is the pool it
 may play in**, and a screen either names one fixed track, which must be in its pool, or is a **pool
 screen** (`{pool: true}`) that plays one track of it, rolled per fight off `seeds.CombatMusic` when
-the screen is entered — so a fight and its retry play the same track. Combat is the pool screen.
+the screen is entered — so a fight and its retry play the same track. Each pool screen reads its
+own pool, by screen name. `music.Default` is the synthesized score: the fallback, the music of
+any screen that names it, and **the studio splash's**, started by the loader in `main.go` before
+`score.go` runs at all.
 `TestEveryTrackPlaysWhereItMay` fails on a fixed track outside its pool, a pool screen with an empty
 pool, or a track pooled on a screen that always plays something else, and logs every track no
 screen plays. Screen names are `state.ActiveScreen.String`. **A clone without the sounds has no
@@ -125,7 +128,9 @@ the sound is about a round.
 
 An effect plays on a **cue**, a moment a screen raises: `music.PlayCue(data.CueRelicToast)`. `main`
 loads each record of `sounds.json` under its `Cues`, so the screen never names a file. **The cues are
-closed** — `data.SoundCues` — and a cue may be answered by one sound, both refused at load.
+closed** — `data.SoundCues` — and a cue the game does not raise is refused at load. **A cue may be
+answered by several sounds**, which take turns in `sounds.json`'s order (`music.PlayCue`) — a
+rotation rather than a roll, so what a player hears spends no stream.
 
 - **A new cue is a constant in `data` and the one call site that raises it**, never something the
   file can assert into existence.
@@ -135,7 +140,10 @@ closed** — `data.SoundCues` — and a cue may be answered by one sound, both r
   of the deal's cascade (`internal/screens/combat_sound.go`). Toasts raised on one frame are spread
   a sixth of a beat apart in the sound only, so two relics firing into one figure are two sounds
   rather than one twice as loud.
-- **A cue may never change an outcome**: it is raised by playback, after the round is resolved.
+- **`data.CueGoodOpened` is raised once a sealed good is paid for**, in `ShopScene.openGood`
+  beside `openGoods`, so a refused purchase opens nothing and sounds nothing.
+- **A cue may never change an outcome**: it is raised by playback, after the round is resolved, or
+  after the decision it marks has already been made.
 
 ## Setting up AWS
 

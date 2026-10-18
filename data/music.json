@@ -6,10 +6,6 @@
     "Bytes": 1084,
     "SHA256": "3d8642c0e637d0119da7c26c6ddae8959f7b4b8a521f3c30de81b88805c9baad",
     "Screens": [
-      "Title",
-      "PostBattle",
-      "RunOver",
-      "Portal",
       "Victory",
       "Crashed"
     ]
@@ -23,6 +19,7 @@
     "Bytes": 876897,
     "SHA256": "97446b7d79baebc3d31d9a84583498ee216dfcc3ddb57dbee09281282525de4d",
     "Screens": [
+      "PostBattle",
       "Shop"
     ]
   },
@@ -75,7 +72,10 @@
     "Bytes": 2940849,
     "SHA256": "f71cdef96c6fd9358a0308e7a9be4b161fff242bb437d4463c660e9e55cb7d90",
     "Screens": [
-      "Combat"
+      "Title",
+      "Combat",
+      "RunOver",
+      "Portal"
     ]
   },
   {
@@ -87,7 +87,10 @@
     "Bytes": 10296243,
     "SHA256": "689c1bfe20484445ba5ddf1fdab0e26cc777e125db81b836f46e1aab1827fc65",
     "Screens": [
-      "Combat"
+      "Title",
+      "Combat",
+      "RunOver",
+      "Portal"
     ]
   }
 ]

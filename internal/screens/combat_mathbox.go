@@ -336,6 +336,12 @@ type mathColumn struct {
 	figure   int
 	overkill bool
 
+	// silent is a line whose figure is 0 — a defense's, nearly always. **It is not shown at all**:
+	// no scroll, no working and no shake, so a shield card reads as a shield rather than as an
+	// attack that came to nothing. It still runs, finishing the moment it begins, so its card's
+	// riders signal and its event is walked like any other. See begin.
+	silent bool
+
 	// thrown says the finished line has been handed on — its figure flown into the target, or
 	// marked as a fizzle or a block — so it happens once. spent says the total has left the line.
 	thrown bool
@@ -536,7 +542,7 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event, at in
 	killed := handKilled(s.log, at, e.Side)
 	for i := 0; i < e.HandCardCount; i++ {
 		col := mathColumn{hit: i, seat: e.HandCards[i], items: hitScript(e, i, i == 0), logAt: -1,
-			figure: e.HitAmounts[i]}
+			figure: e.HitAmounts[i], silent: e.HitAmounts[i] == 0}
 		if k, ok := outcomes[i]; ok {
 			col.logAt = k
 		} else {
@@ -1111,6 +1117,9 @@ func (s *CombatScene) mathLinesRect(gs *state.GlobalState) (image.Rectangle, boo
 	}
 	var out image.Rectangle
 	for _, col := range box.columns {
+		if col.silent {
+			continue
+		}
 		for _, it := range col.items {
 			w, h := int(mathWidth(gs, it.text, it.size)), int(figureHeight(it.size))
 			r := image.Rect(it.at.X-w/2, it.at.Y-h/2, it.at.X+w/2, it.at.Y+h/2)
@@ -1134,6 +1143,10 @@ func (s *CombatScene) layOutMath(gs *state.GlobalState, box *handMathBox) {
 	spilled := map[int]int{}
 	for c := range box.columns {
 		col := &box.columns[c]
+		// A silent line takes no room, so a card's shown hits stack as if it were not there.
+		if col.silent {
+			continue
+		}
 		card := s.handCardCenter(gs, box.side, col.seat)
 		y, ok := below[col.seat]
 		if !ok {
@@ -1464,12 +1477,24 @@ func (b *handMathBox) Tick() {
 }
 
 // begin starts every line whose card has no unfinished hit above it.
+//
+// **A silent line is done the moment it begins**, and hands only its card's own item to the
+// signals: whatever its riders parked still fires, and nothing shakes for a figure nobody is shown.
 func (b *handMathBox) begin() {
 	for c := range b.columns {
-		if !b.columns[c].begun && !b.waitsOn(c) {
-			b.columns[c].begun = true
-			b.started(c, 0)
+		col := &b.columns[c]
+		if col.begun || b.waitsOn(c) {
+			continue
 		}
+		col.begun = true
+		if col.silent {
+			if col.cardAt < len(col.items) {
+				b.freshSignals = append(b.freshSignals, mathRef{c, col.cardAt})
+			}
+			col.at = len(col.items)
+			continue
+		}
+		b.started(c, 0)
 	}
 }
 
@@ -1500,9 +1525,23 @@ func (b *handMathBox) multStarted() bool {
 	if !b.active {
 		return false
 	}
+	// A silent line's multiplier never sets off — it is finished without being shown — so it says
+	// nothing here, unless every line is silent, when the banner goes as they begin.
+	shown := false
 	for _, c := range b.columns {
+		if c.silent {
+			continue
+		}
+		shown = true
 		if c.at >= c.multAt && c.multAt > 0 {
 			return true
+		}
+	}
+	if !shown {
+		for _, c := range b.columns {
+			if c.begun {
+				return true
+			}
 		}
 	}
 	return false
@@ -1679,7 +1718,7 @@ func (s *CombatScene) drawHandMath(gs *state.GlobalState, screen *ebiten.Image) 
 
 	for c := range b.columns {
 		col := &b.columns[c]
-		if !col.begun {
+		if !col.begun || col.silent {
 			continue
 		}
 		alpha := float32(1)

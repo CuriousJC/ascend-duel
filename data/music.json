@@ -1,111 +1,93 @@
-{
-  "Packs": [
-    {
-      "Pack": "custom",
-      "Name": "Made for Duello",
-      "Note": "The game's own score, a MIDI file synthesized to PCM at startup by internal/music. Its level is the synthesizer's: -1.7 dBFS peak and -14.7 dBFS RMS."
-    },
-    {
-      "Pack": "humble-bundle-game-audio-sfx-treasure-trove",
-      "Name": "Game Audio and SFX Treasure Trove by Tao & Sound",
-      "Note": "dark-fantasy-01 and -02 were peak-normalized to -1.0 dBFS in the library itself (+13.0 and +12.8 dB): as delivered they peak at about -14 dBFS."
-    },
-    {
-      "Pack": "humble-bundle-ultimate-game-audio",
-      "Name": "Ultimate Game Audio Bundle - Access 300,000 Premium Music and Sound Effects"
-    }
-  ],
-  "Tracks": [
-    {
-      "File": "duello.mid",
-      "Pack": "custom",
-      "Source": "custom/duello.mid",
-      "Screens": [
-        "Title",
-        "PostBattle",
-        "RunOver",
-        "Portal",
-        "Victory",
-        "Crashed"
-      ],
-      "Bytes": 1084,
-      "SHA256": "3d8642c0e637d0119da7c26c6ddae8959f7b4b8a521f3c30de81b88805c9baad"
-    },
-    {
-      "File": "dark-fantasy-01.ogg",
-      "Pack": "humble-bundle-game-audio-sfx-treasure-trove",
-      "Source": "humble-bundle-game-audio-sfx-treasure-trove/dark-fantasy-01.wav",
-      "GainDB": 0,
-      "Quality": 6,
-      "Screens": [
-        "Shop"
-      ],
-      "Bytes": 876911,
-      "SHA256": "9c23836cc0ad406069e5432706f3efa54ae2a0d42761b32f8a6f87eed3cef2a3"
-    },
-    {
-      "File": "dark-fantasy-02.ogg",
-      "Pack": "humble-bundle-game-audio-sfx-treasure-trove",
-      "Source": "humble-bundle-game-audio-sfx-treasure-trove/dark-fantasy-02.wav",
-      "GainDB": 0,
-      "Quality": 6,
-      "Screens": [],
-      "Bytes": 405137,
-      "SHA256": "f0d7509d810fd519293e35d114dd0755fdf917d88d867d4afd69f4ed9821a1d7"
-    },
-    {
-      "File": "ambience-1.ogg",
-      "Pack": "humble-bundle-game-audio-sfx-treasure-trove",
-      "Source": "humble-bundle-game-audio-sfx-treasure-trove/ambience-1.wav",
-      "GainDB": 5.6,
-      "Quality": 6,
-      "Screens": [],
-      "Bytes": 1052904,
-      "SHA256": "fc8168e26736f5178893e7afb3ce5aa867e1c497f1871d8940ed95a224a28573"
-    },
-    {
-      "File": "long-bell.ogg",
-      "Pack": "humble-bundle-game-audio-sfx-treasure-trove",
-      "Source": "humble-bundle-game-audio-sfx-treasure-trove/long-bell.wav",
-      "GainDB": 0,
-      "Quality": 6,
-      "Screens": [],
-      "Bytes": 134578,
-      "SHA256": "45a863b808a654e433e4f0dfbe0ca4328297a59b77f24b7c9ab5b2fb0edb533d"
-    },
-    {
-      "File": "aliens-motif.ogg",
-      "Pack": "humble-bundle-ultimate-game-audio",
-      "Source": "humble-bundle-ultimate-game-audio/aliens-motif.wav",
-      "GainDB": -1,
-      "Quality": 6,
-      "Screens": [],
-      "Bytes": 2693203,
-      "SHA256": "84bd529fde2f818c3eb83c2f178163ef84b98b3896b6631f915380b0c62f1cf2"
-    },
-    {
-      "File": "combat-ambience-1.ogg",
-      "Pack": "humble-bundle-ultimate-game-audio",
-      "Source": "humble-bundle-ultimate-game-audio/combat-ambience-1.wav",
-      "GainDB": -0.1,
-      "Quality": 6,
-      "Screens": [
-        "Combat"
-      ],
-      "Bytes": 2940863,
-      "SHA256": "e2d1a3dfa24593b6574c965c923d6da1cb10c7e22b9f5834e64f9ba897a00c2c"
-    },
-    {
-      "File": "combat-ambience-2.ogg",
-      "Pack": "humble-bundle-ultimate-game-audio",
-      "Source": "humble-bundle-ultimate-game-audio/combat-ambience-2.wav",
-      "GainDB": -1.5,
-      "Quality": 6,
-      "Screens": [
-        "Combat"
-      ],
-      "Bytes": 10296257,
-      "SHA256": "f9b20b540df19b8a58d35fa9d1e0c3b37cc57dbd3a3b053bbe1e970cbf0d8175"
-    }
-  ]
-}
+[
+  {
+    "File": "duello.mid",
+    "Pack": "custom",
+    "Source": "custom/duello.mid",
+    "Bytes": 1084,
+    "SHA256": "3d8642c0e637d0119da7c26c6ddae8959f7b4b8a521f3c30de81b88805c9baad",
+    "Screens": [
+      "Title",
+      "PostBattle",
+      "RunOver",
+      "Portal",
+      "Victory",
+      "Crashed"
+    ]
+  },
+  {
+    "File": "dark-fantasy-01.ogg",
+    "Pack": "humble-bundle-game-audio-sfx-treasure-trove",
+    "Source": "humble-bundle-game-audio-sfx-treasure-trove/dark-fantasy-01.wav",
+    "GainDB": 0,
+    "Quality": 6,
+    "Bytes": 876897,
+    "SHA256": "97446b7d79baebc3d31d9a84583498ee216dfcc3ddb57dbee09281282525de4d",
+    "Screens": [
+      "Shop"
+    ]
+  },
+  {
+    "File": "dark-fantasy-02.ogg",
+    "Pack": "humble-bundle-game-audio-sfx-treasure-trove",
+    "Source": "humble-bundle-game-audio-sfx-treasure-trove/dark-fantasy-02.wav",
+    "GainDB": 0,
+    "Quality": 6,
+    "Bytes": 405123,
+    "SHA256": "6f2a99a845df76e1d78bb7689a44a2503196637ca30914392f4407d0f587b848",
+    "Screens": []
+  },
+  {
+    "File": "ambience-1.ogg",
+    "Pack": "humble-bundle-game-audio-sfx-treasure-trove",
+    "Source": "humble-bundle-game-audio-sfx-treasure-trove/ambience-1.wav",
+    "GainDB": 5.6,
+    "Quality": 6,
+    "Bytes": 1052890,
+    "SHA256": "99f89027a598201bd495b9e95f3ccacc82517d5376a00f8e42826e806221c20d",
+    "Screens": []
+  },
+  {
+    "File": "long-bell.ogg",
+    "Pack": "humble-bundle-game-audio-sfx-treasure-trove",
+    "Source": "humble-bundle-game-audio-sfx-treasure-trove/long-bell.wav",
+    "GainDB": 0,
+    "Quality": 6,
+    "Bytes": 134564,
+    "SHA256": "b1899503b53dd83dfe641dfa4f20506fc84adf8fcd7de4e409b7544a473d2e9a",
+    "Screens": []
+  },
+  {
+    "File": "aliens-motif.ogg",
+    "Pack": "humble-bundle-ultimate-game-audio",
+    "Source": "humble-bundle-ultimate-game-audio/aliens-motif.wav",
+    "GainDB": -1,
+    "Quality": 6,
+    "Bytes": 2693189,
+    "SHA256": "7ff2ea3aa892e39ac552dea6f8ccc9c9e8041ff02867cd8db36b61c47c2694ee",
+    "Screens": []
+  },
+  {
+    "File": "combat-ambience-1.ogg",
+    "Pack": "humble-bundle-ultimate-game-audio",
+    "Source": "humble-bundle-ultimate-game-audio/combat-ambience-1.wav",
+    "GainDB": -0.1,
+    "Quality": 6,
+    "Bytes": 2940849,
+    "SHA256": "f71cdef96c6fd9358a0308e7a9be4b161fff242bb437d4463c660e9e55cb7d90",
+    "Screens": [
+      "Combat"
+    ]
+  },
+  {
+    "File": "combat-ambience-2.ogg",
+    "Pack": "humble-bundle-ultimate-game-audio",
+    "Source": "humble-bundle-ultimate-game-audio/combat-ambience-2.wav",
+    "GainDB": -1.5,
+    "Quality": 6,
+    "Bytes": 10296243,
+    "SHA256": "689c1bfe20484445ba5ddf1fdab0e26cc777e125db81b836f46e1aab1827fc65",
+    "Screens": [
+      "Combat"
+    ]
+  }
+]

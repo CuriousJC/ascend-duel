@@ -162,11 +162,16 @@ func (s *CombatScene) ledgerRecords(events []combat.Event) []session.LedgerRecor
 		case combat.KindVitae:
 			// **Two riders pay vitae and they are different things.** A held card is paid for being
 			// kept back; a played silver card gambled and came up. See combat.Event.Rider.
-			kind := session.KindHeld
 			if e.Rider == combat.RiderSilver {
-				kind = session.KindSilver
+				add(session.LedgerRecord{Kind: session.KindSilver, Side: sideWord(e.Side), Amount: e.Amount})
+				break
 			}
-			add(session.LedgerRecord{Kind: kind, Side: sideWord(e.Side), Amount: e.Amount})
+			// **A held card names itself**: its line is its own, at the top of the round or after the
+			// played cards, with no act above it to say which card was kept back.
+			add(session.LedgerRecord{
+				Kind: session.KindHeld, Side: sideWord(e.Side), Amount: e.Amount,
+				Card: combat.ConceptOf(e.Action).Label, Element: ui.ElementName(e.Element),
+			})
 
 		case combat.KindExpired:
 			// **Shields that were never spent are the player's own decision coming back**, and a

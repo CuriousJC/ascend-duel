@@ -24,6 +24,13 @@
 // knows that, and a track and the score are the same kind of thing once they are in. See
 // track.go.
 //
+// # Effects
+//
+// **An effect is a short sound played once, over the music**, under a *cue* — a moment a screen
+// raises, `data.CueRelicToast` — rather than under its own name, so the screen never learns which
+// file answers it. Each play is its own player, so effects layer; they have their own level and their
+// own bar, beside the score's. See sound.go.
+//
 // **Which music a screen gets is not decided here.** This package knows how to hold several
 // pieces and which one is sounding; `internal/game/score.go` owns the table that says a screen
 // plays one, for the reason the settings cog lives in the frame. A name nothing was loaded under

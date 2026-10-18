@@ -787,7 +787,8 @@ func (s *CombatScene) shakeFor(i int) ui.Travel {
 	return s.relicShake[i]
 }
 
-// shakeRelicAt starts seat i rattling, growing the row to reach it.
+// shakeRelicAt starts seat i rattling, growing the row to reach it, and toasts it aloud — every
+// relic that rattles here is one activating. See combat_sound.go.
 func (s *CombatScene) shakeRelicAt(i int) {
 	if i < 0 {
 		return
@@ -796,6 +797,7 @@ func (s *CombatScene) shakeRelicAt(i int) {
 		s.relicShake = append(s.relicShake, ui.Travel{})
 	}
 	s.relicShake[i] = ui.NewTravel(0, relicShakeTicks())
+	s.toastSound()
 }
 
 // tickShakes starts a shake on whatever the hand dialog has just set off, and advances the ones

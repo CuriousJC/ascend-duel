@@ -20,19 +20,23 @@ privateassets/
     local.psd1         ignored: this machine's source path, bucket and profile
   audio/
     README.md          committed: keeps the directory real for //go:embed
-    *.ogg *.mid        ignored: the game-ready tracks, flat
+    music/             ignored: the game-ready loops and the score, flat
+    sounds/            ignored: the game-ready effects, flat
 ```
 
-**[data/music.json](../data/music.json) is the record of what belongs in `audio/`**: one entry per
-track, with the pack it came from, the delivered file it was made from, the gain and quality it was
-made at, the screens it may play on, and the size and hash of the game-ready file. It is committed;
-the audio is not. `audio/README.md` is committed for a duller reason: `//go:embed audio` is resolved
+**Two committed catalogs say what belongs in `audio/`**: [data/music.json](../data/music.json) for
+`music/` and [data/sounds.json](../data/sounds.json) for `sounds/`. Each entry carries the pack it came
+from, the delivered file it was made from, the gain and quality it was made at, where it plays — the
+screens a loop may play on, the cues an effect answers — and the size and hash of the game-ready
+file. The packs themselves, and the purchase each is credited to, are
+[data/audio_packs.json](../data/audio_packs.json), because one pack can supply both. They are
+committed; the audio is not. `audio/README.md` is committed for a duller reason: `//go:embed audio` is resolved
 at compile time and a directory with nothing embeddable in it is a *build* error, so without it a
 clean clone would fail to compile rather than merely play silent.
 
-**A track's name is its filename stem** — `combat-ambience-1.ogg` is the track `combat-ambience-1`
-— so two files sharing a stem fail the launch, and the folder is flat because nothing about where a
-file came from reaches the game but its record.
+**A sound's name is its filename stem** — `combat-ambience-1.ogg` is the track `combat-ambience-1`
+— and a name is unique across both folders, so two files sharing a stem fail the launch. Each folder
+is flat because nothing about where a file came from reaches the game but its record.
 
 ## Where the sounds come from
 
@@ -41,15 +45,17 @@ The owner's source folder (`SourcePath` in `mgmt/local.psd1`) holds two things:
 ```
 ascend_assets/
   sounds/<pack>/...   the library: every pack as it was delivered, never edited
-  game-ready/         built from the library, one file per track in data/music.json
+  game-ready/music/   built from the library, one file per record in data/music.json
+  game-ready/sounds/  built from the library, one file per record in data/sounds.json
 ```
 
 `mgmt/build-game-ready.ps1` reads each record's source out of the library and writes its
-game-ready file: a MIDI file copied, anything else encoded to Ogg Vorbis at 44100 Hz with the
+game-ready file into the folder of its catalog: a MIDI file copied, anything else encoded to Ogg Vorbis at 44100 Hz with the
 record's own gain and quality. **The library is only ever read**, so a gain is changed by editing
 the record and rebuilding, and the delivered file is always there to rebuild from.
 `mgmt/sync-from-drive.ps1` mirrors `game-ready/` into `audio/` and records each file's hash in
-`music.json`. The procedure is the [`sounds` skill](../.claude/skills/sounds/SKILL.md).
+its catalog. **The encode is bit-exact**, so rebuilding an unchanged record builds the same bytes and
+leaves its hash alone. The procedure is the [`sounds` skill](../.claude/skills/sounds/SKILL.md).
 
 ## Getting the files
 
@@ -92,7 +98,7 @@ reading -0.3 dBFS by its samples can come out of the encoder at -0.3 after a -0.
 `build-game-ready.ps1 -Measure` reports both and suggests a gain from the true peak, and a build
 refuses an encode that peaks above -0.1 dBFS.
 
-**The bucket is the current set, not a history.** What a release may ship is the `music.json`
+**The bucket is the current set, not a history.** What a release may ship is the catalogs
 committed with it — so the bucket and the committed hashes move together, and an old commit rebuilt
 against a newer bucket fails `-require` rather than shipping a sound its record never named. The
 bucket is versioned, so a file deleted from it is recoverable.

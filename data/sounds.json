@@ -1,0 +1,14 @@
+[
+  {
+    "File": "relic-toast-1.ogg",
+    "Pack": "humble-bundle-complete-rpg-creator",
+    "Source": "humble-bundle-complete-rpg-creator/relic-toast-1.wav",
+    "GainDB": 4,
+    "Quality": 6,
+    "Bytes": 15186,
+    "SHA256": "e7f25aa9f65146b65ccda7ee6b92b899275b87df7c8c787d4f7828e186a59dc9",
+    "Cues": [
+      "relic-toast"
+    ]
+  }
+]

@@ -341,6 +341,14 @@ type CombatScene struct {
 	relicShake []ui.Travel
 	cardShake  []ui.Travel
 
+	// toasts is the relic-toast sounds still to play this frame and the next few, and toastFrame /
+	// toastsThisFrame count the ones raised on one frame so each can sit a little after the last.
+	// See combat_sound.go.
+	toasts          []int
+	toastFrame      int
+	toastLastFrame  int
+	toastsThisFrame int
+
 	// enemyShake is each of the opponent's seats' shake: a creature's card rattles on the beat it
 	// swings, which is the whole of how the table says which card is hitting.
 	enemyShake []ui.Travel
@@ -977,6 +985,7 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	}
 
 	s.tickShakes(gs)
+	s.tickToasts()
 
 	// The hand arriving: the deal, the flip cascade, the sort. **Driven from here rather than from
 	// the theater's own tick**, because its stages hand over to each other and the handover needs

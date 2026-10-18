@@ -3844,8 +3844,8 @@ same constraint the debug flags, `internal/trace` and the scripted demo are unde
 raw number rather than as a fraction of it is one the setting cannot reach, which is what
 `TestNoClockIsWrittenAsARawNumber` has been guarding since before there was a setting.
 
-**A sounds bar is expected and is deliberately not there yet.** There is no sound system, and a
-slider setting a number nothing reads would be a control that lies about what it does.
+**Music and sounds are two levels, on two bars** *(owner's call)*: a player may want the loops down and
+the relics loud, or the reverse. A fresh profile has both at zero, which is silence.
 
 ## Achievements
 

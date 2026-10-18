@@ -1,5 +1,5 @@
 // Package privateassets carries the game-ready sounds, which are kept out of git and synced from a
-// private S3 bucket instead. data/music.json is the committed record of what they are.
+// private S3 bucket instead. data/music.json and data/sounds.json are the committed record of what they are.
 //
 // # Why it is not in assets/
 //
@@ -45,16 +45,16 @@ var audio embed.FS
 
 // audioExts is what the game can play: MP3, Ogg Vorbis and WAV, which Ebitengine decodes, and
 // MIDI, which internal/music synthesizes — the score, `duello.mid`. It matches data.MusicExts,
-// which this package cannot import, and the two have to stay in step — a track music.json names
+// which this package cannot import, and the two have to stay in step — a sound a catalog names
 // and this skips would be a recorded sound that is not in the binary.
 var audioExts = map[string]bool{".ogg": true, ".wav": true, ".mp3": true, ".mid": true}
 
-// Audio returns the raw bytes of every sound that is present, keyed by **filename** —
-// `audio/dark-fantasy-01.ogg` is `dark-fantasy-01.ogg`.
+// Audio returns the raw bytes of every sound that is present, the loops and the effects apart,
+// each keyed by **filename** — `audio/music/dark-fantasy-01.ogg` is the music `dark-fantasy-01.ogg`.
 //
-// **audio/ is flat**, and `tools/privateassets -require` refuses a file in a folder. A folder is
-// still walked into and never reaches the key, which is the same cut assets.EmbedTree makes for
-// the motif pictures, so a stray one cannot rename a track.
+// **The folder is which catalog a file belongs to**: `audio/music/` is data/music.json's and
+// `audio/sounds/` is data/sounds.json's, and each is flat. A file anywhere else is skipped here and
+// refused by `tools/privateassets -require`, so it can neither play nor ship.
 //
 // **The extension is kept because it is what says how to decode the bytes.** The name a caller
 // plays a sound by is still the stem, and music.LoadTrack is where that cut is made: it needs
@@ -68,14 +68,14 @@ var audioExts = map[string]bool{".ogg": true, ".wav": true, ".mp3": true, ".mid"
 // original somebody left beside its converted copy — so filing a source file next to its
 // conversion cannot quietly put an undecodable blob in the map.
 //
-// **A stem claimed twice is fatal, across folders as well as within one.** `hit.ogg` and
-// `hit.wav`, or `a/hit.ogg` and `b/hit.ogg`, are two files that a caller can only ask for as
-// `hit`, and picking either silently is worse than refusing to start.
+// **A stem claimed twice is fatal, across both folders as well as within one.** `hit.ogg` and
+// `hit.wav`, or a loop and an effect both called `hit`, are one name meaning two files, and picking
+// either silently is worse than refusing to start.
 //
-// **Absence is never fatal.** An empty map is a build that has not synced the sounds.
-func Audio() map[string][]byte {
-	sounds := make(map[string][]byte)
-	// stems is only for the collision check; the map itself is keyed by filename.
+// **Absence is never fatal.** Empty maps are a build that has not synced the sounds.
+func Audio() (music, sounds map[string][]byte) {
+	music, sounds = map[string][]byte{}, map[string][]byte{}
+	// stems is only for the collision check; the maps themselves are keyed by filename.
 	stems := make(map[string]string)
 
 	err := fs.WalkDir(audio, "audio", func(p string, d fs.DirEntry, err error) error {
@@ -83,6 +83,15 @@ func Audio() map[string][]byte {
 			return err
 		}
 		if d.IsDir() {
+			return nil
+		}
+		var into map[string][]byte
+		switch path.Dir(p) {
+		case "audio/music":
+			into = music
+		case "audio/sounds":
+			into = sounds
+		default:
 			return nil
 		}
 		name := d.Name()
@@ -99,7 +108,7 @@ func Audio() map[string][]byte {
 			log.Fatalf("%s and %s share the stem %q; one name cannot mean two files", first, p, stem)
 		}
 		stems[stem] = p
-		sounds[name] = raw
+		into[name] = raw
 		return nil
 	})
 	if err != nil {
@@ -108,5 +117,5 @@ func Audio() map[string][]byte {
 		log.Fatalf("failed to read the embedded audio directory: %v", err)
 	}
 
-	return sounds
+	return music, sounds
 }

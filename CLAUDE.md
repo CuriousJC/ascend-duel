@@ -109,7 +109,7 @@ skill that does not exist.
 | [`achievements`](.claude/skills/achievements/SKILL.md) | adding or changing an achievement, a moment, a counter or an unlock, adding any new kind of progress the profile keeps, or touching `internal/screens/achieve.go` — a chosen-seed run must progress nothing |
 | [`bug-hunter`](.claude/skills/bug-hunter/SKILL.md) | any bug the owner found while playing — before diagnosing it, before fixing it, and before authoring a scenario record to reproduce it |
 | [`audit`](.claude/skills/audit/SKILL.md) | the milestone pass — the owner asking for an audit, a refactor sweep or a health check — and before any refactor that crosses more than one package |
-| [`sounds`](.claude/skills/sounds/SKILL.md) | adding, moving, renaming or replacing any sound, building `game-ready/` or syncing it from Drive, setting up or pushing to the sound bucket, touching `privateassets/` (`mgmt/` included), `tools/privateassets`, `data/music.json`, `score.go`'s track names, or the release's private-asset steps |
+| [`sounds`](.claude/skills/sounds/SKILL.md) | adding, moving, renaming or replacing any sound, building `game-ready/` or syncing it from Drive, setting up or pushing to the sound bucket, touching `privateassets/` (`mgmt/` included), `tools/privateassets`, `data/music.json`, `data/sounds.json` or `data/audio_packs.json`, `score.go`'s track names, a sound cue, or the release's private-asset steps |
 | [`secondary`](.claude/skills/secondary/SKILL.md) | the owner saying you are the secondary copy — and then before refreshing from main, checking for conflicts, or opening a PR from `secondary-work` |
 
 **Loading is cheap and guessing is not.** Every one of these exists because something specific
@@ -137,8 +137,8 @@ The project is **source-available, not open source**, and is intended to be sold
 - **Assets are the owner's business and not yours.** Do not reason about where a file came
   from, do not ask, and do not write provenance into a comment, a doc or a data file.
   **Bought audio is the one exception** *(owner's call)*: it is the one asset with a supplier to
-  credit, so `data/music.json` records each track's pack and the purchase that pack is, for a
-  credits screen to read. Keep that record current; it is still not yours to reason past.
+  credit, so `data/audio_packs.json` records each pack and the purchase it is, and every record in
+  `data/music.json` and `data/sounds.json` names its pack, for a credits screen to read. Keep that record current; it is still not yours to reason past.
 
 ## Commands
 
@@ -192,8 +192,8 @@ go run ./tools/artcompare   # one catalog's art, every candidate batch side by s
 go run ./tools/artcompare -catalog relic    # the same for relics; card, essence, rune, stone, other, enemy-card
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
-go run ./tools/privateassets   # the sounds: what is present, what matches data/music.json, what is unrecorded
-go run ./tools/privateassets -write     # record each game-ready file's size and hash in data/music.json
+go run ./tools/privateassets   # the sounds: what is present, what matches data/music.json and data/sounds.json, what is unrecorded
+go run ./tools/privateassets -write     # record each game-ready file's size and hash in its catalog
 go run ./tools/privateassets -require   # what a release runs: refuse a build missing, altered or unnamed audio
 ```
 
@@ -565,14 +565,14 @@ git tag -a v0.1.0 -m "..."; git push origin v0.1.0
   library under `sounds/`. **The exchange is written out
   by hand rather than taken from `aws-actions/configure-aws-credentials`**, which is the
   first-party-actions rule below costing about a dozen lines. **What may ship is the committed
-  `data/music.json`**, hashes and all, so adopting a new set of sounds is an edit somebody reviews. Three
+  `data/music.json` and `data/sounds.json`**, hashes and all, so adopting a new set of sounds is an edit somebody reviews. Three
   repository variables configure it — `SOUNDS_BUCKET`, `SOUNDS_ROLE_ARN`, `SOUNDS_REGION`.
 
   **`SOUNDS_BUCKET` is the switch for the whole arrangement, and both steps are gated on it.**
   Unset, a release fetches nothing and requires nothing, and **ships with no sound at all** —
   the score is in the bundle too, so that is what the game does on any machine without it, and a
   release can be cut before the bucket exists. Set, the sync runs and `tools/privateassets -require` refuses
-  a build whose `music.json` names a file the directory does not hold. **The two share one condition
+  a build whose catalogs name a file the directory does not hold. **The two share one condition
   on purpose**: fetching without requiring is a release that can ship quiet, and requiring
   without fetching is a release that cannot be cut at all.
 - **Only first-party actions**, and publishing goes through the `gh` CLI rather than a
@@ -858,7 +858,7 @@ than a drift.
 ### The settings screen, and the second widget in the game
 
 [internal/screens/settings.go](internal/screens/settings.go) is the program's own screen: a music
-volume bar, a game-speed bar, and Back. `models.Slider` + `systems.UpdateSlider`/`DrawSlider` is
+volume bar, a sounds volume bar, a game-speed bar, and Back. `models.Slider` + `systems.UpdateSlider`/`DrawSlider` is
 the widget, built the same way `models.Button` is and following the same rules — one named color,
 a bevelled face, a cached image repainted only when something visible changed.
 
@@ -879,8 +879,10 @@ a bevelled face, a cached image repainted only when something visible changed.
 - **`models.Slider.Ink` exists because the game has two grounds.** The near-white default is for a
   dark screen; this one is painted on `ui.ScreenGround` and passes `ui.GroundInk`. Same reason
   `ColorToward` exists beside `ColorAtStrength`.
-- **The sounds bar is deliberately absent.** There is no sound system yet, and a slider setting a
-  number nothing reads is a control that lies about what it does.
+- **Music and sounds are two bars, not one** *(owner's call)*, so either can be down while the other is
+  up. Releasing the sounds bar plays a relic toast, because an effect only sounds when a relic fires
+  and a level chosen in silence is chosen blind. **The column is full**:
+  `TestTheSettingsColumnClearsTheBottomRow` fails on a row that lands EXIT on BACK.
 ### Cards fly; they never appear
 
 **A card that changes where it is on screen travels there**. Drawn, discarded,
@@ -1842,8 +1844,9 @@ fight  →  victory  →  reward  →  shop  →  portal  →  fight ...
 refiling something is one line there and nothing anywhere else.
 
 **No sound is in here and none may be filed here** — the bought loops and the game's own MIDI
-score alike. They are `privateassets/`, a package of its own at the repository root, one flat
-folder of game-ready tracks, kept out of git and recorded in `data/music.json` — see
+score alike. They are `privateassets/`, a package of its own at the repository root, two flat
+folders of game-ready audio, `music/` and `sounds/`, kept out of git and recorded in `data/music.json` and
+`data/sounds.json` — see
 [privateassets/README.md](privateassets/README.md) and the
 [`sounds`](.claude/skills/sounds/SKILL.md) skill. **`privateassets.Audio` is the loader**, keyed
 by filename stem across four extensions, so two files sharing a stem is one key with two answers

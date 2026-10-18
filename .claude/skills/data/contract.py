@@ -74,7 +74,7 @@ CATALOGS = {
                          why={"stat": "the profile's own unlock list is the tally",
                               "family": "Steamworks' own fields, no family to group by",
                               "scen": "earned, never put on"}),
-    "music": dict(file="data/music.json", list="Tracks", key="File", sheet=None, book=None,
+    "music": dict(file="data/music.json", key="File", sheet=None, book=None,
                   stat=None, scen=None, mech=None,
                   why={"words": "a track says nothing; its pack's Name is its credit line",
                        "art": "heard, never drawn",
@@ -84,6 +84,16 @@ CATALOGS = {
                        "stat": "nothing about a track is earned or spent",
                        "scen": "a fight's track is rolled off the run seed, which a scenario's Seed already pins",
                        "mech": "presentation, not a rule; privateassets/README.md holds its design"}),
+    "sounds": dict(file="data/sounds.json", key="File", sheet=None, book=None,
+                   stat=None, scen=None, mech=None,
+                   why={"words": "an effect says nothing; its pack's Name is its credit line",
+                        "art": "heard, never drawn",
+                        "family": "its Pack is where it came from, and its Cues are what it is for",
+                        "sheet": "the audio is not in git, so a page could show nothing; tools/privateassets is the report",
+                        "book": "heard, not collected",
+                        "stat": "nothing about an effect is earned or spent",
+                        "scen": "a cue is raised by playback, which a scenario reaches by playing",
+                        "mech": "presentation, not a rule; privateassets/README.md holds its design"}),
 }
 
 PARTS = ("words", "art", "family", "sheet", "book", "stat", "scen", "mech")

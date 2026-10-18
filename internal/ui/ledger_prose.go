@@ -29,7 +29,9 @@ import (
 
 // LedgerLines is a block of records read back as lines: a round's, or the gap after a fight.
 func LedgerLines(recs []session.LedgerRecord) []session.LedgerLine {
-	w := lineWriter{blowRow: -1}
+	// **cur starts at -1, not at its zero value**: a block may open with an outcome — a held card's
+	// payout comes before anything is played — and row 0 of an empty block is no line at all.
+	w := lineWriter{cur: -1, blowRow: -1}
 	for _, r := range recs {
 		w.write(r)
 	}
@@ -253,9 +255,6 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 		// arithmetic the readout has already done.
 		w.attach(0, Say(SayRaised, Slots{"shields": Plain(ShieldCount(r.Amount))}))
 
-	case session.KindHeld:
-		w.attach(0, Say(SayHeld, Slots{"n": figure(r.Amount)}))
-
 	case session.KindReflected:
 		// **The relic names itself**, the drain's rule, so a second thorn relic cannot narrate as
 		// the first.
@@ -311,6 +310,12 @@ func (w *lineWriter) write(r session.LedgerRecord) {
 			"shields": ElementSpans(strings.Replace(ShieldCount(r.Amount), " ", " "+r.Element+" ", 1)),
 			"relic":   Plain(r.Relic),
 		}))
+
+	case session.KindHeld:
+		// **A line of its own, naming the card.** A held card was not played, so there is no act of
+		// its own to attach to, and the line before it is another card's or none at all — at the top
+		// of a round a held payout is the first thing in the block.
+		w.announce(voiceForSide(r.Side), Say(SayHeld, Slots{"card": heldCard(r), "n": figure(r.Amount)}))
 
 	case session.KindTimeUp:
 		// **A line of its own, and it opens one.** Nobody swung, so there is no attacker's sentence
@@ -676,6 +681,24 @@ func cardClause(r session.LedgerRecord) []session.LedgerSpan {
 		"card":   ElementSpans(article + card),
 		"weight": Plain(cardWeightText(r.Weight)),
 	})
+}
+
+// heldCard is the card a held payout names, opening its sentence: `A fire jab`. A record written
+// before held payouts named their card reads as the held-card fallback, `A card`.
+func heldCard(r session.LedgerRecord) []session.LedgerSpan {
+	if r.Card == "" {
+		return Plain(SayText(SayHeldCard, nil))
+	}
+	card := lower(r.Card)
+	article := "a "
+	if r.Element != "" {
+		el := lower(r.Element)
+		if isVowel(el) {
+			article = "an "
+		}
+		card = el + " " + card
+	}
+	return ElementSpans(capitalize(article + card))
 }
 
 func isVowel(s string) bool {

@@ -8,9 +8,8 @@ package screens
 // exactly where they were: see `state.GlobalState.Returns`. The run's phase is never touched, which is
 // what makes opening it mid-journey a look at a dialog rather than a decision.
 //
-// **Two controls today, and the third is expected.** Music and speed are the two things the game
-// already has; combat sounds are not built, so there is no bar for them — a slider setting a
-// number nothing reads would be a control that lies about what it does.
+// **Three bars: music, sounds and speed.** Music and sounds are two levels rather than one because
+// a player can want either down while the other is up *(owner's call)*.
 //
 // **Every *setting* here may only change what the player sees or hears.** The speed bar scales
 // `clock.go`'s one beat, and a whole round is resolved before playback begins, so it moves
@@ -33,6 +32,7 @@ import (
 	"fmt"
 	"image"
 
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/actions"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/music"
@@ -57,19 +57,21 @@ const (
 	settingsSliderHeight = 56
 
 	// settingsRowGap is the space between one bar and the next, measured from center to center.
-	settingsRowGap = 100
+	settingsRowGap = 90
 
 	// settingsStripGap is the air above and below the speed strip. It is the one row on this screen
 	// that is not a control, so it needs to read as belonging to the bar above it without looking
 	// like a third thing to click.
 	settingsStripGap = 30
 
-	// settingsTop is where the column starts. **It came up from 38% on 2026-09-15** to pay for the
-	// speed strip: the band is 125 pixels and everything under it moves down, and the screen had a
-	// large unused gap under the title and almost none between EXIT and BACK. The strip is the
-	// reason this is not simply a percentage picked by eye — the column below it is measured
-	// sequentially in settingsRows so one insertion cannot silently land a button on another.
-	settingsTopPct = 26
+	// settingsTopPct is where the column starts. **The column is full**: three bars, the speed strip,
+	// the toggle and the abandon band fill it to just above the bottom row, and
+	// TestTheSettingsColumnClearsTheBottomRow fails when a change lands EXIT on BACK. The column is
+	// measured sequentially in settingsRows so one insertion cannot silently land a button on another.
+	settingsTopPct = 20
+
+	// settingsTitlePct is where the heading sits, above the column.
+	settingsTitlePct = 15
 
 	// settingsToggleHeight is the fullscreen button. **Shorter than a bar's row**, because a
 	// latched button has no label band above it — the word is on the face.
@@ -91,7 +93,7 @@ const (
 const (
 	// settingsAbandonGap is how far below the last bar the rule sits. Wide, because the whole job
 	// of the gap is to say that what is under it is not another setting.
-	settingsAbandonGap = 76
+	settingsAbandonGap = 50
 
 	// settingsAbandonRuleWidth matches the bars, so the rule reads as the end of that column
 	// rather than as a decoration of its own.
@@ -126,9 +128,10 @@ const settingsSeedCaption = "SEED"
 
 // SettingsScene is the settings screen.
 type SettingsScene struct {
-	music *models.Slider
-	speed *models.Slider
-	back  *models.Button
+	music  *models.Slider
+	sounds *models.Slider
+	speed  *models.Slider
+	back   *models.Button
 
 	// compendium opens the Compendium over this screen; its Back comes back here.
 	compendium *models.Button
@@ -166,6 +169,14 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 		s.music.OnChange = func(v float64) { music.SetLevel(v) }
 		s.music.OnCommit = func(v float64) { s.commit(gs) }
 
+		s.sounds = models.NewSlider(settingsSliderWidth, settingsSliderHeight, "SOUNDS", 0)
+		s.sounds.Ink = ui.GroundInk
+		s.sounds.OnChange = func(v float64) { music.SetSoundLevel(v) }
+
+		// **A toast on release, so the bar says what it set.** An effect only plays when a relic fires,
+		// and a level chosen in silence is a level chosen blind.
+		s.sounds.OnCommit = func(v float64) { music.PlayCue(data.CueRelicToast); s.commit(gs) }
+
 		s.speed = models.NewSlider(settingsSliderWidth, settingsSliderHeight, "GAME SPEED", 0)
 		s.speed.Ink = ui.GroundInk
 		s.speed.OnChange = func(v float64) { ui.SetSpeed(speedFor(v)) }
@@ -200,6 +211,7 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 	// Re-read every visit. The level can have moved since the last one — a fresh profile is
 	// silent and the game may have been played for an hour since — and Init runs on every entry.
 	s.music.Value = music.Level()
+	s.sounds.Value = music.SoundLevel()
 	s.speed.Value = speedValue(ui.Speed())
 	s.full.Latched = Fullscreen()
 
@@ -207,29 +219,35 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 	// to fail, and a volume control that silently did nothing would be worse than one that says
 	// it cannot — the same rule the chrome's mute button was under before it became a cog.
 	s.music.Disabled = !music.Available()
+	s.sounds.Disabled = s.music.Disabled
 
 	center := gs.PctX(50)
 	rows := settingsRows(gs)
 
 	s.music.ScreenX, s.music.ScreenY = center, rows.music
+	s.sounds.ScreenX, s.sounds.ScreenY = center, rows.sounds
 	s.speed.ScreenX, s.speed.ScreenY = center, rows.speed
 	s.full.ScreenX, s.full.ScreenY = center, rows.full
 
 	// The abandon band, below the rule; Back stays last, at the bottom of the screen, because the
 	// way out of a screen is the last thing on it.
-	s.abandon.ScreenX, s.abandon.ScreenY = center, s.abandonRuleY(gs)+56
-	s.exit.ScreenX, s.exit.ScreenY = center, s.abandon.ScreenY+settingsExitGap
+	s.abandon.ScreenX, s.abandon.ScreenY = center, rows.abandon
+	s.exit.ScreenX, s.exit.ScreenY = center, rows.exit
 	half := (settingsBottomWidth + settingsBottomGap) / 2
-	s.compendium.ScreenX, s.compendium.ScreenY = center-half, gs.PctY(88)
-	s.back.ScreenX, s.back.ScreenY = center+half, gs.PctY(88)
+	s.compendium.ScreenX, s.compendium.ScreenY = center-half, rows.bottom
+	s.back.ScreenX, s.back.ScreenY = center+half, rows.bottom
 }
 
 // settingsLayout is where every row on this screen sits, in screen pixels.
 type settingsLayout struct {
-	music, speed int
-	strip        image.Rectangle
-	full         int
-	rule         int
+	music, sounds, speed int
+	strip                image.Rectangle
+	full                 int
+	rule                 int
+
+	// abandon and exit are the two buttons under the rule, and bottom is the row Compendium and
+	// Back share. All three are centers, as a button stores them.
+	abandon, exit, bottom int
 }
 
 // settingsRows measures the column **sequentially, each row off the one above it**.
@@ -244,7 +262,8 @@ func settingsRows(gs *state.GlobalState) settingsLayout {
 	var l settingsLayout
 
 	l.music = gs.PctY(settingsTopPct)
-	l.speed = l.music + settingsRowGap
+	l.sounds = l.music + settingsRowGap
+	l.speed = l.sounds + settingsRowGap
 
 	stripTop := l.speed + settingsSliderHeight/2 + settingsStripGap
 	half := settingsSliderWidth / 2
@@ -255,6 +274,9 @@ func settingsRows(gs *state.GlobalState) settingsLayout {
 
 	l.full = l.strip.Max.Y + settingsStripGap + settingsToggleHeight/2
 	l.rule = l.full + settingsToggleHeight/2 + settingsAbandonGap
+	l.abandon = l.rule + 56
+	l.exit = l.abandon + settingsExitGap
+	l.bottom = gs.PctY(88)
 	return l
 }
 
@@ -288,6 +310,7 @@ func (s *SettingsScene) Update(gs *state.GlobalState) error {
 	s.strip.update(gs)
 
 	systems.UpdateSlider(gs, s.music)
+	systems.UpdateSlider(gs, s.sounds)
 	systems.UpdateSlider(gs, s.speed)
 	systems.UpdateButton(gs, s.full)
 	systems.UpdateButton(gs, s.compendium)
@@ -309,6 +332,7 @@ func (s *SettingsScene) Update(gs *state.GlobalState) error {
 	// The readouts follow the bars rather than being written once, so the number under the
 	// cursor is the number the game is at.
 	s.music.Readout = fmt.Sprintf("%d%%", int(s.music.Value*100+0.5))
+	s.sounds.Readout = fmt.Sprintf("%d%%", int(s.sounds.Value*100+0.5))
 	s.speed.Readout = fmt.Sprintf("%.2fx", speedFor(s.speed.Value))
 	return nil
 }
@@ -317,7 +341,7 @@ func (s *SettingsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	ui.FillScreenBackdrop(gs, screen)
 
 	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(gs.PctX(50)), float64(gs.PctY(20)))
+	op.GeoM.Translate(float64(gs.PctX(50)), float64(gs.PctY(settingsTitlePct)))
 	op.PrimaryAlign = text.AlignCenter
 	op.SecondaryAlign = text.AlignCenter
 	op.ColorScale.ScaleWithColor(ui.GroundInk)
@@ -325,6 +349,7 @@ func (s *SettingsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: settingsTitleSize}, op)
 
 	systems.DrawSlider(gs, screen, s.music)
+	systems.DrawSlider(gs, screen, s.sounds)
 	systems.DrawSlider(gs, screen, s.speed)
 	s.strip.draw(gs, screen, settingsRows(gs).strip)
 	systems.DrawButton(gs, screen, s.full)
@@ -393,9 +418,9 @@ func (s *SettingsScene) leave(gs *state.GlobalState) {
 	gs.PopReturn()
 }
 
-// commit writes both settings to the profile, once, at the end of a drag.
+// commit writes every setting to the profile, once, at the end of a drag.
 //
-// **It writes both rather than the one that moved.** The profile is one file and a save rewrites
+// **It writes all of them rather than the one that moved.** The profile is one file and a save rewrites
 // all of it anyway, so a per-setting path would be two functions that can disagree about which
 // fields are current.
 func (s *SettingsScene) commit(gs *state.GlobalState) {
@@ -403,6 +428,7 @@ func (s *SettingsScene) commit(gs *state.GlobalState) {
 		return
 	}
 	gs.Profile.Settings.MusicVolume = music.Level()
+	gs.Profile.Settings.SoundVolume = music.SoundLevel()
 	gs.Profile.Settings.Speed = ui.Speed()
 	gs.Profile.Settings.Fullscreen = Fullscreen()
 	saveProfile(gs)
@@ -438,6 +464,7 @@ func speedValue(speed float64) float64 {
 // silence or a moment of full volume.
 func ApplySettings(s profile.Settings) {
 	music.SetLevel(s.MusicVolume)
+	music.SetSoundLevel(s.SoundVolume)
 
 	// A zero speed is ignored by SetSpeed rather than applied, and profile.LoadProfile has
 	// already normalized one off disk — so an older profile with no settings block at all lands

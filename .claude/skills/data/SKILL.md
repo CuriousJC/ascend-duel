@@ -35,6 +35,9 @@ is what lets every layer above read it, and it **must never import upward**.
 | `card_traits.json` | `LoadCardTraits` | the card traits: a `Name`, a tooltip `Text`, and two closed properties the rules read — `Counted` and `Landings`. Read by `internal/combat` at init |
 | `relic_traits.json` | `LoadRelicTraits` | the relic traits: a `Name`, a shelf `Percent`, and `Slot`, `Lasts` and `Rules` in the relic grammar. Parsed and registered in `internal/session` — see MECHANICS.md §Traits |
 | `wording.json` | `LoadWording` | the sentences the fight log and the reward screen say, as templates by `section.key` — `{hole}` filled by code, `{ink:word}` colored, `{mark:word}` marked. Read only by `internal/ui/wording.go`, which declares each sentence's holes and refuses a mismatch at launch |
+| `music.json` | `LoadAudio` | the loops that ship: each a game-ready `File`, its `Pack`, the delivered `Source` it is built from, its own `GainDB` and `Quality`, the `Screens` it may play on, and the generated `Bytes`/`SHA256`. The audio is not in git; the `sounds` skill is the procedure |
+| `sounds.json` | `LoadAudio` | the effects that ship: the same fields as a loop, with the `Cues` it plays on in place of `Screens` — a closed vocabulary, `data.SoundCues` |
+| `audio_packs.json` | `LoadAudio` | where the audio came from: one record per purchase, credited by `Name`. **Its own file because a pack can supply both catalogs** |
 
 ## The catalog contract — one concept shape for every catalog
 

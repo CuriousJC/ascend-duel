@@ -210,8 +210,8 @@ jobs:
       # **The interlock.** The game builds and plays silent when the directory is empty, which is
       # correct for a clean clone and for every pull-request CI run — and would be a catastrophe
       # in a *configured* release, where it means shipping a game whose audio nobody noticed was
-      # missing. This fails the build when data/music.json names a file the directory does not
-      # hold, when a file's bytes are not the ones recorded, or when the directory holds a file no
+      # missing. This fails the build when data/music.json or data/sounds.json names a file the
+      # directory does not hold, when a file's bytes are not the ones recorded, or when the directory holds a file no
       # track names. It arms itself the moment SOUNDS_BUCKET is set.
       - name: require the private assets
         if: vars.SOUNDS_BUCKET != ''

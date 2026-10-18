@@ -1,0 +1,20 @@
+[
+  {
+    "Pack": "custom",
+    "Name": "Made for Duello",
+    "Note": "The game's own score, a MIDI file synthesized to PCM at startup by internal/music. Its level is the synthesizer's: -1.7 dBFS peak and -14.7 dBFS RMS."
+  },
+  {
+    "Pack": "humble-bundle-game-audio-sfx-treasure-trove",
+    "Name": "Game Audio and SFX Treasure Trove by Tao & Sound",
+    "Note": "dark-fantasy-01 and -02 were peak-normalized to -1.0 dBFS in the library itself (+13.0 and +12.8 dB): as delivered they peak at about -14 dBFS."
+  },
+  {
+    "Pack": "humble-bundle-ultimate-game-audio",
+    "Name": "Ultimate Game Audio Bundle - Access 300,000 Premium Music and Sound Effects"
+  },
+  {
+    "Pack": "humble-bundle-complete-rpg-creator",
+    "Name": "The Complete RPG Creator Bundle - 2D, GUI & Audio Assets"
+  }
+]

@@ -397,7 +397,9 @@ them, and the row **sorts itself last**.
   **toasts** — `relicToast`, which is the rattle, a tilt one way then the other, and the lit
   border, all three off one `travel`. The hits' own toast, on a second clock, since one is playback
   and the other is a hand arriving. **A resting relic is blitted and a toasting one is flown**,
-  because a turn puts the card off the pixel grid.
+  because a turn puts the card off the pixel grid. **Every toast is also heard**: `shakeRelicAt`
+  and `startDealRing` raise `data.CueRelicToast`, and toasts on one frame are spread in the sound
+  only — `combat_sound.go`, and the `sounds` skill for the cue itself.
 - **`tickDeal` is driven by the scene, not by `combatTheater.tick`.** Its stages hand over to each
   other and the handovers need the scene: the cascade reads the run's worn relics and the sort
   rewrites the hand.
@@ -558,10 +560,10 @@ absent entry and a deliberate silence read identically in a switch;
 **The burst pattern is derived from the rider and the seat, never rolled** — the crack pattern's
 rule and the dissolve's, and the explicit exception the `randomness` skill records.
 
-**What is still missing:** gold, silver and the heal write **no line in the fight log**, and the
-vitae line only appears when some earlier row is open — `attach` drops a line when `cur` is -1, and
-rider events arrive before anything on that turn has opened a row. Fixing it means deciding whether
-these `announce` their own line, which is a change to the log's shape rather than to this widget.
+**A held card's payout announces a line of its own**, naming the card. **What is still missing:**
+gold, silver and the heal write **no line in the fight log** when nothing is open — `attach` drops
+an outcome when `cur` is -1, and rider events arrive before anything on that turn has opened a row.
+Giving them lines is the held payout's change again, deciding the wording for each.
 See `internal/scenario`'s `signals` entry for looking at any of it.
 
 ### The round timer under the journey place

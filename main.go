@@ -316,9 +316,24 @@ func main() {
 		// **Sorted rather than ranged over the map**, because map order is randomized deliberately
 		// and nothing in this game may depend on it. Nothing here does today; a loop that reported
 		// the first failure rather than all of them would.
-		private := privateassets.Audio()
+		private, effects := privateassets.Audio()
 		score = private[music.Score+".mid"]
 		delete(private, music.Score+".mid")
+
+		// **An effect is loaded under the cues data/sounds.json gives it**, so a screen raises a cue
+		// and never learns which file answers it. A sound named and not synced is a cue that plays
+		// nothing, which is a build without the sounds rather than a failure.
+		for _, s := range data.LoadAudio().Sounds {
+			raw, ok := effects[s.File]
+			if !ok {
+				continue
+			}
+			for _, cue := range s.Cues {
+				if err := music.LoadCue(cue, s.File, raw); err != nil {
+					log.Println(err)
+				}
+			}
+		}
 		files := make([]string, 0, len(private))
 		for file := range private {
 			files = append(files, file)

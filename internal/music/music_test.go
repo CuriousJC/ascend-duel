@@ -24,9 +24,10 @@ import (
 // realScore is the shipped score's bytes, skipping the test on a clone that has not synced it.
 func realScore(t *testing.T) []byte {
 	t.Helper()
-	raw := privateassets.Audio()[Score+".mid"]
+	tracks, _ := privateassets.Audio()
+	raw := tracks[Score+".mid"]
 	if raw == nil {
-		t.Skip("duello.mid is not synced into privateassets/audio/; see the sounds skill")
+		t.Skip("duello.mid is not synced into privateassets/audio/music/; see the sounds skill")
 	}
 	return raw
 }

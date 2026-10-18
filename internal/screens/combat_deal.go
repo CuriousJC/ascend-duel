@@ -314,6 +314,7 @@ func (s *CombatScene) startDealRing() {
 
 	d.hold = ui.NewTravel(0, dealRingTicks())
 	d.rings[d.at].shake = ui.NewTravel(0, dealRingTicks())
+	s.toastSound()
 
 	for i := range d.cards {
 		c := &d.cards[i]

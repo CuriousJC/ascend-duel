@@ -1,10 +1,11 @@
-# Mirrors <SourcePath>\game-ready into privateassets/audio/, then records each file's hash in
-# data/music.json.
+﻿# Mirrors <SourcePath>\game-ready into privateassets/audio/, then records each file's hash in its
+# catalog, data/music.json or data/sounds.json.
 #
 #   powershell -File privateassets/mgmt/sync-from-drive.ps1 [-SourcePath <ascend_assets folder>]
 #
-# game-ready\ is the source and audio/ is a mirror of it: one flat folder of exactly the tracks
-# data/music.json names, built by build-game-ready.ps1. A file removed or renamed there is deleted
+# game-ready\ is the source and audio/ is a mirror of it: music\ holding exactly the tracks
+# data/music.json names and sounds\ exactly the effects data/sounds.json names, each flat, built by
+# build-game-ready.ps1. A file removed or renamed there is deleted
 # here. The library, <SourcePath>\sounds\, never reaches the repository.
 #
 # README.md is the one file in audio/ that game-ready does not hold. It is committed, because

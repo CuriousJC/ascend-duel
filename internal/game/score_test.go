@@ -3,6 +3,7 @@ package game
 import (
 	"encoding/json"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -53,11 +54,13 @@ func TestEveryNamedTrackIsInTheBundle(t *testing.T) {
 		t.Fatalf("reading the bundle manifest: %v", err)
 	}
 
-	// The manifest names files and score.go names tracks, and a track's name is its filename
-	// stem — the same cut assets.embedFamily and privateassets.Audio make.
+	// The manifest names files by their path under audio/ and score.go names tracks, and a track's
+	// name is its filename stem with the pack folder left out — the same cut assets.embedFamily
+	// and privateassets.Audio make.
 	bundled := make(map[string]bool, len(man.Files))
 	for _, f := range man.Files {
-		bundled[strings.TrimSuffix(f.Name, filepath.Ext(f.Name))] = true
+		base := path.Base(f.Name)
+		bundled[strings.TrimSuffix(base, path.Ext(base))] = true
 	}
 
 	played := make(map[string]bool)

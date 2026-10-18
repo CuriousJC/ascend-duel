@@ -18,7 +18,7 @@ import (
 )
 
 // Files are grouped into directories by what they are for — `game/`, `motifs/`, `relic/`,
-// `upgrade/`, `sounds/` — and the //go:embed paths below are relative to this file, so a
+// `upgrade/` — and the //go:embed paths below are relative to this file, so a
 // directory rename is a one-line edit per asset here and nothing anywhere else.
 //
 // **The map keys did not change with the move.** They are the lookup names used across the
@@ -371,15 +371,6 @@ func ProseFile(name string) ([]byte, error) {
 	return proseArt.ReadFile("prose/" + name)
 }
 
-// MUSIC
-//
-// Scores are Standard MIDI Files, not recorded audio: internal/music synthesizes them
-// at startup. That is why a whole track is a kilobyte and why there is no soundfont
-// here whose license would have to be cleared before the game could be sold.
-//
-//go:embed sounds/duello.mid
-var duello_mid []byte
-
 // FONTS
 //
 //go:embed game/Kubasta.ttf
@@ -409,17 +400,6 @@ func LoadAssets() map[string]*ebiten.Image {
 	// authored at 1060x1484, which is 6 MB of RGBA each. Fifteen of those is ninety megabytes
 	// nothing looks at.
 	return assets
-}
-
-// LoadMusic returns the raw bytes of each embedded score, keyed the same way as the
-// image and font maps. They are handed back undecoded because the decoder lives in
-// internal/music, and assets sits below it — nothing here may reach up.
-func LoadMusic() map[string][]byte {
-	music := make(map[string][]byte)
-
-	music["duello_mid"] = duello_mid
-
-	return music
 }
 
 // LoadFonts returns a mapped set of fonts for the game

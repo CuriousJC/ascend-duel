@@ -1,13 +1,12 @@
 // Package music plays the game's score.
 //
-// The score ships as a Standard MIDI File — `assets/sounds/duello.mid`, a kilobyte of
-// notes — and is synthesized to PCM once at startup by the pure-Go code in smf.go and
+// The score ships as a Standard MIDI File — `duello.mid`, a kilobyte of notes filed in
+// the `custom` pack of `privateassets/`, beside the bought loops and out of git like them — and is synthesized to PCM once at startup by the pure-Go code in smf.go and
 // synth.go. Ebitengine cannot play MIDI; its audio package decodes MP3, Ogg Vorbis and
 // WAV and nothing else. The three ways past that were to convert the file to Ogg
 // offline, to embed a SoundFont and a synthesizer library, or to generate the audio
-// here, and the third was chosen **to keep the tune in the diff**: a SoundFont is
-// megabytes and a rendered Ogg is a binary where a kilobyte of notes will do, so
-// editing either means editing something nobody can read.
+// here, and the third was chosen because a SoundFont is megabytes and a rendered Ogg is
+// a binary where a kilobyte of notes will do.
 //
 // What it costs is fidelity. This is an oscillator, so the score sounds like a chiptune
 // rather than like General MIDI. The file is two synth basses and a drum part, so the
@@ -28,12 +27,13 @@
 // **Which music a screen gets is not decided here.** This package knows how to hold several
 // pieces and which one is sounding; `internal/game/score.go` owns the table that says a screen
 // plays one, for the reason the settings cog lives in the frame. A name nothing was loaded under
-// falls back to the score, which is what lets a build with no bundle synced play everywhere
-// rather than fall silent somewhere.
+// falls back to the score. **A build with no bundle synced has neither and plays nothing** — the
+// score is in the bundle too, so the game's sound is one arrangement rather than two.
 //
 // # Working on it
 //
-// `main` starts the score after assets load, and it loops for the whole session across every screen.
+// `main` starts the score after assets load, when the bundle holds it, and it loops for the whole
+// session across every screen.
 // `oto`, first-party to Ebitengine, is the only dependency the synthesizer needs.
 //
 //   - **`smf.go` and `synth.go` may not import Ebitengine**, exactly like `internal/combat`. That is

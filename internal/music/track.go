@@ -6,9 +6,9 @@ package music
 // caller's business: `main` loads the loops out of `privateassets/`, this package never learns
 // that, and a track and the score are the same kind of thing once they are here.
 //
-// **A track that was never loaded falls back to the score.** That is what makes a machine with
-// no bundle synced play the game rather than sit in silence on one screen — absent audio is a
-// supported state.
+// **A track that was never loaded falls back to the score**, so a screen whose loop is missing
+// plays the score rather than sitting silent. A machine with no bundle synced has no score
+// either and plays nothing — absent audio is a supported state.
 
 import (
 	"bytes"
@@ -126,9 +126,9 @@ func LoadTrack(file string, w []byte) error {
 // screen rather than a pair of hooks on entering and leaving one. A screen that has just
 // changed and a screen that has not are the same call; only a change does anything.
 //
-// **A name nothing was loaded under plays the score.** A build with no private assets synced
-// therefore keeps its music instead of falling silent wherever a track was meant to be — the
-// same rule that makes an empty privateassets/audio/ a build rather than a failure.
+// **A name nothing was loaded under plays the score**, so a missing loop costs one screen its own
+// music rather than its music. With no score started either, that is silence — the build with an
+// empty privateassets/audio/, which is a build rather than a failure.
 //
 // **The score resumes and a track restarts**, and the two are different on purpose. The score
 // runs for the whole session and dropping back into it mid-phrase is what it is for — the same

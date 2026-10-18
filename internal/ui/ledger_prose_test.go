@@ -51,6 +51,53 @@ func TestEveryRecordKindReadsAsSomething(t *testing.T) {
 	}
 }
 
+// TestARoundMayOpenWithAnyRecord holds the ledger to a block whose first record has no line before
+// it to attach to — a held card's payout comes at the very top of a round, before anything is
+// played. **The panel builds every fight of the run whenever it opens**, so one such round makes the
+// ledger unopenable for the rest of the run.
+func TestARoundMayOpenWithAnyRecord(t *testing.T) {
+	for _, kind := range session.RecordKinds() {
+		rec := session.LedgerRecord{
+			Kind: kind, Side: session.SideYou, Target: session.SideFoe, Name: "Giant Bat",
+			Card: "Jab", Element: "fire", Verb: session.InkAttack,
+			Relic: "Keen", Amount: 3, Hand: "Pair", Multiplier: 100,
+			Subject: "a fire jab", Into: "an ice jab",
+		}
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					t.Errorf("a round opening with a %q record panics: %v", kind, r)
+				}
+			}()
+			LedgerLines([]session.LedgerRecord{rec})
+		}()
+	}
+}
+
+// TestAHeldCardHasALineOfItsOwn holds a held payout to its own line naming the card it paid for:
+// never hung off the card played before it, which was not the one kept back, and never lost at the
+// top of a round, where nothing comes before it. A record written before the card was named reads
+// as a card all the same.
+func TestAHeldCardHasALineOfItsOwn(t *testing.T) {
+	held := session.LedgerRecord{Kind: session.KindHeld, Side: session.SideYou, Card: "Jab", Element: "ice", Amount: 8}
+
+	alone := LedgerLines([]session.LedgerRecord{held})
+	if len(alone) != 1 || !strings.Contains(alone[0].Text(), "An ice jab") || !strings.Contains(alone[0].Text(), "8") {
+		t.Errorf("a round opening with a held payout reads %q", lineText(alone))
+	}
+
+	after := LedgerLines([]session.LedgerRecord{anAct(), held})
+	act := lineText(LedgerLines([]session.LedgerRecord{anAct()}))
+	if len(after) != 2 || after[0].Text()+"\n" != act {
+		t.Errorf("a held payout after a played card changed that card's line: %q", lineText(after))
+	}
+
+	old := LedgerLines([]session.LedgerRecord{{Kind: session.KindHeld, Side: session.SideYou, Amount: 8}})
+	if len(old) != 1 || strings.TrimSpace(old[0].Text()) == "" || strings.Contains(old[0].Text(), "{") {
+		t.Errorf("a held payout with no card named reads %q", lineText(old))
+	}
+}
+
 // A term is several kinds of line in one column and each is picked by its role; a role this build
 // does not write draws as a hit, so a line read back from an older account still says something.
 func TestEveryTermRoleReadsAsSomething(t *testing.T) {

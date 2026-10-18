@@ -69,7 +69,6 @@ var (
 	SayFizzled      = word("outcome.fizzled", "what")
 	SayDrained      = word("outcome.drained", "relic", "n")
 	SayRaised       = word("outcome.raised", "shields")
-	SayHeld         = word("outcome.held", "n")
 	SayReflected    = word("outcome.reflected", "relic", "n")
 	SayTithed       = word("outcome.tithed", "relic", "n")
 	SaySilver       = word("outcome.silver", "n")
@@ -83,6 +82,8 @@ var (
 var (
 	SayRegenerated = word("announce.regenerated", "who", "n", "relic")
 	SayWarded      = word("announce.warded", "who", "shields", "relic")
+	SayHeld        = word("announce.held", "card", "n")
+	SayHeldCard    = word("announce.held-card")
 	SayTimeUp      = word("announce.time-up", "who", "n")
 	SayDefeated    = word("announce.defeated", "who")
 	SayDMGBuilt    = word("announce.dmg", "who")

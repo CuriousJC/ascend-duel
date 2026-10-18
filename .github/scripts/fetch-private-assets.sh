@@ -22,8 +22,8 @@
 # **Doing nothing is a success.** With no bucket configured the script says so and exits clean,
 # which is what keeps a fork buildable and what keeps a release cuttable before the bucket
 # exists. What stops that from becoming a release that silently ships quiet is the step *after*
-# this one: `go run ./tools/privateassets -require` fails when data/music.json names a file the
-# directory does not hold.
+# this one: `go run ./tools/privateassets -require` fails when data/music.json or data/sounds.json
+# names a file the directory does not hold.
 #
 # **Both steps are gated on SOUNDS_BUCKET in the workflow**, so the guard arrives together with
 # the sync. This check stays anyway: the variable is set in one place and this script is called
@@ -72,9 +72,9 @@ export AWS_REGION
 
 # `--exact-timestamps` because a synced file that differs only in mtime is still the wrong file
 # to skip: the hash check downstream is what decides, and it wants the bytes actually fetched.
-# **game-ready/ is the one flat folder of what ships**, built from the owner's library; the
+# **game-ready/ is what ships, music/ and sounds/**, built from the owner's library; the
 # library itself is in the bucket too, under sounds/, and the role cannot read it. What the release
-# may ship is decided by the committed data/music.json, which -require checks next — not by what
+# may ship is decided by the committed data/music.json and data/sounds.json, which -require checks next — not by what
 # happens to be in the bucket.
 echo "syncing s3://${SOUNDS_BUCKET}/game-ready/"
 aws s3 sync "s3://${SOUNDS_BUCKET}/game-ready/" privateassets/audio/ \

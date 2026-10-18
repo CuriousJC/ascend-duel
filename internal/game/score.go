@@ -116,7 +116,7 @@ var screenTunes = map[state.ActiveScreen]tune{
 // against, so it is the file and never a map walk that decides which index is which track.
 var musicPools = func() map[string][]string {
 	pools := map[string][]string{}
-	for _, t := range data.LoadMusic().Tracks {
+	for _, t := range data.LoadAudio().Music {
 		for _, s := range t.Screens {
 			pools[s] = append(pools[s], t.Name())
 		}

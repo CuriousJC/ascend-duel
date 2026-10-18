@@ -45,7 +45,7 @@ func TestEveryTrackPlaysWhereItMay(t *testing.T) {
 	}
 
 	pool := map[string][]string{}
-	for _, tr := range data.LoadMusic().Tracks {
+	for _, tr := range data.LoadAudio().Music {
 		pool[tr.Name()] = tr.Screens
 		for _, s := range tr.Screens {
 			if !screens[s] {

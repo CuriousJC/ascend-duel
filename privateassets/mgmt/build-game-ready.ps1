@@ -1,17 +1,18 @@
-# Builds <SourcePath>\game-ready\ from the library, as data/music.json says.
+﻿# Builds <SourcePath>\game-ready\ from the library, as data/music.json and data/sounds.json say.
 #
-#   powershell -File privateassets/mgmt/build-game-ready.ps1                       # status of every track
+#   powershell -File privateassets/mgmt/build-game-ready.ps1                       # status of every sound
 #   powershell -File privateassets/mgmt/build-game-ready.ps1 -Track combat-ambience-1 [-Track ...]
 #   powershell -File privateassets/mgmt/build-game-ready.ps1 -Missing              # build what is not built yet
 #   powershell -File privateassets/mgmt/build-game-ready.ps1 -All                  # rebuild everything
 #   powershell -File privateassets/mgmt/build-game-ready.ps1 -Measure <pack>/<file>.wav
 #
 # The library, <SourcePath>\sounds\<pack>\, is never written: each record's Source is read from it
-# and its game-ready File written to one flat folder beside it. game-ready\ is derived, so a build
-# overwrites what is there; it is the folder sync-from-drive.ps1 mirrors into privateassets/audio/
-# and push-sounds.ps1 sends to the bucket.
+# and its game-ready File written beside it, into game-ready\music\ for a track and game-ready\sounds\
+# for an effect, each flat. game-ready\ is derived, so a build overwrites what is there; it is the
+# folder sync-from-drive.ps1 mirrors into privateassets/audio/ and push-sounds.ps1 sends to the bucket.
+# -Track takes either kind by name: a name is unique across both catalogs.
 #
-# For each track built:
+# For each sound built:
 #   - a MIDI file, or a source already in its game-ready format at no gain, is copied.
 #   - anything else is encoded with ffmpeg's libvorbis at the record's own Quality, with the record's
 #     own GainDB applied, at the game's 44100 Hz, carrying the text tags over (-map_metadata 0). Embedded cover art and the
@@ -25,7 +26,7 @@
 # nothing.
 #
 # Afterwards: sync-from-drive.ps1, which mirrors game-ready\ into audio/ and records each file's
-# hash in music.json.
+# hash in its catalog.
 
 param(
     [string[]]$Track = @(),
@@ -48,8 +49,16 @@ if (-not (Test-Path $library)) { throw "no library at $library" }
 # decoder resamples nothing at startup.
 $GameRate = 44100
 
-$catalog = Get-Content -Raw (Join-Path $RepoRoot 'data\music.json') | ConvertFrom-Json
-$tracks = @($catalog.Tracks)
+# Every record of both catalogs, each tagged with the folder it is filed in.
+$tracks = @()
+foreach ($kind in @(@('music', 'music.json'), @('sounds', 'sounds.json'))) {
+    $records = Get-Content -Raw -Encoding UTF8 (Join-Path $RepoRoot ('data\' + $kind[1])) | ConvertFrom-Json
+    foreach ($r in @($records)) {
+        $r | Add-Member -NotePropertyName Dir -NotePropertyValue $kind[0]
+        $tracks += $r
+    }
+}
+function ReadyPath($t) { Join-Path (Join-Path $ready $t.Dir) $t.File }
 
 function TrackName($t) { [IO.Path]::GetFileNameWithoutExtension($t.File) }
 function IsEncoded($t) {
@@ -100,7 +109,11 @@ function TruePeakDb([string]$file) {
 
 function Encode([string]$from, [string]$to, $t) {
     $ErrorActionPreference = 'Continue'
-    $a = @('-hide_banner', '-loglevel', 'error', '-nostdin', '-y', '-i', $from, '-map', '0:a:0', '-map_metadata', '0')
+    # **Bit-exact, so the same record builds the same bytes.** Without it ffmpeg gives every Ogg a
+    # random stream serial, and a rebuild of an unchanged record would change its hash — a fresh push
+    # and a fresh commit for nothing.
+    $a = @('-hide_banner', '-loglevel', 'error', '-nostdin', '-y', '-i', $from, '-map', '0:a:0', '-map_metadata', '0',
+        '-fflags', '+bitexact', '-flags:a', '+bitexact')
     $gain = [double]$t.GainDB
     if ($gain -ne 0) { $a += @('-af', ('volume={0}dB' -f $gain.ToString([Globalization.CultureInfo]::InvariantCulture))) }
     $a += @('-ar', [string]$GameRate, '-c:a', 'libvorbis', '-q:a', [string]$t.Quality, $to)
@@ -128,8 +141,8 @@ if ($Measure) {
 if ($Track.Count -eq 0 -and -not $Missing -and -not $All) {
     $byFile = @{}
     foreach ($t in $tracks) {
-        $byFile[$t.File] = $true
-        $dst = Join-Path $ready $t.File
+        $byFile[$t.Dir + '\' + $t.File] = $true
+        $dst = ReadyPath $t
         $state = if (-not (Test-Path $dst)) { 'not built' }
         elseif (-not $t.SHA256) { 'built, not recorded' }
         elseif ((Get-FileHash $dst -Algorithm SHA256).Hash.ToLower() -ne $t.SHA256) { 'built, differs from its record' }
@@ -137,8 +150,9 @@ if ($Track.Count -eq 0 -and -not $Missing -and -not $All) {
         Write-Host ('  {0,-28} {1}' -f (TrackName $t), $state)
     }
     if (Test-Path $ready) {
-        foreach ($f in Get-ChildItem $ready -File | Where-Object Name -ne 'desktop.ini') {
-            if (-not $byFile[$f.Name]) { Write-Host ('  {0,-28} in game-ready and named by no track' -f $f.Name) }
+        foreach ($f in Get-ChildItem $ready -File -Recurse | Where-Object Name -ne 'desktop.ini') {
+            $rel = $f.FullName.Substring($ready.Length + 1)
+            if (-not $byFile[$rel]) { Write-Host ('  {0,-28} in game-ready and named by no record' -f $rel) }
         }
     }
     return
@@ -148,11 +162,11 @@ if ($Track.Count -eq 0 -and -not $Missing -and -not $All) {
 
 $chosen = @()
 if ($All) { $chosen = $tracks }
-elseif ($Missing) { $chosen = @($tracks | Where-Object { -not (Test-Path (Join-Path $ready $_.File)) }) }
+elseif ($Missing) { $chosen = @($tracks | Where-Object { -not (Test-Path (ReadyPath $_)) }) }
 else {
     foreach ($name in $Track) {
         $t = $tracks | Where-Object { (TrackName $_) -eq $name } | Select-Object -First 1
-        if (-not $t) { throw "no track named $name in data/music.json" }
+        if (-not $t) { throw "no sound named $name in data/music.json or data/sounds.json" }
         $chosen += $t
     }
 }
@@ -167,7 +181,8 @@ New-Item -ItemType Directory -Force $ready | Out-Null
 foreach ($t in $chosen) {
     $name = TrackName $t
     $src = Join-Path $library ($t.Source -replace '/', '\')
-    $dst = Join-Path $ready $t.File
+    $dst = ReadyPath $t
+    New-Item -ItemType Directory -Force (Split-Path -Parent $dst) | Out-Null
     if (-not (Test-Path $src -PathType Leaf)) { throw "${name}: no source at $src" }
 
     if (-not (IsEncoded $t)) {
@@ -213,4 +228,4 @@ foreach ($t in $chosen) {
 }
 
 Write-Host ''
-Write-Host 'Next: sync-from-drive.ps1, to mirror game-ready into audio/ and record the hashes in music.json.'
+Write-Host 'Next: sync-from-drive.ps1, to mirror game-ready into audio/ and record the hashes in the catalogs.'

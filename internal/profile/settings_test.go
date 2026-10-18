@@ -10,8 +10,8 @@ func TestAFreshProfileIsSilentAndAtTheTunedSpeed(t *testing.T) {
 	// **A new player boots to silence**, which predates there being anywhere to turn it up from:
 	// music that begins on its own is the first thing anyone reaches for a control to stop.
 	p, _, _ := LoadProfile(At(t.TempDir()))
-	if p.Settings.MusicVolume != 0 {
-		t.Errorf("a new player's music is at %v, want silence", p.Settings.MusicVolume)
+	if p.Settings.MusicVolume != 0 || p.Settings.SoundVolume != 0 {
+		t.Errorf("a new player's music is at %v and sounds at %v, want silence", p.Settings.MusicVolume, p.Settings.SoundVolume)
 	}
 	if p.Settings.Speed != 1 {
 		t.Errorf("a new player's speed is %v, want the tuned 1", p.Settings.Speed)
@@ -23,6 +23,7 @@ func TestSettingsSurviveARoundTrip(t *testing.T) {
 
 	p, _, _ := LoadProfile(s)
 	p.Settings.MusicVolume = 0.6
+	p.Settings.SoundVolume = 0.3
 	p.Settings.Speed = 1.5
 	if err := SaveProfile(s, p); err != nil {
 		t.Fatalf("saving: %v", err)
@@ -32,7 +33,7 @@ func TestSettingsSurviveARoundTrip(t *testing.T) {
 	if err != nil || !writable {
 		t.Fatalf("reading back what this build wrote: %v, writable=%v", err, writable)
 	}
-	if back.Settings.MusicVolume != 0.6 || back.Settings.Speed != 1.5 {
+	if back.Settings.MusicVolume != 0.6 || back.Settings.SoundVolume != 0.3 || back.Settings.Speed != 1.5 {
 		t.Errorf("read back %+v, want the pair that was written", back.Settings)
 	}
 }
@@ -66,13 +67,16 @@ func TestAnOutOfRangeSettingIsClamped(t *testing.T) {
 	// draws the bar: a slider clamped only at the widget would let a file past it.
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, profileFile),
-		[]byte(`{"version":1,"settings":{"musicVolume":9,"speed":99}}`), 0o644); err != nil {
+		[]byte(`{"version":1,"settings":{"musicVolume":9,"soundVolume":-2,"speed":99}}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
 	p, _, _ := LoadProfile(At(dir))
 	if p.Settings.MusicVolume != 1 {
 		t.Errorf("a music level of 9 loaded as %v, want it clamped to 1", p.Settings.MusicVolume)
+	}
+	if p.Settings.SoundVolume != 0 {
+		t.Errorf("a sound level of -2 loaded as %v, want it clamped to 0", p.Settings.SoundVolume)
 	}
 	if p.Settings.Speed != SpeedMax {
 		t.Errorf("a speed of 99 loaded as %v, want it clamped to %v", p.Settings.Speed, SpeedMax)

@@ -108,10 +108,10 @@ type Profile struct {
 	unknown map[string]any
 }
 
-// Settings is the pair of preferences the settings screen owns.
+// Settings is the preferences the settings screen owns.
 //
-// **Both are stored as the thing the player set, not as the thing the game uses.** Music is 0..1
-// against whatever ceiling internal/music decides is full; speed is a multiplier on the game's one
+// **Each is stored as the thing the player set, not as the thing the game uses.** Music and sounds
+// are 0..1 against whatever ceiling internal/music decides is full; speed is a multiplier on the game's one
 // clock. Storing a tick count or a device volume would put a tuning decision in a file that
 // outlives the build that made it.
 type Settings struct {
@@ -120,6 +120,11 @@ type Settings struct {
 	// **A fresh profile is silent.** Music that begins on its own is the first thing a new player
 	// reaches for a control to stop, and that rule predates there being anywhere to stop it from.
 	MusicVolume float64 `json:"musicVolume"`
+
+	// SoundVolume is how loud the effects are, 0 (silent) to 1 — a relic toasting. **Its own
+	// level, beside the music's** *(owner's call)*, so either can be down while the other is up.
+	// A fresh profile is silent here too, and so is a profile written before the bar existed.
+	SoundVolume float64 `json:"soundVolume"`
 
 	// Fullscreen is whether the game takes the whole display rather than a window.
 	//
@@ -167,6 +172,7 @@ func (s Settings) normalize() Settings {
 	}
 	s.Speed = clamp(s.Speed, SpeedMin, SpeedMax)
 	s.MusicVolume = clamp(s.MusicVolume, 0, 1)
+	s.SoundVolume = clamp(s.SoundVolume, 0, 1)
 	return s
 }
 

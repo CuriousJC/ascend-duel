@@ -62,8 +62,8 @@ analysis.md
 # its picture for the review-diff reason; this is the same trade taken wider.
 
 # The game-ready sounds. **Kept out of git and synced from a private S3 bucket instead** — see
-# privateassets/README.md, which is where the arrangement is described, and data/music.json, which
-# is the committed record of what they are.
+# privateassets/README.md, which is where the arrangement is described, and data/music.json and
+# data/sounds.json, which are the committed record of what they are.
 #
 # **audio/README.md is committed because it keeps `audio/` real**: `//go:embed audio` is resolved
 # at compile time, and a directory with nothing embeddable in it is a build error, so without it a

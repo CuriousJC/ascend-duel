@@ -34,7 +34,6 @@
     "fizzled": "{what} fizzles, no damage applied.",
     "drained": "{relic} drains {n}",
     "raised": "{shields} up",
-    "held": "unplayed for {n} vitae",
     "reflected": "{relic} returns {n}",
     "tithed": "{relic} pays {n} vitae",
     "silver": "silver pays {n} vitae",
@@ -47,6 +46,8 @@
   "announce": {
     "regenerated": "{who} restores {n} - {relic}",
     "warded": "{who} raises {shields} - {relic}",
+    "held": "{card} held back for {n} vitae",
+    "held-card": "A card",
     "time-up": "{who} is out of time - the duel takes {n}",
     "defeated": "{who} falls",
     "dmg": "{who} DMG grows for the attack"

@@ -110,9 +110,9 @@ Art by: CuriousJC and KingSherman1820
 ### Third-party assets
 
 - **Fonts** — `Kubasta.ttf` (CC0, via FontStruct), Fira Sans, and Roboto Flex.
-- **Music loops** — from Humble Bundle. They are not in this repository; see
-  [privateassets/README.md](privateassets/README.md). A clone without them builds and plays the
-  synthesized score everywhere.
+- **Music loops** — from Humble Bundle, credited pack by pack in [data/music.json](data/music.json).
+  They are not in this repository: a release fetches them from a private bucket, and a clone
+  without them builds and plays silent. See [privateassets/README.md](privateassets/README.md).
 
 Everything else under [assets/](assets/) is first-party: generated from the prompts in
 [docs/art/](docs/art/), or generated at runtime.

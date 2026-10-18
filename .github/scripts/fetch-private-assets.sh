@@ -36,17 +36,8 @@ set -euo pipefail
 : "${AWS_REGION:=us-east-1}"
 
 if [ -z "$SOUNDS_BUCKET" ] || [ -z "$SOUNDS_ROLE_ARN" ]; then
-  echo "no private asset bucket configured (SOUNDS_BUCKET / SOUNDS_ROLE_ARN); building without sound effects"
+  echo "no private asset bucket configured (SOUNDS_BUCKET / SOUNDS_ROLE_ARN); building without sound"
   exit 0
-fi
-
-# The bundle prefix comes out of the committed manifest rather than out of the workflow, so
-# adopting a new set of sounds is one edit in a file that is reviewed, and the version the
-# release fetched is the version the release recorded.
-bundle="$(jq -r '.Bundle' privateassets/audio/manifest.json)"
-if [ -z "$bundle" ] || [ "$bundle" = "null" ]; then
-  echo "::error::privateassets/audio/manifest.json names no Bundle"
-  exit 1
 fi
 
 if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
@@ -81,13 +72,17 @@ export AWS_REGION
 
 # `--exact-timestamps` because a synced file that differs only in mtime is still the wrong file
 # to skip: the hash check downstream is what decides, and it wants the bytes actually fetched.
-echo "syncing bundle ${bundle} from s3://${SOUNDS_BUCKET}/sounds/${bundle}/"
-aws s3 sync "s3://${SOUNDS_BUCKET}/sounds/${bundle}/" privateassets/audio/ \
+# **sounds/ is a mirror of the owner's Drive folder**, one folder per pack, and the pack folders
+# come down as they are. What the release may ship is decided by the committed manifest, which
+# -require checks next — not by what happens to be in the bucket.
+echo "syncing s3://${SOUNDS_BUCKET}/sounds/"
+aws s3 sync "s3://${SOUNDS_BUCKET}/sounds/" privateassets/audio/ \
   --exact-timestamps \
   --exclude "*" \
   --include "*.ogg" \
   --include "*.wav" \
-  --include "*.mp3"
+  --include "*.mp3" \
+  --include "*.mid"
 
 # The credentials are deliberately not written to $GITHUB_ENV. They are wanted for one sync and
 # nothing after it, and exporting them would leave a working set of AWS credentials in the

@@ -4,22 +4,36 @@ import (
 	"math"
 	"testing"
 
-	"github.com/curiousjc/ascend-duel/assets"
+	"github.com/curiousjc/ascend-duel/privateassets"
 )
 
 // These tests exist because the score is *generated*, and generated output fails
 // quietly. A recorded track that fails to load is silent and obvious; a synthesizer
 // handed a file it half-understands plays something, and what it plays is wrong in a
 // way nobody notices until they go looking. So the shape of the real file is pinned
-// here, and every one of these numbers is a fact about assets/sounds/duello.mid.
+// here, and every one of these numbers is a fact about duello.mid in privateassets/audio/custom/.
+//
+// **The file is not in git**, so on a clone without the sound bundle — CI among them — every test
+// that reads it skips rather than fails; realScore is the one door. Run them on a machine that has
+// synced the bundle after touching the synthesizer or the score.
 //
 // Nothing below opens an audio device — parsing and rendering are pure arithmetic over
 // byte slices, which is what keeps them testable at all. Only music.go touches
 // Ebitengine, and nothing here calls it.
 
+// realScore is the shipped score's bytes, skipping the test on a clone that has not synced it.
+func realScore(t *testing.T) []byte {
+	t.Helper()
+	raw := privateassets.Audio()[Score+".mid"]
+	if raw == nil {
+		t.Skip("duello.mid is not synced into privateassets/audio/; see the sounds skill")
+	}
+	return raw
+}
+
 func score0(t *testing.T) *score {
 	t.Helper()
-	sc, err := parseSMF(assets.LoadMusic()["duello_mid"])
+	sc, err := parseSMF(realScore(t))
 	if err != nil {
 		t.Fatalf("parsing the score: %v", err)
 	}
@@ -173,7 +187,7 @@ func TestRenderIsDeterministic(t *testing.T) {
 }
 
 func TestRejectsWhatItCannotPlay(t *testing.T) {
-	valid := assets.LoadMusic()["duello_mid"]
+	valid := realScore(t)
 
 	// A file the reader cannot understand has to be an error rather than a best guess.
 	// Silence with a log line is recoverable; a score with holes in it is not, because

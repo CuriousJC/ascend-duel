@@ -191,8 +191,8 @@ jobs:
       #
       # **`SOUNDS_BUCKET` is the switch for the whole arrangement**, and both steps below are
       # gated on it rather than only the first. Until the bucket, the role and the three
-      # repository variables exist, a release builds and ships with the synthesized score
-      # everywhere — which is what the game does anyway on any machine without the bundle.
+      # repository variables exist, a release builds and ships with no sound at all — the score
+      # is in the bundle too, so that is what the game does on any machine without it.
       #
       # **One condition on both steps, never two.** Fetching without requiring is a release that
       # can ship quiet; requiring without fetching is a release that cannot be cut at all, which

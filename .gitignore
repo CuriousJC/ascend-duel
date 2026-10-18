@@ -75,3 +75,6 @@ analysis.md
 # Verify with `git check-ignore -v` on one of each.
 /privateassets/audio/*
 !/privateassets/audio/manifest.json
+!/privateassets/audio/bundle-names.txt
+# The management scripts beside it are committed; this machine's own paths and bucket are not.
+/privateassets/mgmt/local.psd1

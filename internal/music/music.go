@@ -77,7 +77,10 @@ var level float64
 // the game — and when it does, `player` is nil and every call below is a no-op. A volume
 // control that silently did nothing would be worse than none, so the caller asks this and
 // disables it instead.
-func Available() bool { return player != nil }
+//
+// **The score or any track counts**: a build can hold loops and no score, and a volume bar that
+// went dead while the shop's loop played would be lying the other way.
+func Available() bool { return player != nil || len(tracks) > 0 }
 
 // Level reports how loud the score is, from 0 to 1.
 func Level() float64 { return level }

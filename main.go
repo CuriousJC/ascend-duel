@@ -203,6 +203,9 @@ func main() {
 	//
 	// **The profile and its settings stay above**, because fullscreen is one of them and the splash
 	// should open on the display the player chose.
+	// score is the synthesized score's MIDI, found by the loader and started once the splash is
+	// over. Nil is a build without the sound bundle, which plays nothing.
+	var score []byte
 	g.Boot(func() {
 		defer reportLoadPanic(g)
 
@@ -300,22 +303,22 @@ func main() {
 			}
 		}
 
-		// The score is a MIDI file synthesized to PCM here at startup rather than a
-		// recorded track — see internal/music for why. It loops for the whole session
-		// across every screen. How loud it is comes off the profile above — see the settings screen,
-		// which is reached from the cog in the game's chrome. That is a button rather than a hotkey:
-		// the input vocabulary has no keyboard.
+		// Every sound, the score included, is in privateassets/ — not in git and possibly not on
+		// this machine at all; see privateassets/README.md. **Loading none of them is a normal
+		// build, and a silent one.** The score is a MIDI file, `duello.mid`, synthesized to PCM at
+		// startup — see internal/music — and it is taken out of the set here because it is started
+		// rather than loaded as a track. internal/game names a track per screen and
+		// music.PlayTrack falls back to the score for a name nothing was loaded under.
 		//
-		// The bought loops, which are not in git and may not be on this machine at all — see
-		// privateassets/README.md. **Loading none of them is a normal build**: internal/game names a
-		// track per screen and music.PlayTrack falls back to the score for a name nothing was loaded
-		// under, so a clone with no bundle synced plays the synthesized score everywhere rather than
-		// falling silent in the shop.
+		// How loud it all is comes off the profile above — see the settings screen, which is
+		// reached from the cog in the game's chrome.
 		//
 		// **Sorted rather than ranged over the map**, because map order is randomized deliberately
 		// and nothing in this game may depend on it. Nothing here does today; a loop that reported
 		// the first failure rather than all of them would.
 		private := privateassets.Audio()
+		score = private[music.Score+".mid"]
+		delete(private, music.Score+".mid")
 		files := make([]string, 0, len(private))
 		for file := range private {
 			files = append(files, file)
@@ -331,7 +334,10 @@ func main() {
 	}, func() {
 		// Not having a sound device is not a reason to refuse to run, so a failure here is
 		// reported and stepped over. Nothing below this line depends on it.
-		if err := music.Start(assets.LoadMusic()["duello_mid"]); err != nil {
+		if score == nil {
+			return
+		}
+		if err := music.Start(score); err != nil {
 			// **Noted rather than told.** A machine with no audio device is a machine that plays the
 			// game in silence, which the volume bar on the settings screen already says out loud; a box
 			// in the player's way about it would be the game complaining about their hardware.

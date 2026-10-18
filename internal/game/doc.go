@@ -97,8 +97,8 @@
 //     that agree about five screens and disagree about three are two tables.
 //   - **One table rather than a map of tracks beside a set of exceptions**, because a screen written into
 //     both would be a contradiction nothing catches.
-//   - **A track nothing was loaded under gets the score**, so a clone with no bundle synced plays the
-//     score everywhere rather than falling silent. `TestEveryNamedTrackIsInTheBundle` holds this table
+//   - **A track nothing was loaded under gets the score**, so a missing loop costs a screen its own
+//     music rather than its music. A clone with no bundle synced has no score either and is silent. `TestEveryNamedTrackIsInTheBundle` holds this table
 //     against the committed manifest — **the manifest, not the directory**, since the audio is not in git
 //     and a test looking for files would fail on every clean clone — and *reports* a bundled loop no
 //     screen plays rather than failing on one.

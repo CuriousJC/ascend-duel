@@ -109,6 +109,7 @@ skill that does not exist.
 | [`achievements`](.claude/skills/achievements/SKILL.md) | adding or changing an achievement, a moment, a counter or an unlock, adding any new kind of progress the profile keeps, or touching `internal/screens/achieve.go` — a chosen-seed run must progress nothing |
 | [`bug-hunter`](.claude/skills/bug-hunter/SKILL.md) | any bug the owner found while playing — before diagnosing it, before fixing it, and before authoring a scenario record to reproduce it |
 | [`audit`](.claude/skills/audit/SKILL.md) | the milestone pass — the owner asking for an audit, a refactor sweep or a health check — and before any refactor that crosses more than one package |
+| [`sounds`](.claude/skills/sounds/SKILL.md) | adding, moving, renaming or replacing any sound, syncing the packs from Drive, setting up or pushing to the sound bucket, touching `privateassets/` (`mgmt/` included), `tools/privateassets`, the manifest, `score.go`'s track names, or the release's private-asset steps |
 | [`secondary`](.claude/skills/secondary/SKILL.md) | the owner saying you are the secondary copy — and then before refreshing from main, checking for conflicts, or opening a PR from `secondary-work` |
 
 **Loading is cheap and guessing is not.** Every one of these exists because something specific
@@ -551,22 +552,22 @@ git tag -a v0.1.0 -m "..."; git push origin v0.1.0
   traveling with the binary the moment it is renamed.
 - **Neither `debugtrace` nor `idleexit` is ever set in a release build.** Instrumentation
   must not ship, and a game that closes itself on an idle player is a bug.
-- **The release fetches the bought sounds and refuses to build without them, once it is
-  configured to.**
+- **The release fetches the sounds and refuses to build without them, once it is
+  configured to.** The procedure is the [`sounds`](.claude/skills/sounds/SKILL.md) skill.
   `.github/scripts/fetch-private-assets.sh` runs in both build jobs, and CI runs it in neither —
   so a credential is wanted on the two jobs that ship a binary and nowhere else, and a pull
   request from a fork needs nothing. **There are no stored keys**: the build jobs carry
   `id-token: write`, GitHub mints a short-lived OIDC token, and STS exchanges it for
-  fifteen-minute read-only credentials against one bucket prefix. **The exchange is written out
+  fifteen-minute read-only credentials against the bucket's `sounds/` prefix. **The exchange is written out
   by hand rather than taken from `aws-actions/configure-aws-credentials`**, which is the
-  first-party-actions rule below costing about a dozen lines. **The bundle prefix comes out of
-  the committed manifest**, so adopting a new set of sounds is an edit somebody reviews. Three
+  first-party-actions rule below costing about a dozen lines. **What may ship is the
+  committed manifest**, so adopting a new set of sounds is an edit somebody reviews. Three
   repository variables configure it — `SOUNDS_BUCKET`, `SOUNDS_ROLE_ARN`, `SOUNDS_REGION`.
 
   **`SOUNDS_BUCKET` is the switch for the whole arrangement, and both steps are gated on it.**
-  Unset, a release fetches nothing and requires nothing, and ships the synthesized score
-  everywhere — which is what the game does on any machine without the bundle, so a release can
-  be cut before the bucket exists. Set, the sync runs and `tools/privateassets -require` refuses
+  Unset, a release fetches nothing and requires nothing, and **ships with no sound at all** —
+  the score is in the bundle too, so that is what the game does on any machine without it, and a
+  release can be cut before the bucket exists. Set, the sync runs and `tools/privateassets -require` refuses
   a build whose manifest names a file the directory does not hold. **The two share one condition
   on purpose**: fetching without requiring is a release that can ship quiet, and requiring
   without fetching is a release that cannot be cut at all.
@@ -1833,14 +1834,15 @@ fight  →  victory  →  reward  →  shop  →  portal  →  fight ...
 ## Art
 
 **`assets/` is grouped by what a file is for**: `game/` (fonts, title screens), `motifs/`,
-`relic/`, `upgrade/`, `sounds/`. The `//go:embed` paths are relative to `embed.go`, so
+`relic/`, `upgrade/`. The `//go:embed` paths are relative to `embed.go`, so
 refiling something is one line there and nothing anywhere else.
 
-**The music loops are not in here and must never be filed here.** They are `privateassets/`, a
-package of its own at the repository root, and they are kept out of git — see
-[privateassets/README.md](privateassets/README.md). **`privateassets.Audio`
-is the loader**, keyed by filename stem like every family here but across three extensions rather
-than one, so `.ogg` and `.wav` sharing a stem is one key with two answers and is refused at load.
+**No sound is in here and none may be filed here** — the bought loops and the game's own MIDI
+score alike. They are `privateassets/`, a package of its own at the repository root, one folder
+per pack, kept out of git — see [privateassets/README.md](privateassets/README.md) and the
+[`sounds`](.claude/skills/sounds/SKILL.md) skill. **`privateassets.Audio` is the loader**, keyed
+by filename stem across every pack folder and four extensions, so two files sharing a stem
+anywhere is one key with two answers and is refused at load.
 **It is also the only family whose being empty is correct**: a machine that has not synced the
 bundle builds and plays silent.
 

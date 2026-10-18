@@ -1,23 +1,53 @@
 {
-  "Bundle": "v1",
   "Packs": [
     {
-      "Name": "dark-fantasy",
-      "Note": "Two looping music beds, peak-normalized to -1.0 dBFS on the way in (+13.0 and +12.8 dB, no clipping): as delivered they peak at about -14 dBFS, roughly a fifth the amplitude of the synthesized score."
+      "Name": "humble-bundle-game-audio-sfx-treasure-trove",
+      "Note": "dark-fantasy-01 and -02, two looping music beds, peak-normalized to -1.0 dBFS on the way in (+13.0 and +12.8 dB, no clipping): as delivered they peak at about -14 dBFS, roughly a fifth the amplitude of the synthesized score."
+    },
+    {
+      "Name": "humble-bundle-ultimate-game-audio"
+    },
+    {
+      "Name": "custom",
+      "Note": "The game's own score, a MIDI file synthesized to PCM at startup by internal/music. Not normalized: its level is set by the synthesizer, at -1.7 dBFS peak and -14.7 dBFS RMS."
     }
   ],
   "Files": [
     {
-      "Name": "dark-fantasy-01.wav",
-      "Pack": "dark-fantasy",
+      "Name": "custom/duello.mid",
+      "Pack": "custom",
+      "Bytes": 1084,
+      "SHA256": "3d8642c0e637d0119da7c26c6ddae8959f7b4b8a521f3c30de81b88805c9baad"
+    },
+    {
+      "Name": "humble-bundle-game-audio-sfx-treasure-trove/ambience-1.wav",
+      "Pack": "humble-bundle-game-audio-sfx-treasure-trove",
+      "Bytes": 12533462,
+      "SHA256": "d3bb09022675d71841b5c51cf20e80ec5700c50b06eda85a32d1ac8b6043ee5b"
+    },
+    {
+      "Name": "humble-bundle-game-audio-sfx-treasure-trove/dark-fantasy-01.wav",
+      "Pack": "humble-bundle-game-audio-sfx-treasure-trove",
       "Bytes": 9141702,
       "SHA256": "8910c19ebae2fe4ea9d89bc9ad7916367f96b82bca9ba9ef513906084ca886b0"
     },
     {
-      "Name": "dark-fantasy-02.wav",
-      "Pack": "dark-fantasy",
+      "Name": "humble-bundle-game-audio-sfx-treasure-trove/dark-fantasy-02.wav",
+      "Pack": "humble-bundle-game-audio-sfx-treasure-trove",
       "Bytes": 4577626,
       "SHA256": "35139ddf8806cac42bce9f83cd9dc287f0df27f7cc247e8b9a992093df47e03c"
+    },
+    {
+      "Name": "humble-bundle-game-audio-sfx-treasure-trove/long-bell.wav",
+      "Pack": "humble-bundle-game-audio-sfx-treasure-trove",
+      "Bytes": 2622326,
+      "SHA256": "cec56ef94e8e6c0db80fdf13830247ececa749f0e7b2653dcd7fab488bd294a1"
+    },
+    {
+      "Name": "humble-bundle-ultimate-game-audio/aliens-motif.wav",
+      "Pack": "humble-bundle-ultimate-game-audio",
+      "Bytes": 21369210,
+      "SHA256": "02182c710d749d8aa0b05d37de7b85035bf9695407cff7c85a5df0641bcfe8c3"
     }
   ]
 }

@@ -22,12 +22,20 @@
 //   - **A file the manifest names and the directory does not hold.** This is the silent failure
 //     the whole arrangement exists to prevent: the game builds fine without its sounds, so a
 //     release cut on a machine that never synced the bundle ships quiet and nothing goes red.
-//   - **A file whose bytes do not hash to what the manifest recorded.** A bundle prefix is meant
-//     to be immutable, and an overwritten one means two releases claiming one bundle shipped
-//     different audio.
+//   - **A file whose bytes do not hash to what the manifest recorded.** The bucket is a mirror of
+//     the Drive folder and the manifest is committed, so a mismatch is a push nobody committed
+//     the manifest for, or a manifest committed with nothing pushed — either way the release
+//     would ship sounds nobody reviewed.
 //   - **A file belonging to no pack.** A pack is the batch a file arrived in, and it is the only
 //     thing the manifest says about where a file came from — so a file in no pack is one nothing
 //     can be traced back through.
+//
+// # A folder is a pack
+//
+// **A file filed under `audio/<pack>/` belongs to that pack**, and -write records it so without
+// being told; a manifest entry naming a different pack from the folder it sits in is refused. A
+// file at the top of audio/ has no folder to say where it came from, so its Pack is still set by
+// hand. The folder never reaches a track's name — see privateassets.Audio.
 //
 // An **empty** manifest passes -require, deliberately. "This game has no sound effects yet" is a
 // true state and was the state for the whole of its development; a tool that failed on it would
@@ -48,6 +56,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
@@ -64,17 +73,12 @@ const manifestName = "manifest.json"
 // audioExts is the set of extensions the game can actually decode. It matches the filter in
 // privateassets.Audio and the two have to stay in step: a file this tool records and the
 // loader skips would be a manifested sound that is not in the binary.
-var audioExts = map[string]bool{".ogg": true, ".wav": true, ".mp3": true}
+var audioExts = map[string]bool{".ogg": true, ".wav": true, ".mp3": true, ".mid": true}
 
 // Manifest is the committed record of what the bundle holds.
-//
-// **Bundle is the S3 prefix the files came from**, and moving it is how a new set of sounds is
-// adopted — never by overwriting a prefix in place, which would leave two releases claiming one
-// bundle and shipping different audio.
 type Manifest struct {
-	Bundle string `json:"Bundle"`
-	Packs  []Pack `json:"Packs"`
-	Files  []File `json:"Files"`
+	Packs []Pack `json:"Packs"`
+	Files []File `json:"Files"`
 }
 
 // Pack is where a file came from — one batch, named. Nothing beyond the name is recorded here:
@@ -84,8 +88,9 @@ type Pack struct {
 	Note string `json:"Note,omitempty"`
 }
 
-// File is one shipped sound. Name is the filename as it sits in the directory, extension
-// included — the loader keys by stem, but the manifest is about files on disk.
+// File is one shipped sound. Name is its path under the directory, slash-separated and extension
+// included — `dark-fantasy/dark-fantasy-01.wav` — because the loader keys by stem but the
+// manifest is about files on disk.
 type File struct {
 	Name   string `json:"Name"`
 	Pack   string `json:"Pack"`
@@ -150,37 +155,62 @@ func readManifest() (Manifest, error) {
 	return man, nil
 }
 
-// scan hashes every decodable audio file in the directory. Anything else — the README, the
-// manifest, an original somebody left beside its converted copy — is not a shipped sound and is
-// skipped, exactly as privateassets.Audio skips it.
+// scan hashes every decodable audio file under the directory, folders included. Anything else —
+// the README, the manifest, an original somebody left beside its converted copy — is not a
+// shipped sound and is skipped, exactly as privateassets.Audio skips it.
+//
+// **It skips what go:embed skips**: a name starting with `.` or `_`, file or folder, is not in
+// the binary, so recording it would manifest a sound that does not ship.
 func scan() (map[string]File, error) {
 	found := make(map[string]File)
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-	for _, e := range entries {
-		if e.IsDir() || !audioExts[strings.ToLower(filepath.Ext(e.Name()))] {
-			continue
-		}
-		raw, err := os.ReadFile(filepath.Join(dir, e.Name()))
+	err := filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return nil, err
+			return err
+		}
+		if p != dir && (strings.HasPrefix(d.Name(), ".") || strings.HasPrefix(d.Name(), "_")) {
+			if d.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if d.IsDir() || !audioExts[strings.ToLower(filepath.Ext(d.Name()))] {
+			return nil
+		}
+		rel, err := filepath.Rel(dir, p)
+		if err != nil {
+			return err
+		}
+		name := filepath.ToSlash(rel)
+		raw, err := os.ReadFile(p)
+		if err != nil {
+			return err
 		}
 		sum := sha256.Sum256(raw)
-		found[e.Name()] = File{
-			Name:   e.Name(),
+		found[name] = File{
+			Name:   name,
 			Bytes:  int64(len(raw)),
 			SHA256: hex.EncodeToString(sum[:]),
 		}
-	}
-	return found, nil
+		return nil
+	})
+	return found, err
 }
 
-// rewrite records what is on disk, carrying each file's existing Pack across so that re-running
-// this after a sync does not wipe the attributions that are the point of the manifest. A file
-// that is new to the manifest has no pack and is reported as such — it is the one thing this
-// tool cannot work out for itself.
+// folderPack is the pack a file's folder names, or "" for a file at the top of the directory.
+func folderPack(name string) string {
+	if i := strings.Index(name, "/"); i >= 0 {
+		return name[:i]
+	}
+	return ""
+}
+
+// rewrite records what is on disk. A file in a folder takes the folder as its pack; a file at the
+// top carries its existing Pack across, so that re-running this after a sync does not wipe the
+// attributions that are the point of the manifest. A top-level file new to the manifest has no
+// pack and is reported as such — it is the one thing this tool cannot work out for itself.
+//
+// **A pack a folder names and Packs does not describe is added**, with no Note, so -require
+// passes on it and the Note is left for whoever filed the batch to write.
 func rewrite(man Manifest, onDisk map[string]File) error {
 	packOf := make(map[string]string, len(man.Files))
 	for _, f := range man.Files {
@@ -197,7 +227,10 @@ func rewrite(man Manifest, onDisk map[string]File) error {
 	var unattributed []string
 	for _, name := range names {
 		f := onDisk[name]
-		f.Pack = packOf[name]
+		f.Pack = folderPack(name)
+		if f.Pack == "" {
+			f.Pack = packOf[name]
+		}
 		if f.Pack == "" {
 			unattributed = append(unattributed, name)
 		}
@@ -207,6 +240,16 @@ func rewrite(man Manifest, onDisk map[string]File) error {
 		// An empty list rather than null, so the committed file reads the same whether or not
 		// anything has been filed yet.
 		man.Files = []File{}
+	}
+	described := make(map[string]bool, len(man.Packs))
+	for _, p := range man.Packs {
+		described[p.Name] = true
+	}
+	for _, f := range man.Files {
+		if folder := folderPack(f.Name); folder != "" && !described[folder] {
+			described[folder] = true
+			man.Packs = append(man.Packs, Pack{Name: folder})
+		}
 	}
 	if man.Packs == nil {
 		man.Packs = []Pack{}
@@ -240,7 +283,7 @@ func report(man Manifest, onDisk map[string]File) []string {
 		packs[p.Name] = true
 	}
 
-	fmt.Printf("%s — bundle %s, %d file(s) manifested, %d present\n", dir, man.Bundle, len(man.Files), len(onDisk))
+	fmt.Printf("%s — %d file(s) manifested, %d present\n", dir, len(man.Files), len(onDisk))
 
 	var problems []string
 	seen := make(map[string]bool, len(man.Files))
@@ -249,9 +292,11 @@ func report(man Manifest, onDisk map[string]File) []string {
 		got, present := onDisk[want.Name]
 		switch {
 		case !present:
-			problems = append(problems, fmt.Sprintf("%s: manifested but not present — sync bundle %s", want.Name, man.Bundle))
+			problems = append(problems, fmt.Sprintf("%s: manifested but not present — sync the sound bundle", want.Name))
 		case got.SHA256 != want.SHA256:
 			problems = append(problems, fmt.Sprintf("%s: present, but its bytes are not the manifested ones", want.Name))
+		case folderPack(want.Name) != "" && want.Pack != folderPack(want.Name):
+			problems = append(problems, fmt.Sprintf("%s: names pack %q but is filed in the folder %q", want.Name, want.Pack, folderPack(want.Name)))
 		case want.Pack == "":
 			problems = append(problems, fmt.Sprintf("%s: belongs to no pack — nothing records where it came from", want.Name))
 		case !packs[want.Pack]:

@@ -25,7 +25,7 @@ func (s *ShopScene) Report() map[string]any {
 		"opened":  len(s.opened),
 		"drunk":   len(s.drunk),
 
-		// A reroll is two ticks â€” armed on one, applied on the next â€” so a crash between them is
+		// A reroll is two ticks — armed on one, applied on the next — so a crash between them is
 		// the one this pair is for.
 		"rerolling": int(s.rerolling),
 		"rerollNow": s.rerollNow,

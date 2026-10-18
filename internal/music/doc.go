@@ -1,7 +1,7 @@
 // Package music plays the game's score.
 //
 // The score ships as a Standard MIDI File — `duello.mid`, a kilobyte of notes filed in
-// the `custom` pack of `privateassets/`, beside the bought loops and out of git like them — and is synthesized to PCM once at startup by the pure-Go code in smf.go and
+// `privateassets/` beside the bought loops and out of git like them — and is synthesized to PCM once at startup by the pure-Go code in smf.go and
 // synth.go. Ebitengine cannot play MIDI; its audio package decodes MP3, Ogg Vorbis and
 // WAV and nothing else. The three ways past that were to convert the file to Ogg
 // offline, to embed a SoundFont and a synthesizer library, or to generate the audio
@@ -67,14 +67,14 @@
 // caps the score and every track *together*, so raising it to rescue one loop makes the chiptune
 // harsh. The score sits at **-1.7 dBFS peak, -14.7 dBFS RMS**; peak-normalize a track to **-1.0 dBFS**
 // and the two land within a decibel or two, which is what stops a player reaching for the bar when the
-// screen changes. The gain applied goes in the pack's `Note`, because it means the bytes that ship are
-// not the bytes that were bought.
+// screen changes. Each track's gain is its own `GainDB` in `data/music.json`, applied when the track is
+// made game-ready, because it means the bytes that ship are not the bytes that were bought.
 //
 // **A track is decoded by its extension, and the size is the thing to watch.** `decoders` is the table
 // — the same three formats `privateassets.Audio` hands over, which is why `LoadTrack` is given a
-// *filename* rather than a name: a loader accepting less than the embed carries is a manifested sound
-// that ships and is never heard. `sampleRate` is 44100 and the loops are 16-bit stereo at exactly that,
-// so nothing is resampled — but a minute of WAV is about ten megabytes in the binary where the Ogg
-// would be a few hundred kilobytes. **Convert on the way into `privateassets/audio/`, not in the
+// *filename* rather than a name: a loader accepting less than the embed carries is a recorded sound
+// that ships and is never heard. `sampleRate` is 44100 and every game-ready track is encoded to Ogg at
+// exactly that, so nothing is resampled at startup — a minute of WAV is about ten megabytes in the
+// binary where the Ogg is under one. **Convert on the way into `privateassets/audio/`, not in the
 // loader**, and read the size against the catalog before adding a loop.
 package music

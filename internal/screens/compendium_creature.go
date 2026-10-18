@@ -4,11 +4,11 @@ package screens
 //
 // Resting on a found entry in the bestiary draws this in place of a tooltip. A creature's whole
 // personality is which hits come round how often, and the fight only ever shows the played half of
-// that â€” so the page is the one place in the game a player can read the deck itself.
+// that — so the page is the one place in the game a player can read the deck itself.
 //
 // **It is the game's own drawing, not a picture of it.** The card is `ui.EnemySpec` and every deck
 // card is `ui.CardSpec`, held by the creature as it is built for a fight, so the faces here are the
-// faces on the table. The figures are its record's bases â€” `entities.NewEnemyFrom` at fight 0 â€”
+// faces on the table. The figures are its record's bases — `entities.NewEnemyFrom` at fight 0 —
 // because a creature met later in the journey is grown to where it is met, and the page is about
 // the creature rather than about one meeting with it.
 //

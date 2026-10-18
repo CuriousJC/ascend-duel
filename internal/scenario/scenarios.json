@@ -817,7 +817,7 @@
   },
   {
     "ScenarioRecord": "momentum-and-atrophy",
-    "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn â€” and the Block at the end of it is what resets Momentum, so the growth should climb 0.2x a round and then drop to nothing.",
+    "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn — and the Block at the end of it is what resets Momentum, so the growth should climb 0.2x a round and then drop to nothing.",
     "Relics": [
       "demotion-three",
       "dmg-no-shield"

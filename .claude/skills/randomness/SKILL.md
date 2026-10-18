@@ -116,6 +116,7 @@ the salt table, so inserting one mid-list re-points every stream after it.
 | `seeds.TonicOrder` | run | `newTonicOrder` (`internal/session/tonic.go`): one shuffle of the tonic catalog's sorted keys, walked a realm at a time | which tonic every realm offers, on any change to the relic shelf |
 | `seeds.LuckRoll` | fight | `CombatScene.luckRNG`, injected into `ResolveRound` as `Sources.Luck` | what every gold and silver card in the run rolls, on any change to either shuffle |
 | `seeds.ShieldRoll` | fight | `CombatScene.shieldRNG`, injected into `ResolveRound` as `Sources.Shield`: one roll per `raise-shield` naming `"random"` — armored's — per turn | what every gold and silver card rolls, on buying an armored relic |
+| `seeds.CombatMusic` | fight | `poolPick` (`internal/game/score.go`): one draw over the combat pool in `data/music.json`, made when the combat screen is entered | every deal and roll of every fight, on adding a track to the pool |
 | Loot offers | — | **not built** | — |
 
 **`VialStock` is the sharpest case in the table**: it draws essences from the same

@@ -303,13 +303,13 @@ func (s *CombatScene) sideName(side combat.Side) string {
 // verbatim would be a panel nobody could read. Merging an action with its outcome is
 // presentation of events the engine already decided; it computes nothing, so what is written
 // here still cannot disagree with what the round did. **Hands get lines of their
-// own**, because they are not something a card did â€” folding a hand into the line of the card
+// own**, because they are not something a card did — folding a hand into the line of the card
 // that happened to start it would bury the one thing worth reading.
 //
 // **The attack phase is the hand's line and a line per hit under it.** The defenses write a line
 // each; the attack cards write no sentence of their own, since each is a hit line with its
-// arithmetic beside it, and the line that mattered â€” what the five cards came to â€” was the sixth. **Every hand takes that line,
-// the No Hand included** *(2026-08-19)* â€” a lone attack is the catalog's one-card hand and is
+// arithmetic beside it, and the line that mattered — what the five cards came to — was the sixth. **Every hand takes that line,
+// the No Hand included** *(2026-08-19)* — a lone attack is the catalog's one-card hand and is
 // announced like any other.
 //
 // **It takes the events rather than reading the round off the scene** *(2026-08-18)*. It was the

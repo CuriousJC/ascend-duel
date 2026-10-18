@@ -109,7 +109,7 @@ skill that does not exist.
 | [`achievements`](.claude/skills/achievements/SKILL.md) | adding or changing an achievement, a moment, a counter or an unlock, adding any new kind of progress the profile keeps, or touching `internal/screens/achieve.go` — a chosen-seed run must progress nothing |
 | [`bug-hunter`](.claude/skills/bug-hunter/SKILL.md) | any bug the owner found while playing — before diagnosing it, before fixing it, and before authoring a scenario record to reproduce it |
 | [`audit`](.claude/skills/audit/SKILL.md) | the milestone pass — the owner asking for an audit, a refactor sweep or a health check — and before any refactor that crosses more than one package |
-| [`sounds`](.claude/skills/sounds/SKILL.md) | adding, moving, renaming or replacing any sound, syncing the packs from Drive, setting up or pushing to the sound bucket, touching `privateassets/` (`mgmt/` included), `tools/privateassets`, the manifest, `score.go`'s track names, or the release's private-asset steps |
+| [`sounds`](.claude/skills/sounds/SKILL.md) | adding, moving, renaming or replacing any sound, building `game-ready/` or syncing it from Drive, setting up or pushing to the sound bucket, touching `privateassets/` (`mgmt/` included), `tools/privateassets`, `data/music.json`, `score.go`'s track names, or the release's private-asset steps |
 | [`secondary`](.claude/skills/secondary/SKILL.md) | the owner saying you are the secondary copy — and then before refreshing from main, checking for conflicts, or opening a PR from `secondary-work` |
 
 **Loading is cheap and guessing is not.** Every one of these exists because something specific
@@ -136,6 +136,9 @@ The project is **source-available, not open source**, and is intended to be sold
   commits published before it is irrevocable, and the owners have accepted that.
 - **Assets are the owner's business and not yours.** Do not reason about where a file came
   from, do not ask, and do not write provenance into a comment, a doc or a data file.
+  **Bought audio is the one exception** *(owner's call)*: it is the one asset with a supplier to
+  credit, so `data/music.json` records each track's pack and the purchase that pack is, for a
+  credits screen to read. Keep that record current; it is still not yours to reason past.
 
 ## Commands
 
@@ -189,9 +192,9 @@ go run ./tools/artcompare   # one catalog's art, every candidate batch side by s
 go run ./tools/artcompare -catalog relic    # the same for relics; card, essence, rune, stone, other, enemy-card
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
-go run ./tools/privateassets   # the loops: what is present, what matches, what is unrecorded
-go run ./tools/privateassets -write     # record what is in privateassets/audio/ into its manifest
-go run ./tools/privateassets -require   # what a release runs: refuse a build missing or unattributed audio
+go run ./tools/privateassets   # the sounds: what is present, what matches data/music.json, what is unrecorded
+go run ./tools/privateassets -write     # record each game-ready file's size and hash in data/music.json
+go run ./tools/privateassets -require   # what a release runs: refuse a build missing, altered or unnamed audio
 ```
 
 **A sheet can be narrowed with a chip bar, and `tools/sheetfilter` is the whole of it** — the
@@ -558,17 +561,18 @@ git tag -a v0.1.0 -m "..."; git push origin v0.1.0
   so a credential is wanted on the two jobs that ship a binary and nowhere else, and a pull
   request from a fork needs nothing. **There are no stored keys**: the build jobs carry
   `id-token: write`, GitHub mints a short-lived OIDC token, and STS exchanges it for
-  fifteen-minute read-only credentials against the bucket's `sounds/` prefix. **The exchange is written out
+  fifteen-minute read-only credentials against the bucket's `game-ready/` prefix — never the
+  library under `sounds/`. **The exchange is written out
   by hand rather than taken from `aws-actions/configure-aws-credentials`**, which is the
-  first-party-actions rule below costing about a dozen lines. **What may ship is the
-  committed manifest**, so adopting a new set of sounds is an edit somebody reviews. Three
+  first-party-actions rule below costing about a dozen lines. **What may ship is the committed
+  `data/music.json`**, hashes and all, so adopting a new set of sounds is an edit somebody reviews. Three
   repository variables configure it — `SOUNDS_BUCKET`, `SOUNDS_ROLE_ARN`, `SOUNDS_REGION`.
 
   **`SOUNDS_BUCKET` is the switch for the whole arrangement, and both steps are gated on it.**
   Unset, a release fetches nothing and requires nothing, and **ships with no sound at all** —
   the score is in the bundle too, so that is what the game does on any machine without it, and a
   release can be cut before the bucket exists. Set, the sync runs and `tools/privateassets -require` refuses
-  a build whose manifest names a file the directory does not hold. **The two share one condition
+  a build whose `music.json` names a file the directory does not hold. **The two share one condition
   on purpose**: fetching without requiring is a release that can ship quiet, and requiring
   without fetching is a release that cannot be cut at all.
 - **Only first-party actions**, and publishing goes through the `gh` CLI rather than a
@@ -1838,11 +1842,12 @@ fight  →  victory  →  reward  →  shop  →  portal  →  fight ...
 refiling something is one line there and nothing anywhere else.
 
 **No sound is in here and none may be filed here** — the bought loops and the game's own MIDI
-score alike. They are `privateassets/`, a package of its own at the repository root, one folder
-per pack, kept out of git — see [privateassets/README.md](privateassets/README.md) and the
+score alike. They are `privateassets/`, a package of its own at the repository root, one flat
+folder of game-ready tracks, kept out of git and recorded in `data/music.json` — see
+[privateassets/README.md](privateassets/README.md) and the
 [`sounds`](.claude/skills/sounds/SKILL.md) skill. **`privateassets.Audio` is the loader**, keyed
-by filename stem across every pack folder and four extensions, so two files sharing a stem
-anywhere is one key with two answers and is refused at load.
+by filename stem across four extensions, so two files sharing a stem is one key with two answers
+and is refused at load.
 **It is also the only family whose being empty is correct**: a machine that has not synced the
 bundle builds and plays silent.
 

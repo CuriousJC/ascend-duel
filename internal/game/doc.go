@@ -98,8 +98,11 @@
 //   - **One table rather than a map of tracks beside a set of exceptions**, because a screen written into
 //     both would be a contradiction nothing catches.
 //   - **A track nothing was loaded under gets the score**, so a missing loop costs a screen its own
-//     music rather than its music. A clone with no bundle synced has no score either and is silent. `TestEveryNamedTrackIsInTheBundle` holds this table
-//     against the committed manifest — **the manifest, not the directory**, since the audio is not in git
-//     and a test looking for files would fail on every clean clone — and *reports* a bundled loop no
-//     screen plays rather than failing on one.
+//     music rather than its music. A clone with no bundle synced has no score either and is silent. `TestEveryTrackPlaysWhereItMay` holds this table
+//     against `data/music.json` — **the catalog, not the directory**, since the audio is not in git
+//     and a test looking for files would fail on every clean clone — so a screen plays only a track
+//     whose `Screens` name it, and *reports* a shipped track no screen plays rather than failing on one.
+//   - **`Screens` in `data/music.json` is a pool.** A screen in this table either names one track of
+//     its pool or is a pool screen, which plays one track of it rolled per fight off
+//     `seeds.CombatMusic` and held for as long as the screen is up.
 package game

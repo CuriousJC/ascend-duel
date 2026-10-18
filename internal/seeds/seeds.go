@@ -186,6 +186,14 @@ const (
 	// **Its own stream rather than ActionTraits'**: sharing would make drinking the tonic reroll which
 	// traits every bundle's cards carry.
 	ActionUpgrades
+
+	// CombatMusic is which track of the combat pool in `data/music.json` a fight plays. Per fight:
+	// one draw, so a resumed run or a retried fight plays the same track.
+	//
+	// **Its own stream although it decides nothing about the game**: sharing any fight stream would
+	// make a deal or a roll a function of how many tracks the pool holds, so adding a track to
+	// `music.json` would reroll every fight of every run.
+	CombatMusic
 )
 
 // stream is what the package knows about each one. A table rather than four switch statements,
@@ -231,6 +239,7 @@ var streams = [...]stream{
 	ActionStock:    {name: "action-stock", salt: 0x5EED_AC70, perFight: true},
 	ActionTraits:   {name: "action-traits", salt: 0x5EED_AC7A, perFight: true},
 	ActionUpgrades: {name: "action-upgrades", salt: 0x5EED_AC79, perFight: true},
+	CombatMusic:    {name: "combat-music", salt: 0x5EED_3051, perFight: true},
 }
 
 // fightStride separates one fight's seed from the next within a run. A large odd number so

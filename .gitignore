@@ -61,20 +61,19 @@ analysis.md
 # commit that changed nothing about it is pure history weight. tools/glyphsheet already commits
 # its picture for the review-diff reason; this is the same trade taken wider.
 
-# The music loops. **Kept out of git and synced from a private S3 bucket instead** — see
-# privateassets/README.md, which is where the arrangement is described.
+# The game-ready sounds. **Kept out of git and synced from a private S3 bucket instead** — see
+# privateassets/README.md, which is where the arrangement is described, and data/music.json, which
+# is the committed record of what they are.
 #
-# **manifest.json is committed and is load-bearing twice over.** It is the checksum list, and it
-# is also what keeps `audio/` real: `//go:embed audio` is resolved at compile time, and a pattern
-# matching nothing is a build error, so without it a clean clone would fail to *build* rather
-# than merely play silent.
+# **audio/README.md is committed because it keeps `audio/` real**: `//go:embed audio` is resolved
+# at compile time, and a directory with nothing embeddable in it is a build error, so without it a
+# clean clone would fail to *build* rather than merely play silent.
 #
 # **Ignore the entries, not the directory.** git cannot re-include anything under an excluded
-# parent, so `/privateassets/audio/` followed by a negation would silently keep the manifest out
-# as well. The trailing `*` excludes the entries instead, which is what makes the `!` line work.
+# parent, so `/privateassets/audio/` followed by a negation would silently keep the README out as
+# well. The trailing `*` excludes the entries instead, which is what makes the `!` line work.
 # Verify with `git check-ignore -v` on one of each.
 /privateassets/audio/*
-!/privateassets/audio/manifest.json
-!/privateassets/audio/bundle-names.txt
+!/privateassets/audio/README.md
 # The management scripts beside it are committed; this machine's own paths and bucket are not.
 /privateassets/mgmt/local.psd1

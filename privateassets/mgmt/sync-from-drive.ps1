@@ -1,10 +1,15 @@
-# Mirrors <SourcePath>\sounds into privateassets/audio/, then rewrites the manifest.
+# Mirrors <SourcePath>\game-ready into privateassets/audio/, then records each file's hash in
+# data/music.json.
 #
 #   powershell -File privateassets/mgmt/sync-from-drive.ps1 [-SourcePath <ascend_assets folder>]
 #
-# The source is the truth and audio/ is a mirror of it: one folder per pack plus
-# bundle-names.txt, and a file removed or renamed at the source is deleted here. manifest.json is
-# the one thing in audio/ the source does not hold, and /XF keeps the mirror from deleting it.
+# game-ready\ is the source and audio/ is a mirror of it: one flat folder of exactly the tracks
+# data/music.json names, built by build-game-ready.ps1. A file removed or renamed there is deleted
+# here. The library, <SourcePath>\sounds\, never reaches the repository.
+#
+# README.md is the one file in audio/ that game-ready does not hold. It is committed, because
+# `//go:embed audio` fails to compile on a directory that is not there, and /XF keeps the mirror
+# from deleting it.
 
 param([string]$SourcePath = '')
 
@@ -13,16 +18,15 @@ $ErrorActionPreference = 'Stop'
 
 $cfg = Read-LocalConfig
 $SourcePath = Resolve $SourcePath $cfg 'SourcePath' -Required
-$source = Join-Path $SourcePath 'sounds'
+$source = Join-Path $SourcePath 'game-ready'
 
 if (-not (Test-Path $source)) {
-    throw "no sound packs at $source"
+    throw "no game-ready folder at $source; build it with build-game-ready.ps1"
 }
 
 # /MIR deletes whatever the source no longer holds. /XF names files the mirror neither copies nor
-# deletes: desktop.ini is Drive's folder metadata, and manifest.json is the committed record
-# that -write rebuilds below.
-robocopy $source $AudioDir /MIR /XF desktop.ini manifest.json /NP /NJH /NJS
+# deletes: desktop.ini is Drive's folder metadata, README.md is the committed placeholder.
+robocopy $source $AudioDir /MIR /XF desktop.ini README.md /NP /NJH /NJS
 # robocopy's exit code is a bitmask and anything under 8 is success.
 if ($LASTEXITCODE -ge 8) {
     throw "robocopy failed with exit code $LASTEXITCODE"
@@ -36,3 +40,7 @@ try {
 } finally {
     Pop-Location
 }
+
+# The status of every track, so a record with nothing built yet is not forgotten.
+Write-Host ''
+& (Join-Path $PSScriptRoot 'build-game-ready.ps1') -SourcePath $SourcePath

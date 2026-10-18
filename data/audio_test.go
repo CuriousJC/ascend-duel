@@ -8,7 +8,7 @@ func TestTheAudioCatalogsLoad(t *testing.T) {
 		t.Fatal("music.json names no track")
 	}
 	for _, cue := range SoundCues {
-		if cat.CueSound(cue) == "" {
+		if len(cat.CueSounds(cue)) == 0 {
 			t.Logf("no sound plays on the cue %q", cue)
 		}
 	}
@@ -41,9 +41,6 @@ func TestTheAudioCatalogsRefuseWhatWouldShipWrong(t *testing.T) {
 		sound(`{"File": "s.mid", "Pack": "p", "Source": "p/s.mid", "Cues": []}`))
 	refused(t, "a cue the game does not raise", packs, okMusic,
 		sound(`{"File": "s.ogg", "Pack": "p", "Source": "p/s.wav", "GainDB": 0, "Quality": 6, "Cues": ["relic-tost"]}`))
-	refused(t, "a cue claimed twice", packs, okMusic, `[`+
-		`{"File": "s.ogg", "Pack": "p", "Source": "p/s.wav", "GainDB": 0, "Quality": 6, "Cues": ["relic-toast"]},`+
-		`{"File": "t.ogg", "Pack": "p", "Source": "p/t.wav", "GainDB": 0, "Quality": 6, "Cues": ["relic-toast"]}]`)
 	refused(t, "a name in both catalogs", packs, okMusic,
 		sound(`{"File": "m.ogg", "Pack": "p", "Source": "p/m2.wav", "GainDB": 0, "Quality": 6, "Cues": []}`))
 	refused(t, "a credited pack nothing comes from",

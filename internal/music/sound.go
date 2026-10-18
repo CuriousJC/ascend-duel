@@ -37,8 +37,12 @@ const soundCeiling = 0.6
 const maxLiveSounds = 16
 
 var (
-	// cuePCM is each cue's sound, decoded once at the game's rate.
-	cuePCM = map[string][]byte{}
+	// cuePCM is each cue's sounds, decoded once at the game's rate, in the order they were loaded.
+	cuePCM = map[string][][]byte{}
+
+	// cueTurn is which of a cue's sounds plays next. **Turns rather than a roll**: what a player
+	// hears may never spend a stream, and four sounds in rotation already never repeat back to back.
+	cueTurn = map[string]int{}
 
 	// liveSounds are the effects still playing, held so the garbage collector cannot stop them —
 	// the same reason the score's player is held at package level.
@@ -49,15 +53,12 @@ var (
 	soundLevel float64
 )
 
-// LoadCue decodes one effect and files it under a cue. `file` is the sound's filename, whose
-// extension picks the decoder. A second sound for a cue is refused by data.ParseAudio before it
-// gets here, so the first one in wins.
+// LoadCue decodes one effect and files it under a cue, after any already filed there — a cue with
+// several sounds plays them in turn, in loading order. `file` is the sound's filename, whose
+// extension picks the decoder.
 //
 // Errors are worth reporting and never worth quitting over, exactly as LoadTrack's are.
 func LoadCue(cue, file string, raw []byte) error {
-	if _, taken := cuePCM[cue]; taken {
-		return nil
-	}
 	ext := strings.ToLower(filepath.Ext(file))
 	decode, known := decoders[ext]
 	if !known {
@@ -74,18 +75,21 @@ func LoadCue(cue, file string, raw []byte) error {
 	if audio.CurrentContext() == nil {
 		audio.NewContext(sampleRate)
 	}
-	cuePCM[cue] = pcm
+	cuePCM[cue] = append(cuePCM[cue], pcm)
 	return nil
 }
 
-// PlayCue plays the cue's sound once, over everything else. **A cue with no sound is silence**,
-// and so is a level of zero: neither is an error, since a build without the sounds is a build.
+// PlayCue plays the cue's next sound once, over everything else. **A cue with no sound is
+// silence**, and so is a level of zero: neither is an error, since a build without the sounds is a
+// build. A silent play does not take a turn.
 func PlayCue(cue string) {
-	pcm := cuePCM[cue]
+	sounds := cuePCM[cue]
 	ctx := audio.CurrentContext()
-	if pcm == nil || ctx == nil || soundLevel == 0 {
+	if len(sounds) == 0 || ctx == nil || soundLevel == 0 {
 		return
 	}
+	pcm := sounds[cueTurn[cue]%len(sounds)]
+	cueTurn[cue]++
 	pruneSounds()
 	if len(liveSounds) >= maxLiveSounds {
 		return

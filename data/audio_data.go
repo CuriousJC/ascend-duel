@@ -34,7 +34,8 @@ package data
 // **`Screens` is the pool a track may play in**, named as `state.ActiveScreen.String` writes them
 // and checked there, since `data` cannot see that vocabulary. **`Cues` is a closed vocabulary that
 // lives here**, `SoundCues`, because a cue is a name the screens raise and this file is the one
-// place both sides can read.
+// place both sides can read. **A cue may be answered by several sounds**, and plays them in turn in
+// this file's order — variety without a roll, so no stream is spent on what a player hears.
 
 import (
 	"bytes"
@@ -126,10 +127,13 @@ const (
 	// CueRelicToast is a worn relic toasting in a fight: firing into a hit's arithmetic, or as a
 	// hand is dealt. Once per relic per toast.
 	CueRelicToast = "relic-toast"
+
+	// CueGoodOpened is a sealed good bought off the shop's shelf and opened.
+	CueGoodOpened = "good-opened"
 )
 
 // SoundCues is every cue there is.
-var SoundCues = []string{CueRelicToast}
+var SoundCues = []string{CueRelicToast, CueGoodOpened}
 
 // MusicExts is what a track can be: MP3, Ogg Vorbis and WAV, which Ebitengine decodes, and MIDI,
 // which internal/music synthesizes. privateassets.audioExts and music.decoders take the same set.
@@ -155,14 +159,15 @@ func (c *AudioCatalog) Each(fn func(dir string, f *AudioFile)) {
 	}
 }
 
-// CueSound is the sound a cue plays, by name, or "" for a cue nothing is filed under.
-func (c AudioCatalog) CueSound(cue string) string {
+// CueSounds is every sound a cue plays, by name, in file order — the order they take turns in.
+func (c AudioCatalog) CueSounds(cue string) []string {
+	var names []string
 	for _, s := range c.Sounds {
 		if slices.Contains(s.Cues, cue) {
-			return s.Name()
+			names = append(names, s.Name())
 		}
 	}
-	return ""
+	return names
 }
 
 // LoadAudio parses the three embedded catalogs.
@@ -178,7 +183,7 @@ func LoadAudio() AudioCatalog { return ParseAudio(audioPacksJSON, musicJSON, sou
 // a pack every record can find, and every credited pack shipping something. Per record, it refuses
 // a file the game cannot play, a file in a folder, a source outside its pack's folder, a gain
 // missing or misplaced, a quality missing, misplaced or off the scale, an encode to anything but
-// Ogg, a MIDI effect, a cue the game does not raise, and a cue claimed by two sounds.
+// Ogg, a MIDI effect, and a cue the game does not raise.
 func ParseAudio(packsRaw, musicRaw, soundsRaw []byte) AudioCatalog {
 	var cat AudioCatalog
 	strict("audio_packs.json", packsRaw, &cat.Packs)
@@ -210,16 +215,11 @@ func ParseAudio(packsRaw, musicRaw, soundsRaw []byte) AudioCatalog {
 		used[f.Pack] = true
 	})
 
-	cued := map[string]string{}
 	for _, s := range cat.Sounds {
 		for _, cue := range s.Cues {
 			if !slices.Contains(SoundCues, cue) {
 				panic(fmt.Sprintf("sounds.json: %s plays on %q, which is no cue (%v)", s.Name(), cue, SoundCues))
 			}
-			if other, taken := cued[cue]; taken {
-				panic(fmt.Sprintf("sounds.json: %s and %s both play on %q; a cue plays one sound", other, s.Name(), cue))
-			}
-			cued[cue] = s.Name()
 		}
 	}
 

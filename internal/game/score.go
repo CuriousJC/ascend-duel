@@ -34,7 +34,7 @@ package game
 //
 // # Every screen is listed
 //
-// **The table names all of them, including the ones that take music.Score.** This file is the
+// **The table names all of them, including the ones that take music.Default.** This file is the
 // answer to "what plays where", and a screen answered by a zero value is a screen this page does
 // not mention — which is how the score came to be the music on nearly every screen and the one
 // piece not written down anywhere near the decision. A screen missing from the table still gets
@@ -70,7 +70,7 @@ type tune struct {
 
 // The loops, by the names they are loaded under. A track's name is its filename stem, so these
 // are the tracks data/music.json names, and a screen may only play a track whose `Screens` there
-// list it — TestEveryTrackPlaysWhereItMay holds the two together. music.Score is named by
+// list it — TestEveryTrackPlaysWhereItMay holds the two together. music.Default is named by
 // internal/music.
 const (
 	darkFantasy01 = "dark-fantasy-01"
@@ -82,22 +82,25 @@ const (
 )
 
 var screenTunes = map[state.ActiveScreen]tune{
-	state.Title: {track: music.Score},
+	// The title shares the fight's pool, drawn for the run it would continue — so Continue walks
+	// into a fight already playing its track. The studio splash, before this table, plays the
+	// default — started by the loader in main.go.
+	state.Title: {pool: true},
 
 	// A fight plays one track of its pool, the same one for the whole fight and for a retry of it.
 	state.Combat: {pool: true},
 
-	state.PostBattle: {track: music.Score},
+	state.PostBattle: {track: darkFantasy01},
 	state.Shop:       {track: darkFantasy01},
-	state.RunOver:    {track: music.Score},
-	state.Portal:     {track: music.Score},
-	state.Victory:    {track: music.Score},
+	state.RunOver:    {pool: true},
+	state.Portal:     {pool: true},
+	state.Victory:    {track: music.Default},
 
-	// The screen a panic ends on. **The score rather than {keep: true}**, which would leave the
+	// The screen a panic ends on. **The default rather than {keep: true}**, which would leave the
 	// shop's loop playing over a crash report — a destination like RunOver, not an overlay the
 	// player came to and will go back from. There is nothing to be transparent *to*: whatever
 	// was happening is over.
-	state.Crashed: {track: music.Score},
+	state.Crashed: {track: music.Default},
 
 	// Opened from anywhere, and back where they came from. See the note above.
 	state.Settings:     {keep: true},
@@ -132,7 +135,7 @@ var musicPools = func() map[string][]string {
 func poolPick(screen state.ActiveScreen, runSeed int64, fight int) string {
 	pool := musicPools[screen.String()]
 	if len(pool) == 0 {
-		return music.Score
+		return music.Default
 	}
 	rng := rand.New(rand.NewSource(seeds.ForFight(runSeed, seeds.CombatMusic, fight)))
 	return pool[rng.Intn(len(pool))]
@@ -154,7 +157,7 @@ func (g *Game) updateScore() {
 	case !listed:
 		// A screen nobody added to the table. The score rather than silence, and rather than
 		// whatever the screen before it happened to be playing.
-		music.PlayTrack(music.Score)
+		music.PlayTrack(music.Default)
 	case t.keep:
 	case t.pool:
 		if entered {

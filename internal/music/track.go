@@ -24,15 +24,16 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/audio/wav"
 )
 
-// Score is what the synthesized score is called.
+// Default is the default music: the synthesized score, `duello.mid`, which plays wherever a
+// screen names it and wherever a named track was never loaded. The constant says what it is for;
+// its value is the file's stem.
 //
-// **A name rather than the empty string**, because "the music that plays nearly everywhere" is
-// the most important entry in `internal/game`'s screen table and it was the one entry that could
-// not be written down there. A zero value standing for a real thing is the pattern this project
+// **A name rather than the empty string**, because the fallback is an entry in `internal/game`'s
+// screen table like any other and has to be possible to write down there. A zero value standing for a real thing is the pattern this project
 // rejects everywhere else — a run seed of zero is the run 000000 rather than "unset".
 //
 // It is not a loadable name: LoadTrack refuses it, so nothing can take the score's seat.
-const Score = "duello"
+const Default = "duello"
 
 // tracks holds every loaded loop by name. Package state beside `player` and `level`, for the
 // reason `player` is: an audio.Player carries a finalizer that stops playback, so one the
@@ -42,7 +43,7 @@ var tracks = map[string]*audio.Player{}
 // current names what is sounding, and starts at the score because the score starts playing.
 // **There is no "nothing" state**: something is always sounding unless the device failed to
 // open, and a separate name for silence would be a second way of saying the volume is zero.
-var current = Score
+var current = Default
 
 // stream is what the three decoders have in common: bytes to read, and a length to loop at.
 // Each package returns its own *Stream type, so the dispatch below needs a shape rather than a
@@ -87,7 +88,7 @@ func LoadTrack(file string, w []byte) error {
 	ext := strings.ToLower(filepath.Ext(file))
 	name := strings.TrimSuffix(file, filepath.Ext(file))
 
-	if name == Score {
+	if name == Default {
 		return fmt.Errorf("music: %q is the synthesized score and cannot be loaded over", name)
 	}
 	decode, known := decoders[ext]
@@ -120,7 +121,7 @@ func LoadTrack(file string, w []byte) error {
 	return nil
 }
 
-// PlayTrack switches to a loaded track, or to the synthesized score when handed Score.
+// PlayTrack switches to a loaded track, or to the synthesized score when handed Default.
 //
 // **Safe to call every frame**, which is what lets the caller be a table read off the active
 // screen rather than a pair of hooks on entering and leaving one. A screen that has just
@@ -135,8 +136,8 @@ func LoadTrack(file string, w []byte) error {
 // argument SetLevel is under, that a track which kept running puts you where the music would
 // have got to. A track belongs to a *place*, so arriving there should start it.
 func PlayTrack(name string) {
-	if _, ok := tracks[name]; name != Score && !ok {
-		name = Score
+	if _, ok := tracks[name]; name != Default && !ok {
+		name = Default
 	}
 	if name == current {
 		return
@@ -152,7 +153,7 @@ func PlayTrack(name string) {
 	if next == nil {
 		return
 	}
-	if name != Score {
+	if name != Default {
 		if err := next.Rewind(); err != nil {
 			// Not worth stopping for: a loop that failed to rewind plays from wherever it was,
 			// which is music rather than silence.
@@ -163,13 +164,13 @@ func PlayTrack(name string) {
 	next.Play()
 }
 
-// Playing reports what is sounding, by name. Score is the synthesized one.
+// Playing reports what is sounding, by name. Default is the synthesized one.
 func Playing() string { return current }
 
 // sounding is the player behind `current`. It is nil when the audio device never opened, which
 // every caller has to survive — see Available.
 func sounding() *audio.Player {
-	if current == Score {
+	if current == Default {
 		return player
 	}
 	return tracks[current]

@@ -45,6 +45,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/models"
+	"github.com/curiousjc/ascend-duel/internal/music"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
@@ -269,7 +270,7 @@ var animGestures = []animGesture{
 	{
 		name:  "intercept",
 		where: "drawIntercept, combat_intercept.go",
-		what:  "A hit and the shield that stops it meeting in the middle and breaking apart. A matched block writes SURGE over the break; a fizzle writes FIZZLE.",
+		what:  "A hit and the shield that stops it meeting in the middle and breaking apart. A block writes BLOCK over the break, a matched one SURGE; a fizzle writes FIZZLE.",
 		ticks: interceptGalleryTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
 			drawInterceptGallery(gs, screen, at, s.t.Age)
@@ -570,6 +571,11 @@ func (s *AnimationsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		animTitleSize, ui.GroundInk)
 	animText(gs, screen, "jade: the game uses it  -  carnelian: defined, not used",
 		gs.PctX(animListLeftPct), gs.PctY(animTitleTopPct)+animLegendOffset, animNoteSize, animStageInk)
+
+	// What is sounding, read every frame. This screen keeps whatever music the one before it was
+	// playing, so it is the one place a loop can be heard and named without guessing.
+	animText(gs, screen, "music: "+music.Playing(), gs.PctX(animStageLeftPct), gs.PctY(animListTopPct),
+		animNoteSize, animStageInk)
 
 	for _, b := range s.rows {
 		systems.DrawButton(gs, screen, b)

@@ -90,7 +90,10 @@ func (s *CombatScene) raiseScrolls(gs *state.GlobalState) {
 				continue
 			}
 			other.scrolled = true
-			stack = append(stack, other.items...)
+			// **A silent line has no scroll**: a card whose every hit comes to 0 unrolls nothing.
+			if !other.silent {
+				stack = append(stack, other.items...)
+			}
 		}
 		if len(stack) == 0 {
 			continue

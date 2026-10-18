@@ -33,6 +33,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/models"
+	"github.com/curiousjc/ascend-duel/internal/music"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
@@ -888,6 +889,7 @@ func (s *ShopScene) openGood(gs *state.GlobalState, key string) {
 	gs.Journal.Write(journal.Record{Kind: journal.KindGood, Key: key, Amount: gs.Run.Price(good.Price)})
 
 	openGoods(gs, key)
+	music.PlayCue(data.CueGoodOpened)
 
 	trace.Logf("shop", "opened %s, %d vitae left", good.Name, gs.Run.Vitae())
 }

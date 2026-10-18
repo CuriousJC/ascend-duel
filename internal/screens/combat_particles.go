@@ -132,7 +132,7 @@ func (s *CombatScene) raiseWraps(gs *state.GlobalState) {
 				continue
 			}
 			other.wrapped = true
-			if other.unthrown || len(other.items) == 0 {
+			if other.unthrown || other.silent || len(other.items) == 0 {
 				continue
 			}
 			stack = append(stack, other.items...)

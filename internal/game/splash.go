@@ -5,8 +5,10 @@ package game
 // **It is the frame's rather than a scene's**, because it plays before there is anything a scene
 // could be handed: the catalogs, the profile's unlocks and the run are being built on another
 // goroutine while it draws. So it is not in the registry and has no ActiveScreen, and while it is
-// up Update and Draw do nothing else — no chrome, no score, no journal, no watcher — which is what
-// keeps the loader the only thing touching the state until it has finished.
+// up Update and Draw do nothing else — no chrome, no score table, no journal, no watcher — which is
+// what keeps the loader the only thing touching the state until it has finished. **The music under
+// the splash is the default**, music.Default, started by the loader as its first job; score.go
+// takes over once the splash is down.
 //
 // The sequence is dark, a flicker, the bulb lit with the logo for splashLitTicks, and a fade to
 // black. **The fade waits for the loader**: a slow machine holds the lit frame, with the light
@@ -68,7 +70,7 @@ type splash struct {
 	loaded chan struct{}
 
 	// after runs on the game's goroutine once the fade is over — what the loader could not do
-	// from its own, such as starting the music.
+	// from its own. Nil is nothing to do.
 	after func()
 
 	// fadeFrom is the tick the fade to black began on, or zero before it has.

@@ -25,7 +25,7 @@ import (
 func realScore(t *testing.T) []byte {
 	t.Helper()
 	tracks, _ := privateassets.Audio()
-	raw := tracks[Score+".mid"]
+	raw := tracks[Default+".mid"]
 	if raw == nil {
 		t.Skip("duello.mid is not synced into privateassets/audio/music/; see the sounds skill")
 	}
@@ -265,10 +265,10 @@ func TestAnUnloadedTrackFallsBackToTheScore(t *testing.T) {
 	was := current
 	t.Cleanup(func() { current = was })
 
-	current = Score
+	current = Default
 	PlayTrack("a-track-nobody-loaded")
 
-	if got := Playing(); got != Score {
-		t.Fatalf("an unloaded track should leave the score playing; Playing() = %q, want %q", got, Score)
+	if got := Playing(); got != Default {
+		t.Fatalf("an unloaded track should leave the score playing; Playing() = %q, want %q", got, Default)
 	}
 }

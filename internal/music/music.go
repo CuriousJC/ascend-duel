@@ -21,7 +21,8 @@ const fullVolume = 0.35
 // local variable falls silent at an unpredictable moment after Start returns.
 var player *audio.Player
 
-// Start decodes the given Standard MIDI File, renders it, and begins looping it.
+// Start decodes the given Standard MIDI File, renders it, and begins looping it — unless a track
+// is already what is playing, in which case it is ready for PlayTrack(Default) and silent until then.
 //
 // It is safe to call more than once; the second call does nothing. Errors are worth
 // reporting but never worth quitting over — a machine with no sound device should
@@ -51,7 +52,12 @@ func Start(midi []byte) error {
 		return fmt.Errorf("music: opening the audio device: %w", err)
 	}
 	p.SetVolume(level * fullVolume)
-	p.Play()
+
+	// **Only if it is what should be sounding.** A screen may have put a track on before the
+	// score finished rendering, and the score then waits its turn like any other.
+	if current == Default {
+		p.Play()
+	}
 
 	player = p
 	return nil

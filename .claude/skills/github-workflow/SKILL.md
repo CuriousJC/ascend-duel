@@ -51,6 +51,36 @@ the branch name never reaches `main`'s history at all** — the PR title becomes
 
 ## Opening a PR
 
+**Never open a PR that is known to break a build** *(owner's call)*. That covers a red test, and it
+covers the one break the test suite cannot see: **the sounds**. A release fetches
+`s3://<bucket>/game-ready/` and `tools/privateassets -require` refuses a build whose committed
+`data/music.json` or `data/sounds.json` does not match it exactly — so a PR that adds, changes or
+removes a sound passes CI and still breaks the next release unless the bucket holds that set.
+
+**So if the branch touches either catalog** (`git diff --name-only origin/main...HEAD -- data/music.json data/sounds.json`
+is not empty, or the working tree changes them), **run both checks before opening the PR**:
+
+```powershell
+go run ./tools/privateassets -require          # privateassets/audio/ matches the catalogs
+$cfg = Import-PowerShellDataFile privateassets/mgmt/local.psd1
+$a = @('s3','sync',"$($cfg.SourcePath)\game-ready","s3://$($cfg.Bucket)/game-ready/",
+       '--delete','--exclude','*desktop.ini','--dryrun')
+if ($cfg.AwsProfile) { $a += @('--profile',$cfg.AwsProfile) }
+& aws @a                                        # must print nothing: the bucket matches game-ready
+```
+
+- **Both must be clean**: `-require` passing says the repo matches `game-ready/`, and an empty
+  dry run says the bucket does. Together they say the bucket matches the catalogs being committed.
+- **Any `(dryrun) upload` or `delete` line refuses the PR.** Stop, say which files differ, and ask
+  the owner to run `privateassets/mgmt/push-sounds.ps1` — the `sounds` skill's push; pushing to the
+  bucket is the owner's step unless they ask for it to be run. Open the PR once the dry run is empty.
+- **The dry run only reads.** It is safe to run without asking.
+- **A credential failure is not a pass.** If `aws` cannot reach the bucket, the PR waits and the
+  reply says so.
+- **Merge it promptly once it is open.** The bucket is the current set rather than a history, so
+  from the push until the merge `main` is the one out of step: a release cut from `main` in that
+  window is refused for holding a file its catalogs do not name.
+
 Use `gh`. The **PR description is the artefact that lasts** — the branch name is discarded
 by the squash and the title becomes the commit subject, so the body is the only place the
 reasoning survives.

@@ -1,52 +1,45 @@
-// Command privateassets reads privateassets/audio/ and its manifest, and reports, records or
+// Command privateassets holds privateassets/audio/ against data/music.json, and reports, records or
 // enforces what is in there.
 //
 //	go run ./tools/privateassets            # report: what is present, what matches, what is missing
-//	go run ./tools/privateassets -write     # rewrite manifest.json from what is on disk
-//	go run ./tools/privateassets -require   # exit non-zero unless every manifested file is present and attributed
+//	go run ./tools/privateassets -write     # record each game-ready file's Bytes and SHA256 in music.json
+//	go run ./tools/privateassets -require   # exit non-zero unless the directory is exactly what music.json names
 //
 // # Why it exists
 //
-// privateassets/ holds the music loops, which are not in git — they are synced from a private
-// bucket instead. That buys a problem the rest of the catalog does not have — **the thing being shipped is not the
-// thing being reviewed.** A picture is in the diff; a sound is on whichever machine synced the
-// bundle last, and an audio file is the one asset where "is this the file I think it is" cannot
-// be answered by looking at it.
+// The audio is not in git — it is built into a game-ready folder outside the repository, mirrored
+// into privateassets/audio/ and synced from a private bucket. That buys a problem the rest of the
+// catalog does not have — **the thing being shipped is not the thing being reviewed.** A picture is
+// in the diff; a sound is on whichever machine synced last, and an audio file is the one asset where
+// "is this the file I think it is" cannot be answered by looking at it.
 //
-// So the manifest is the reviewable artefact, and this is what keeps it honest in both
-// directions: -write records what a build machine has, and -require refuses a build against
-// anything else.
+// So data/music.json is the reviewable artefact, and this is what keeps it honest in both
+// directions: -write records what a machine built, and -require refuses a build against anything
+// else.
 //
-// # The three things -require refuses, and why each one is worth a failed release
+// # What -require refuses, and why each one is worth a failed release
 //
-//   - **A file the manifest names and the directory does not hold.** This is the silent failure
-//     the whole arrangement exists to prevent: the game builds fine without its sounds, so a
-//     release cut on a machine that never synced the bundle ships quiet and nothing goes red.
-//   - **A file whose bytes do not hash to what the manifest recorded.** The bucket is a mirror of
-//     the Drive folder and the manifest is committed, so a mismatch is a push nobody committed
-//     the manifest for, or a manifest committed with nothing pushed — either way the release
-//     would ship sounds nobody reviewed.
-//   - **A file belonging to no pack.** A pack is the batch a file arrived in, and it is the only
-//     thing the manifest says about where a file came from — so a file in no pack is one nothing
-//     can be traced back through.
+//   - **A track music.json names and the directory does not hold.** The game builds fine without its
+//     sounds, so a release cut on a machine that never synced ships quiet and nothing goes red.
+//   - **A file whose bytes do not hash to what music.json recorded**, or a track never recorded at
+//     all. The bucket is the current set, so a mismatch is a file re-made and pushed with nobody
+//     committing its record, or a record committed with nothing pushed — either way the release
+//     would ship a sound nobody reviewed.
+//   - **A file music.json does not name**, or one in a folder. Only what the catalog names is
+//     game-ready, and the embed would compile anything in the directory into the binary.
 //
-// # A folder is a pack
+// Everything about a record itself — a pack nobody credits, a missing gain — is refused by
+// data.ParseMusic, which the game's own tests read through, so the tool and the game agree.
 //
-// **A file filed under `audio/<pack>/` belongs to that pack**, and -write records it so without
-// being told; a manifest entry naming a different pack from the folder it sits in is refused. A
-// file at the top of audio/ has no folder to say where it came from, so its Pack is still set by
-// hand. The folder never reaches a track's name — see privateassets.Audio.
-//
-// An **empty** manifest passes -require, deliberately. "This game has no sound effects yet" is a
-// true state and was the state for the whole of its development; a tool that failed on it would
-// have to be disabled to be adopted.
+// An **empty** catalog with an empty directory passes, deliberately: a game with no sound is a true
+// state, and a tool that failed on it would have to be disabled to be adopted.
 //
 // # What it deliberately does not do
 //
-// **It does not talk to S3.** Syncing is `aws s3 sync`, which is one line, already installed on
-// both runners and on any machine with credentials, and wrapping it would mean an AWS SDK in
-// go.mod for a job a CLI already does. This tool reads a directory and hashes files; it holds no
-// credentials and opens no socket, which is what makes it safe to run in any context.
+// **It does not talk to S3 and it does not convert.** Syncing is `aws s3 sync` and converting is
+// ffmpeg, both driven from privateassets/mgmt/. This tool reads a directory, hashes files and
+// writes one JSON file; it holds no credentials and opens no socket, which is what makes it safe to
+// run in any context.
 package main
 
 import (
@@ -61,46 +54,26 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/curiousjc/ascend-duel/data"
 )
 
 // dir is the directory this tool is about, relative to the repository root, which is where every
 // tool in this repo is run from.
 const dir = "privateassets/audio"
 
-// manifestName sits inside dir and is committed; see privateassets/README.md.
-const manifestName = "manifest.json"
+// catalogPath is the record of what dir should hold.
+const catalogPath = "data/music.json"
 
-// audioExts is the set of extensions the game can actually decode. It matches the filter in
-// privateassets.Audio and the two have to stay in step: a file this tool records and the
-// loader skips would be a manifested sound that is not in the binary.
-var audioExts = map[string]bool{".ogg": true, ".wav": true, ".mp3": true, ".mid": true}
-
-// Manifest is the committed record of what the bundle holds.
-type Manifest struct {
-	Packs []Pack `json:"Packs"`
-	Files []File `json:"Files"`
-}
-
-// Pack is where a file came from — one batch, named. Nothing beyond the name is recorded here:
-// a file belongs to a pack, and that is the whole of what the manifest says about its origin.
-type Pack struct {
-	Name string `json:"Name"`
-	Note string `json:"Note,omitempty"`
-}
-
-// File is one shipped sound. Name is its path under the directory, slash-separated and extension
-// included — `dark-fantasy/dark-fantasy-01.wav` — because the loader keys by stem but the
-// manifest is about files on disk.
-type File struct {
-	Name   string `json:"Name"`
-	Pack   string `json:"Pack"`
-	Bytes  int64  `json:"Bytes"`
-	SHA256 string `json:"SHA256"`
+// onDisk is one decodable file found in dir.
+type onDisk struct {
+	bytes  int64
+	sha256 string
 }
 
 func main() {
-	write := flag.Bool("write", false, "rewrite manifest.json from what is on disk, preserving pack attributions")
-	require := flag.Bool("require", false, "exit non-zero unless every manifested file is present, matching and attributed")
+	write := flag.Bool("write", false, "record each game-ready file's Bytes and SHA256 in music.json")
+	require := flag.Bool("require", false, "exit non-zero unless the directory is exactly what music.json names")
 	flag.Parse()
 
 	if *write && *require {
@@ -108,61 +81,46 @@ func main() {
 		os.Exit(2)
 	}
 
-	man, err := readManifest()
+	raw, err := os.ReadFile(catalogPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "reading %s: %v\n", filepath.Join(dir, manifestName), err)
+		fmt.Fprintf(os.Stderr, "reading %s: %v\n", catalogPath, err)
 		os.Exit(1)
 	}
+	cat := data.ParseMusic(raw)
 
-	onDisk, err := scan()
+	found, err := scan()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "reading %s: %v\n", dir, err)
 		os.Exit(1)
 	}
 
 	if *write {
-		if err := rewrite(man, onDisk); err != nil {
-			fmt.Fprintf(os.Stderr, "writing %s: %v\n", filepath.Join(dir, manifestName), err)
+		if err := record(cat, found); err != nil {
+			fmt.Fprintf(os.Stderr, "writing %s: %v\n", catalogPath, err)
 			os.Exit(1)
 		}
 		return
 	}
 
-	problems := report(man, onDisk)
+	problems := report(cat, found)
 	if *require && len(problems) > 0 {
 		fmt.Fprintf(os.Stderr, "\n%d problem(s) with %s; refusing the build\n", len(problems), dir)
 		os.Exit(1)
 	}
 }
 
-// readManifest reads the committed manifest. A missing one is an error rather than an empty
-// manifest: the file is committed, so its absence means the directory is not what this tool
-// thinks it is, and inventing one would write a fresh manifest over whatever is actually wrong.
-func readManifest() (Manifest, error) {
-	var man Manifest
-	raw, err := os.ReadFile(filepath.Join(dir, manifestName))
-	if err != nil {
-		return man, err
-	}
-	dec := json.NewDecoder(bytes.NewReader(raw))
-	// An unknown field is a manifest written by a newer build, or a typo. Either way, reading it
-	// as if it were understood is how a field that was meant to say something gets silently
-	// dropped by the next -write.
-	dec.DisallowUnknownFields()
-	if err := dec.Decode(&man); err != nil {
-		return man, err
-	}
-	return man, nil
-}
-
-// scan hashes every decodable audio file under the directory, folders included. Anything else —
-// the README, the manifest, an original somebody left beside its converted copy — is not a
-// shipped sound and is skipped, exactly as privateassets.Audio skips it.
+// scan hashes every decodable audio file under the directory, keyed by its path under it. A file in
+// a folder is still found, so that it can be refused: game-ready is flat.
 //
-// **It skips what go:embed skips**: a name starting with `.` or `_`, file or folder, is not in
-// the binary, so recording it would manifest a sound that does not ship.
-func scan() (map[string]File, error) {
-	found := make(map[string]File)
+// **It skips what go:embed skips**: a name starting with `.` or `_`, file or folder, is not in the
+// binary. Anything that is not playable audio — the directory's README — is skipped as
+// privateassets.Audio skips it.
+func scan() (map[string]onDisk, error) {
+	found := make(map[string]onDisk)
+	exts := make(map[string]bool, len(data.MusicExts))
+	for _, e := range data.MusicExts {
+		exts[e] = true
+	}
 	err := filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -173,149 +131,107 @@ func scan() (map[string]File, error) {
 			}
 			return nil
 		}
-		if d.IsDir() || !audioExts[strings.ToLower(filepath.Ext(d.Name()))] {
+		if d.IsDir() || !exts[strings.ToLower(filepath.Ext(d.Name()))] {
 			return nil
 		}
 		rel, err := filepath.Rel(dir, p)
 		if err != nil {
 			return err
 		}
-		name := filepath.ToSlash(rel)
 		raw, err := os.ReadFile(p)
 		if err != nil {
 			return err
 		}
 		sum := sha256.Sum256(raw)
-		found[name] = File{
-			Name:   name,
-			Bytes:  int64(len(raw)),
-			SHA256: hex.EncodeToString(sum[:]),
-		}
+		found[filepath.ToSlash(rel)] = onDisk{bytes: int64(len(raw)), sha256: hex.EncodeToString(sum[:])}
 		return nil
 	})
 	return found, err
 }
 
-// folderPack is the pack a file's folder names, or "" for a file at the top of the directory.
-func folderPack(name string) string {
-	if i := strings.Index(name, "/"); i >= 0 {
-		return name[:i]
-	}
-	return ""
-}
-
-// rewrite records what is on disk. A file in a folder takes the folder as its pack; a file at the
-// top carries its existing Pack across, so that re-running this after a sync does not wipe the
-// attributions that are the point of the manifest. A top-level file new to the manifest has no
-// pack and is reported as such — it is the one thing this tool cannot work out for itself.
-//
-// **A pack a folder names and Packs does not describe is added**, with no Note, so -require
-// passes on it and the Note is left for whoever filed the batch to write.
-func rewrite(man Manifest, onDisk map[string]File) error {
-	packOf := make(map[string]string, len(man.Files))
-	for _, f := range man.Files {
-		packOf[f.Name] = f.Pack
-	}
-
-	names := make([]string, 0, len(onDisk))
-	for name := range onDisk {
-		names = append(names, name)
-	}
-	sort.Strings(names)
-
-	man.Files = nil
-	var unattributed []string
-	for _, name := range names {
-		f := onDisk[name]
-		f.Pack = folderPack(name)
-		if f.Pack == "" {
-			f.Pack = packOf[name]
+// record writes each present track's Bytes and SHA256 into music.json and leaves every other field
+// as it was. **A track whose file is absent keeps what it had**, so recording on a machine that has
+// only built some of the catalog does not wipe the rest. A file no record names is reported: a
+// record is authored first — it is what the file was built from — so this cannot invent one.
+func record(cat data.MusicCatalog, found map[string]onDisk) error {
+	named := make(map[string]bool, len(cat.Tracks))
+	changed := 0
+	for i, t := range cat.Tracks {
+		named[t.File] = true
+		got, ok := found[t.File]
+		if !ok {
+			continue
 		}
-		if f.Pack == "" {
-			unattributed = append(unattributed, name)
+		if t.Bytes != got.bytes || t.SHA256 != got.sha256 {
+			changed++
 		}
-		man.Files = append(man.Files, f)
-	}
-	if man.Files == nil {
-		// An empty list rather than null, so the committed file reads the same whether or not
-		// anything has been filed yet.
-		man.Files = []File{}
-	}
-	described := make(map[string]bool, len(man.Packs))
-	for _, p := range man.Packs {
-		described[p.Name] = true
-	}
-	for _, f := range man.Files {
-		if folder := folderPack(f.Name); folder != "" && !described[folder] {
-			described[folder] = true
-			man.Packs = append(man.Packs, Pack{Name: folder})
-		}
-	}
-	if man.Packs == nil {
-		man.Packs = []Pack{}
+		cat.Tracks[i].Bytes = got.bytes
+		cat.Tracks[i].SHA256 = got.sha256
 	}
 
-	raw, err := json.MarshalIndent(man, "", "  ")
-	if err != nil {
+	// No HTML escaping: a pack credited "Tao & Sound" is written as it reads, not as &.
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(cat); err != nil {
 		return err
 	}
-	if err := os.WriteFile(filepath.Join(dir, manifestName), append(raw, '\n'), 0o644); err != nil {
+	if err := os.WriteFile(catalogPath, buf.Bytes(), 0o644); err != nil {
 		return err
 	}
+	fmt.Printf("recorded %d track(s) in %s, %d changed\n", len(cat.Tracks), catalogPath, changed)
 
-	fmt.Printf("recorded %d file(s) in %s\n", len(man.Files), filepath.Join(dir, manifestName))
-	if len(unattributed) > 0 {
-		fmt.Printf("\n%d file(s) belong to no pack. Set their Pack field and describe the pack in Packs:\n", len(unattributed))
-		for _, name := range unattributed {
+	var stray []string
+	for name := range found {
+		if !named[name] {
+			stray = append(stray, name)
+		}
+	}
+	sort.Strings(stray)
+	if len(stray) > 0 {
+		fmt.Printf("\n%d file(s) in %s that no track names; a release refuses them:\n", len(stray), dir)
+		for _, name := range stray {
 			fmt.Printf("  %s\n", name)
 		}
-		fmt.Println("\nA release refuses to build until they are attributed.")
 	}
 	return nil
 }
 
 // report prints the state of the directory and returns one line per problem. The same reading
-// serves the bare run and -require, so what a developer is shown and what a release refuses
-// cannot drift apart.
-func report(man Manifest, onDisk map[string]File) []string {
-	packs := make(map[string]bool, len(man.Packs))
-	for _, p := range man.Packs {
-		packs[p.Name] = true
-	}
-
-	fmt.Printf("%s — %d file(s) manifested, %d present\n", dir, len(man.Files), len(onDisk))
+// serves the bare run and -require, so what a developer is shown and what a release refuses cannot
+// drift apart.
+func report(cat data.MusicCatalog, found map[string]onDisk) []string {
+	fmt.Printf("%s: %d track(s) in %s, %d file(s) present\n", dir, len(cat.Tracks), catalogPath, len(found))
 
 	var problems []string
-	seen := make(map[string]bool, len(man.Files))
-	for _, want := range man.Files {
-		seen[want.Name] = true
-		got, present := onDisk[want.Name]
+	named := make(map[string]bool, len(cat.Tracks))
+	for _, t := range cat.Tracks {
+		named[t.File] = true
+		got, present := found[t.File]
 		switch {
 		case !present:
-			problems = append(problems, fmt.Sprintf("%s: manifested but not present — sync the sound bundle", want.Name))
-		case got.SHA256 != want.SHA256:
-			problems = append(problems, fmt.Sprintf("%s: present, but its bytes are not the manifested ones", want.Name))
-		case folderPack(want.Name) != "" && want.Pack != folderPack(want.Name):
-			problems = append(problems, fmt.Sprintf("%s: names pack %q but is filed in the folder %q", want.Name, want.Pack, folderPack(want.Name)))
-		case want.Pack == "":
-			problems = append(problems, fmt.Sprintf("%s: belongs to no pack — nothing records where it came from", want.Name))
-		case !packs[want.Pack]:
-			problems = append(problems, fmt.Sprintf("%s: names pack %q, which Packs does not describe", want.Name, want.Pack))
+			problems = append(problems, fmt.Sprintf("%s: named but not present; sync the sounds", t.File))
+		case t.SHA256 == "":
+			problems = append(problems, fmt.Sprintf("%s: present and never recorded; run -write and commit music.json", t.File))
+		case got.sha256 != t.SHA256:
+			problems = append(problems, fmt.Sprintf("%s: present, but its bytes are not the recorded ones", t.File))
 		}
 	}
-	for name := range onDisk {
-		if !seen[name] {
-			problems = append(problems, fmt.Sprintf("%s: present but unmanifested — run -write, then record its pack", name))
+	for name := range found {
+		switch {
+		case strings.Contains(name, "/"):
+			problems = append(problems, fmt.Sprintf("%s: in a folder; game-ready is flat", name))
+		case !named[name]:
+			problems = append(problems, fmt.Sprintf("%s: present and named by no track in %s", name, catalogPath))
 		}
 	}
 
 	if len(problems) == 0 {
-		// An empty manifest reaches here too, and says so honestly rather than reporting a clean
-		// bill of health for a directory holding nothing.
-		if len(man.Files) == 0 {
-			fmt.Println("no sounds are manifested; the game builds and plays silent")
+		if len(cat.Tracks) == 0 {
+			fmt.Println("no tracks are named; the game builds and plays silent")
 		} else {
-			fmt.Println("every manifested file is present, matching and attributed")
+			fmt.Println("every named track is present and matches its record")
 		}
 		return nil
 	}

@@ -3,7 +3,7 @@ package ui
 // **The run's record, under the deck: the tonics it drank and what it has come to so far.**
 //
 // The grid is the deck the run has built, and the band under it is the rest of what the run chose
-// and did ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â so the panel a player opens to read their build answers "and what else is this run" in
+// and did — so the panel a player opens to read their build answers "and what else is this run" in
 // the same look. The tonics are cards, rested on for what each one does; the figures are the run's
 // own tally, the round being fought included.
 //
@@ -73,8 +73,8 @@ func drunkTonics(run *session.Session) []session.Tonic {
 	return out
 }
 
-// tonicSeats is where each drunk tonic's card sits. **They overlap rather than run off the band** ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â
-// the deck rows' rule ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â once there are more than the tonics' share holds side by side.
+// tonicSeats is where each drunk tonic's card sits. **They overlap rather than run off the band** —
+// the deck rows' rule — once there are more than the tonics' share holds side by side.
 func tonicSeats(band image.Rectangle, n int) []image.Rectangle {
 	st := deckRecordStyle()
 	pitch := st.Width + deckRecordTonicGap
@@ -143,7 +143,7 @@ func drawDeckRecord(gs *state.GlobalState, screen *ebiten.Image, d DeckContents)
 	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: deckRecordLineSize}
 	head := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: deckColumnHeadSize}
 
-	// The tonics, or a word saying there are none ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â a blank band reads as a band that failed to draw.
+	// The tonics, or a word saying there are none — a blank band reads as a band that failed to draw.
 	drawRecordText(screen, "TONICS", head, band.Min.X, band.Min.Y, deckColumnFadedInk)
 	tonics := drunkTonics(d.Run)
 	if len(tonics) == 0 {

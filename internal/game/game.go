@@ -22,6 +22,13 @@ var ErrClosing = errors.New("closing")
 type Game struct {
 	GlobalState *state.GlobalState
 
+	// scoreScreen is the screen updateScore last ran on, and scoreStarted whether it has run at all,
+	// so a pool screen can tell it has just been entered. poolTrack is what that entry picked. See
+	// score.go.
+	scoreScreen  state.ActiveScreen
+	scoreStarted bool
+	poolTrack    string
+
 	// One registry, replacing the two parallel switches Update and Draw used to
 	// carry. Those could drift out of sync — a screen added to one and forgotten in
 	// the other silently did nothing — and now cannot.

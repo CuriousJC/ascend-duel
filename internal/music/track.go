@@ -54,13 +54,13 @@ type stream interface {
 
 // decoders is every format this can take, by lower-case extension. **It is the same three
 // Ebitengine decodes and the same three privateassets.Audio hands over**, and the three lists
-// have to agree: a file the loader skips and the embed carries is a manifested sound that is
+// have to agree: a file the loader skips and the embed carries is a recorded sound that is
 // shipped and never heard — which is silence on one screen and nothing going red anywhere.
 //
-// The loops ship as WAV today, which costs size — a minute of 16-bit stereo is about ten
-// megabytes in the binary where the Ogg of it is a few hundred kilobytes. That is a conversion
-// on the way *in* to privateassets/ rather than a second code path here, and this table is what
-// makes it a conversion rather than a change to the game.
+// The loops ship as Ogg, because a minute of 16-bit stereo WAV is about ten megabytes in the
+// binary and Ebitengine's WAV decoder refuses 24-bit files outright. That is a conversion on the
+// way *in* to privateassets/ — privateassets/mgmt/build-game-ready.ps1 — rather than a second code
+// path here, and this table is what makes it a conversion rather than a change to the game.
 var decoders = map[string]func(int, io.Reader) (stream, error){
 	".wav": func(rate int, r io.Reader) (stream, error) { return wav.DecodeWithSampleRate(rate, r) },
 	".ogg": func(rate int, r io.Reader) (stream, error) { return vorbis.DecodeWithSampleRate(rate, r) },

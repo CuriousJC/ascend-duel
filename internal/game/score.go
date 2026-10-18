@@ -42,7 +42,11 @@ package game
 // intention.
 
 import (
+	"math/rand"
+
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/music"
+	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/state"
 )
 
@@ -58,11 +62,16 @@ type tune struct {
 	// keep leaves whatever is sounding alone. For a screen that is opened from somewhere and
 	// returns there, rather than one the run walks to.
 	keep bool
+
+	// pool plays one of the tracks data/music.json lets this screen play, rolled per fight off
+	// seeds.CombatMusic. See poolPick.
+	pool bool
 }
 
 // The loops, by the names they are loaded under. A track's name is its filename stem, so these
-// are the files in privateassets/audio/. music.Score is the third piece and is named by
-// internal/music, being the one that is always present.
+// are the tracks data/music.json names, and a screen may only play a track whose `Screens` there
+// list it — TestEveryTrackPlaysWhereItMay holds the two together. music.Score is named by
+// internal/music.
 const (
 	darkFantasy01 = "dark-fantasy-01"
 
@@ -73,8 +82,11 @@ const (
 )
 
 var screenTunes = map[state.ActiveScreen]tune{
-	state.Title:      {track: music.Score},
-	state.Combat:     {track: music.Score},
+	state.Title: {track: music.Score},
+
+	// A fight plays one track of its pool, the same one for the whole fight and for a retry of it.
+	state.Combat: {pool: true},
+
 	state.PostBattle: {track: music.Score},
 	state.Shop:       {track: darkFantasy01},
 	state.RunOver:    {track: music.Score},
@@ -100,15 +112,59 @@ var screenTunes = map[state.ActiveScreen]tune{
 	state.Goods: {keep: true},
 }
 
+// musicPools is every screen's pool, in data/music.json's file order — the order poolPick draws
+// against, so it is the file and never a map walk that decides which index is which track.
+var musicPools = func() map[string][]string {
+	pools := map[string][]string{}
+	for _, t := range data.LoadMusic().Tracks {
+		for _, s := range t.Screens {
+			pools[s] = append(pools[s], t.Name())
+		}
+	}
+	return pools
+}()
+
+// poolPick is the track a pool screen plays in a fight: one draw off seeds.CombatMusic, so a fight
+// resumed or retried plays the same track. **Every track in the pool is a candidate whether or not
+// it was loaded**, so what a fight plays is a fact about the run and the catalog, not about which
+// machine synced the sounds; one that was not loaded falls back to the score inside PlayTrack. An
+// empty pool is the score.
+func poolPick(screen state.ActiveScreen, runSeed int64, fight int) string {
+	pool := musicPools[screen.String()]
+	if len(pool) == 0 {
+		return music.Score
+	}
+	rng := rand.New(rand.NewSource(seeds.ForFight(runSeed, seeds.CombatMusic, fight)))
+	return pool[rng.Intn(len(pool))]
+}
+
 // updateScore puts the right music on for whatever screen is up.
+//
+// **A pool screen picks once, on the way in**, and holds that track until it is left: the fight
+// counter moves on a win while the combat screen is still up, and a pick read every frame would
+// change track under the last blow. Coming back from Settings re-enters and picks again, which
+// lands on the same track, since the fight has not changed.
 func (g *Game) updateScore() {
-	t, listed := screenTunes[g.GlobalState.ActiveScreen]
+	screen := g.GlobalState.ActiveScreen
+	entered := !g.scoreStarted || screen != g.scoreScreen
+	g.scoreScreen, g.scoreStarted = screen, true
+
+	t, listed := screenTunes[screen]
 	switch {
 	case !listed:
 		// A screen nobody added to the table. The score rather than silence, and rather than
 		// whatever the screen before it happened to be playing.
 		music.PlayTrack(music.Score)
 	case t.keep:
+	case t.pool:
+		if entered {
+			fight := 0
+			if g.GlobalState.Run != nil {
+				fight = g.GlobalState.Run.Fight()
+			}
+			g.poolTrack = poolPick(screen, g.GlobalState.RunSeed, fight)
+		}
+		music.PlayTrack(g.poolTrack)
 	default:
 		music.PlayTrack(t.track)
 	}

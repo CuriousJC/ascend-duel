@@ -1,8 +1,9 @@
 # privateassets
 
 **The audio kept out of git** — every sound the game makes, the bought loops and its own MIDI
-score (`custom/duello.mid`) alike. Everything under [assets/](../assets/) is committed; nothing in
-here is, and a release syncs it from a private S3 bucket instead.
+score (`duello.mid`) alike. Everything under [assets/](../assets/) is committed; of this directory
+only the code, the scripts and two READMEs are, and a release syncs the sounds from a private S3
+bucket instead.
 
 **Two directories rather than one with a special corner**, because the split is the thing being
 enforced. A rule saying "this one subdirectory of `assets/` is different" is a rule somebody has
@@ -15,33 +16,49 @@ being told.
 privateassets/
   README.md            this file
   embed.go             package privateassets — the embed and the loader
-  mgmt/                committed: the sync, push and AWS setup scripts
+  mgmt/                committed: the build, sync, push and AWS setup scripts
     local.psd1         ignored: this machine's source path, bucket and profile
   audio/
-    manifest.json      committed: the checksum list
-    bundle-names.txt   committed: which purchase each pack folder came from
-    <pack>/            ignored: one folder per pack
-      *.ogg *.wav *.mp3 *.mid  the sounds
+    README.md          committed: keeps the directory real for //go:embed
+    *.ogg *.mid        ignored: the game-ready tracks, flat
 ```
 
-**A folder is a pack.** `go run ./tools/privateassets -write` records a file under `audio/<pack>/`
-as belonging to that pack and adds the pack to `Packs` for its `Note` to be written. **The folder
-never reaches a track's name**: `<pack>/dark-fantasy-01.wav` is the track
-`dark-fantasy-01`, so two files sharing a stem in different packs fail the launch.
+**[data/music.json](../data/music.json) is the record of what belongs in `audio/`**: one entry per
+track, with the pack it came from, the delivered file it was made from, the gain and quality it was
+made at, the screens it may play on, and the size and hash of the game-ready file. It is committed;
+the audio is not. `audio/README.md` is committed for a duller reason: `//go:embed audio` is resolved
+at compile time and a directory with nothing embeddable in it is a *build* error, so without it a
+clean clone would fail to compile rather than merely play silent.
 
-**`manifest.json` is committed and is load-bearing twice over.** It is the checksum list — what
-the bundle holds and what each file hashes to — and it is also what keeps `audio/` real:
-`//go:embed audio` is resolved at compile time and a pattern matching nothing is a *build* error,
-so without a committed file in there a clean clone would fail to compile rather than merely play
-silent.
+**A track's name is its filename stem** — `combat-ambience-1.ogg` is the track `combat-ambience-1`
+— so two files sharing a stem fail the launch, and the folder is flat because nothing about where a
+file came from reaches the game but its record.
+
+## Where the sounds come from
+
+The owner's source folder (`SourcePath` in `mgmt/local.psd1`) holds two things:
+
+```
+ascend_assets/
+  sounds/<pack>/...   the library: every pack as it was delivered, never edited
+  game-ready/         built from the library, one file per track in data/music.json
+```
+
+`mgmt/build-game-ready.ps1` reads each record's source out of the library and writes its
+game-ready file: a MIDI file copied, anything else encoded to Ogg Vorbis at 44100 Hz with the
+record's own gain and quality. **The library is only ever read**, so a gain is changed by editing
+the record and rebuilding, and the delivered file is always there to rebuild from.
+`mgmt/sync-from-drive.ps1` mirrors `game-ready/` into `audio/` and records each file's hash in
+`music.json`. The procedure is the [`sounds` skill](../.claude/skills/sounds/SKILL.md).
 
 ## Getting the files
 
-They live in a private S3 bucket under `sounds/`, one folder per pack, as a mirror of the owner's
-own copy. A release fetches them; anyone else with read access can too:
+The bucket mirrors the whole source folder, so the game-ready tracks are under `game-ready/` and
+the library under `sounds/`. A release fetches `game-ready/` and nothing else — the role it assumes
+cannot read the library — and anyone else with read access can too:
 
 ```powershell
-aws s3 sync "s3://<bucket>/sounds/" privateassets/audio/ --exclude "*" --include "*.ogg" --include "*.wav" --include "*.mp3" --include "*.mid"
+aws s3 sync "s3://<bucket>/game-ready/" privateassets/audio/ --exclude "*" --include "*.ogg" --include "*.wav" --include "*.mp3" --include "*.mid"
 go run ./tools/privateassets          # what is present, what matches, what is unrecorded
 ```
 
@@ -55,36 +72,27 @@ With no bucket configured a release does neither and ships with no sound at all;
 setting the variable turns the sync on and the guard with it, in one switch rather than two that
 can disagree.
 
-## Filing a new batch
+## Levels
 
-The packs are kept outside the repository and mirrored in by the scripts in [mgmt/](mgmt/), which
-read this machine's paths and bucket from a gitignored `mgmt/local.psd1` (template:
-`mgmt/local.example.psd1`); the procedure is the [`sounds` skill](../.claude/skills/sounds/SKILL.md).
+Ebitengine decodes **MP3, Ogg Vorbis and WAV and nothing else**, and its WAV decoder takes 8- and
+16-bit files only, which is one more reason a track ships as Ogg. **MIDI is the score alone** —
+`duello.mid`, synthesized by `internal/music`.
 
-The bucket holds the converted, shipped audio. Ebitengine decodes **MP3, Ogg Vorbis and WAV and
-nothing else**, so a file delivered as AIFF or FLAC is converted before it is filed, the same way
-generated art is reduced before it is committed. Those three are what `music.decoders` and
-`privateassets.Audio` both take; what a conversion is choosing between is size and fidelity, not
-whether the game can read it. **MIDI is the score alone** — `custom/duello.mid`, synthesized by
-`internal/music`.
+**Every track carries its own gain, and -1.0 dBFS true peak is the level the score sits beside.**
+A delivered loop is mastered to whatever the supplier chose, and the dark-fantasy loops arrived at
+about **-14 dBFS peak** — roughly a fifth the amplitude of the synthesized score, which sits at -1.7
+dBFS peak and -14.7 dBFS RMS. A quiet file is not something to fix with the volume ceiling, because
+`music.fullVolume` caps the score and every loop together: raising it to rescue one makes the
+chiptune harsh. At -1.0 dBFS the two sit within a decibel or two of each other, which is the point
+— a player should not reach for the bar when the screen changes.
 
-**Normalize on the way in, and check it against the score.** A delivered loop is mastered to
-whatever the supplier chose, and the dark-fantasy loops arrived at about **-14 dBFS peak** — roughly a
-fifth the amplitude of the synthesized score, which sits at -1.7 dBFS peak and -14.7 dBFS RMS. A
-quiet file is not something to fix with the volume ceiling, because `music.fullVolume` caps the
-score and every loop together: raising it to rescue one makes the chiptune harsh. **Peak-normalize
-to -1.0 dBFS** and the two sit within a decibel or two of each other, which is the point — a
-player should not reach for the bar when the screen changes.
+**Measure the true peak, not the sample peak.** A master whose samples stay under full scale can
+still go over between them, and a resample or a lossy encode is what brings that out: a file
+reading -0.3 dBFS by its samples can come out of the encoder at -0.3 after a -0.7 dB cut.
+`build-game-ready.ps1 -Measure` reports both and suggests a gain from the true peak, and a build
+refuses an encode that peaks above -0.1 dBFS.
 
-Record the gain applied in the batch's `Note`, since it means the bytes that ship are not the
-bytes that were delivered.
-
-```powershell
-go run ./tools/privateassets -write   # rewrite audio/manifest.json from what is in that directory
-```
-
-**The bucket is the current set, not a history.** It mirrors the owner's copy, and what a release
-may ship is the manifest committed with it — so the bucket and the committed manifest move
-together, and an old commit rebuilt against a newer bucket fails `-require` rather than shipping
-sounds its manifest never named. The bucket is versioned, so a file deleted from it is
-recoverable.
+**The bucket is the current set, not a history.** What a release may ship is the `music.json`
+committed with it — so the bucket and the committed hashes move together, and an old commit rebuilt
+against a newer bucket fails `-require` rather than shipping a sound its record never named. The
+bucket is versioned, so a file deleted from it is recoverable.

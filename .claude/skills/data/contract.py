@@ -74,6 +74,16 @@ CATALOGS = {
                          why={"stat": "the profile's own unlock list is the tally",
                               "family": "Steamworks' own fields, no family to group by",
                               "scen": "earned, never put on"}),
+    "music": dict(file="data/music.json", list="Tracks", key="File", sheet=None, book=None,
+                  stat=None, scen=None, mech=None,
+                  why={"words": "a track says nothing; its pack's Name is its credit line",
+                       "art": "heard, never drawn",
+                       "family": "its Pack is where it came from, and nothing groups by more",
+                       "sheet": "the audio is not in git, so a page could show nothing; tools/privateassets is the report",
+                       "book": "heard, not collected",
+                       "stat": "nothing about a track is earned or spent",
+                       "scen": "a fight's track is rolled off the run seed, which a scenario's Seed already pins",
+                       "mech": "presentation, not a rule; privateassets/README.md holds its design"}),
 }
 
 PARTS = ("words", "art", "family", "sheet", "book", "stat", "scen", "mech")
@@ -125,7 +135,7 @@ def check(c):
         "book": f'label: "{c["book"]}"' in BOOKS,
         "stat": bool(c["stat"]) and re.search(rf"\b{c['stat']}\s*=", STATS) is not None,
         "scen": bool(c["scen"]) and f'`json:"{c["scen"]}"`' in SCENARIO,
-        "mech": c["mech"] in MECHANICS,
+        "mech": bool(c["mech"]) and c["mech"] in MECHANICS,
     }
 
 

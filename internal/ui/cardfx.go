@@ -1,13 +1,13 @@
 package ui
 
-// cardfx.go â€” a card destroyed in front of you: a stone crumbling, a cantrip burning.
+// cardfx.go — a card destroyed in front of you: a stone crumbling, a cantrip burning.
 //
 // **Both are the dissolve's grid put to a different use.** A morph cuts the face into
 // `cards.DissolveCell` squares and fades each one on its own delay; here the same squares, off the
 // same cached lattice, are the pieces the card breaks into. A crumble lets each square go and fall
 // as a piece of the card's own picture; a burn takes them bottom row first, charring each one dark
-// and flaring it in the fire ramp before it goes. Nothing is authored for the card itself â€” the
-// pieces *are* the card â€” and the particles thrown with them are an `Emitter` like any other.
+// and flaring it in the fire ramp before it goes. Nothing is authored for the card itself — the
+// pieces *are* the card — and the particles thrown with them are an `Emitter` like any other.
 //
 // **Derived, never rolled**, and a picture rather than a rule: like the dissolve, a card always
 // comes apart the same way, and nothing waits on it unless a caller decides it should.
@@ -33,7 +33,7 @@ var (
 	RuneMoteSprites = []string{"rune-mote-1", "rune-mote-2", "rune-mote-3"}
 )
 
-// FirstDrawn is the first of these keys that has art, and the fallback keys when none does â€” so an
+// FirstDrawn is the first of these keys that has art, and the fallback keys when none does — so an
 // effect wired to sprites nobody has drawn yet still shows something.
 func FirstDrawn(keys, fallback []string) []string {
 	for _, k := range keys {

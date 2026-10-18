@@ -11,7 +11,7 @@ import (
 // quietly. A recorded track that fails to load is silent and obvious; a synthesizer
 // handed a file it half-understands plays something, and what it plays is wrong in a
 // way nobody notices until they go looking. So the shape of the real file is pinned
-// here, and every one of these numbers is a fact about duello.mid in privateassets/audio/custom/.
+// here, and every one of these numbers is a fact about duello.mid in privateassets/audio/.
 //
 // **The file is not in git**, so on a clone without the sound bundle — CI among them — every test
 // that reads it skips rather than fails; realScore is the one door. Run them on a machine that has

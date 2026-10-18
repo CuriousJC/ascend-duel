@@ -8,7 +8,7 @@
 #   - the S3 bucket: private, public access blocked, versioned, TLS only
 #   - GitHub's OIDC identity provider in IAM
 #   - a role the release jobs assume, readable only from main and v* tags of this repository,
-#     granting s3:ListBucket and s3:GetObject on sounds/ and nothing else
+#     granting s3:ListBucket and s3:GetObject on game-ready/ and nothing else — not the library
 #
 # Safe to re-run. It never sets the GitHub repository variables; it prints the commands, because
 # setting SOUNDS_BUCKET arms the release's -require guard and that is a decision, not a side effect.
@@ -29,19 +29,27 @@ $Bucket = Resolve $Bucket $cfg 'Bucket' -Required
 $Region = Resolve $Region $cfg 'Region' -Default 'us-east-1'
 $AwsProfile = Resolve $AwsProfile $cfg 'AwsProfile'
 
+# PowerShell names are case-insensitive, so inside a function called Aws a bare `aws` is the
+# function itself. Every call to the CLI names `aws.exe`.
+#
+# Both wrappers judge the CLI by its exit code alone. Under 'Stop', Windows PowerShell 5.1 turns
+# any line a native command writes to stderr into a terminating error, redirected or not, so the
+# preference is relaxed inside them.
 function Aws {
+    $ErrorActionPreference = 'Continue'
     $a = @($args)
     if ($AwsProfile) { $a += @('--profile', $AwsProfile) }
-    $out = & aws @a
+    $out = & aws.exe @a
     if ($LASTEXITCODE -ne 0) { throw "aws $($args -join ' ') failed with exit code $LASTEXITCODE" }
     return $out
 }
 
 # Like Aws, but a failure is an answer rather than an error: "does this exist yet".
 function AwsQuiet {
+    $ErrorActionPreference = 'Continue'
     $a = @($args)
     if ($AwsProfile) { $a += @('--profile', $AwsProfile) }
-    $out = & aws @a 2>$null
+    $out = & aws.exe @a 2>$null
     return @{ Ok = ($LASTEXITCODE -eq 0); Out = $out }
 }
 
@@ -53,16 +61,16 @@ function WriteJson($obj) {
 
 # --- the CLI -------------------------------------------------------------------------------------
 
-if (-not (Get-Command aws -ErrorAction SilentlyContinue)) {
+if (-not (Get-Command aws.exe -CommandType Application -ErrorAction SilentlyContinue)) {
     Write-Host 'installing the AWS CLI'
     winget install -e --id Amazon.AWSCLI --accept-package-agreements --accept-source-agreements
     if ($LASTEXITCODE -ne 0) { throw 'winget could not install the AWS CLI' }
     $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')
-    if (-not (Get-Command aws -ErrorAction SilentlyContinue)) {
+    if (-not (Get-Command aws.exe -CommandType Application -ErrorAction SilentlyContinue)) {
         throw 'the AWS CLI installed but is not on PATH yet; open a new terminal and re-run'
     }
 }
-Write-Host (& aws --version)
+Write-Host (& aws.exe --version)
 
 $who = AwsQuiet sts get-caller-identity --output json
 if (-not $who.Ok) {
@@ -146,10 +154,11 @@ if ((AwsQuiet iam get-role --role-name $RoleName).Ok) {
 } else {
     Write-Host "creating role $RoleName"
     Aws iam create-role --role-name $RoleName --assume-role-policy-document (WriteJson $trust) `
-        --description 'Duello release jobs: read the sound bundle' | Out-Null
+        --description 'Duello release jobs: read the game-ready sounds' | Out-Null
 }
 
-# Read-only, and only under sounds/: list the prefix, get the objects.
+# Read-only, and only under game-ready/: list the prefix, get the objects. The library under
+# sounds/ is a backup and a release has no business reading it.
 $read = @{
     Version   = '2012-10-17'
     Statement = @(
@@ -157,12 +166,12 @@ $read = @{
             Effect    = 'Allow'
             Action    = 's3:ListBucket'
             Resource  = "arn:aws:s3:::$Bucket"
-            Condition = @{ StringLike = @{ 's3:prefix' = @('sounds/*') } }
+            Condition = @{ StringLike = @{ 's3:prefix' = @('game-ready/*') } }
         },
         @{
             Effect   = 'Allow'
             Action   = 's3:GetObject'
-            Resource = "arn:aws:s3:::$Bucket/sounds/*"
+            Resource = "arn:aws:s3:::$Bucket/game-ready/*"
         }
     )
 }

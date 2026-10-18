@@ -29,7 +29,7 @@ func aRound(t *testing.T) ([]combat.Event, []combat.Card) {
 }
 
 // TestARoundIsCountedWhenItsDuelSettles is the whole arithmetic: what was dealt, by element and by
-// form, what was taken, the hand, and the records â€” and none of it before the duel settles.
+// form, what was taken, the hand, and the records — and none of it before the duel settles.
 func TestARoundIsCountedWhenItsDuelSettles(t *testing.T) {
 	run := bare(t)
 	log, turn := aRound(t)
@@ -87,8 +87,8 @@ func TestALostDuelNamesWhatKilledThePlayer(t *testing.T) {
 	}
 }
 
-// TestAResumeDoesNotCountADuelTwice is why a duel's rounds are held apart: a run saved mid-duel â€”
-// which spending a consumable does â€” and resumed is fought again from the top of the room.
+// TestAResumeDoesNotCountADuelTwice is why a duel's rounds are held apart: a run saved mid-duel —
+// which spending a consumable does — and resumed is fought again from the top of the room.
 func TestAResumeDoesNotCountADuelTwice(t *testing.T) {
 	motifs, shape := rosters(t)
 	seed, err := seeds.Parse(theSeed)

@@ -58,3 +58,21 @@ func TestTheSameSeedOffersTheSameJourney(t *testing.T) {
 		}
 	}
 }
+
+// TestNoTwoPortalsOpenOntoOneElement. A realm's offers are two motifs in two elements, so the
+// choice is never between two realms of the same color.
+func TestNoTwoPortalsOpenOntoOneElement(t *testing.T) {
+	motifs, shape := data.LoadMotifs(), data.LoadJourney()
+	for seed := int64(0); seed < 500; seed++ {
+		p := New(motifs, shape, rand.New(rand.NewSource(seed)))
+		for realm := 1; realm <= shape.Realms; realm++ {
+			seen := map[string]bool{}
+			for _, f := range p.ChoicesAt(realm) {
+				if seen[f.Element] {
+					t.Fatalf("seed %d: realm %d offers %s twice", seed, realm, f.Element)
+				}
+				seen[f.Element] = true
+			}
+		}
+	}
+}

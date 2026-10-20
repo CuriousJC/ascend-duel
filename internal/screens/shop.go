@@ -669,8 +669,9 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// **The runes the run is carrying, in the pane the fight draws them in** *(2026-09-06)*.
 	// The shop draws the band's two halves itself, because a relic here can be sold — and the
 	// consumables pane went missing in the split, so a run walked into a shop and its sack
-	// vanished. nil: a rune is carried on this screen, not spent. See buildband.go.
-	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil, s.band.heldSkip, s.tip.Showing(),
+	// vanished. Only a freestanding card is lit here, as on every screen off the table. See
+	// buildband.go.
+	drawConsumablePane(gs, screen, buildConsumableRect(gs), anywhereSpendable(gs), s.band.heldSkip, s.tip.Showing(),
 		&s.band.sale)
 
 	// **The four panes, left to right.** Each paints its own surface first and its cards on top;

@@ -298,11 +298,13 @@ var animGestures = []animGesture{
 	{
 		name:  "portal swirl",
 		where: "systems.DrawSwirl, portal.go",
-		what:  "The way through a portal: one picture turning in place over a smaller copy of itself turning back.",
+		what:  "The way through a portal: one picture turning in place over a smaller copy of itself turning back, squashed into the portal's oval.",
 		ticks: systems.SwirlTurnTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
 			mid := image.Pt((at.Min.X+at.Max.X)/2, (at.Min.Y+at.Max.Y)/2)
-			swirl := &models.Swirl{ScreenX: mid.X, ScreenY: mid.Y, Radius: portalSwirlRadius,
+			ry := min(at.Dy()/2, portalSwirlRadiusY)
+			swirl := &models.Swirl{ScreenX: mid.X, ScreenY: mid.Y,
+				Radius: ry * portalSwirlRadius / portalSwirlRadiusY, RadiusY: ry,
 				Angle: p * 2 * math.Pi, InnerAngle: p * 2 * math.Pi * systems.SwirlInnerSpin}
 			systems.DrawSwirl(screen, swirl, portalSwirl(gs))
 		},

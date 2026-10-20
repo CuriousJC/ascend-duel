@@ -74,15 +74,26 @@ func SwirlTurnTicks() int {
 }
 
 // SwirlCovers reports whether a point is on the part of the swirl that answers a click.
+// An oval swirl answers on the same share of its oval.
 func SwirlCovers(s *models.Swirl, at image.Point) bool {
-	dx, dy := float64(at.X-s.ScreenX), float64(at.Y-s.ScreenY)
-	r := float64(s.Radius) * models.SwirlHitShare
-	return dx*dx+dy*dy <= r*r
+	rx := float64(s.Radius) * models.SwirlHitShare
+	ry := float64(swirlRadiusY(s)) * models.SwirlHitShare
+	dx, dy := float64(at.X-s.ScreenX)/rx, float64(at.Y-s.ScreenY)/ry
+	return dx*dx+dy*dy <= 1
 }
 
-// SwirlBounds is the square the swirl is drawn in.
+// SwirlBounds is the rectangle the swirl is drawn in: a square, or an oval's box.
 func SwirlBounds(s *models.Swirl) image.Rectangle {
-	return image.Rect(s.ScreenX-s.Radius, s.ScreenY-s.Radius, s.ScreenX+s.Radius, s.ScreenY+s.Radius)
+	ry := swirlRadiusY(s)
+	return image.Rect(s.ScreenX-s.Radius, s.ScreenY-ry, s.ScreenX+s.Radius, s.ScreenY+ry)
+}
+
+// swirlRadiusY is the swirl's vertical radius: its own, or Radius for a round one.
+func swirlRadiusY(s *models.Swirl) int {
+	if s.RadiusY > 0 {
+		return s.RadiusY
+	}
+	return s.Radius
 }
 
 // DrawSwirl draws the swirl as two layers of one picture turning against each other. A nil picture
@@ -92,6 +103,7 @@ func DrawSwirl(screen *ebiten.Image, s *models.Swirl, picture *ebiten.Image) {
 		return
 	}
 	size := float64(2 * s.Radius)
+	squash := float64(swirlRadiusY(s)) / float64(s.Radius)
 	light := 1.0
 	switch s.State {
 	case models.ButtonStateHovered:
@@ -100,16 +112,18 @@ func DrawSwirl(screen *ebiten.Image, s *models.Swirl, picture *ebiten.Image) {
 		light = swirlHoverLight
 		size *= swirlPressScale
 	}
-	drawSwirlLayer(screen, picture, s, size, s.Angle, light, 1)
-	drawSwirlLayer(screen, picture, s, size*swirlInnerScale, s.InnerAngle, light, swirlInnerAlpha)
+	drawSwirlLayer(screen, picture, s, size, squash, s.Angle, light, 1)
+	drawSwirlLayer(screen, picture, s, size*swirlInnerScale, squash, s.InnerAngle, light, swirlInnerAlpha)
 }
 
-func drawSwirlLayer(screen, picture *ebiten.Image, s *models.Swirl, size, angle, light, alpha float64) {
+// drawSwirlLayer turns the picture and then scales it, so an oval's squash is applied to the turned
+// picture and the outline never turns with it.
+func drawSwirlLayer(screen, picture *ebiten.Image, s *models.Swirl, size, squash, angle, light, alpha float64) {
 	pw, ph := float64(picture.Bounds().Dx()), float64(picture.Bounds().Dy())
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(-pw/2, -ph/2)
 	op.GeoM.Rotate(angle)
-	op.GeoM.Scale(size/pw, size/ph)
+	op.GeoM.Scale(size/pw, size*squash/ph)
 	op.GeoM.Translate(float64(s.ScreenX), float64(s.ScreenY))
 	op.ColorScale.Scale(float32(light*alpha), float32(light*alpha), float32(light*alpha), float32(alpha))
 	op.Filter = ebiten.FilterLinear

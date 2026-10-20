@@ -141,6 +141,24 @@ func (c Consumable) Name() string {
 	}
 }
 
+// Freestanding reports whether the thing is used on nothing selected and outside a fight: a stone,
+// or a rune that names no cards — a purse filled, a rock shower, a chimera. **Everything else is a
+// fight's**: a rune or an essence is aimed at cards in the hand, and a cantrip is cast onto the
+// fighter standing in the room, so off the table it can only be sold.
+//
+// A chimera is freestanding even though what it becomes may not be: using it is the turning, and
+// the rune it turns into waits in its seat for a fight like any other.
+func (c Consumable) Freestanding() bool {
+	switch c.Kind {
+	case ConsumableStone:
+		return true
+	case ConsumableRune:
+		return c.Rune.Count == 0
+	default:
+		return false
+	}
+}
+
 // Consumables is everything the run is carrying, in one row: the sack, then the satchel, then the
 // scroll case, then the pouch.
 //

@@ -119,6 +119,29 @@ func stoneUseFrom(gs *state.GlobalState, face cards.Spec, from image.Rectangle) 
 	})
 }
 
+// runeUseFrom is a rune being used out of a seat on a screen with no table: lifted to the middle of
+// the screen, its sigil turned out there, its motes sent to what it changed. A rune that names no
+// cards, used from the band off the combat screen.
+func runeUseFrom(gs *state.GlobalState, face cards.Spec, from, to image.Rectangle) ui.Consume {
+	cx, cy := gs.ScreenWidth/2, gs.ScreenHeight/2
+	return ui.NewConsume(ui.Consume{
+		Exit:  ui.ExitSigil,
+		Face:  face,
+		Style: cards.EssenceStyle,
+		From:  image.Rect(from.Min.X, from.Min.Y, from.Min.X+cardWidth, from.Min.Y+cardHeight),
+		Stage: image.Rect(cx-cardWidth/2, cy-cardHeight/2, cx+cardWidth/2, cy+cardHeight/2),
+		To:    []image.Rectangle{to},
+		Motes: runeMotes(),
+		Seed:  cards.MarkSeed(face.Name),
+	})
+}
+
+// runeMotes is the sparks a spent rune sends to what it changed.
+func runeMotes() ui.Emitter {
+	return ui.Emitter{Element: cards.Arcane, Rate: 1.2, Size: 22,
+		Sprites: ui.FirstDrawn(ui.RuneMoteSprites, []string{"spark-lightning-1", "spark-lightning-2"})}
+}
+
 // useCantripMotes burns the scroll and carries its relic into the band seat it now takes.
 func (s *CombatScene) useCantripMotes(gs *state.GlobalState, face cards.Spec) {
 	seat := -1

@@ -1,10 +1,12 @@
 package session
 
 import (
+	"math/rand"
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/journey"
 	"github.com/curiousjc/ascend-duel/internal/profile"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 )
@@ -297,5 +299,29 @@ func TestASnapshotNamingARungThisBuildHasNotGotIsRefused(t *testing.T) {
 
 	if _, _, err := Resume(nil, data.JourneyData{}, snap); err == nil {
 		t.Error("a run resumed holding stones on a rung that does not exist")
+	}
+}
+
+// TestTheEndlessJourneyChoosesThePortal. Past the last realm a portal is still opened, but the
+// player is never stood in front of it: the run is walked through one of the two by a draw.
+func TestTheEndlessJourneyChoosesThePortal(t *testing.T) {
+	motifs, shape := rosters(t)
+	s := Start(motifs, shape, 1)
+	s.fight = journey.FirstFightInRealm(s.journey.Realms() + 2)
+	if !s.Endless() {
+		t.Fatalf("realm %d is not past the journey's %d", s.Realm(), s.journey.Realms())
+	}
+	if s.PortalDue() {
+		t.Fatal("the endless journey stands the player in front of a portal")
+	}
+	if !s.EndlessPortalDue() {
+		t.Fatal("no portal is open for the endless journey to take")
+	}
+	key := s.TakeEndlessPortal(rand.New(rand.NewSource(7)))
+	if key == "" || s.Motif() != key {
+		t.Fatalf("walked through %q and the realm is %q", key, s.Motif())
+	}
+	if s.EndlessPortalDue() {
+		t.Fatal("the portal is still open after the endless journey took it")
 	}
 }

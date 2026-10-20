@@ -17,8 +17,12 @@ package screens
 // joining it later is one line in the table below, with no existing scene edited.
 
 import (
+	"math/rand"
+
+	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/trace"
 )
 
 // phaseScreens is which scene draws which station of the run.
@@ -53,6 +57,7 @@ func advanceRun(gs *state.GlobalState) {
 	}
 	for i := 0; i < session.PhaseCount; i++ {
 		gs.Run.Advance()
+		takeEndlessPortal(gs)
 		if next, ok := screenFor(gs.Run.Phase()); ok {
 			gs.ActiveScreen = next
 			gs.NewScreen = true
@@ -65,5 +70,21 @@ func advanceRun(gs *state.GlobalState) {
 			saveRun(gs)
 			return
 		}
+	}
+}
+
+// takeEndlessPortal walks the run through a portal the endless journey chooses, if one is open — the
+// station the player no longer stands at. Taken before the run is saved, so a resume fights the
+// realm the draw chose.
+//
+// **Not journaled**: the journal holds inputs, and this is a draw off the run code that a replay
+// makes again.
+func takeEndlessPortal(gs *state.GlobalState) {
+	if !gs.Run.EndlessPortalDue() {
+		return
+	}
+	rng := rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.EndlessPortal, gs.Run.Fight())))
+	if key := gs.Run.TakeEndlessPortal(rng); key != "" {
+		trace.Logf("flow", "endless journey walked through the portal to %s on realm %d", key, gs.Run.Realm())
 	}
 }

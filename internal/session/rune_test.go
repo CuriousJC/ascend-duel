@@ -776,3 +776,30 @@ func TestAChimeraBecomesTheLastRuneInItsSeat(t *testing.T) {
 		t.Errorf("the last rune is %q after a chimera was used, want %q", run.LastRune(), purse.Record)
 	}
 }
+
+// TestOnlyARuneNamingNoCardsIsFreestanding holds the split the band reads off the table: a rune is
+// used outside a fight exactly when it fills the purse, showers stones or is a chimera, and every
+// other rune waits for a hand to aim at.
+func TestOnlyARuneNamingNoCardsIsFreestanding(t *testing.T) {
+	anywhere := map[RuneTarget]bool{RuneVitae: true, RuneStones: true, RuneChimera: true}
+	for _, p := range Runes() {
+		c := Consumable{Kind: ConsumableRune, Rune: p}
+		if got, want := c.Freestanding(), anywhere[p.Target]; got != want {
+			t.Errorf("%s (%s): freestanding %v, want %v", p.Record, p.Target, got, want)
+		}
+	}
+}
+
+// TestAStoneIsFreestandingAndAnEssenceOrCantripIsNot holds the other kinds: a stone needs nothing,
+// an essence needs a card, and a cantrip needs a fighter in the room.
+func TestAStoneIsFreestandingAndAnEssenceOrCantripIsNot(t *testing.T) {
+	for kind, want := range map[ConsumableKind]bool{
+		ConsumableStone:   true,
+		ConsumableEssence: false,
+		ConsumableCantrip: false,
+	} {
+		if got := (Consumable{Kind: kind}).Freestanding(); got != want {
+			t.Errorf("kind %d: freestanding %v, want %v", kind, got, want)
+		}
+	}
+}

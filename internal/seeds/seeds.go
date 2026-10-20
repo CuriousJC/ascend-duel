@@ -194,6 +194,15 @@ const (
 	// make a deal or a roll a function of how many tracks the pool holds, so adding a track to
 	// `music.json` would reroll every fight of every run.
 	CombatMusic
+
+	// EndlessPortal is which of a realm's portals the endless journey walks the run through, where
+	// the player no longer chooses. Per fight, keyed by the first fight of the realm it opens onto:
+	// one draw.
+	//
+	// **Its own stream rather than EnemySelect's**: the journey is rolled up front and sharing its
+	// cursor would make every realm's offers a function of how far a run went into the endless
+	// journey — and drawing it at all would reroll them.
+	EndlessPortal
 )
 
 // stream is what the package knows about each one. A table rather than four switch statements,
@@ -240,6 +249,7 @@ var streams = [...]stream{
 	ActionTraits:   {name: "action-traits", salt: 0x5EED_AC7A, perFight: true},
 	ActionUpgrades: {name: "action-upgrades", salt: 0x5EED_AC79, perFight: true},
 	CombatMusic:    {name: "combat-music", salt: 0x5EED_3051, perFight: true},
+	EndlessPortal:  {name: "endless-portal", salt: 0x5EED_E7D1, perFight: true},
 }
 
 // fightStride separates one fight's seed from the next within a run. A large odd number so

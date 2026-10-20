@@ -17,6 +17,11 @@ type Swirl struct {
 	// edge is a press on what looks like the backdrop.
 	Radius int
 
+	// RadiusY is how tall it is drawn, for a swirl standing in an oval: the picture turns first and
+	// is squashed after, so the outline holds still while the light inside it turns. **Zero is
+	// Radius**, a round swirl.
+	RadiusY int
+
 	State         ButtonState
 	PressedInside bool
 	OnClick       func()

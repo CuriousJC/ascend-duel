@@ -9,7 +9,7 @@ package screens
 // one controller rather than a copy per screen — the deck pile's argument, applied to the row beside
 // it. A relic or a consumable that is on the screen can be dragged along its row, clicked to arm a
 // sale, and sold through the tab that hangs under it. **A consumable hangs USE beside its SELL on
-// every screen**, enabled only where it can be spent right now — so a rune in the shop shows the
+// every screen**, enabled only where it can be spent right now — so a rune aimed at cards shows the
 // same two tabs it shows in a fight, with USE dark, rather than a different card with one tab.
 //
 // **What differs between screens is a handful of answers, not a second implementation**, and they
@@ -22,6 +22,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
+	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/journal"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
@@ -35,9 +36,13 @@ type bandControls struct {
 	heldDrag  ui.CardDrag
 	sale      sellTab
 
-	// uses are stones spent off the table: lifted to the middle of the screen, crumbled, their dust
-	// sent to the hands button. Nothing waits on them. See useStone.
+	// uses are carried cards spent off the table: lifted to the middle of the screen and used up
+	// there, their motes sent to whatever they changed. Nothing waits on them. See useAnywhere.
 	uses []ui.Consume
+
+	// morphs are chimeras turning into the rune they copy, in their own seats in the pane. See
+	// becomeLastRune.
+	morphs []paneMorph
 }
 
 // bandHooks is what one screen answers about the band, every frame.
@@ -64,10 +69,10 @@ type bandHooks struct {
 	afterSale func()
 
 	// canUse is whether the carried card in one seat can be spent here, now — which decides whether
-	// its USE tab is lit, never whether it hangs. **Nil is the band's own answer, stoneUsable**: a
-	// stone raises a rung for the rest of the run and needs nothing on screen to do it, so it is
-	// usable wherever the band is; everything else wants a fight or a selection, which only the
-	// combat screen has. use is how, and nil is useStone.
+	// its USE tab is lit, never whether it hangs. **Nil is the band's own answer, usableAnywhere**:
+	// a freestanding card — a stone, or a rune naming no cards — needs nothing on screen to do what
+	// it does, so it is usable wherever the band is; everything else wants a fight or a selection,
+	// which only the combat screen has. use is how, and nil is useAnywhere.
 	canUse func(seat int) bool
 	use    func(seat int)
 
@@ -100,25 +105,58 @@ func (b *bandControls) init() {
 	b.relicDrag = ui.CardDrag{}
 	b.heldDrag = ui.CardDrag{}
 	b.uses = nil
+	b.morphs = nil
 	b.sale.initSellTab()
 }
 
-// stoneUsable is the band's own answer to whether a carried card can be used: a stone, yes,
-// anywhere; anything else, not off the table.
-func stoneUsable(gs *state.GlobalState, seat int) bool {
+// usableAnywhere is the band's own answer to whether a carried card can be used: a freestanding one
+// yes, anywhere — see session.Consumable.Freestanding — and anything else, not off the table.
+func usableAnywhere(gs *state.GlobalState, seat int) bool {
 	held := heldConsumables(gs)
-	return seat >= 0 && seat < len(held) && held[seat].Kind == session.ConsumableStone
+	return seat >= 0 && seat < len(held) && anywhereSpendable(gs)(held[seat])
 }
 
-// useStone spends the stone in one seat of the consumables pane onto its rung, for the rest of the
-// run, and crumbles it in the middle of the screen.
-//
-// **Its seat and face are read before it is spent**, since spending takes it out of the pane.
-func (b *bandControls) useStone(gs *state.GlobalState, seat int, h bandHooks) {
-	if !stoneUsable(gs, seat) {
+// anywhereSpendable is usableAnywhere as the pane reads it, so a card off the table is lit exactly
+// when its USE tab would be. **A chimera on a run that has spent no rune is dim**, since there is
+// nothing for it to become.
+func anywhereSpendable(gs *state.GlobalState) func(session.Consumable) bool {
+	return func(c session.Consumable) bool {
+		if gs.Run == nil || !c.Freestanding() {
+			return false
+		}
+		if c.Kind == session.ConsumableRune && c.Rune.Target == session.RuneChimera {
+			_, ok := gs.Run.Echoes(c.Rune)
+			return ok
+		}
+		return true
+	}
+}
+
+// useAnywhere spends the freestanding card in one seat of the consumables pane.
+func (b *bandControls) useAnywhere(gs *state.GlobalState, seat int, h bandHooks) {
+	if !usableAnywhere(gs, seat) {
 		return
 	}
 	c := heldConsumables(gs)[seat]
+	switch {
+	case c.Kind == session.ConsumableStone:
+		b.useStone(gs, seat, c)
+	case c.Rune.Target == session.RuneChimera:
+		b.becomeLastRune(gs, seat, c)
+	default:
+		b.useRune(gs, seat, c)
+	}
+	if h.forget != nil {
+		h.forget()
+	}
+	saveRun(gs)
+}
+
+// useStone spends a stone onto its rung, for the rest of the run, and crumbles it in the middle of
+// the screen.
+//
+// **Its seat and face are read before it is spent**, since spending takes it out of the pane.
+func (b *bandControls) useStone(gs *state.GlobalState, seat int, c session.Consumable) {
 	from, _ := b.sale.seatOf(gs, heldSale(seat))
 	face := ui.StoneSpec(gs, c.Stone, true)
 	if !gs.Run.SpendCarried(c.At) {
@@ -133,13 +171,50 @@ func (b *bandControls) useStone(gs *state.GlobalState, seat int, h bandHooks) {
 	})
 	trace.Logf("band", "used stone %s on shape %s, %d stones left",
 		c.Stone.Record, c.Stone.Shape, gs.Run.CarryCount())
-	if h.forget != nil {
-		h.forget()
-	}
-	saveRun(gs)
 }
 
-// tickUses advances every stone crumbling off the table and drops the finished ones.
+// useRune spends a rune that names no cards — a purse filled or a rock shower — and burns its sigil
+// in the middle of the screen, the motes going to the purse on the duelist card or to the hands
+// button the stones raised.
+//
+// **The shower draws the stream the combat screen draws**, showerRNG, so a rune spent here rolls
+// what it would roll anywhere else in the same run.
+func (b *bandControls) useRune(gs *state.GlobalState, seat int, c session.Consumable) {
+	from, _ := b.sale.seatOf(gs, heldSale(seat))
+	face := ui.RuneSpec(gs, c.Rune, true, false)
+	if !gs.Run.ApplyRuneRolling(c.Rune, nil, runeRNG(gs, c.Rune)) {
+		return
+	}
+	gs.Run.Drop(c.At)
+	gs.Journal.Write(journal.Record{Kind: journal.KindRune, Key: c.Rune.Record})
+
+	to := buildCardRect(gs)
+	if c.Rune.Target == session.RuneStones {
+		to = handsTarget(gs)
+	}
+	b.uses = append(b.uses, runeUseFrom(gs, face, from, to))
+	trace.Logf("band", "used rune %s off the table, %d vitae in hand", c.Rune.Record, gs.Run.Vitae())
+}
+
+// becomeLastRune turns a chimera into the run's last rune in its own seat, and dissolves it there —
+// the combat screen's gesture, on the band. Nothing fires: the rune it becomes waits for a fight.
+func (b *bandControls) becomeLastRune(gs *state.GlobalState, seat int, c session.Consumable) {
+	before := ui.RuneSpec(gs, c.Rune, true, false)
+	if !gs.Run.BecomeLastRune(c.At) {
+		return
+	}
+	gs.Journal.Write(journal.Record{Kind: journal.KindRune, Key: c.Rune.Record})
+	if now := heldConsumables(gs); seat < len(now) {
+		b.morphs = append(b.morphs, paneMorph{
+			seat: seat,
+			m:    ui.MorphInto(before, ui.RuneSpec(gs, now[seat].Rune, true, false), cards.EssenceStyle),
+		})
+	}
+	trace.Logf("band", "chimera became %s off the table", gs.Run.LastRune())
+}
+
+// tickUses advances every card being used off the table and every chimera turning, and drops the
+// finished ones.
 func (b *bandControls) tickUses() {
 	kept := b.uses[:0]
 	for i := range b.uses {
@@ -149,6 +224,15 @@ func (b *bandControls) tickUses() {
 		}
 	}
 	b.uses = kept
+
+	morphs := b.morphs[:0]
+	for i := range b.morphs {
+		b.morphs[i].Tick()
+		if !b.morphs[i].Done() {
+			morphs = append(morphs, b.morphs[i])
+		}
+	}
+	b.morphs = morphs
 }
 
 // busy is whether a drag is in progress over either row.
@@ -163,10 +247,10 @@ func (b *bandControls) update(gs *state.GlobalState, h bandHooks) bool {
 	b.tickUses()
 
 	if h.canUse == nil {
-		h.canUse = func(seat int) bool { return stoneUsable(gs, seat) }
+		h.canUse = func(seat int) bool { return usableAnywhere(gs, seat) }
 	}
 	if h.use == nil {
-		h.use = func(seat int) { b.useStone(gs, seat, h) }
+		h.use = func(seat int) { b.useAnywhere(gs, seat, h) }
 	}
 
 	if gs.Run == nil || !h.live || !gs.CursorAllowed() {
@@ -299,9 +383,18 @@ func (b *bandControls) drawHeldGhost(gs *state.GlobalState, screen *ebiten.Image
 	drawConsumableCard(gs, screen, b.heldDrag.At(gs), c, canSpend(spendable, c), true)
 }
 
-// heldSkip is the seat a dragged carried card left, which the pane draws empty.
+// heldSkip is the seat a dragged carried card left, which the pane draws empty, and a seat a
+// chimera is turning in, which the band draws itself — see drawBandOverlay.
 func (b *bandControls) heldSkip(i int) bool {
-	return b.heldDrag.Dragging() && i == b.heldDrag.Origin()
+	if b.heldDrag.Dragging() && i == b.heldDrag.Origin() {
+		return true
+	}
+	for _, m := range b.morphs {
+		if m.seat == i {
+			return true
+		}
+	}
+	return false
 }
 
 // sellWorn takes a worn relic off the run, pays its tier's figure and journals it — the sale every

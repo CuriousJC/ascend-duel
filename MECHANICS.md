@@ -2486,8 +2486,8 @@ separate grammars.
 |---|---|
 | Bought | the shop's **sack of runes** — 5 vitae, holds 4, keep 1, offered on visits where the pack roll puts it up |
 | Held | in the run's sack, **two at a time**, across fights and across a save |
-| Spent | on the combat screen, **between turns only** — select the cards, then click the rune |
-| Targets | cards **in the hand**, by identity, one or two of them |
+| Spent | on the combat screen, **between turns only** — select the cards, then click the rune; a rune naming no cards on any screen that shows the band |
+| Targets | cards **in the hand**, by identity, one or two of them — or none |
 | Lasts | the rest of the run |
 
 ### A graft makes the left card the right card whole
@@ -2602,6 +2602,13 @@ of the hand row anywhere in it.
 - **A consumable that takes no card ignores the selection** *(owner's call)*. A Hoard, a rock
   shower or a chimera is live whatever is selected, is handed none of it, and leaves the cards
   picked for the round where they are.
+- **Every consumable is freestanding or a fight's** *(owner's call)*. A freestanding one — a stone,
+  a Hoard, a rock shower, a chimera — needs nothing selected and no fighter, so its USE is live on
+  every screen that shows the band: the shop, the reward, a sealed good and the portal as well as
+  the fight. Everything else — a rune or an essence aimed at cards, and a cantrip, which is cast
+  onto the fighter standing in the room — can only be sold off the table. A chimera used there
+  turns into the last rune in its seat, and that rune waits for a fight like any other.
+  `session.Consumable.Freestanding` is the split.
 - **The order of a selection is the order of the row.** A rune naming a first and a second
   target — Clone — reads them left to right, and the player reorders by dragging, exactly as they
   reorder the round. There is no separate click order to learn.
@@ -3508,8 +3515,18 @@ it is the only way on: there is no Back and no Skip.
   rolled up front off the run code, and every offer is spent, so the same code always offers the
   same pairs whatever was picked. The picks are saved with the run and written to the journal, so a
   run code plus its picks is the whole path.
+- **The two portals never open onto the same element** *(owner's call)*. The second offer's element
+  is drawn from the four the first did not take, so the choice is always between two colors as well
+  as two motifs. A harder setting that allows a repeat would be a toggle, and there is none yet.
 - **Past the top of the journey the journey wraps onto realm one's single offer**, and a portal with one
   realm behind it is walked past rather than shown.
+- **The endless journey chooses the portal for the player** *(owner's call)*. Past the last realm
+  the portal screen is never shown: the run is walked through one of the two portals by a draw off
+  the run code — `seeds.EndlessPortal`, keyed by the fight it opens onto — so what the player
+  walks into is no longer something they can plan around. **It is a roll, and the deterministic
+  rewrite was declined**: always taking the first offer is just as fixed by the run code, but the
+  endless journey wraps, so every lap would walk into the same realm at the same height. A draw per
+  portal keeps the laps different while a run code still always walks the same way.
 - **Generate every option, always.** Rolling only the chosen one shifts every subsequent draw in
   the run.
 

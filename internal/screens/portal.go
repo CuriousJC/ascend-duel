@@ -7,8 +7,9 @@ package screens
 // panel — the realm's name, what the motif is, what the element does to it. Taking one is the only
 // way on.
 //
-// **The way through is a swirl, not a button**: a round, rim-faded picture turning in place over the
-// heart of each painted portal, faster under the cursor. See models.Swirl. It carries no word, so the
+// **The way through is a swirl, not a button**: a rim-faded picture turning in place over the whole
+// of each painted portal, squashed to its oval after it turns so the outline holds still and the
+// faded rim melts into the painted fog, faster under the cursor. See models.Swirl. It carries no word, so the
 // turning says it can be pressed and the tooltip names the realm it leads to.
 //
 // **The gates are painted, not drawn.** The screen's backdrop, `screen-portal` in
@@ -53,7 +54,9 @@ const (
 	// the build band has the top of the screen.
 	portalSubDrop = 46
 
-	portalPanelW = 700
+	// portalPanelW keeps the left panel clear of the deck pile in the bottom-left corner, which the
+	// choice is made against: centered on its gate, a panel reaches portalGateMids[0]-portalPanelW/2.
+	portalPanelW = 560
 	portalPanelH = 320
 	portalPad    = 40
 
@@ -70,8 +73,10 @@ const (
 	portalLinePitch = 31
 	portalParaGap   = 18
 
-	// portalSwirlRadius is how big the turning swirl is drawn over each portal's heart.
-	portalSwirlRadius = 140
+	// portalSwirlRadius and portalSwirlRadiusY are the turning swirl's oval: the whole painted portal,
+	// so the turning reaches its rim.
+	portalSwirlRadius  = portalGateW / 2
+	portalSwirlRadiusY = portalGateH / 2
 )
 
 // portalSwirlArt is the picture every swirl turns, by its asset key.
@@ -132,7 +137,8 @@ func (s *PortalScene) Init(gs *state.GlobalState) {
 	for i := range s.take {
 		if s.take[i] == nil {
 			i := i
-			s.take[i] = &models.Swirl{Radius: portalSwirlRadius, OnClick: func() { s.enter(gs, i) }}
+			s.take[i] = &models.Swirl{Radius: portalSwirlRadius, RadiusY: portalSwirlRadiusY,
+				OnClick: func() { s.enter(gs, i) }}
 		}
 		g := portalGateRect(gs, i)
 		s.take[i].ScreenX = (g.Min.X + g.Max.X) / 2

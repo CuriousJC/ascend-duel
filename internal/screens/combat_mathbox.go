@@ -859,9 +859,9 @@ func termItems(e combat.Event, i int) []mathItem {
 	return append(out, relicFactorItems(e, i)...)
 }
 
-// awakenItems is what the cards ahead woke on this hit's card: **a row per Awakening**, each a `+`
-// and that relic's own figure, flying out of it in the relic pink — under the duelist's DMG, before
-// the card multiplies them. Two that woke are two rows, never one sum.
+// awakenItems is what the cards ahead woke on this hit's card: **a row per payment**, each a `+`
+// and that one figure, flying out of its relic in the relic pink — under the duelist's DMG, before
+// the card multiplies them. Two cards ahead are two rows, and so are two Awakenings, never one sum.
 func awakenItems(e combat.Event, i int) []mathItem {
 	if e.HandAwaken[i] == 0 {
 		return nil
@@ -878,17 +878,17 @@ func awakenItems(e combat.Event, i int) []mathItem {
 	return out
 }
 
-// awakenPart is one Awakening's share of what was woken on one hit's card.
+// awakenPart is one payment of what was woken on one hit's card.
 type awakenPart struct{ seat, add int }
 
-// awakenParts is every Awakening that woke hit i's card, in worn order, with what each added. **An
-// event that does not say what each added** — one built by hand — is one part, the whole figure,
-// out of the first seat that woke.
+// awakenParts is every payment that woke hit i's card, in the engine's order, with what each added.
+// **An event that does not say what each added** — one built by hand — is one part, the whole
+// figure, out of the first seat that woke.
 func awakenParts(e combat.Event, i int) []awakenPart {
 	var out []awakenPart
-	for seat, add := range e.HandAwakenBy[i] {
-		if add != 0 {
-			out = append(out, awakenPart{seat, add})
+	for _, step := range e.HandAwakenBy[i] {
+		if step.Add != 0 {
+			out = append(out, awakenPart{step.Seat, step.Add})
 		}
 	}
 	if len(out) == 0 {

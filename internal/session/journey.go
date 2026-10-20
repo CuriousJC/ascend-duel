@@ -129,13 +129,29 @@ func (s *Session) PortalOffers() []journey.Realm {
 	return s.journey.ChoicesAt(s.Realm())
 }
 
-// PortalDue reports whether the run is standing in front of an open portal: the room just won was a
-// portal room, so the run is at the first room of a realm above the first, and that realm offers
+// PortalDue reports whether the run is standing in front of a portal the player chooses: one is
+// open — see portalOpen — and the run has not walked on past the journey's top.
+//
+// **The endless journey chooses for the player** *(owner's call)*: past the last realm the run is
+// walked through one of the two portals without being asked, which is what makes going on harder
+// than stopping. See TakeEndlessPortal, and Endless.
+func (s *Session) PortalDue() bool { return s.portalOpen() && !s.Endless() }
+
+// EndlessPortalDue reports whether a portal is open that the endless journey takes for the player.
+func (s *Session) EndlessPortalDue() bool { return s.portalOpen() && s.Endless() }
+
+// Endless reports whether the run has walked on past the last realm of the journey.
+func (s *Session) Endless() bool {
+	return s.journey != nil && s.Realm() > s.journey.Realms()
+}
+
+// portalOpen reports whether the run is standing in front of an open portal: the room just won was
+// a portal room, so the run is at the first room of a realm above the first, and that realm offers
 // more than one realm and none has been taken yet.
 //
 // **More than one**, because a realm the journey wraps back onto past its top is realm one's single
 // offer again, and a choice of one is not a choice.
-func (s *Session) PortalDue() bool {
+func (s *Session) portalOpen() bool {
 	if s.journey == nil || s.fight == 0 || journey.RoomOf(s.fight) != journey.RoomOuter {
 		return false
 	}
@@ -144,6 +160,23 @@ func (s *Session) PortalDue() bool {
 	}
 	i := s.Realm() - 2
 	return i < 0 || i >= len(s.portals) || s.portals[i] == ""
+}
+
+// TakeEndlessPortal walks the run through one of the open portals at random, when the endless
+// journey is choosing, and reports the motif it took. A no-op returning "" when no such portal is
+// open.
+//
+// **The caller owns the seeding** — the run does not know its own seed — and it is
+// `seeds.EndlessPortal` at the portal room just won, so a run code always walks the same way.
+func (s *Session) TakeEndlessPortal(rng *rand.Rand) string {
+	if !s.EndlessPortalDue() || rng == nil {
+		return ""
+	}
+	key, err := s.TakePortal(rng.Intn(len(s.PortalOffers())))
+	if err != nil {
+		return ""
+	}
+	return key
 }
 
 // TakePortal walks the run through one of the open portals, by its index in PortalOffers, and

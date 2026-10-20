@@ -1953,18 +1953,22 @@ func distinctForms(cards []Card) int {
 	return n
 }
 
-// AwakenBonus is what each card of the turn is swung at on top of the turn's DMG, per worn seat:
-// `by[slot][seat]` is what that seat's Awakenings added to that slot's card. **Every rule is asked
-// of every attack** — its card predicates read against each card queued ahead of it, the rule
-// paying its Amount once per match — so two fire cards ahead of a Cut are +20 to it, and a card
-// never counts itself. A defense gains nothing. `seats` is which worn seats woke anything this turn
-// and `openers` which slots woke something, in turn order, so a screen can toast them. See DoAwaken.
-func AwakenBonus(worn []WornRelic, turn []Slot) (by [][]int, seats []bool, openers []int) {
-	by = make([][]int, len(turn))
+// AwakenStep is one Awakening paying once on one card: the worn seat that paid, the slot of the card
+// ahead that matched, and what it added.
+type AwakenStep struct{ Seat, Opener, Add int }
+
+// AwakenBonus is what each card of the turn is swung at on top of the turn's DMG: `by[slot]` is
+// every step the Awakenings paid onto that slot's card, in worn order and then turn order. **Every
+// rule is asked of every attack** — its card predicates read against each card queued ahead of it,
+// the rule paying its Amount once per match — so two fire cards ahead of a Cut are two steps of +10
+// to it, and a card never counts itself. A defense gains nothing. `seats` is which worn seats woke
+// anything this turn and `openers` which slots woke something, in turn order, so a screen can toast
+// them. See DoAwaken.
+func AwakenBonus(worn []WornRelic, turn []Slot) (by [][]AwakenStep, seats []bool, openers []int) {
+	by = make([][]AwakenStep, len(turn))
 	seats = make([]bool, len(worn))
 	opened := make([]bool, len(turn))
 	for at, slot := range turn {
-		by[at] = make([]int, len(worn))
 		if slot.Card.Spec().Verb != VerbAttack {
 			continue
 		}
@@ -1979,7 +1983,7 @@ func AwakenBonus(worn []WornRelic, turn []Slot) (by [][]int, seats []bool, opene
 					}
 					for _, e := range rule.Then {
 						if e.Do == DoAwaken {
-							by[at][seat] += e.Amount
+							by[at] = append(by[at], AwakenStep{Seat: seat, Opener: ahead, Add: e.Amount})
 							seats[seat] = true
 							opened[ahead] = true
 						}

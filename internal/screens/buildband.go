@@ -89,9 +89,10 @@ func buildBandBottom(gs *state.GlobalState) int {
 func drawBuildBand(gs *state.GlobalState, screen *ebiten.Image, vitae int, band *bandControls, raise bool) {
 	drawBuildCard(gs, screen, vitae)
 	drawBuildRelics(gs, screen, band)
-	// **nil: a rune is carried on these screens, not spent.** The pane draws the same two seats
-	// and the same cards, dim, and the tooltip still explains them. See canSpend.
-	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil, band.heldSkip, raise, &band.sale)
+	// **Off the table only a freestanding card is lit**: a stone or a rune naming no cards is used
+	// here, and everything else is carried to a fight, drawn dim with its tooltip still explaining
+	// it. See anywhereSpendable.
+	drawConsumablePane(gs, screen, buildConsumableRect(gs), anywhereSpendable(gs), band.heldSkip, raise, &band.sale)
 	drawGuideCard(gs, screen)
 }
 
@@ -99,8 +100,12 @@ func drawBuildBand(gs *state.GlobalState, screen *ebiten.Image, vitae int, band 
 // the tabs under whatever is armed. Called after the screen's own content, before its tooltip.
 func drawBandOverlay(gs *state.GlobalState, screen *ebiten.Image, band *bandControls) {
 	drawDraggedRelic(gs, screen, &band.relicDrag, runCounters(gs))
-	band.drawHeldGhost(gs, screen, nil)
+	band.drawHeldGhost(gs, screen, anywhereSpendable(gs))
 	band.sale.drawTab(gs, screen)
+	r, seats := buildConsumableRect(gs), consumableSeats(gs)
+	for _, m := range band.morphs {
+		ui.DrawMorph(gs, screen, consumableSlotRect(r, m.seat, seats).Min, m.m)
+	}
 	for _, u := range band.uses {
 		u.Draw(gs, screen)
 	}

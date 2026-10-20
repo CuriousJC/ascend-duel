@@ -398,10 +398,11 @@ type Event struct {
 	// HandAwaken[i] is the DMG the Awakenings added to hit i's card: to HandDMG, for this card alone,
 	// before the card's own multiplier — their Amount once for every matching card queued ahead of
 	// it. Zero on a defense and on a card with nothing matching ahead of it. HandCardBase and
-	// HandAmounts already have it inside them, multiplied. HandAwakenBy[i] is the same figure per
-	// worn seat, so two Awakenings that both woke are written as two steps rather than one sum.
+	// HandAmounts already have it inside them, multiplied. HandAwakenBy[i] is the same figure one
+	// step per payment — a step for every matching card ahead, from every Awakening that matched —
+	// so two lightning cards ahead are two steps of 10 rather than one of 20.
 	HandAwaken   [maxHandTerms]int
-	HandAwakenBy [maxHandTerms][]int
+	HandAwakenBy [maxHandTerms][]AwakenStep
 
 	// AwakenSeats is which worn seats woke anything this turn, and AwakenOpeners which cards did —
 	// indices into the turn as it resolved, the convention HandCards and Slot use — so a screen can

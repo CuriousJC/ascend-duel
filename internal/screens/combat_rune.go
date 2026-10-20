@@ -410,7 +410,7 @@ func (s *CombatScene) spendRune(gs *state.GlobalState, i int) {
 	aimed := s.handCardWords(ids)
 	inHand := s.heldRunCards(gs)
 
-	if !gs.Run.ApplyRuneRolling(p, ids, s.runeRNG(gs, p)) {
+	if !gs.Run.ApplyRuneRolling(p, ids, runeRNG(gs, p)) {
 		return
 	}
 	gs.Run.Drop(i)
@@ -452,9 +452,7 @@ func (s *CombatScene) spendRune(gs *state.GlobalState, i int) {
 	s.raiseHandMorphs(gs, was, seats)
 
 	// **The rune fires on the table, and its motes land the change.** See combat_consume.go.
-	s.useHandMotes(gs, ui.ExitSigil, ui.RuneSpec(gs, p, true, false), morphed,
-		ui.Emitter{Element: cards.Arcane, Rate: 1.2, Size: 22,
-			Sprites: ui.FirstDrawn(ui.RuneMoteSprites, []string{"spark-lightning-1", "spark-lightning-2"})})
+	s.useHandMotes(gs, ui.ExitSigil, ui.RuneSpec(gs, p, true, false), morphed, runeMotes())
 
 	// **Spending a rune ends the selection**, and the ending is watched rather than applied.
 	// Leaving the targets lifted said the gesture was still going, and leaving them *queued* spent
@@ -759,7 +757,7 @@ func (s *CombatScene) sortSettledHand() { s.sortRow() }
 // consumable and became something a card permanently carries — see combat.RiderGolden. What is left
 // is the shower, and the shape stays because the question "which stream does this rune draw
 // from" is the one a second rolling target has to answer again.
-func (s *CombatScene) runeRNG(gs *state.GlobalState, p session.Rune) *rand.Rand {
+func runeRNG(gs *state.GlobalState, p session.Rune) *rand.Rand {
 	if gs.Run == nil {
 		return nil
 	}
@@ -770,7 +768,7 @@ func (s *CombatScene) runeRNG(gs *state.GlobalState, p session.Rune) *rand.Rand 
 
 	switch echoed.Target {
 	case session.RuneStones:
-		return s.showerRNG(gs)
+		return showerRNG(gs)
 	default:
 		return nil
 	}
@@ -780,9 +778,9 @@ func (s *CombatScene) runeRNG(gs *state.GlobalState, p session.Rune) *rand.Rand 
 //
 // **Its own salted stream, plus the number of stones the run has already placed** — see
 // `seeds.StoneShower`. The fight index alone is not enough here, because a run may carry three
-// showers and spend all three in one fight; the placed count is a number the snapshot already
-// carries, so a resumed run rolls what it would have rolled.
-func (s *CombatScene) showerRNG(gs *state.GlobalState) *rand.Rand {
+// showers and spend all three in one fight, or one in the shop after it; the placed count is a
+// number the snapshot already carries, so a resumed run rolls what it would have rolled.
+func showerRNG(gs *state.GlobalState) *rand.Rand {
 	placed := 0
 	for _, n := range gs.Run.StoneCounts() {
 		placed += n

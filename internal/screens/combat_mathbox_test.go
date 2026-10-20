@@ -573,7 +573,7 @@ func TestAnAwakeningIsARowUnderTheDMG(t *testing.T) {
 	e.HandDMG = 10
 	e.HandCardPct[1], e.HandCardBase[1] = 200, 40
 	e.HandAwaken[1] = 10
-	e.AwakenSeats, e.HandAwakenBy[1] = []bool{true}, []int{10}
+	e.AwakenSeats, e.HandAwakenBy[1] = []bool{true}, []combat.AwakenStep{{Seat: 0, Add: 10}}
 
 	sameLines(t, "a Pair behind a fire card", linesOf(e),
 		[]string{"20 x 1.5 = 30", "+ 10 + 10 x 2 x 1.5 = 60"})
@@ -595,7 +595,8 @@ func TestTwoAwakeningsAreTwoRows(t *testing.T) {
 	e.HandDMG = 15
 	e.HandCardPct[1], e.HandCardBase[1] = 200, 70
 	e.HandAwaken[1] = 20
-	e.AwakenSeats, e.HandAwakenBy[1] = []bool{true, false, true}, []int{10, 0, 10}
+	e.AwakenSeats, e.HandAwakenBy[1] = []bool{true, false, true},
+		[]combat.AwakenStep{{Seat: 0, Add: 10}, {Seat: 2, Add: 10}}
 
 	rows := scriptRows(hitScript(e, 1, false))
 	if len(rows) < 4 || rows[0] != "+ 15" || rows[1] != "+ 10" || rows[2] != "+ 10" || rows[3] != "x 2" {
@@ -609,6 +610,22 @@ func TestTwoAwakeningsAreTwoRows(t *testing.T) {
 	}
 	if len(seats) != 2 || seats[0] != 1 || seats[1] != 3 {
 		t.Errorf("the 10s fly out of relic seats %v, want 1 and 3", seats)
+	}
+}
+
+// **One Awakening woken by two cards ahead is two rows too**, both out of its one seat — a 10 for
+// each card, never a 20.
+func TestOneAwakeningWokenTwiceIsTwoRows(t *testing.T) {
+	e := handEvent("pair", []int{20, 50}, 150, 105)
+	e.HandDMG = 15
+	e.HandCardPct[1], e.HandCardBase[1] = 200, 70
+	e.HandAwaken[1] = 20
+	e.AwakenSeats, e.HandAwakenBy[1] = []bool{true},
+		[]combat.AwakenStep{{Seat: 0, Opener: 0, Add: 10}, {Seat: 0, Opener: 1, Add: 10}}
+
+	rows := scriptRows(hitScript(e, 1, false))
+	if len(rows) < 4 || rows[0] != "+ 15" || rows[1] != "+ 10" || rows[2] != "+ 10" || rows[3] != "x 2" {
+		t.Fatalf("the rows read %q, want the DMG, a 10 per card ahead, then the card's x 2", rows)
 	}
 }
 

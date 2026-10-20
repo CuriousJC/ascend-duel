@@ -140,6 +140,40 @@ func TestAnAwakeningStacksPerMatchingCardAhead(t *testing.T) {
 	}
 }
 
+// TestEveryCardAheadIsItsOwnAwakening. Two fire cards ahead of a Jab are two steps of 10 from the
+// one relic, each naming the card that woke it, never one step of 20 — so the working can show
+// each card's share.
+func TestEveryCardAheadIsItsOwnAwakening(t *testing.T) {
+	flame := awakening(t, "awaken-fire-steps", RelicCondition{Element: Fire, HasElement: true})
+	turn := []Card{Of(Bash, Fire), Of(Cut, Fire), Of(Jab, Earth)}
+
+	events, _, _ := resolve(duelist(10, 9, 5000).Wearing(WornRelic{Relic: flame}),
+		duelist(10, 6, 5000), turn, nil, 1)
+	e := handEventOf(t, events, SideA)
+	slots := ResolutionOrder(turn, nil)
+	for n := 0; n < e.HandCardCount; n++ {
+		if slots[e.HandCards[n]].Index != 2 {
+			continue
+		}
+		steps := e.HandAwakenBy[n]
+		if len(steps) != 2 {
+			t.Fatalf("the Jab woke in %d steps %v, want one per fire card ahead of it", len(steps), steps)
+		}
+		openers := map[int]bool{}
+		for _, s := range steps {
+			if s.Seat != 0 || s.Add != 10 {
+				t.Errorf("a step reads %+v, want 10 from seat 0", s)
+			}
+			openers[slots[s.Opener].Index] = true
+		}
+		if !openers[0] || !openers[1] {
+			t.Errorf("the steps were opened by queue places %v, want the Bash and the Cut", openers)
+		}
+		return
+	}
+	t.Fatal("the Jab never landed")
+}
+
 // TestNothingMatchingAheadWakesNothing. A fire card last has nothing behind it to raise.
 func TestNothingMatchingAheadWakesNothing(t *testing.T) {
 	flame := awakening(t, "awaken-fire-last", RelicCondition{Element: Fire, HasElement: true})

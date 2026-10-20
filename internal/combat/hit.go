@@ -170,12 +170,12 @@ func strike(
 	//
 	// **Ahead as the player queued it**, not as the turn resolves: the defend phase goes first, so
 	// a Brace queued third is turn[0] here. A slot's Index is its place in the queue.
-	var awakenBy [][]int
+	var awakenBy [][]AwakenStep
 	awakenBy, e.AwakenSeats, e.AwakenOpeners = AwakenBonus(worn, turn)
 	awaken := func(l landing) int {
 		n := 0
-		for _, add := range awakenBy[l.seat] {
-			n += add
+		for _, step := range awakenBy[l.seat] {
+			n += step.Add
 		}
 		return n
 	}
@@ -245,7 +245,7 @@ func strike(
 			}
 			e.HandPlayPct[at] = card.ScaleOnPlay()
 			e.HandAwaken[at] = woke
-			e.HandAwakenBy[at] = append([]int(nil), awakenBy[l.seat]...)
+			e.HandAwakenBy[at] = append([]AwakenStep(nil), awakenBy[l.seat]...)
 			e.HitAmounts[at] = figure
 			if l.nth > 0 {
 				// **Only the extra landings are attributed to a relic.** The card's own first

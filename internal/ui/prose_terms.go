@@ -120,17 +120,18 @@ func hitFactors(e combat.Event, i int, relics []combat.WornRelic) []session.Ledg
 	return append(out, priced...)
 }
 
-// awakenFactors names the Awakenings that added to one hit, **one factor per relic**, each beside
-// what it alone added. An event that does not say what each added writes them as one.
+// awakenFactors names the Awakenings that added to one hit, **one factor per payment** — per card
+// ahead that matched — each beside what it alone added, so the ledger reads as the math box does.
+// An event that does not say what each added writes them as one.
 func awakenFactors(e combat.Event, term int, relics []combat.WornRelic) []session.LedgerFactor {
 	add := e.HandAwaken[term]
 	if add == 0 {
 		return nil
 	}
 	var out []session.LedgerFactor
-	for seat, by := range e.HandAwakenBy[term] {
-		if by != 0 {
-			out = append(out, session.LedgerFactor{Relic: relicName(relics, seat), Add: by})
+	for _, step := range e.HandAwakenBy[term] {
+		if step.Add != 0 {
+			out = append(out, session.LedgerFactor{Relic: relicName(relics, step.Seat), Add: step.Add})
 		}
 	}
 	if len(out) == 0 {

@@ -2,6 +2,7 @@ package journey
 
 import (
 	"math/rand"
+	"slices"
 	"strconv"
 
 	"github.com/curiousjc/ascend-duel/data"
@@ -89,8 +90,11 @@ func New(motifs map[string]data.MotifData, shape data.JourneyData, rng *rand.Ran
 		}
 
 		set := make([]Realm, 0, want)
+		var dealt []string
 		for _, key := range taken {
-			set = append(set, rollRealm(motifs[key], rng))
+			f := rollRealm(motifs[key], rng, dealt)
+			dealt = append(dealt, f.Element)
+			set = append(set, f)
 		}
 		p.choices = append(p.choices, set)
 	}
@@ -99,12 +103,22 @@ func New(motifs map[string]data.MotifData, shape data.JourneyData, rng *rand.Ran
 
 // rollRealm gives a motif an element and fills its three rooms.
 //
+// **No two portals of one realm open onto the same element** *(owner's call)*: the element is drawn
+// from those `taken` by the realm's earlier offers has not claimed, so a choice between two portals
+// is always a choice between two elements as well as two motifs.
+//
 // **Every element is reachable**, because data.LoadMotifs refuses a motif that cannot field all
 // three rooms at all five — so this never has to ask whether the theme it rolled is buildable.
-func rollRealm(m data.MotifData, rng *rand.Rand) Realm {
+func rollRealm(m data.MotifData, rng *rand.Rand, taken []string) Realm {
+	var free []string
+	for _, e := range data.AffinityElements {
+		if !slices.Contains(taken, e) {
+			free = append(free, e)
+		}
+	}
 	f := Realm{
 		Motif:   m.Motif,
-		Element: data.AffinityElements[rng.Intn(len(data.AffinityElements))],
+		Element: free[rng.Intn(len(free))],
 	}
 	for i, tier := range data.TierOrder {
 		can := m.Candidates(tier, f.Element)

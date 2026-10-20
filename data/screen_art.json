@@ -47,7 +47,7 @@
     "Screens": [
       "Portal"
     ],
-    "Draw": "The same slow, swirling gray fog as the gray fog backdrop, and in it two portals standing side by side, one filling each portal anchor: the left portal and the right portal. Each is an upright oval of swirling rainbow light, every hue of the spectrum from red through violet turning in a slow bright spiral, the same rainbow as the portals at the far side of a boss's portal room. The portals have no frame of stone, metal or wood: their shape is given by the fog itself, which thickens and curls around each oval into a soft rim of brighter gray mist, as if the fog had parted to let the light through and is pressing in at the edges. The rainbow is strongest and most saturated at the heart of each portal, where the game turns a round swirl of its own over the painting (the left swirl and right swirl anchors), and softens toward the fog rim. The painted heart should be a swirl of the same rainbow, so the turning one sits in it without a seam. Each oval fills its anchor rectangle, centered on it, its widest point at the middle and its top and bottom curving in. The two portals are separate, with plain fog between them. Below the portals the canvas is plain fog. The rainbow is the one place the fog's gray does not reach: never a single-colored portal, never a dark, empty or mirror-like opening.",
+    "Draw": "The same slow, swirling gray fog as the gray fog backdrop, and in it two portals standing side by side, one filling each portal anchor: the left portal and the right portal. Each is an upright oval of swirling rainbow light, every hue of the spectrum from red through violet turning in a slow bright spiral, the same rainbow as the portals at the far side of a boss's portal room. The portals have no frame of stone, metal or wood: their shape is given by the fog itself, which thickens and curls around each oval into a soft rim of brighter gray mist, as if the fog had parted to let the light through and is pressing in at the edges. The rainbow is strongest and most saturated at the heart of each portal and softens toward the fog rim. The game turns a swirl of its own over the whole of each oval (the left swirl and right swirl anchors), fading out at its edge, so the painted portal should be a swirl of the same rainbow all the way out for the turning one to sit in without a seam. Each oval fills its anchor rectangle, centered on it, its widest point at the middle and its top and bottom curving in. The two portals are separate, with plain fog between them. Below the portals the canvas is plain fog. The rainbow is the one place the fog's gray does not reach: never a single-colored portal, never a dark, empty or mirror-like opening.",
     "Anchors": [
       {
         "Name": "left portal",
@@ -68,18 +68,18 @@
       {
         "Name": "left swirl",
         "Kind": "button",
-        "X": 392,
-        "Y": 280,
-        "W": 280,
-        "H": 280
+        "X": 336,
+        "Y": 140,
+        "W": 392,
+        "H": 560
       },
       {
         "Name": "right swirl",
         "Kind": "button",
-        "X": 1298,
-        "Y": 280,
-        "W": 280,
-        "H": 280
+        "X": 1242,
+        "Y": 140,
+        "W": 392,
+        "H": 560
       }
     ]
   }

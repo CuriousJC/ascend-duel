@@ -199,7 +199,7 @@ func (s *GoodsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	drawBuildCard(gs, screen, gs.Run.Vitae())
 	drawGuideCard(gs, screen)
 	drawBuildRelics(gs, screen, &s.band)
-	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil,
+	drawConsumablePane(gs, screen, buildConsumableRect(gs), anywhereSpendable(gs),
 		func(i int) bool { return s.landingSeat(i) || s.band.heldSkip(i) }, s.tip.Showing(), &s.band.sale)
 	drawDeckPile(gs, screen)
 

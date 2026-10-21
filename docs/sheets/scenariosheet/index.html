@@ -63,7 +63,7 @@
 <div class="wrap">
   <h1>Scenario sheet</h1>
   <p class="note">
-    The 67 fixtures in <code>internal/scenario/scenarios.json</code>: what each one plugs in, and the command
+    The 70 fixtures in <code>internal/scenario/scenarios.json</code>: what each one plugs in, and the command
     that launches it. Compiled out of every build that is not <code>-tags scenario</code>, so none
     of this is reachable from a shipped binary.
   </p>
@@ -800,7 +800,7 @@
       <div class="record">momentum-and-atrophy</div>
       <div class="facts">opens on combat · room 0 · against ogres-inner-warlord</div>
       <code class="cmd">DUELLO_SCENARIO=momentum-and-atrophy go run -tags scenario .</code>
-      <p class="blurb">Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn â€” and the Block at the end of it is what resets Momentum, so the growth should climb 0.2x a round and then drop to nothing.</p>
+      <p class="blurb">Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn — and the Block at the end of it is what resets Momentum, so the growth should climb 0.2x a round and then drop to nothing.</p>
 
       
         <div class="strip">
@@ -2063,7 +2063,7 @@
         
           <table>
             <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
-            <tr><td class="key">awaken-fire</td><td>Awakening Flame</td><td class="said">If your first card is a fire card, every attack after it gains &#43;10 DMG.</td></tr><tr><td class="key">attune-ice</td><td>Ice Attunement</td><td class="said">Ice cards land on ice creatures instead of fizzling.</td></tr><tr><td class="key">attune-slash</td><td>Slash Attunement</td><td class="said">Every slashing card you play banks &#43;1 AP for your next turn.</td></tr><tr><td class="key">eternity-pearl</td><td>Eternity Pearl</td><td class="said">At the start of every fight, copy one of your consumables at random. The copy is weightless.</td></tr>
+            <tr><td class="key">awaken-fire</td><td>Awakening Flame</td><td class="said">ATTACK CARDS FOLLOWING FIRE CARDS GET &#43;10 DMG</td></tr><tr><td class="key">attune-ice</td><td>Ice Attunement</td><td class="said">Ice cards land on ice creatures instead of fizzling.</td></tr><tr><td class="key">attune-slash</td><td>Slash Attunement</td><td class="said">Every slashing card you play banks &#43;1 AP for your next turn.</td></tr><tr><td class="key">eternity-pearl</td><td>Eternity Pearl</td><td class="said">At the start of every fight, copy one of your consumables at random. The copy is weightless.</td></tr>
           </table>
         
         
@@ -2086,7 +2086,7 @@
       <div class="record">awakenings</div>
       <div class="facts">opens on combat · room 0 · against animals-outer-bat in earth · DUMMY -- nothing dies</div>
       <code class="cmd">DUELLO_SCENARIO=awakenings go run -tags scenario .</code>
-      <p class="blurb">Four Awakenings worn against an earth Giant Bat, so nothing in the opening hand fizzles. Open on the fire Bash and two of them wake at once - fire and crush - so every attack behind it is swung at &#43;20 DMG; open on the arcane Thrust and only the arcane one wakes, for &#43;10; open on the ice Brace and the ice one wakes, though the Brace itself gains nothing. Dummy life on both sides, so it can be replayed round after round with a different opener each time.</p>
+      <p class="blurb">Four Awakenings worn against an earth Giant Bat, so nothing in the opening hand fizzles. Every attack is swung at &#43;10 DMG for each matching card queued ahead of it, so order is everything: the fire Bash first is fire and crush at once, &#43;20 to every attack behind it; the arcane Thrust raises only what follows it; an ice Brace ahead counts like any card, though the Brace itself gains nothing. Stack two matching cards ahead of a third attack and it takes both. Dummy life on both sides, so it can be replayed round after round with a different order each time.</p>
 
       
         <div class="strip">
@@ -2104,7 +2104,7 @@
         
           <table>
             <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
-            <tr><td class="key">awaken-fire</td><td>Awakening Flame</td><td class="said">If your first card is a fire card, every attack after it gains &#43;10 DMG.</td></tr><tr><td class="key">awaken-arcane</td><td>Awakening Arcana</td><td class="said">If your first card is an arcane card, every attack after it gains &#43;10 DMG.</td></tr><tr><td class="key">awaken-ice</td><td>Awakening Frost</td><td class="said">If your first card is an ice card, every attack after it gains &#43;10 DMG.</td></tr><tr><td class="key">awaken-crush</td><td>Awakening Club</td><td class="said">If your first card is a crushing card, every attack after it gains &#43;10 DMG.</td></tr>
+            <tr><td class="key">awaken-fire</td><td>Awakening Flame</td><td class="said">ATTACK CARDS FOLLOWING FIRE CARDS GET &#43;10 DMG</td></tr><tr><td class="key">awaken-arcane</td><td>Awakening Arcana</td><td class="said">ATTACK CARDS FOLLOWING ARCANE CARDS GET &#43;10 DMG</td></tr><tr><td class="key">awaken-ice</td><td>Awakening Frost</td><td class="said">ATTACK CARDS FOLLOWING ICE CARDS GET &#43;10 DMG</td></tr><tr><td class="key">awaken-crush</td><td>Awakening Club</td><td class="said">ATTACK CARDS FOLLOWING CRUSH CARDS GET &#43;10 DMG</td></tr>
           </table>
         
         
@@ -2222,6 +2222,54 @@
             <tr><th>Deck — 10 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders and traits</th></tr>
             <tr><td>Jab</td><td>fire</td><td>3</td><td>1</td><td class="rider">effortless</td></tr><tr><td>Bash</td><td>fire</td><td>2</td><td>2</td><td class="rider">mirrored</td></tr><tr><td>Block</td><td>ice</td><td>1</td><td>2</td><td class="rider">mirrored</td></tr><tr><td>Bash</td><td>fire</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>2</td><td>1</td><td class="rider"></td></tr>
           </table>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">compendium-open</div>
+      <div class="facts">opens on compendium · room 0 · the whole Compendium found</div>
+      <code class="cmd">DUELLO_SCENARIO=compendium-open go run -tags scenario .</code>
+      <p class="blurb">The whole Compendium found: every relic, cantrip, potion, tonic, essence, rune, stone, sealed good, trait, creature in every colour, realm and achievement reads as found, so the books can be reviewed record by record without a profile that has played them all. A view only - nothing is written to the profile, and the captions still count what the profile holds, so a record nobody has had reads 0. Opens on the Compendium over the first duel, whose Back lands in the fight.</p>
+
+      
+
+      <div class="cols">
+        
+        
+        
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">compendium</div>
+      <div class="facts">opens on compendium · room 0</div>
+      <code class="cmd">DUELLO_SCENARIO=compendium go run -tags scenario .</code>
+      <p class="blurb">The Compendium as this profile has it: what the player has found and what is still masked - the placeholder cards, the disabled ???? chips, the portal swirl standing in for a realm not yet entered. compendium-open&#39;s counterpart, for looking at the undiscovered side. Opens on the Compendium over the first duel, whose Back lands in the fight.</p>
+
+      
+
+      <div class="cols">
+        
+        
+        
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">compendium-third</div>
+      <div class="facts">opens on compendium · room 0 · 33% of the Compendium found</div>
+      <code class="cmd">DUELLO_SCENARIO=compendium-third go run -tags scenario .</code>
+      <p class="blurb">A third of the Compendium found, so found and undiscovered entries sit side by side: real cards beside placeholders, rooms beside portal swirls, live chips beside disabled ???? ones. Creatures and realms are revealed realm by realm, so the two books agree. The share is a hash of each entry&#39;s key, so the same third shows every launch. Opens on the Compendium over the first duel, whose Back lands in the fight.</p>
+
+      
+
+      <div class="cols">
+        
+        
+        
         
       </div>
     </div>

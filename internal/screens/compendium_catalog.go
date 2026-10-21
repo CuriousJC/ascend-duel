@@ -21,6 +21,8 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/models"
+	"github.com/curiousjc/ascend-duel/internal/scenario"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
@@ -29,8 +31,9 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
-// The grid. **Every catalog card is 200x280 and is drawn here at three fifths**, the same reduction
-// for all of them so the books read as one shelf.
+// The grid. **Every catalog card is 200x280 and is drawn here at its own size**, except the
+// bestiary's, which is drawn at three fifths: a creature in every colour is many times any other
+// catalog, and a page of them at full size is a handful of cards.
 const (
 	catalogScaleNum = 3
 	catalogScaleDen = 5
@@ -38,6 +41,13 @@ const (
 	catalogGapX     = 22
 	catalogGapY     = 14
 	catalogCaptionH = 34
+
+	// catalogTagH is one line of an entry's tags — the element and the motif a creature or a realm
+	// carries — set between the picture and the caption.
+	catalogTagH = 22
+
+	// catalogTagGap is what a book whose count lives in the tooltip keeps under its tags.
+	catalogTagGap = 6
 
 	// catalogUndrawnScale is how far a found record with no art of its own is darkened, so the
 	// placeholder on a found card is told apart from the placeholder standing in for an unfound one.
@@ -64,31 +74,40 @@ type compendiumEntry struct {
 	// creature is set on the bestiary's entries, and is what a found one shows in place of a
 	// tooltip — see compendium_creature.go.
 	creature *creaturePeek
+
+	// element and motif are what the book's filter reads — a creature's colour and its motif key, or
+	// a realm's — and tags are the lines set under the picture saying so. **Shown found or not**:
+	// they say where an entry sits on the roster, which the filter's chips have already named.
+	element string
+	motif   string
+	tags    []models.TipLine
+
+	// backdrop is a realm's: the room drawn in place of a card — see compendium_realm.go.
+	backdrop string
 }
 
-// catalogCell is the size one entry takes: the reduced card and the caption under it.
-func catalogCell() (w, h int) {
-	st := cards.EssenceStyle.Scaled(catalogScaleNum, catalogScaleDen)
-	return st.Width, st.Height + catalogCaptionH
+// cell is the size one entry takes: its picture and the caption under it.
+func (d *compendiumDialog) cell() (w, h int) {
+	return d.pic.X, d.pic.Y + d.captionH
 }
 
 // catalogGrid is how many entries fit across the body and how many rows down it.
-func catalogGrid(body image.Rectangle) (cols, rows int) {
-	w, h := catalogCell()
+func (d *compendiumDialog) catalogGrid(body image.Rectangle) (cols, rows int) {
+	w, h := d.cell()
 	cols = (body.Dx() + catalogGapX) / (w + catalogGapX)
 	rows = (body.Dy() + catalogGapY) / (h + catalogGapY)
 	return max(cols, 1), max(rows, 1)
 }
 
-// catalogSeat is where the entry at index i is drawn, given the scrolled-to row, and whether it is on
-// the page at all.
-func catalogSeat(body image.Rectangle, i, offset int) (image.Rectangle, bool) {
-	cols, rows := catalogGrid(body)
+// catalogSeat is where the i-th shown entry is drawn, given the scrolled-to row, and whether it is
+// on the page at all.
+func (d *compendiumDialog) catalogSeat(body image.Rectangle, i, offset int) (image.Rectangle, bool) {
+	cols, rows := d.catalogGrid(body)
 	row := i/cols - offset
 	if row < 0 || row >= rows {
 		return image.Rectangle{}, false
 	}
-	w, h := catalogCell()
+	w, h := d.cell()
 	used := cols*w + (cols-1)*catalogGapX
 	left := body.Min.X + (body.Dx()-used)/2
 	x := left + (i%cols)*(w+catalogGapX)
@@ -102,8 +121,9 @@ func (s *CompendiumScene) pointAtEntry(gs *state.GlobalState, body image.Rectang
 		return
 	}
 	at := image.Pt(gs.MouseX, gs.MouseY)
-	for i, e := range s.open.entries {
-		seat, ok := catalogSeat(body, i, s.scroll.Offset)
+	for i, idx := range s.open.shown {
+		e := s.open.entries[idx]
+		seat, ok := s.open.catalogSeat(body, i, s.scroll.Offset)
 		if !ok || !at.In(seat) {
 			continue
 		}
@@ -124,25 +144,36 @@ func (s *CompendiumScene) pointAtEntry(gs *state.GlobalState, body image.Rectang
 // drawCatalog draws the visible rows of a catalog book.
 func (s *CompendiumScene) drawCatalog(gs *state.GlobalState, screen *ebiten.Image, body image.Rectangle) {
 	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: compendiumCaptionSize}
-	for i, e := range s.open.entries {
-		seat, ok := catalogSeat(body, i, s.scroll.Offset)
+	decodes := realmThumbsPerFrame
+	for i, idx := range s.open.shown {
+		e := s.open.entries[idx]
+		seat, ok := s.open.catalogSeat(body, i, s.scroll.Offset)
 		if !ok {
 			continue
 		}
-		spec := e.spec
-		if !e.found {
-			spec = undiscoveredSpec(gs)
-		}
-		img := ui.CardImage(gs, spec, e.style)
-		if img != nil {
-			op := &ebiten.DrawImageOptions{}
-			op.GeoM.Translate(float64(seat.Min.X), float64(seat.Min.Y))
-			if e.found && ui.IsPlaceholder(gs, e.spec.Art) {
-				op.ColorScale.Scale(catalogUndrawnScale, catalogUndrawnScale, catalogUndrawnScale, 1)
+		if e.backdrop != "" {
+			drawRealmPicture(gs, screen, e, image.Rectangle{Min: seat.Min, Max: seat.Min.Add(s.open.pic)}, &decodes)
+		} else {
+			spec := e.spec
+			if !e.found {
+				spec = undiscoveredSpec(gs)
 			}
-			screen.DrawImage(img, op)
+			if img := ui.CardImage(gs, spec, e.style); img != nil {
+				op := &ebiten.DrawImageOptions{}
+				op.GeoM.Translate(float64(seat.Min.X), float64(seat.Min.Y))
+				if e.found && ui.IsPlaceholder(gs, e.spec.Art) {
+					op.ColorScale.Scale(catalogUndrawnScale, catalogUndrawnScale, catalogUndrawnScale, 1)
+				}
+				screen.DrawImage(img, op)
+			}
 		}
-		if !e.found {
+		ty := seat.Min.Y + s.open.pic.Y + 4
+		for _, tag := range e.tags {
+			x := seat.Min.X + (seat.Dx()-int(tagWidth(tag, face)))/2
+			systems.DrawLine(screen, tag, face, x, ty, compendiumQuietInk)
+			ty += catalogTagH
+		}
+		if !e.found || s.open.countInTip {
 			continue
 		}
 		cap := &text.DrawOptions{}
@@ -164,22 +195,59 @@ func undiscoveredSpec(gs *state.GlobalState) cards.Spec {
 	}
 }
 
-// catalogDialog finishes a book: its "N of M found" line, and the count line every found record's
-// tooltip ends on.
+// tagWidth is how wide a tag line is set, for centering it under its picture.
+func tagWidth(line models.TipLine, face *text.GoTextFace) float64 {
+	w := 0.0
+	for _, run := range line {
+		w += systems.MeasureText(run.Text, face)
+	}
+	return w
+}
+
+// catalogDialog finishes a book: the count line every found record's tooltip ends on, every entry
+// shown, and its "N of M found" line.
+//
+// **A revealing scenario finds everything here**, so every catalog — and the bestiary's peek — reads
+// as found without each book asking. See scenario.Reveals: a roster entry is keyed by its realm, so a
+// partly revealed bestiary and realm book agree about where the player has been.
 func catalogDialog(title string, entries []compendiumEntry) *compendiumDialog {
-	found := 0
 	for i := range entries {
 		e := &entries[i]
-		if !e.found {
-			continue
+		key := e.title
+		if e.motif != "" {
+			key = e.motif + ":" + e.element
 		}
-		found++
-		e.extra = append(e.extra, e.verb+" "+times(e.count))
+		if scenario.Reveals(key) {
+			e.found = true
+		}
+		if e.found {
+			e.extra = append(e.extra, e.verb+" "+times(e.count))
+		}
 	}
-	return &compendiumDialog{
+	// The cell is the book's own card, which every entry in one book shares.
+	card := cards.EssenceStyle
+	if len(entries) > 0 {
+		card = entries[0].style
+	}
+	d := &compendiumDialog{
 		title:    title,
-		subtitle: strconv.Itoa(found) + " of " + strconv.Itoa(len(entries)) + " found",
 		entries:  entries,
+		pic:      image.Pt(card.Width, card.Height),
+		captionH: catalogCaptionH,
+	}
+	d.refilter()
+	return d
+}
+
+// tagged makes room in a book's caption for the tag lines its entries carry.
+func (d *compendiumDialog) tagged() {
+	most := 0
+	for _, e := range d.entries {
+		most = max(most, len(e.tags))
+	}
+	d.captionH = catalogCaptionH + most*catalogTagH
+	if d.countInTip {
+		d.captionH = catalogTagGap + most*catalogTagH
 	}
 }
 
@@ -195,12 +263,17 @@ func times(n int) string {
 	}
 }
 
-// bleedStyle is the reduced full-bleed card every catalog is drawn in — the relic's pink-bordered
-// one for relics, the essence's for everything else.
+// bleedStyle is the full-bleed card every catalog is drawn in — the relic's pink-bordered one for
+// relics, the essence's for everything else.
 func bleedStyle(relic bool) cards.Style {
 	if relic {
-		return cards.RelicStyle.Scaled(catalogScaleNum, catalogScaleDen)
+		return cards.RelicStyle
 	}
+	return cards.EssenceStyle
+}
+
+// creatureStyle is the bestiary's card: the essence's, reduced.
+func creatureStyle() cards.Style {
 	return cards.EssenceStyle.Scaled(catalogScaleNum, catalogScaleDen)
 }
 
@@ -368,14 +441,27 @@ func creaturesDialog(gs *state.GlobalState) *compendiumDialog {
 				beaten := all.Total(session.CreatureAs(session.StatCreatureDefeatedAs, r.Record, element))
 				fell := all.Total(session.CreatureAs(session.StatCreatureKillerAs, r.Record, element))
 
-				e := entry(spec, bleedStyle(false), beaten, "BEATEN", r.FullName(), nil)
+				e := entry(spec, creatureStyle(), beaten, "BEATEN", r.FullName(), nil)
 				e.found = beaten+fell > 0
 				e.creature = &creaturePeek{
 					record: r, element: element, motif: motif.Name, beaten: beaten, fell: fell,
 				}
+				e.element, e.motif = element, key
 				out = append(out, e)
 			}
 		}
 	}
-	return catalogDialog("CREATURES", out)
+	d := catalogDialog("CREATURES", out)
+	d.roster(gs, func(_ bool, element, motif string) []models.TipLine {
+		return []models.TipLine{ui.TipLine(element), {{Text: motif}}}
+	})
+	return d
+}
+
+// motifName is what a motif is called, or its key while it has no name.
+func motifName(m data.MotifData) string {
+	if m.Name == "" {
+		return m.Motif
+	}
+	return m.Name
 }

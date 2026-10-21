@@ -78,6 +78,7 @@ var compendiumBooks = []compendiumBook{
 	{label: "STATISTICS", open: statsDialog},
 	{label: "ACHIEVEMENTS", leave: actions.OpenAchievements},
 	{label: "CREATURES", open: creaturesDialog},
+	{label: "REALMS", open: realmsDialog},
 	{label: "RELICS", open: relicsDialog},
 	{label: "CANTRIPS", open: cantripsDialog},
 	{label: "POTIONS", open: potionsDialog},
@@ -96,6 +97,25 @@ type compendiumDialog struct {
 	subtitle string
 	entries  []compendiumEntry
 	rows     []statRow
+
+	// pic and captionH are one catalog entry's picture and the caption under it: the reduced card
+	// for every book but the realms, whose rooms are landscape.
+	pic      image.Point
+	captionH int
+
+	// countInTip leaves the count off the caption and in the tooltip alone, so a book with large
+	// pictures fits another row: the realms.
+	countInTip bool
+
+	// facets are the book's filter chips, and shown the indices of the entries they let through, in
+	// book order. **A book with no facets shows everything** — see compendium_filter.go.
+	facets []*compendiumFacet
+	shown  []int
+
+	// perCol is how many chips stand down a column, and refiltered that a chip was pressed since the
+	// scene last looked, so the book goes back to its top.
+	perCol     int
+	refiltered bool
 
 	// stats is the statistics book's: it is rebuilt when its tabs move between the rolled and the
 	// chosen-seed record, so it remembers which it is showing.
@@ -197,7 +217,7 @@ func (s *CompendiumScene) Update(gs *state.GlobalState) error {
 		return nil
 	}
 
-	body := compendiumBody(gs)
+	body := compendiumBody(gs, s.open)
 	track := image.Rect(body.Max.X+compendiumScrollGap, body.Min.Y,
 		body.Max.X+compendiumScrollGap+compendiumScrollWidth, body.Max.Y)
 	s.scroll.Width, s.scroll.Height = track.Dx(), track.Dy()
@@ -209,8 +229,9 @@ func (s *CompendiumScene) Update(gs *state.GlobalState) error {
 		systems.UpdateButton(gs, s.chosenTab)
 		s.scroll.Total, s.scroll.Visible = len(s.open.rows), statRowsVisible(body)
 	} else {
-		cols, rows := catalogGrid(body)
-		s.scroll.Total = (len(s.open.entries) + cols - 1) / cols
+		s.updateChips(gs)
+		cols, rows := s.open.catalogGrid(body)
+		s.scroll.Total = (len(s.open.shown) + cols - 1) / cols
 		s.scroll.Visible = rows
 		s.pointAtEntry(gs, body)
 	}
@@ -257,12 +278,13 @@ func (s *CompendiumScene) drawDialog(gs *state.GlobalState, screen *ebiten.Image
 			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: compendiumSubtitleSize}, sub)
 	}
 
-	body := compendiumBody(gs)
+	body := compendiumBody(gs, s.open)
 	if s.open.stats {
 		systems.DrawButton(gs, screen, s.rolledTab)
 		systems.DrawButton(gs, screen, s.chosenTab)
 		s.drawStatRows(gs, screen, body)
 	} else {
+		s.drawChips(gs, screen)
 		s.drawCatalog(gs, screen, body)
 	}
 	systems.DrawScrollbar(gs, screen, s.scroll)
@@ -270,13 +292,14 @@ func (s *CompendiumScene) drawDialog(gs *state.GlobalState, screen *ebiten.Image
 }
 
 // compendiumBody is the rectangle a book's contents are drawn in: inside the panel, under its title,
-// and clear of the scrollbar down the right.
-func compendiumBody(gs *state.GlobalState) image.Rectangle {
+// between any filter chips, and clear of the scrollbar down the right.
+func compendiumBody(gs *state.GlobalState, d *compendiumDialog) image.Rectangle {
 	r := ui.ModalPanelRect(gs)
+	left, right := d.chipSides()
 	return image.Rect(
-		r.Min.X+compendiumBodyInset,
+		r.Min.X+compendiumBodyInset+left,
 		r.Min.Y+compendiumBodyTop,
-		r.Max.X-compendiumBodyInset-compendiumScrollGap-compendiumScrollWidth,
+		r.Max.X-compendiumBodyInset-compendiumScrollGap-compendiumScrollWidth-right,
 		r.Max.Y-compendiumBodyBottom,
 	)
 }

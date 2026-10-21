@@ -72,6 +72,10 @@ const (
 	DummyRounds = 999
 )
 
+// Reveals reports whether a Compendium entry should read as found whatever the profile says.
+// Always false here.
+func Reveals(string) bool { return false }
+
 // Dummy reports whether the fight is unkillable in both directions. Always false here.
 func Dummy() bool { return false }
 

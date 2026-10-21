@@ -215,6 +215,8 @@ type record struct {
 	RoundLimit     int                 `json:"RoundLimit"`
 	RelicSlots     int                 `json:"RelicSlots"`
 	Teach          bool                `json:"Teach"`
+	Reveal         bool                `json:"Reveal"`
+	RevealPercent  int                 `json:"RevealPercent"`
 }
 
 type handCard struct {
@@ -492,6 +494,12 @@ func factsOf(r record) []string {
 	}
 	if r.Teach {
 		out = append(out, "runs the tutorial")
+	}
+	if r.Reveal {
+		out = append(out, "the whole Compendium found")
+	}
+	if r.RevealPercent > 0 {
+		out = append(out, strconv.Itoa(r.RevealPercent)+"% of the Compendium found")
 	}
 	return out
 }

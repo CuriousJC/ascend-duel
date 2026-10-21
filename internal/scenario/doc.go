@@ -59,6 +59,9 @@
 //     `"wild-element"`. `Runes` is the right fixture for looking at the *dialog* and the wrong one for
 //     looking at what an altered card does to a hand, which needs a turn played to spend the consumable
 //     first.
+//   - **`"Reveal": true` reads the whole Compendium as found**, achievements included, with
+//     `"Screen": "compendium"` to open on it, and `"RevealPercent"` a steady share of it. It is a
+//     view: nothing reaches the profile.
 //   - **`"Teach": true` forces the tutorial on the run** whatever the profile says, and is the only way
 //     to see it a second time.
 //   - **Every entry carries a `Note` saying what question it answers**, printed at startup. A fixture

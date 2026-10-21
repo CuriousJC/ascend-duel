@@ -2128,5 +2128,22 @@
     "Enemy": "animals-outer-rat",
     "Dummy": true,
     "Actions": 20
+  },
+  {
+    "ScenarioRecord": "compendium-open",
+    "Note": "The whole Compendium found: every relic, cantrip, potion, tonic, essence, rune, stone, sealed good, trait, creature in every colour, realm and achievement reads as found, so the books can be reviewed record by record without a profile that has played them all. A view only - nothing is written to the profile, and the captions still count what the profile holds, so a record nobody has had reads 0. Opens on the Compendium over the first duel, whose Back lands in the fight.",
+    "Reveal": true,
+    "Screen": "compendium"
+  },
+  {
+    "ScenarioRecord": "compendium",
+    "Note": "The Compendium as this profile has it: what the player has found and what is still masked - the placeholder cards, the disabled ???? chips, the portal swirl standing in for a realm not yet entered. compendium-open's counterpart, for looking at the undiscovered side. Opens on the Compendium over the first duel, whose Back lands in the fight.",
+    "Screen": "compendium"
+  },
+  {
+    "ScenarioRecord": "compendium-third",
+    "Note": "A third of the Compendium found, so found and undiscovered entries sit side by side: real cards beside placeholders, rooms beside portal swirls, live chips beside disabled ???? ones. Creatures and realms are revealed realm by realm, so the two books agree. The share is a hash of each entry's key, so the same third shows every launch. Opens on the Compendium over the first duel, whose Back lands in the fight.",
+    "RevealPercent": 33,
+    "Screen": "compendium"
   }
 ]

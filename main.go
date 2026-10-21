@@ -448,6 +448,12 @@ func startScenarioAt(g *game.Game) {
 		}
 		gs.Run.SetPhase(session.PhasePortal)
 		gs.ActiveScreen = state.Portal
+	case "compendium":
+		// Opened over the run's first fight, as the settings screen's button would open it from the
+		// duel, so Back lands there.
+		gs.Run.SetPhase(session.PhaseFight)
+		gs.Returns = append(gs.Returns, state.Combat)
+		gs.ActiveScreen = state.Compendium
 	default:
 		gs.Run.SetPhase(session.PhaseFight)
 		gs.ActiveScreen = state.Combat

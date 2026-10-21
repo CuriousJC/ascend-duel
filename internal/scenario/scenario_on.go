@@ -6,6 +6,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"hash/fnv"
 	"log"
 	"os"
 	"slices"
@@ -205,6 +206,16 @@ type record struct {
 	// see the lesson again: it forces the script whatever the profile says, and it is why the
 	// tutorial can still be worked on after it has been finished once.
 	Teach bool `json:"Teach"`
+
+	// Reveal opens the whole Compendium: every catalog record, creature, realm and achievement reads
+	// as found, whatever the profile holds. **It is a view and writes nothing** — the profile's own
+	// figures are still what the captions count, so a revealed record nobody has had reads 0.
+	Reveal bool `json:"Reveal"`
+
+	// RevealPercent opens roughly that share of it instead, 1 to 99: which entries is a hash of each
+	// one's key, never rolled, so the same ones read as found every launch. A creature and a realm are
+	// keyed by the realm they belong to, so a revealed realm's creatures are revealed beside it.
+	RevealPercent int `json:"RevealPercent"`
 }
 
 // handCard is one card of a plugged hand: a concept by its label, a color, and any riders it
@@ -423,9 +434,13 @@ func check(r *record) error {
 			return fmt.Errorf("deck: %q: %v", c.Card, err)
 		}
 	}
-	if r.Screen != "" && r.Screen != screenCombat && r.Screen != screenReward && r.Screen != screenShop && r.Screen != screenPortal {
-		return fmt.Errorf("%q is not a screen (want %q, %q, %q or %q)",
-			r.Screen, screenCombat, screenReward, screenShop, screenPortal)
+	if r.Screen != "" && r.Screen != screenCombat && r.Screen != screenReward && r.Screen != screenShop &&
+		r.Screen != screenPortal && r.Screen != screenCompendium {
+		return fmt.Errorf("%q is not a screen (want %q, %q, %q, %q or %q)",
+			r.Screen, screenCombat, screenReward, screenShop, screenPortal, screenCompendium)
+	}
+	if r.RevealPercent < 0 || r.RevealPercent > 99 {
+		return fmt.Errorf("RevealPercent %d is not a share (1 to 99; Reveal is the whole)", r.RevealPercent)
 	}
 	if r.Actions < 0 {
 		return fmt.Errorf("an action budget of %d is not a budget", r.Actions)
@@ -565,6 +580,9 @@ const (
 	screenReward = "reward"
 	screenShop   = "shop"
 	screenPortal = "portal"
+
+	// screenCompendium opens the Compendium over the run's first fight, so its Back lands in the duel.
+	screenCompendium = "compendium"
 )
 
 // Screen is which scene to open on, defaulting to the duel.
@@ -573,6 +591,20 @@ func Screen() string {
 		return screenCombat
 	}
 	return current.Screen
+}
+
+// Reveals reports whether the Compendium entry keyed by key should read as found whatever the
+// profile says: every key under Reveal, and a share of them, by hash, under RevealPercent.
+func Reveals(key string) bool {
+	if current.Reveal {
+		return true
+	}
+	if current.RevealPercent <= 0 {
+		return false
+	}
+	h := fnv.New32a()
+	h.Write([]byte(key))
+	return int(h.Sum32()%100) < current.RevealPercent
 }
 
 // Fight, Vitae and Life are the run state a jumped-in screen needs to have anything to show.

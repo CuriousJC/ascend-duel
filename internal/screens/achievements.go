@@ -32,7 +32,6 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"github.com/curiousjc/ascend-duel/internal/models"
-	"github.com/curiousjc/ascend-duel/internal/scenario"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/ui"
@@ -286,9 +285,9 @@ func achievementsScrollRect(gs *state.GlobalState) image.Rectangle {
 
 // earned reports whether the profile holds an entry. **A missing profile reads as nothing earned**
 // rather than as an error: a machine that could not read its profile still gets to look at the page.
-// A revealing scenario reads its share as earned — see scenario.Reveals; nothing is written.
+// A revealing scenario or the reveal dev tool reads its share as earned — see reveals; nothing is written.
 func earned(gs *state.GlobalState, key string) bool {
-	if scenario.Reveals(key) {
+	if reveals(gs, key) {
 		return true
 	}
 	return gs.Profile != nil && gs.Profile.Has(key)

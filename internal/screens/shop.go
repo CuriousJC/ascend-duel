@@ -456,6 +456,10 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 	if !gs.CursorAllowed() {
 		return
 	}
+	// No tooltip while a card rides the cursor; see bandControls.update.
+	if s.band.busy() {
+		return
+	}
 
 	// **The three shelves hit-test through ui.HoveredSeat**, like every row in the game: the panes
 	// share one pitch across every seat the shop offers, so the cards overlap by a dozen pixels and
@@ -672,7 +676,7 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// vanished. Only a freestanding card is lit here, as on every screen off the table. See
 	// buildband.go.
 	drawConsumablePane(gs, screen, buildConsumableRect(gs), anywhereSpendable(gs), s.band.heldSkip, s.tip.Showing(),
-		&s.band.sale)
+		&s.band.sale, &s.band.heldDrag)
 
 	// **The four panes, left to right.** Each paints its own surface first and its cards on top;
 	// see shop_panes.go, which owns where they stand.
@@ -736,6 +740,13 @@ func (s *ShopScene) drawShelf(gs *state.GlobalState, screen *ebiten.Image) {
 			ui.DrawAloft(screen, face, at.Min, 1, float64(gs.Count), float64(i)*2.1)
 		} else {
 			ui.DrawRelicCard(gs, screen, at.Min, record, "", affordable, false)
+			// **An armored offer's edge is lit**, as it will be on the band. See ui.DrawEdgeLight.
+			if item.traits.AddsRules() {
+				var geo ebiten.GeoM
+				geo.Translate(float64(at.Min.X), float64(at.Min.Y))
+				ui.DrawEdgeLight(screen, geo, cards.RelicStyle.Width, cards.RelicStyle.Height,
+					cards.RelicStyle.CornerRadius, gs.Count, i)
+			}
 		}
 		s.figure(gs, screen, at, price, affordable)
 	}

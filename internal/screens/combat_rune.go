@@ -954,6 +954,9 @@ type consumableRow struct {
 	rect  image.Rectangle
 	held  int
 	seats int
+
+	// runes is how many of the held cards are runes, which sit first — the only ones a drop moves.
+	runes int
 	click func(i int)
 	move  func(from, to int)
 }
@@ -995,6 +998,10 @@ func (r consumableRow) RowDropIndex(gs *state.GlobalState) int {
 
 // RowLift is deliberately empty. See the type comment.
 func (r consumableRow) RowLift(int) {}
+
+// RowAccepts is moveCarried's rule, asked before the drop so the preview never opens a gap the drop
+// would not land in: runes reorder among themselves and nothing else moves.
+func (r consumableRow) RowAccepts(from, to int) bool { return from < r.runes && to < r.runes }
 
 func (r consumableRow) RowReturn(from, to int) {
 	if r.move != nil {

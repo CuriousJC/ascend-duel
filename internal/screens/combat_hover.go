@@ -37,6 +37,11 @@ func (s *CombatScene) hover(gs *state.GlobalState) {
 		return
 	}
 
+	// **No tooltip while a card rides the cursor** — see bandControls.update.
+	if s.drag.Dragging() || s.band.busy() {
+		return
+	}
+
 	// **The hands panel explains itself in words**, so there is nothing under it to point at —
 	// and a hand card's tooltip drawn through a dialog is the failure this branch exists to stop.
 	if s.hands.IsOpen() {

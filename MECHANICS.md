@@ -416,12 +416,18 @@ does not hold — a cantrip-relic is worn `weightless` and `ephemeral` by key.
 | **Mirrored** | a card | lands twice: an attack throws one more full-strength hit, ahead of any relic's repeats, which add to it; a defense raises its shields twice | an offset, softened, see-through echo of its picture over the picture, inside the card's own frame |
 | **Weightless** | a wearing | takes no relic slot | aloft on the band |
 | **Ephemeral** | a wearing | lasts the fight it was put on in | faded toward its foot, its border broken |
-| **Armored** | a wearing | a turn-start `raise-shield` of `Element: "random"`: **one shield of a rolled color** at the top of each of the wearer's turns, after that relic's own wards | its shield heaps over the ring, as a helm's does; the tooltip ends on *Armored* |
+| **Armored** | a wearing | a turn-start `raise-shield` of `Element: "random"`: **one shield of a rolled color** at the top of each of the wearer's turns, after that relic's own wards | at rest, a line of light runs round its edge, on the band, the shelf and in the Compendium; in a fight its shield heaps over the ring, as a helm's does; the tooltip ends on *Armored* |
+
+**A trait has no picture of its own, and its record carries no `Art` or `Draw`.** The Drawn column
+is the whole of how one looks: a treatment on the relic or card carrying it. The
+Compendium's trait book draws each trait that way on a sample — a relic from the open shelf, a card
+from the starting deck — chosen off `seeds.CompendiumSample`, so one run shows one sample and the
+next another.
 
 **The shelf sells a relic with a trait at the trait's `Percent`.** Every seat rolls every priced
 trait after its relic is picked, each off its own split of `seeds.ShelfTraits` keyed by the trait,
 so moving one trait's odds or adding a trait rerolls no other trait and no relic. An offer's tooltip
-names its traits, since armored has no picture of its own. **A trait lasting one fight may not be
+names its traits, and each is drawn on the offer as it will be on the band. **A trait lasting one fight may not be
 priced above zero** — a bought relic gone after one fight is vitae spent on nothing.
 
 **A card trait comes from an action bundle** — see §The sealed packs. A scenario can also put one on
@@ -3933,7 +3939,7 @@ The list looks heterogeneous and is not. It is three families, and only one of t
 - **A lifetime count** — three hundred slashing cards, two hundred Bashes, fifty fire cards. Tallied
   per form, per card and per element. A tally on the profile,
   not a predicate over anything the process is holding.
-- **A named moment** — a duel won, the tutorial finished, the fifth realm reached, a card walked round the end of its ladder by an essence, ten shields standing at once, a rung of the hand ladder formed. The only family
+- **A named moment** — a duel won, the tutorial finished, the fifth realm reached, a card walked round the end of its ladder by an essence, ten shields standing at once, a rung of the hand ladder formed, a single hit of a thousand, the journey won, a deck of one element or one attack form, a boss in every element, every realm, every creature. The only family
   that costs a line of Go each, and deliberately the short one.
 
 **`ladder-wrapped` is read off the two cards, not the essence.** A Jab that comes out a Skewer can
@@ -3946,6 +3952,20 @@ moment belongs to the three-rung attack ladders alone.
 satisfy the Elemental Five of a Kind, every smaller elemental rung and the Pair; what the player
 saw on the banner is the one that paid, and "you formed it" means that one. It is read off the
 resolved event log, like the play counts.
+
+**`hit-landed` is one card's hit, not the turn's.** The hardest single hit the player landed on the
+creature in a resolved round, after the hand's multiplier — off the event log, so a hit a shield ate
+landed nothing and is not one.
+
+**The deck moments read the run's whole deck, asked at every save.** One element means every card,
+defend cards included; one form means every *attack*, defend cards not asked. A wildcard on the axis
+fits whatever the rest agree on, so a fire deck holding a wild-element card is still a fire deck.
+
+**The collection moments read the Compendium's own record**: the rolled-seed statistics with the run
+in progress added on, so a creature the books show as beaten is one these count. **A realm is beaten
+when its boss falls in its element**; the bestiary is every record beaten in every element it can be
+dealt as, bosses included; a boss of each element is five. **The target is the roster as it stands**,
+so authoring a motif raises it for everyone who has not yet earned it.
 
 **The turn family reads the turn, not the hand.** A hand counts the cards that scored it and leaves
 the rest out; these are about what was played together, which is why Kitchen Sink can ask for a defense

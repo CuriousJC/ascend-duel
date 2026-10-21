@@ -113,6 +113,13 @@ type DragRow interface {
 	RowClick(i int)
 }
 
+// DropGuard is a row that refuses some moves. **Optional**, for the one row whose drop index is not
+// the whole story — the consumables pane reorders runes only among themselves. A refused move is
+// previewed as no move at all, so the gap never opens somewhere a drop would not land.
+type DropGuard interface {
+	RowAccepts(from, to int) bool
+}
+
 // CardDrag is the press currently in progress over one row. The zero value is no press, which is
 // what lets it be a plain field rather than a pointer that has to be nil-checked at every use.
 type CardDrag struct {
@@ -131,6 +138,13 @@ type CardDrag struct {
 	// grabDX/grabDY keep the cursor where it landed on the card, so picking one up does not snap
 	// it to the cursor.
 	grabDX, grabDY int
+
+	// target is the seat the card would land in if it were let go now, and shift is how far, in
+	// seats, each card of the row is drawn from its own place to open the gap there — eased toward
+	// that every tick. Both are indexed over the row as it stood before the lift, with the card
+	// riding the cursor still in it.
+	target int
+	shift  []float64
 }
 
 // Dragging reports whether a card is currently riding the cursor. Drawing reads it: the row skips
@@ -144,6 +158,21 @@ func (d *CardDrag) Origin() int { return d.originIndex }
 // At is where the dragged card's top-left corner sits this frame.
 func (d *CardDrag) At(gs *state.GlobalState) image.Point {
 	return image.Pt(gs.MouseX-d.grabDX, gs.MouseY-d.grabDY)
+}
+
+// Shift is how far, in seats, the card at i is drawn from its own seat while a card is riding the
+// cursor: the preview of where the drop will land.
+//
+// **Every row draws through it, and that is the whole of what makes the gesture one gesture**
+// *(owner's call)*. Picking a card up moves nothing; the cards between where it came from and where
+// the cursor is ease aside, a seat each, to open the gap it would drop into, and ease back when the
+// cursor leaves the row. i is an index over the row with the lifted card still in it — the hand,
+// which takes its card out of its list, maps its own indices past the origin up by one.
+func (d *CardDrag) Shift(i int) float64 {
+	if !d.active || i < 0 || i >= len(d.shift) {
+		return 0
+	}
+	return d.shift[i]
 }
 
 // Update runs one tick of the lifecycle. The caller decides *whether* the row is live — a round
@@ -163,6 +192,43 @@ func (d *CardDrag) Update(gs *state.GlobalState, row DragRow) {
 	}
 
 	d.promote(gs, row)
+	if d.active {
+		d.track(gs, row)
+	}
+}
+
+// dropTarget is where a release now would land the card: the seat under the cursor inside the row,
+// its own seat outside it or where the row refuses the move.
+func (d *CardDrag) dropTarget(gs *state.GlobalState, row DragRow) int {
+	if !image.Pt(gs.MouseX, gs.MouseY).In(row.RowZone(gs)) {
+		return d.originIndex
+	}
+	to := min(max(row.RowDropIndex(gs), 0), len(d.shift)-1)
+	if g, ok := row.(DropGuard); ok && !g.RowAccepts(d.originIndex, to) {
+		return d.originIndex
+	}
+	return to
+}
+
+// track moves the gap to the cursor and eases every card toward the seat that opens it. **Eased
+// out**, a fixed share of what is left each tick, so a card leaves quickly and settles gently — and
+// over a slide's length, since a seat is the same few inches a sort moves a card.
+func (d *CardDrag) track(gs *state.GlobalState, row DragRow) {
+	d.target = d.dropTarget(gs, row)
+	rate := min(1, 4/float64(max(SlideTicks(), 1)))
+	for i := range d.shift {
+		want := 0.0
+		switch {
+		case d.originIndex < i && i <= d.target:
+			want = -1
+		case d.target <= i && i < d.originIndex:
+			want = 1
+		}
+		d.shift[i] += (want - d.shift[i]) * rate
+		if Abs(int((want-d.shift[i])*1000)) < 5 {
+			d.shift[i] = want
+		}
+	}
 }
 
 // begin records a press over a card without yet committing to what it means.
@@ -201,6 +267,8 @@ func (d *CardDrag) promote(gs *state.GlobalState, row DragRow) {
 	}
 
 	d.active = true
+	d.target = d.originIndex
+	d.shift = make([]float64, row.RowLen())
 	row.RowLift(d.originIndex)
 }
 
@@ -211,16 +279,15 @@ func (d *CardDrag) promote(gs *state.GlobalState, row DragRow) {
 // something destructive the player cannot see coming.
 func (d *CardDrag) end(gs *state.GlobalState, row DragRow) {
 	origin, active := d.originIndex, d.active
+	to := origin
+	if active {
+		to = d.dropTarget(gs, row)
+	}
 	*d = CardDrag{}
 
 	if !active {
 		row.RowClick(origin)
 		return
-	}
-
-	to := origin
-	if image.Pt(gs.MouseX, gs.MouseY).In(row.RowZone(gs)) {
-		to = row.RowDropIndex(gs)
 	}
 	row.RowReturn(origin, to)
 }

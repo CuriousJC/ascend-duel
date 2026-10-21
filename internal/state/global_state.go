@@ -54,6 +54,12 @@ type GlobalState struct {
 	// never change an outcome. See screens.AnimationsScene.
 	DebugAnimations bool
 
+	// RevealCompendium reads every Compendium entry and every achievement as found, writing nothing.
+	//
+	// **All three are set from the profile's dev tools**, never by hand — see screens.ApplyDevTools
+	// and profile.DevSettings. Off unless the profile says devTools.
+	RevealCompendium bool
+
 	// Version is what this build calls itself, set once by main from a linker-injected
 	// string. It is genuinely global — the window title and the title screen both want it
 	// and neither owns it — and it is a plain string, so state stays free of imports.

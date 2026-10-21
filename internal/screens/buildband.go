@@ -92,7 +92,7 @@ func drawBuildBand(gs *state.GlobalState, screen *ebiten.Image, vitae int, band 
 	// **Off the table only a freestanding card is lit**: a stone or a rune naming no cards is used
 	// here, and everything else is carried to a fight, drawn dim with its tooltip still explaining
 	// it. See anywhereSpendable.
-	drawConsumablePane(gs, screen, buildConsumableRect(gs), anywhereSpendable(gs), band.heldSkip, raise, &band.sale)
+	drawConsumablePane(gs, screen, buildConsumableRect(gs), anywhereSpendable(gs), band.heldSkip, raise, &band.sale, &band.heldDrag)
 	drawGuideCard(gs, screen)
 }
 
@@ -186,6 +186,7 @@ func drawBuildRelics(gs *state.GlobalState, screen *ebiten.Image, band *bandCont
 			continue
 		}
 		at := relicSlotAt(row, i, len(worn))
+		at.X += dragNudge(drag, i, relicSlotPitch(row, len(worn)))
 		drawRunRelic(gs, screen, at, i,
 			ui.RelicSpec(gs, record, counters[record.RelicRecord], true, false), record.RelicRecord)
 	}
@@ -207,6 +208,10 @@ func drawRunRelic(gs *state.GlobalState, screen *ebiten.Image, at image.Point, s
 		return
 	}
 	ui.DrawFloatingCard(gs, screen, at, seat, spec, cards.RelicStyle)
+	// **An armored relic's edge is lit at rest** — see ui.DrawEdgeLight.
+	if gs.Run != nil && gs.Run.RelicTraitsOf(key).AddsRules() {
+		ui.DrawEdgeLightFloating(gs, screen, at, seat, cards.RelicStyle)
+	}
 }
 
 // buildRelicRow is the band's row, addressed by the shared drag: the reward screen's and the shop's.

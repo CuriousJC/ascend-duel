@@ -3,8 +3,6 @@
     "CardTrait": "effortless",
     "Name": "Effortless",
     "Family": "Card traits",
-    "Art": "",
-    "Draw": "",
     "Text": "NOT ONE OF THE FIVE",
     "Percent": 5,
     "Counted": false
@@ -13,8 +11,6 @@
     "CardTrait": "mirrored",
     "Name": "Mirrored",
     "Family": "Card traits",
-    "Art": "",
-    "Draw": "",
     "Text": "LANDS TWICE",
     "Percent": 5,
     "Landings": 2

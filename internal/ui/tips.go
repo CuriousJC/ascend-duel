@@ -185,8 +185,8 @@ func relicTitle(record data.RelicData) string {
 // buying**, so the price quoted is the one charged; nil quotes the list price.
 func ShopRelicTip(record data.RelicData, run *session.Session, traits combat.RelicTrait) (string, []string) {
 	title, lines := RelicTip(record)
-	// **An offer says the traits it is sold with**, since one like armored has no picture of its
-	// own and would otherwise be bought blind.
+	// **An offer says the traits it is sold with**: the picture shows that it carries one, and the
+	// words say which and what it does.
 	for _, t := range combat.RelicTraits() {
 		if traits.Has(t) {
 			lines = append(lines, t.Name())

@@ -301,6 +301,12 @@ func (s RelicTrait) LastsOneFight() bool {
 	return s.any(func(sp relicTraitSpec) bool { return sp.LastsFight })
 }
 
+// AddsRules reports whether any trait in the set wears rules of its own beside the relic's — armored's
+// shield. It is what the drawing reads to light a relic's edge at rest.
+func (s RelicTrait) AddsRules() bool {
+	return s.any(func(sp relicTraitSpec) bool { return len(sp.Rules) > 0 })
+}
+
 // Weightless reports whether the wearing takes no slot, and Ephemeral whether it lasts the fight it
 // was put on in — each true when any of its traits says so.
 func (w WornRelic) Weightless() bool { return w.Traits.TakesNoSlot() }

@@ -54,6 +54,40 @@ func earnMoment(gs *state.GlobalState, m achieve.Moment) {
 	earn(gs, achieve.Loaded().ByMoment(m))
 }
 
+// earnDeckShape records everything the run's deck, as it now stands, has earned by its make-up.
+//
+// **Asked on every save**, which is every station the run passes: an essence, a rune, a card taken
+// or one taken away all reach the deck between saves, and a deck asked at each is a deck asked
+// after every change that could have made it one shape.
+func earnDeckShape(gs *state.GlobalState) {
+	if gs == nil || gs.Run == nil {
+		return
+	}
+	for _, m := range achieve.DeckShape(gs.Run.Deck()) {
+		earnMoment(gs, m)
+	}
+}
+
+// earnCollection records everything the roster's record of beaten fights has earned — the
+// bestiary, the realms, a boss in each element.
+//
+// **Read off the rolled-seed statistics with the run in progress added on**, the Compendium's own
+// reckoning, so a creature the realm book shows as beaten is one the achievement counts. A chosen
+// seed's fights are in the other record and count toward nothing. Asked on every win, after the
+// duel has been tallied.
+func earnCollection(gs *state.GlobalState) {
+	if !progresses(gs) {
+		return
+	}
+	tally := compendiumTally(gs, false)
+	beaten := func(record, element string) bool {
+		return tally.Total(session.CreatureAs(session.StatCreatureDefeatedAs, record, element)) > 0
+	}
+	for _, m := range achieve.Collection(gs.Motifs, beaten) {
+		earnMoment(gs, m)
+	}
+}
+
 // earnTurn records everything the cards played in one turn have earned.
 //
 // **The resolved turn, read once, off the queue the engine was handed** — not off the playback. A

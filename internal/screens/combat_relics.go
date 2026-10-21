@@ -279,6 +279,15 @@ const relicSlotMaxGap = 26
 //
 // **The spread is capped at relicSlotMaxGap and the row is centered in the pane by relicSlotAt**, so
 // a pane wider than the relics in it leaves its slack at both ends rather than between the cards.
+// dragNudge is how far a row's card at i is drawn from its seat while a card is being dragged
+// across the row: the preview's shift, in pixels at the row's pitch. Nil drags nothing.
+func dragNudge(drag *ui.CardDrag, i, pitch int) int {
+	if drag == nil {
+		return 0
+	}
+	return int(math.Round(drag.Shift(i) * float64(pitch)))
+}
+
 func relicSlotPitch(r image.Rectangle, worn int) int {
 	if worn < 2 {
 		return 0
@@ -884,6 +893,15 @@ func (s *CombatScene) wornWeightless(seat int) bool {
 }
 
 // wornEphemeral reports whether the relic in this seat leaves at the end of the fight.
+// lightGuarded runs the edge light round a resting worn relic whose traits add rules — armored. See
+// ui.DrawEdgeLight.
+func (s *CombatScene) lightGuarded(gs *state.GlobalState, screen *ebiten.Image, at image.Point, seat int) {
+	if s.fighter == nil || seat < 0 || seat >= len(s.fighter.Relics) || !s.fighter.Relics[seat].Traits.AddsRules() {
+		return
+	}
+	ui.DrawEdgeLightFloating(gs, screen, at, seat, cards.RelicStyle)
+}
+
 func (s *CombatScene) wornEphemeral(seat int) bool {
 	if s.fighter == nil || seat < 0 || seat >= len(s.fighter.Relics) {
 		return false
@@ -953,6 +971,7 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 		// **The shake, the tilt and the light go together**: the card rattles, rocks and its border
 		// lights, which is what says the relic is working rather than merely moving. See relicToast.
 		at := relicSlotAt(r, i, len(worn))
+		at.X += dragNudge(&s.band.relicDrag, i, relicSlotPitch(r, len(worn)))
 		toast := sumToast(s.shakeFor(i))
 
 		// **The deal's cascade puts a relic up too, and it is a second clock on purpose.** The sum's
@@ -980,6 +999,7 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 		if !toast.lit && s.wornEphemeral(i) {
 			ui.DrawEphemeralFloating(gs, screen, at, i,
 				ui.RelicSpec(gs, relic, counters[relic.RelicRecord], true, false), cards.RelicStyle)
+			s.lightGuarded(gs, screen, at, i)
 			continue
 		}
 
@@ -989,6 +1009,7 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 		if !toast.lit {
 			ui.DrawFloatingCard(gs, screen, at, i,
 				ui.RelicSpec(gs, relic, counters[relic.RelicRecord], true, false), cards.RelicStyle)
+			s.lightGuarded(gs, screen, at, i)
 			continue
 		}
 		ui.DrawFlyingCard(gs, screen,
@@ -1011,8 +1032,10 @@ func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image)
 				s.wornEphemeral(raised)), at, 1, float64(gs.Count), float64(raised)*2.1)
 		case s.wornEphemeral(raised):
 			ui.DrawEphemeralFloating(gs, screen, at, raised, spec, cards.RelicStyle)
+			s.lightGuarded(gs, screen, at, raised)
 		default:
 			ui.DrawFloatingCard(gs, screen, at, raised, spec, cards.RelicStyle)
+			s.lightGuarded(gs, screen, at, raised)
 		}
 	}
 

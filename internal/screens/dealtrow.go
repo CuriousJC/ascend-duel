@@ -95,6 +95,7 @@ func (r *dealtRow) slot(gs *state.GlobalState, i int) image.Rectangle {
 	}
 	at := r.seat(gs, i, len(r.offer))
 	at.Y -= r.lift(i)
+	at.X += dragNudge(&r.drag, i, handPitch(gs, len(r.offer)))
 	return image.Rect(at.X, at.Y, at.X+cardWidth, at.Y+cardHeight)
 }
 

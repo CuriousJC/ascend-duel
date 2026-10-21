@@ -68,7 +68,8 @@ potion is drunk on the spot and has nothing to carry into a scenario. A dash wit
 it is work or a reason still to write.
 
 **The two trait catalogs are the worked example of the whole shape**: `relic_traits.json` and
-`card_traits.json` each carry Name, Text, Art, Draw, Family and a Percent, a grammar (`Slot`, `Lasts`
+`card_traits.json` each carry Name, Text, Family and a Percent — **no Art and no Draw**, because a
+trait is a treatment drawn on the relic or card carrying it and never a picture of its own — a grammar (`Slot`, `Lasts`
 and relic `Rules`; `Counted` and `Landings`), their own streams (`ShelfTraits`, `ActionTraits`), a
 save by name, a scenario field, `tools/traitsheet`, and the Compendium's TRAITS book.
 

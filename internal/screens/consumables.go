@@ -156,7 +156,7 @@ func consumablePaneBackRect(r image.Rectangle) image.Rectangle {
 // on the corner is what says how much room is left. Nothing anywhere outlines an absent card now —
 // the reward screen was the last place doing it, and gave it up on 2026-09-08.
 func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rectangle,
-	spendable func(session.Consumable) bool, skip func(int) bool, raise bool, sale *sellTab) {
+	spendable func(session.Consumable) bool, skip func(int) bool, raise bool, sale *sellTab, drag *ui.CardDrag) {
 
 	if skip == nil {
 		skip = func(int) bool { return false }
@@ -181,6 +181,8 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 		if i >= len(held) || i == raised || skip(i) {
 			continue
 		}
+		// **The drag's preview**: cards ease aside to open the gap a drop would land in.
+		at = at.Add(image.Pt(dragNudge(drag, i, relicSlotPitch(r, seats)), 0))
 		// **A rune is lit exactly when clicking it would do something** *(2026-09-06)*, which
 		// is what makes select-then-apply readable: the player never has to be told whether the
 		// cards they have selected are the right ones, because the rune that wants them is the

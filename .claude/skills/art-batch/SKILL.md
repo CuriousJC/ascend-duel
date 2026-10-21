@@ -13,6 +13,14 @@ the choice is being made.
 
 `tools/artcompare` is the tool. Its own doc comment holds the argument; this is the procedure.
 
+## Not everything is art
+
+**A record that changes another card is not a picture to commission.** A trait is the case: it is
+drawn as a treatment on the relic or card carrying it — aloft, faded, echoed, or not at all — and its
+record has no `Art` and no `Draw`. Before counting a catalog's missing pictures, ask whether its
+records are things or properties of things; `python .claude/skills/data/contract.py` prints the
+catalogs that go without art and why.
+
 ## Two entrances, and they are not the same job
 
 **A replacement batch** — new pictures for records that already have one. That is the numbered

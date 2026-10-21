@@ -114,15 +114,8 @@ func main() {
 	g.GlobalState.Version = version
 	defer reportLoadPanic(g)
 
-	// Off. Turn it on to watch the opponent plan — remembering that what you see with it on is not
-	// what a player sees.
-	g.GlobalState.DebugGameplay = false
-
-	// The animation gallery's door. **On while the gallery is being built**, which is the one of
-	// the two that is not off today — it belongs off before this ships, on the same argument the
-	// other is under. See screens.AnimationsScene, which is the shared vocabulary for talking
-	// about one of the game's gestures.
-	g.GlobalState.DebugAnimations = true
+	// The debug views — perfect information, the animation gallery, a revealed Compendium — are the
+	// profile's dev tools, put in force once the profile is read. See screens.ApplyDevTools.
 
 	// **The run's seed, chosen once, here, and printed.** Everything random in a run derives
 	// from it, each consumer seeding its own source — see GlobalState.RunSeed and the
@@ -196,6 +189,7 @@ func main() {
 	// of the wrong volume; the speed has to be in before the first scene's Init, since a screen
 	// can compute a duration in it. See internal/screens/settings.go.
 	screens.ApplySettings(prof.Settings)
+	screens.ApplyDevTools(g.GlobalState)
 
 	// **Everything below is loaded behind the studio splash** — on its own goroutine, while the
 	// window shows the bulb. Nothing here may touch the window; see internal/game/splash.go for what

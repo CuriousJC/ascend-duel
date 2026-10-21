@@ -331,7 +331,7 @@
     "Description": "Play 1000 slashing cards.",
     "SetBy": "client",
     "Hidden": false,
-    "AchievedIcon": "",
+    "AchievedIcon": "slash-1000",
     "Draw": "A steel scimitar held edge-up, a dense fan of countless thin arcs spreading behind it like a peacock tail.",
     "Said": ["TBD"],
     "Unlocks": ["slash-attunement"],
@@ -343,7 +343,7 @@
     "Description": "Play 1000 stabbing cards.",
     "SetBy": "client",
     "Hidden": false,
-    "AchievedIcon": "",
+    "AchievedIcon": "stab-1000",
     "Draw": "An ivory spear point-forward, a long tunnel of countless bright concentric rings receding behind its tip.",
     "Said": ["TBD"],
     "Unlocks": ["stab-attunement"],
@@ -355,7 +355,7 @@
     "Description": "Play 1000 crushing cards.",
     "SetBy": "client",
     "Hidden": false,
-    "AchievedIcon": "",
+    "AchievedIcon": "crush-1000",
     "Draw": "A granite club buried head-down in shattered ground, the flagstones around it pocked with countless overlapping craters.",
     "Said": ["TBD"],
     "Unlocks": ["crush-attunement"],
@@ -521,6 +521,136 @@
       "Kind": "moment",
       "Moment": "hand-formed",
       "Value": "concept-four-of-a-kind"
+    }
+  },
+  {
+    "APIName": "four-figures",
+    "DisplayName": "FOUR FIGURES",
+    "Description": "Land a single hit of 1,000 damage or more.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "four-figures",
+    "Draw": "A broad sword blade driven straight down through a thick stone block, the block split clean in two halves tipping apart around it.",
+    "Said": [
+      "Now we're getting somewhere."
+    ],
+    "Trigger": {
+      "Kind": "moment",
+      "Moment": "hit-landed",
+      "N": 1000
+    }
+  },
+  {
+    "APIName": "five-figures",
+    "DisplayName": "FIVE FIGURES",
+    "Description": "Land a single hit of 10,000 damage or more.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "five-figures",
+    "Draw": "A huge two-handed war hammer striking the ground head first, three thick jagged cracks splitting the ground outward from the point of impact.",
+    "Said": [
+      "That one's going to leave a mark."
+    ],
+    "Trigger": {
+      "Kind": "moment",
+      "Moment": "hit-landed",
+      "N": 10000
+    }
+  },
+  {
+    "APIName": "true-colors",
+    "DisplayName": "TRUE COLORS",
+    "Description": "Hold a deck in which every card is one element.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "true-colors",
+    "Draw": "Five playing cards fanned out in a hand, each face blank except for the same single round faceted gem at its center.",
+    "Said": [
+      "Pick a color, any color. Just the one."
+    ],
+    "Trigger": {
+      "Kind": "moment",
+      "Moment": "deck-one-element"
+    }
+  },
+  {
+    "APIName": "one-trick",
+    "DisplayName": "ONE TRICK",
+    "Description": "Hold a deck in which every attack is the same form.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "one-trick",
+    "Draw": "A weapon rack holding four identical spears standing upright side by side, points up.",
+    "Said": [
+      "If it works, it works."
+    ],
+    "Trigger": {
+      "Kind": "moment",
+      "Moment": "deck-one-form"
+    }
+  },
+  {
+    "APIName": "journey-won",
+    "DisplayName": "JOURNEY'S END",
+    "Description": "Defeat the boss of the last realm.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "journey-won",
+    "Draw": "A sword standing point down in the ground with a thick laurel wreath hung over its crossguard.",
+    "Said": [
+      "The journey is won."
+    ],
+    "Trigger": {
+      "Kind": "moment",
+      "Moment": "journey-won"
+    }
+  },
+  {
+    "APIName": "cartographer",
+    "DisplayName": "CARTOGRAPHER",
+    "Description": "Defeat the boss of every realm there is to find.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "cartographer",
+    "Draw": "A large compass rose with four long chunky points and four short ones between them, around a round center boss.",
+    "Said": [
+      "Every corner of every realm. You can put the map away now."
+    ],
+    "Trigger": {
+      "Kind": "moment",
+      "Moment": "realms-complete"
+    }
+  },
+  {
+    "APIName": "bestiary",
+    "DisplayName": "BESTIARY",
+    "Description": "Defeat every creature and every boss in every element it comes in.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "bestiary",
+    "Draw": "A thick closed leather-bound tome standing upright, a horned beast's skull embossed large on its cover.",
+    "Said": [
+      "Nothing left out there you haven't met."
+    ],
+    "Trigger": {
+      "Kind": "moment",
+      "Moment": "bestiary-complete"
+    }
+  },
+  {
+    "APIName": "five-crowns",
+    "DisplayName": "FIVE CROWNS",
+    "Description": "Defeat a realm's boss in each of the five elements.",
+    "SetBy": "client",
+    "Hidden": false,
+    "AchievedIcon": "five-crowns",
+    "Draw": "A horned great helm seen from the front, five large round gems set in a row across its brow band.",
+    "Said": [
+      "Five realms, five crowns."
+    ],
+    "Trigger": {
+      "Kind": "moment",
+      "Moment": "boss-every-element"
     }
   }
 ]

@@ -203,6 +203,13 @@ const (
 	// cursor would make every realm's offers a function of how far a run went into the endless
 	// journey — and drawing it at all would reroll them.
 	EndlessPortal
+
+	// CompendiumSample is which relic and which card the Compendium's trait book wears each trait on:
+	// one draw per trait, in file order. Per run, so a run shows one sample and the next another.
+	//
+	// **Presentation only, and its own stream for that reason**: drawn off any stream the rules
+	// advance, opening the book would reroll the journey.
+	CompendiumSample
 )
 
 // stream is what the package knows about each one. A table rather than four switch statements,
@@ -227,29 +234,30 @@ type stream struct {
 }
 
 var streams = [...]stream{
-	EnemySelect:    {name: "enemy-select", salt: 0x5EED_E9E3},
-	PlayerDeck:     {name: "player-deck", salt: 0x5EED_DEC4, perFight: true},
-	EnemyDeck:      {name: "enemy-deck", salt: 0x5EED_F0E5, perFight: true},
-	RewardHand:     {name: "reward-hand", salt: 0x5EED_A17E, perFight: true},
-	EssenceOffer:   {name: "essence-offer", salt: 0x5EED_7A19, perFight: true},
-	ShopStock:      {name: "shop-stock", salt: 0x5EED_5403, perFight: true},
-	BagStock:       {name: "bag-stock", salt: 0x5EED_B0C5, perFight: true},
-	VialStock:      {name: "vial-stock", salt: 0x5EED_CA07, perFight: true},
-	SackStock:      {name: "sack-stock", salt: 0x5EED_B0CC, perFight: true},
-	StoneShower:    {name: "stone-shower", salt: 0x5EED_5704, perFight: true},
-	PackOffer:      {name: "pack-offer", salt: 0x5EED_9AC5, perFight: true},
-	LuckRoll:       {name: "luck-roll", salt: 0x5EED_1DCC, perFight: true},
-	ScrollStock:    {name: "scroll-stock", salt: 0x5EED_5C20, perFight: true},
-	TonicOrder:     {name: "tonic-order", salt: 0x5EED_70C1},
-	MythicRoll:     {name: "mythic-roll", salt: 0x5EED_3171, perFight: true},
-	PearlCopy:      {name: "pearl-copy", salt: 0x5EED_9EA4, perFight: true},
-	ShelfTraits:    {name: "shelf-traits", salt: 0x5EED_0E16, perFight: true},
-	ShieldRoll:     {name: "shield-roll", salt: 0x5EED_A2B0, perFight: true},
-	ActionStock:    {name: "action-stock", salt: 0x5EED_AC70, perFight: true},
-	ActionTraits:   {name: "action-traits", salt: 0x5EED_AC7A, perFight: true},
-	ActionUpgrades: {name: "action-upgrades", salt: 0x5EED_AC79, perFight: true},
-	CombatMusic:    {name: "combat-music", salt: 0x5EED_3051, perFight: true},
-	EndlessPortal:  {name: "endless-portal", salt: 0x5EED_E7D1, perFight: true},
+	EnemySelect:      {name: "enemy-select", salt: 0x5EED_E9E3},
+	PlayerDeck:       {name: "player-deck", salt: 0x5EED_DEC4, perFight: true},
+	EnemyDeck:        {name: "enemy-deck", salt: 0x5EED_F0E5, perFight: true},
+	RewardHand:       {name: "reward-hand", salt: 0x5EED_A17E, perFight: true},
+	EssenceOffer:     {name: "essence-offer", salt: 0x5EED_7A19, perFight: true},
+	ShopStock:        {name: "shop-stock", salt: 0x5EED_5403, perFight: true},
+	BagStock:         {name: "bag-stock", salt: 0x5EED_B0C5, perFight: true},
+	VialStock:        {name: "vial-stock", salt: 0x5EED_CA07, perFight: true},
+	SackStock:        {name: "sack-stock", salt: 0x5EED_B0CC, perFight: true},
+	StoneShower:      {name: "stone-shower", salt: 0x5EED_5704, perFight: true},
+	PackOffer:        {name: "pack-offer", salt: 0x5EED_9AC5, perFight: true},
+	LuckRoll:         {name: "luck-roll", salt: 0x5EED_1DCC, perFight: true},
+	ScrollStock:      {name: "scroll-stock", salt: 0x5EED_5C20, perFight: true},
+	TonicOrder:       {name: "tonic-order", salt: 0x5EED_70C1},
+	MythicRoll:       {name: "mythic-roll", salt: 0x5EED_3171, perFight: true},
+	PearlCopy:        {name: "pearl-copy", salt: 0x5EED_9EA4, perFight: true},
+	ShelfTraits:      {name: "shelf-traits", salt: 0x5EED_0E16, perFight: true},
+	ShieldRoll:       {name: "shield-roll", salt: 0x5EED_A2B0, perFight: true},
+	ActionStock:      {name: "action-stock", salt: 0x5EED_AC70, perFight: true},
+	ActionTraits:     {name: "action-traits", salt: 0x5EED_AC7A, perFight: true},
+	ActionUpgrades:   {name: "action-upgrades", salt: 0x5EED_AC79, perFight: true},
+	CombatMusic:      {name: "combat-music", salt: 0x5EED_3051, perFight: true},
+	EndlessPortal:    {name: "endless-portal", salt: 0x5EED_E7D1, perFight: true},
+	CompendiumSample: {name: "compendium-sample", salt: 0x5EED_C0B5},
 }
 
 // fightStride separates one fight's seed from the next within a run. A large odd number so

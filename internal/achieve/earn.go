@@ -67,6 +67,123 @@ func HandFormed(key string) Moment { return Moment{Name: MomentHandFormed, Value
 // ShieldsRaised is the count a duelist ended up standing behind.
 func ShieldsRaised(n int) Moment { return Moment{Name: MomentShieldsRaised, N: n} }
 
+// HitLanded is the hardest single hit the player landed in a round.
+func HitLanded(n int) Moment { return Moment{Name: MomentHitLanded, N: n} }
+
+// JourneyWon is the last realm's boss falling.
+func JourneyWon() Moment { return Moment{Name: MomentJourneyWon} }
+
+// HardestHit is the largest single hit the player landed on the creature in a resolved round, or
+// zero. **Off the log**, so a hit a shield ate — which raises no KindDamage — is not counted.
+func HardestHit(log []combat.Event) int {
+	best := 0
+	for _, e := range log {
+		if e.Kind == combat.KindDamage && e.Target != combat.SideA && e.Amount > best {
+			best = e.Amount
+		}
+	}
+	return best
+}
+
+// DeckShape is the moments a deck's make-up satisfies: one element across every card, one form
+// across every attack.
+//
+// **A wildcard fits whatever the rest agree on**, on its own axis: a deck of fire cards and one
+// wild-element card is a fire deck, and a deck whose attacks are stabs and a wild-form card is a
+// stab deck. A deck with nothing to agree — no card for the element, no attack for the form — is
+// not one shape, since there is nothing in it to be one of.
+func DeckShape(deck []combat.Card) []Moment {
+	var out []Moment
+	if oneElement(deck) {
+		out = append(out, Moment{Name: MomentDeckOneElement})
+	}
+	if oneForm(deck) {
+		out = append(out, Moment{Name: MomentDeckOneForm})
+	}
+	return out
+}
+
+func oneElement(deck []combat.Card) bool {
+	seen := combat.Basic
+	found := false
+	for _, c := range deck {
+		found = true
+		if c.Wild(combat.AxisElement) {
+			continue
+		}
+		if c.Element == combat.Basic || (seen != combat.Basic && c.Element != seen) {
+			return false
+		}
+		seen = c.Element
+	}
+	return found
+}
+
+func oneForm(deck []combat.Card) bool {
+	var seen combat.Form
+	attacks := 0
+	for _, c := range deck {
+		if c.Spec().Verb != combat.VerbAttack {
+			continue
+		}
+		attacks++
+		if c.Wild(combat.AxisForm) {
+			continue
+		}
+		if seen != combat.FormNone && c.Form() != seen {
+			return false
+		}
+		seen = c.Form()
+	}
+	return attacks > 0
+}
+
+// Collection is the moments the roster's whole record of beaten fights satisfies. `beaten` says
+// whether a record has ever been beaten dealt as an element, by the profile's own reckoning.
+//
+// **A realm is a motif in an element**, one per pair any of the motif's records can be dealt as —
+// the realm book's list — **and it is beaten when one of its bosses falls in that element**. Five
+// elements with a boss down is a boss of each; every pair a record can be dealt as, down, is the
+// bestiary. **The target is the roster as it now stands**, so a motif authored later raises it.
+func Collection(motifs map[string]data.MotifData, beaten func(record, element string) bool) []Moment {
+	bestiary, realms := true, true
+	bossIn := map[string]bool{}
+	found := false
+	for _, m := range motifs {
+		for _, element := range data.AffinityElements {
+			deals, realm := false, false
+			for _, r := range m.Records {
+				if !r.HasAffinity(element) {
+					continue
+				}
+				deals, found = true, true
+				won := beaten(r.Record, element)
+				if !won {
+					bestiary = false
+				}
+				if won && r.Tier == data.TierBoss {
+					realm = true
+					bossIn[element] = true
+				}
+			}
+			if deals && !realm {
+				realms = false
+			}
+		}
+	}
+	var out []Moment
+	if found && bestiary {
+		out = append(out, Moment{Name: MomentBestiaryComplete})
+	}
+	if found && realms {
+		out = append(out, Moment{Name: MomentRealmsComplete})
+	}
+	if len(bossIn) == len(data.AffinityElements) {
+		out = append(out, Moment{Name: MomentBossEveryElement})
+	}
+	return out
+}
+
 // ByMoment is every achievement this moment satisfies.
 func (c *Catalog) ByMoment(m Moment) []string {
 	var out []string
@@ -76,7 +193,7 @@ func (c *Catalog) ByMoment(m Moment) []string {
 			continue
 		}
 		switch m.Name {
-		case MomentRealmReached, MomentShieldsRaised:
+		case MomentRealmReached, MomentShieldsRaised, MomentHitLanded:
 			// A threshold, not an equality. See the constants.
 			if m.N < t.n {
 				continue

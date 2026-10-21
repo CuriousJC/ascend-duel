@@ -283,6 +283,12 @@ func (b *bandControls) update(gs *state.GlobalState, h bandHooks) bool {
 	b.relicDrag.Update(gs, relics)
 	b.heldDrag.Update(gs, held)
 
+	// **No tooltip while a card rides the cursor** *(owner's call)*: the panel would be describing
+	// whatever the dragged card is passing over, which is not what the player is looking at.
+	if b.busy() && h.forget != nil {
+		h.forget()
+	}
+
 	if !pressed {
 		return b.busy()
 	}
@@ -340,6 +346,7 @@ func (b *bandControls) heldRow(gs *state.GlobalState, h bandHooks) consumableRow
 		rect:  buildConsumableRect(gs),
 		held:  len(heldConsumables(gs)),
 		seats: consumableSeats(gs),
+		runes: len(heldRunes(gs)),
 		click: func(i int) {
 			if !h.closed {
 				b.sale.arm(heldSale(i))

@@ -3,6 +3,7 @@ package screens
 import (
 	"fmt"
 	"image"
+	"math"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -13,7 +14,6 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 // The action box: one hand of cards laid out in a row across the bottom of the screen.
@@ -56,8 +56,6 @@ const (
 	// have to compete with the affordability dimming. Up rather than right, because the
 	// hand is now a horizontal strip and the free axis rotated with it.
 	selectedNudge = 26
-
-	dropIndicatorWidth = 4
 
 	// The budget bar, as an offset *below* the bottom of the row. It is exactly as wide as the
 	// hand, so it reads as belonging to the cards rather than floating near them, and it sits
@@ -220,9 +218,10 @@ type paletteCard struct {
 // half of it that knows what a card in the hand is.
 //
 // **Lifting really does take the card out of `s.hand`**, unlike the relic row, which only remembers
-// which seat is empty. The list is the hand — nothing else holds it — so removing the card is what
-// makes the gap close under the cursor, and `syncQueue` keeps the round's queue reading off it the
-// whole time.
+// which seat is empty. The list is the hand — nothing else holds it — and `syncQueue` keeps the
+// round's queue reading off it the whole time. **The row does not close up behind it**: cardSlot
+// lays the hand out with the card's seat still in it, and the gap moves only as the drag's preview
+// moves it — see ui.CardDrag.Shift.
 type handRow struct{ s *CombatScene }
 
 func (r handRow) RowLen() int { return len(r.s.hand) }
@@ -518,6 +517,15 @@ func (s *CombatScene) cardSlot(gs *state.GlobalState, i int) image.Rectangle {
 	if i < len(s.hand) {
 		idx, n := s.rowSeat(i)
 		at = slotAt(gs, idx, n)
+		// **A card riding the cursor still owns its seat**, so every card after it is laid out one
+		// seat on, and then drawn wherever the drag's preview has eased it to.
+		if s.drag.Dragging() && s.Theater.settle.held == nil {
+			if idx >= s.drag.Origin() {
+				idx++
+			}
+			at = slotAt(gs, idx, n)
+			at.X += int(math.Round(s.drag.Shift(idx) * float64(handPitch(gs, n))))
+		}
 	}
 	if i < len(s.hand) && s.hand[i].selected {
 		at.Y -= selectedNudge
@@ -646,18 +654,6 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 		}
 	}
 
-	if !s.drag.Dragging() || !image.Pt(gs.MouseX, gs.MouseY).In(handZone(gs)) {
-		return
-	}
-
-	// A bar standing where the card will drop, full card height so it reads as a slot rather
-	// than as a tick. Straddling the slot's left edge rather than sitting a gap to its left,
-	// since once the cards overlap there is no gap to sit in.
-	slot := s.cardSlot(gs, s.dropIndex(gs))
-	vector.FillRect(screen,
-		float32(slot.Min.X)-dropIndicatorWidth/2, top,
-		dropIndicatorWidth, cardHeight,
-		ui.PlayerSwatch, false)
 }
 
 // previewAttack is the blow the current selection would land if DUEL! were pressed now.

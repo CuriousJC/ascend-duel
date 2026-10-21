@@ -551,6 +551,10 @@ func (s *PostBattleScene) hover(gs *state.GlobalState) {
 	if !gs.CursorAllowed() {
 		return
 	}
+	// No tooltip while a card rides the cursor; see bandControls.update.
+	if s.dealtRow.drag.Dragging() || s.band.busy() {
+		return
+	}
 
 	// **The band is live at every stage, so its relics are explained at every stage.** They are not
 	// a choice this screen offers — which is exactly why the rule above does not cover them: a

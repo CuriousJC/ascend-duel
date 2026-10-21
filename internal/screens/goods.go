@@ -200,7 +200,7 @@ func (s *GoodsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	drawGuideCard(gs, screen)
 	drawBuildRelics(gs, screen, &s.band)
 	drawConsumablePane(gs, screen, buildConsumableRect(gs), anywhereSpendable(gs),
-		func(i int) bool { return s.landingSeat(i) || s.band.heldSkip(i) }, s.tip.Showing(), &s.band.sale)
+		func(i int) bool { return s.landingSeat(i) || s.band.heldSkip(i) }, s.tip.Showing(), &s.band.sale, &s.band.heldDrag)
 	drawDeckPile(gs, screen)
 
 	heading := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 34}

@@ -260,6 +260,10 @@ type CombatScene struct {
 	// round something spends them. See achieve.MomentShieldsRaised.
 	shieldPeak int
 
+	// hitPeak is the hardest single hit the player landed in the last resolved round, stashed and
+	// drained beside shieldPeak. See achieve.MomentHitLanded.
+	hitPeak int
+
 	// handsFormed is the rung each of the player's blows in the last resolved round was scored on,
 	// by hands.json key, stashed beside playedTurn and drained on the same tick into
 	// achieve.MomentHandFormed.
@@ -910,6 +914,10 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 			earnMoment(gs, achieve.DuelWonFirstRound())
 		}
 		earnMoment(gs, achieve.RealmReached(gs.Run.Realm()))
+		if gs.Run.VictoryDue() {
+			earnMoment(gs, achieve.JourneyWon())
+		}
+		earnCollection(gs)
 
 		// **The end of the duel, which is where the lifetime tallies are settled.** See achieve.go
 		// for why they are held in memory until here.
@@ -1249,11 +1257,16 @@ func (s *CombatScene) drainTurn(gs *state.GlobalState) {
 
 	peak := s.shieldPeak
 	s.shieldPeak = 0
+	hit := s.hitPeak
+	s.hitPeak = 0
 
 	earnTurn(gs, turn)
 	bumpCounters(gs, turn)
 	if peak > 0 {
 		earnMoment(gs, achieve.ShieldsRaised(peak))
+	}
+	if hit > 0 {
+		earnMoment(gs, achieve.HitLanded(hit))
 	}
 }
 
@@ -1361,6 +1374,7 @@ func (s *CombatScene) startRound() {
 	s.settleGrants(log)
 	s.recordHandsPlayed(log)
 	s.noteShieldsRaised(log)
+	s.hitPeak = achieve.HardestHit(log)
 
 	// **The round into the run's statistics**, beside the other readings of the resolved round and
 	// for their reason. The queue is still the turn the resolver was handed, which is what a hit's
@@ -1828,7 +1842,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawRelicPane(gs, screen)
 	drawConsumablePane(gs, screen, s.consumablePaneRect(gs), s.consumableSpendable(gs),
 		func(i int) bool { return s.band.heldSkip(i) || s.paneMorphing(i) },
-		s.tip.Showing(), &s.band.sale)
+		s.tip.Showing(), &s.band.sale, &s.band.heldDrag)
 	s.drawPaneMorphs(gs, screen)
 	s.band.drawHeldGhost(gs, screen, s.consumableSpendable(gs))
 

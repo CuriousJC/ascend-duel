@@ -118,6 +118,7 @@ the salt table, so inserting one mid-list re-points every stream after it.
 | `seeds.ShieldRoll` | fight | `CombatScene.shieldRNG`, injected into `ResolveRound` as `Sources.Shield`: one roll per `raise-shield` naming `"random"` — armored's — per turn | what every gold and silver card rolls, on buying an armored relic |
 | `seeds.CombatMusic` | fight | `poolPick` (`internal/game/score.go`): one draw over the combat pool in `data/music.json`, made when the combat screen is entered | every deal and roll of every fight, on adding a track to the pool |
 | `seeds.EndlessPortal` | fight | `takeEndlessPortal` (`internal/screens/flow.go`) → `Session.TakeEndlessPortal`: one draw over a realm's two offers, past the journey's top, keyed by the fight it opens onto | every realm's offers, on any run that walks into the endless journey |
+| `seeds.CompendiumSample` | run | `traitsDialog` (`internal/screens/compendium_trait.go`): one draw per trait, in file order, picking the relic or card the trait book shows it on | the journey or a shop, on opening the Compendium — it is presentation, and a draw off a rules stream would make looking at a book change a run |
 | Loot offers | — | **not built** | — |
 
 **`VialStock` is the sharpest case in the table**: it draws essences from the same

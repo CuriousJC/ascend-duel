@@ -59,18 +59,47 @@ const (
 	// banner, the hand row, the play count — is the one that paid, and "you formed it" means
 	// that one. Read off the resolved event log like recordHandsPlayed, never off the playback.
 	MomentHandFormed = "hand-formed"
+
+	// MomentHitLanded is the hardest single card's hit the player landed on the creature in a
+	// resolved round, carrying its damage in N. **A threshold**, like realm-reached. One card's hit
+	// rather than the turn's total, after the hand's multiplier; a hit a shield ate or a fizzle
+	// landed nothing and is not one.
+	MomentHitLanded = "hit-landed"
+
+	// MomentJourneyWon is the last realm's boss falling: the fight the victory station follows.
+	MomentJourneyWon = "journey-won"
+
+	// MomentDeckOneElement is the run's whole deck standing in one element, defend cards included. A
+	// wildcard element fits whichever element the rest share. See DeckShape.
+	MomentDeckOneElement = "deck-one-element"
+
+	// MomentDeckOneForm is every attack in the run's deck standing in one form. Defend cards are not
+	// asked, and a wildcard form fits whichever form the rest share. See DeckShape.
+	MomentDeckOneForm = "deck-one-form"
+
+	// MomentBestiaryComplete is every creature and every boss beaten in every element it can be
+	// dealt as, across every run that progresses. See Collection.
+	MomentBestiaryComplete = "bestiary-complete"
+
+	// MomentRealmsComplete is every realm the realm book lists — a motif in an element — beaten,
+	// which is its boss falling in that element. See Collection.
+	MomentRealmsComplete = "realms-complete"
+
+	// MomentBossEveryElement is a boss beaten in each of the five elements. See Collection.
+	MomentBossEveryElement = "boss-every-element"
 )
 
 // moments is the same list, for validation and for the error message.
 var moments = []string{
 	MomentDuelWon, MomentDuelWonFirstRound, MomentTutorialFinished, MomentRealmReached, MomentLadderWrapped,
-	MomentShieldsRaised, MomentHandFormed,
+	MomentShieldsRaised, MomentHandFormed, MomentHitLanded, MomentJourneyWon, MomentDeckOneElement,
+	MomentDeckOneForm, MomentBestiaryComplete, MomentRealmsComplete, MomentBossEveryElement,
 }
 
 // momentsCarryingN is the moments whose N is set by the raiser, and so may be asked for in a
 // record. **A moment carrying a field its raiser never sets is a condition that can never be met**,
 // which is the failure this whole file exists to refuse.
-var momentsCarryingN = []string{MomentRealmReached, MomentShieldsRaised}
+var momentsCarryingN = []string{MomentRealmReached, MomentShieldsRaised, MomentHitLanded}
 
 // The three counter families. **A prefix rather than a bare name**, so a counter is self-describing
 // on disk and two axes cannot collide — `slash` is both a form and nothing like the concept

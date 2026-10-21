@@ -26,8 +26,9 @@
 // card plain and mirrored. An effortless card is drawn aloft in the hand, which is motion and needs a
 // window; the animation gallery is where that is looked at.
 //
-// **The backlog.** A trait with no Art draws the placeholder and one with no Draw has no brief, and
-// both are marked in pink — the shape every catalog sheet shares.
+// **No picture per trait, and no backlog.** A trait is a property of a wearing, drawn on the relic or
+// card carrying it, so there is nothing of its own to paint; the Compendium's trait book shows each one
+// on a sample.
 //
 // # Output
 //
@@ -73,12 +74,9 @@ func main() {
 // plate is one trait on the page.
 type plate struct {
 	Key, Name, Text, Kind string
-	Image                 string
 	Percent               int
 	Odds                  []string
 	Does                  []string
-	Art, Draw             string
-	NoArt, NoDraw         bool
 }
 
 // page is everything the template reads.
@@ -86,8 +84,6 @@ type page struct {
 	Ground       string
 	Relic, Card  []plate
 	Mirror       []cell
-	Unwritten    int
-	Undrawn      int
 	ShelfAnyText string
 }
 
@@ -109,7 +105,6 @@ func run(dir string) error {
 		r := t.Record
 		pl := plate{
 			Key: r.RelicTrait, Name: r.Name, Text: r.Text, Kind: "relic", Percent: t.Percent,
-			Art: r.Art, Draw: r.Draw, NoArt: r.Art == "", NoDraw: r.Draw == "",
 		}
 		if t.Percent > 0 {
 			pl.Odds = []string{
@@ -121,9 +116,6 @@ func run(dir string) error {
 			pl.Odds = []string{"never sold"}
 		}
 		pl.Does = relicDoes(r)
-		if pl.Image, err = writeFace(dir, faces, "relic-"+r.RelicTrait+".png", r.Name, r.ArtKey()); err != nil {
-			return err
-		}
 		p.Relic = append(p.Relic, pl)
 	}
 	p.ShelfAnyText = fmt.Sprintf("%.1f%%", (1-none)*100)
@@ -132,7 +124,6 @@ func run(dir string) error {
 		r := t.Record
 		pl := plate{
 			Key: r.CardTrait, Name: r.Name, Text: r.Text, Kind: "card", Percent: t.Percent,
-			Art: r.Art, Draw: r.Draw, NoArt: r.Art == "", NoDraw: r.Draw == "",
 		}
 		if t.Percent > 0 {
 			pl.Odds = []string{fmt.Sprintf("%d%% of cards in an action bundle", t.Percent)}
@@ -146,19 +137,7 @@ func run(dir string) error {
 			pl.Odds = []string{"never in a bundle"}
 		}
 		pl.Does = cardDoes(r)
-		if pl.Image, err = writeFace(dir, faces, "card-"+r.CardTrait+".png", r.Name, r.ArtKey()); err != nil {
-			return err
-		}
 		p.Card = append(p.Card, pl)
-	}
-
-	for _, pl := range append(append([]plate(nil), p.Relic...), p.Card...) {
-		if pl.NoDraw {
-			p.Unwritten++
-		}
-		if pl.NoArt {
-			p.Undrawn++
-		}
 	}
 
 	if p.Mirror, err = mirrorPair(dir, faces); err != nil {
@@ -174,8 +153,8 @@ func run(dir string) error {
 	if err := tmpl.Execute(f, p); err != nil {
 		return fmt.Errorf("writing %s: %w", out, err)
 	}
-	fmt.Printf("wrote %s — %d relic traits and %d card traits; %d with no art, %d with no brief; "+
-		"%s of shelf relics carry a trait\n", out, len(p.Relic), len(p.Card), p.Undrawn, p.Unwritten, p.ShelfAnyText)
+	fmt.Printf("wrote %s — %d relic traits and %d card traits; %s of shelf relics carry a trait\n",
+		out, len(p.Relic), len(p.Card), p.ShelfAnyText)
 	return nil
 }
 
@@ -218,17 +197,6 @@ func cardDoes(r data.CardTraitData) []string {
 		out = append(out, fmt.Sprintf("Landings: %d — lands %d times", r.Landings, r.Landings))
 	}
 	return out
-}
-
-// writeFace draws a trait's card — its picture and nothing else, the bleeding card every catalog's
-// shelf face is — and writes it.
-func writeFace(dir string, f *cards.Faces, name, title, art string) (string, error) {
-	img, err := decode(art)
-	if err != nil {
-		return "", err
-	}
-	spec := cards.Spec{Name: title, Form: cards.FormNone, Element: cards.Basic, Art: img, Enabled: true}
-	return write(dir, f, spec, cards.EssenceStyle, name)
 }
 
 // mirrorPair is one real playing card drawn plain and mirrored, so the echo is judged on a face the

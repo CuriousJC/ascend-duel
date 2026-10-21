@@ -29,12 +29,10 @@ type CardTraitData struct {
 	Name string `json:"Name"`
 	Text string `json:"Text"`
 
-	// Family, Art and Draw are the three fields no rule reads — see the data skill. Art is an
-	// assets.LoadImageData key, empty for the placeholder (ArtKey); Draw is the subject paragraph an
-	// art generator is given.
+	// Family is the one field no rule reads — see the data skill. **There is no Art and no Draw**: a
+	// trait is a property of a wearing, drawn on the relic or card that carries it, never a picture of
+	// its own.
 	Family string `json:"Family"`
-	Art    string `json:"Art"`
-	Draw   string `json:"Draw"`
 
 	// Percent is the chance, out of 100, that a card dealt into an action bundle carries the trait.
 	// Every card rolls every trait. Zero is never.
@@ -56,14 +54,6 @@ func LoadCardTraits() []CardTraitData {
 		mustBeAChance("card_traits.json", r.CardTrait, r.Percent)
 	}
 	return list
-}
-
-// ArtKey is the picture this trait draws: its own if it has one, the placeholder otherwise.
-func (r CardTraitData) ArtKey() string {
-	if r.Art == "" {
-		return PlaceholderArt
-	}
-	return r.Art
 }
 
 // mustBeAChance panics on a percent that is not one.

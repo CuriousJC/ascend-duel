@@ -33,6 +33,8 @@ func saveRun(gs *state.GlobalState) {
 	if gs == nil || gs.Run == nil {
 		return
 	}
+	earnDeckShape(gs)
+
 	// **A machine with nowhere to write is silent, not noisy.** This fires at every phase
 	// transition, so reporting "nowhere to save to" here would be a line per station for the whole
 	// of a run on a machine that cannot help it. A store that *has* a directory and still fails is

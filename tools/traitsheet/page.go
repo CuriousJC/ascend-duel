@@ -43,13 +43,6 @@ var tmpl = template.Must(template.New("traitsheet").Parse(`<!doctype html>
   .text { margin: 10px 0 0; font-size: 13px; }
   ul { padding: 0 0 0 16px; margin: 8px 0 0; font-size: 12.5px; }
   .does { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; color: var(--dim); }
-  .art { margin: 10px 0 0; font-size: 11.5px; color: var(--dim); }
-  .art.missing { color: var(--pink); }
-  .draw {
-    margin: 10px 0 0; font-size: 12.5px; color: var(--dim);
-    border-left: 2px solid var(--rule); padding-left: 9px;
-  }
-  .draw.missing { color: var(--pink); border-left-color: var(--pink); }
   .pair { display: flex; gap: 24px; margin-top: 22px; }
   .pair figure { margin: 0; }
   .pair figcaption { font-size: 12px; color: var(--dim); margin-top: 6px; }
@@ -58,23 +51,20 @@ var tmpl = template.Must(template.New("traitsheet").Parse(`<!doctype html>
 <h1>Trait sheet</h1>
 <p class="facts">{{len .Relic}} relic traits from <code>data/relic_traits.json</code> ·
 {{len .Card}} card traits from <code>data/card_traits.json</code> ·
-{{.ShelfAnyText}} of shelf relics carry at least one trait ·
-{{.Undrawn}} with no art · {{.Unwritten}} with no brief</p>
+{{.ShelfAnyText}} of shelf relics carry at least one trait</p>
 <p class="note">A trait is what a wearing or a card is besides itself, and it composes with
 everything else — see MECHANICS.md §Traits. The odds are per shelf seat and per bundled card;
-each plate also says how often a player actually meets one.</p>
+each plate also says how often a player actually meets one. <strong>A trait has no picture of its
+own</strong>: it is drawn on the relic or card that carries it, which the Compendium's trait book shows.</p>
 
 {{define "plate"}}
 <div class="plate">
-  <img src="{{.Image}}" width="120" alt="{{.Name}}">
   <div>
     <p class="name">{{.Name}}</p>
     <p class="record">{{.Kind}} trait · {{.Key}}</p>
     <p class="text">{{.Text}}</p>
     <ul>{{range .Odds}}<li>{{.}}</li>{{end}}</ul>
     <ul class="does">{{range .Does}}<li>{{.}}</li>{{end}}</ul>
-    {{if .NoArt}}<p class="art missing">no art — draws the placeholder</p>{{else}}<p class="art">art: {{.Art}}</p>{{end}}
-    {{if .NoDraw}}<p class="draw missing">no brief written</p>{{else}}<p class="draw">{{.Draw}}</p>{{end}}
   </div>
 </div>
 {{end}}

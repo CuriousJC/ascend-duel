@@ -107,6 +107,15 @@ const (
 	settingsExitGap   = 92
 )
 
+// The dev column, on the screen's right: a heading and one latched button per tool. Small buttons,
+// because these are instrumentation rather than settings.
+const (
+	settingsDevPct   = 82
+	settingsDevWidth = 360
+	settingsDevGap   = 64
+	settingsDevTitle = "DEV TOOLS"
+)
+
 // The bottom row: the Compendium beside Back. **Beside rather than above**, because the column is
 // full down to Back and a row inserted into it would land EXIT on BACK. Both are ways off this
 // screen, so they share the row the way off a screen is on.
@@ -153,6 +162,10 @@ type SettingsScene struct {
 	// strip is the hand of relic cards under the speed bar: what the game-speed setting looks
 	// like, rather than what it reads as. See settings_speed.go.
 	strip speedStrip
+
+	// dev is the dev column, one latched button per row of devRows. **Built always, drawn and live
+	// only while the profile says devTools** — see devtools.go.
+	dev []*models.Button
 }
 
 // Init builds the controls on first entry and positions them every time.
@@ -202,6 +215,12 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 
 		s.exit = models.NewButton(760, ui.ButtonLarge, settingsExitLabel, func() { askExit(gs, &s.confirm) })
 		s.exit.TextSize = 40
+
+		for _, row := range devRows {
+			row := row
+			b := models.NewButton(settingsDevWidth, ui.ButtonSmall, row.label, func() { s.flipDev(gs, row) })
+			s.dev = append(s.dev, b)
+		}
 	}
 
 	// **The question does not survive a visit**, for the reason the title screen's does not: Init
@@ -236,6 +255,35 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 	half := (settingsBottomWidth + settingsBottomGap) / 2
 	s.compendium.ScreenX, s.compendium.ScreenY = center-half, rows.bottom
 	s.back.ScreenX, s.back.ScreenY = center+half, rows.bottom
+
+	// **The dev column stands beside the settings rather than in them**: the column is full, and a
+	// tool a player never sees has no business being read as one of their settings.
+	for i, b := range s.dev {
+		b.ScreenX, b.ScreenY = gs.PctX(settingsDevPct), rows.music+i*settingsDevGap
+	}
+	s.latchDev(gs)
+}
+
+// latchDev sets each dev toggle's latch from the profile.
+func (s *SettingsScene) latchDev(gs *state.GlobalState) {
+	if gs.Profile == nil {
+		return
+	}
+	for i, row := range devRows {
+		s.dev[i].Latched = *row.on(&gs.Profile.Settings.Dev)
+	}
+}
+
+// flipDev turns one dev tool over, puts the set in force and saves it.
+func (s *SettingsScene) flipDev(gs *state.GlobalState, row devRow) {
+	if gs.Profile == nil {
+		return
+	}
+	on := row.on(&gs.Profile.Settings.Dev)
+	*on = !*on
+	ApplyDevTools(gs)
+	s.latchDev(gs)
+	saveProfile(gs)
 }
 
 // settingsLayout is where every row on this screen sits, in screen pixels.
@@ -315,6 +363,11 @@ func (s *SettingsScene) Update(gs *state.GlobalState) error {
 	systems.UpdateButton(gs, s.full)
 	systems.UpdateButton(gs, s.compendium)
 	systems.UpdateButton(gs, s.back)
+	if devToolsOn(gs) {
+		for _, b := range s.dev {
+			systems.UpdateButton(gs, b)
+		}
+	}
 
 	// **Re-read every tick, not only on entry.** Nothing else in the game changes it today, but a
 	// window manager can drop a game out of fullscreen on its own and a latch that then disagreed
@@ -369,6 +422,9 @@ func (s *SettingsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	systems.DrawButton(gs, screen, s.compendium)
 	systems.DrawButton(gs, screen, s.back)
+	if devToolsOn(gs) {
+		s.drawDev(gs, screen)
+	}
 
 	// **The note under a dead music bar, and nothing when it is live.** A control that has gone
 	// gray for a reason outside the game has to say what the reason was, or it reads as a bug.
@@ -490,3 +546,17 @@ func SetFullscreen(on bool) { ebiten.SetFullscreen(on) }
 // and the clock. A screen that read the file would show a state the game is not in on a machine
 // where the file could not be written.
 func Fullscreen() bool { return ebiten.IsFullscreen() }
+
+// drawDev draws the dev column: its heading, then the toggles.
+func (s *SettingsScene) drawDev(gs *state.GlobalState, screen *ebiten.Image) {
+	op := &text.DrawOptions{}
+	op.GeoM.Translate(float64(gs.PctX(settingsDevPct)), float64(settingsRows(gs).music-settingsDevGap))
+	op.PrimaryAlign = text.AlignCenter
+	op.SecondaryAlign = text.AlignCenter
+	op.ColorScale.ScaleWithColor(ui.GroundInk)
+	systems.DrawText(screen, settingsDevTitle,
+		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextMedium}, op)
+	for _, b := range s.dev {
+		systems.DrawButton(gs, screen, b)
+	}
+}

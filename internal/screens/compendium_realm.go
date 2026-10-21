@@ -78,7 +78,7 @@ func realmsDialog(gs *state.GlobalState) *compendiumDialog {
 			out = append(out, e)
 		}
 	}
-	d := catalogDialog("REALMS", out)
+	d := catalogDialog(gs, "REALMS", out)
 	d.pic = image.Pt(realmThumbW, realmThumbH)
 	d.countInTip = true
 	// **A realm not yet entered names nothing**, even where its element and its motif are both known

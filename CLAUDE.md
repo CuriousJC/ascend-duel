@@ -107,6 +107,7 @@ skill that does not exist.
 | [`art-batch`](.claude/skills/art-batch/SKILL.md) | generating art options for a record and choosing between them, a folder of generated pictures turning up to be looked at, or installing, replacing or comparing anything in `assets/` |
 | [`relic-balance`](.claude/skills/relic-balance/SKILL.md) | any question about the relic catalog **as a whole** — is offense over-weighted at common, does every element have a cost relic, what a batch of new relics does to the shape of the shelf — or adding a category, an axis, or a verb that has to be classified |
 | [`achievements`](.claude/skills/achievements/SKILL.md) | adding or changing an achievement, a moment, a counter or an unlock, adding any new kind of progress the profile keeps, or touching `internal/screens/achieve.go` — a chosen-seed run must progress nothing |
+| [`unlocks`](.claude/skills/unlocks/SKILL.md) | pairing an achievement with a relic, locking or unlocking a relic, or asking which achievements open nothing and which relics are still in the default pool (`python .claude/skills/unlocks/unlocks.py`) |
 | [`bug-hunter`](.claude/skills/bug-hunter/SKILL.md) | any bug the owner found while playing — before diagnosing it, before fixing it, and before authoring a scenario record to reproduce it |
 | [`audit`](.claude/skills/audit/SKILL.md) | the milestone pass — the owner asking for an audit, a refactor sweep or a health check — and before any refactor that crosses more than one package |
 | [`sounds`](.claude/skills/sounds/SKILL.md) | adding, moving, renaming or replacing any sound, building `game-ready/` or syncing it from Drive, setting up or pushing to the sound bucket, touching `privateassets/` (`mgmt/` included), `tools/privateassets`, `data/music.json`, `data/sounds.json` or `data/audio_packs.json`, `score.go`'s track names, a sound cue, or the release's private-asset steps |
@@ -1553,20 +1554,30 @@ and the face is authored at that color.
 - Disabled deliberately ignores the widget's color. A disabled control should read as
   unavailable first and as itself second.
 
-### Two debug flags, and they are not interchangeable
+### Dev tools: one switch in the profile, never a build
 
-`DebugGameplay` and `DebugAnimations` answer different questions and are wanted at different
-times. Keep them separate.
+**A dev tool is a view a developer wants and a player must never be offered**, and every one sits
+behind `devTools` in `profile.json`. Nothing in the game sets it; it is edited by hand. With it on,
+the settings screen grows a **DEV TOOLS** column with one latched toggle per tool, saved in the
+profile's `dev` block; with it off, every tool is off whatever the toggles say and the column is
+not drawn. **One binary is both the dev build and the shipped one**, so no build tag decides what a
+player can reach. `internal/screens/devtools.go` is the whole of it, and `ApplyDevTools` is the one
+place the toggles become `GlobalState` flags.
 
-- **`DebugGameplay`** — perfect information, starting with the opponent's queued actions.
-  About *what the player is allowed to know*. **Off by default**: with it on you are not
-  playing the game, you are inspecting it, and it is easy to tune balance against a view no
-  player will ever have. What it currently reveals is the combat screen's, and lives in the
-  `combat-screen` skill.
-- **`DebugAnimations`** — the door to the **animation gallery**, a square marked
-  `A` off the end of the frame's bottom strip that opens `screens.AnimationsScene`. About *what
-  movements the game has and what each one is called*. **A second flag rather than a lodger on
-  `DebugGameplay`**: "what may the player know" is not "what gestures exist".
+**"This is a dev tool setting" means three edits**: a field on `profile.DevSettings`, a line in
+`ApplyDevTools`, and a row in `devRows`. A tool stays a view — **none may change an outcome**, which
+is why a run with them on still earns achievements. A tool that would change an outcome is not a dev
+tool; it is a scenario.
+
+| Toggle | Flag it sets | What it shows |
+|---|---|---|
+| REVEAL COMPENDIUM | `RevealCompendium` | every Compendium entry and achievement as found, writing nothing |
+| ANIMATION GALLERY | `DebugAnimations` | the gallery's door, a square off the end of the frame's bottom strip |
+| PERFECT INFORMATION | `DebugGameplay` | what the player may not know, starting with the opponent's queued actions |
+
+**Perfect information and the gallery answer different questions** — what the player may know, and
+what gestures the game has — which is why they are two toggles. Balance tuned with perfect
+information on is tuned against a view no player has.
 
 **The gallery exists to give the gestures names.** There are a dozen distinct movements on the
 combat screen and each is reachable only by producing the situation it belongs to — a break needs a
@@ -1588,13 +1599,8 @@ implements it** beside it.
   is the only place a debug page is reachable from every screen. With the flag off the strip is
   exactly the two controls it was.
 
-Neither may ever change an outcome. All are views, the same constraint that applies to
-playback speed — `ResolveRound` never sees any of them.
-
-Both are set once in `main.go`; there is no runtime toggle, because a hotkey would need the
-keyboard and the input vocabulary does not have one. **`DebugGameplay` defaults to off, and
-`DebugAnimations` is on while the gallery is being built** — it belongs off before this ships, on
-the same argument the other is under.
+Every tool is a view, the same constraint that applies to playback speed — `ResolveRound` never
+sees any of them.
 
 ### Nine subsystems, each documented in its own package
 

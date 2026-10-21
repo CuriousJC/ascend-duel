@@ -22,7 +22,6 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/models"
-	"github.com/curiousjc/ascend-duel/internal/scenario"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
@@ -84,6 +83,11 @@ type compendiumEntry struct {
 
 	// backdrop is a realm's: the room drawn in place of a card — see compendium_realm.go.
 	backdrop string
+
+	// aloft and ephemeral are how the trait book draws its sample, the way the game draws a card or
+	// relic carrying the trait: lifted off the row, or faded with its border broken. See
+	// compendium_trait.go.
+	aloft, ephemeral, edge bool
 }
 
 // cell is the size one entry takes: its picture and the caption under it.
@@ -158,13 +162,22 @@ func (s *CompendiumScene) drawCatalog(gs *state.GlobalState, screen *ebiten.Imag
 			if !e.found {
 				spec = undiscoveredSpec(gs)
 			}
-			if img := ui.CardImage(gs, spec, e.style); img != nil {
+			img := ui.CardImage(gs, spec, e.style)
+			if e.found && e.ephemeral {
+				img = ui.EphemeralFace(img)
+			}
+			if e.found && e.aloft {
+				ui.DrawAloft(screen, img, seat.Min, 1, float64(gs.Count), float64(i)*2.1)
+			} else if img != nil {
 				op := &ebiten.DrawImageOptions{}
 				op.GeoM.Translate(float64(seat.Min.X), float64(seat.Min.Y))
 				if e.found && ui.IsPlaceholder(gs, e.spec.Art) {
 					op.ColorScale.Scale(catalogUndrawnScale, catalogUndrawnScale, catalogUndrawnScale, 1)
 				}
 				screen.DrawImage(img, op)
+				if e.found && e.edge {
+					ui.DrawEdgeLight(screen, op.GeoM, e.style.Width, e.style.Height, e.style.CornerRadius, gs.Count, i)
+				}
 			}
 		}
 		ty := seat.Min.Y + s.open.pic.Y + 4
@@ -207,17 +220,17 @@ func tagWidth(line models.TipLine, face *text.GoTextFace) float64 {
 // catalogDialog finishes a book: the count line every found record's tooltip ends on, every entry
 // shown, and its "N of M found" line.
 //
-// **A revealing scenario finds everything here**, so every catalog — and the bestiary's peek — reads
+// **A revealing scenario or the reveal dev tool finds everything here**, so every catalog — and the bestiary's peek — reads
 // as found without each book asking. See scenario.Reveals: a roster entry is keyed by its realm, so a
 // partly revealed bestiary and realm book agree about where the player has been.
-func catalogDialog(title string, entries []compendiumEntry) *compendiumDialog {
+func catalogDialog(gs *state.GlobalState, title string, entries []compendiumEntry) *compendiumDialog {
 	for i := range entries {
 		e := &entries[i]
 		key := e.title
 		if e.motif != "" {
 			key = e.motif + ":" + e.element
 		}
-		if scenario.Reveals(key) {
+		if reveals(gs, key) {
 			e.found = true
 		}
 		if e.found {
@@ -297,7 +310,7 @@ func relicsDialog(gs *state.GlobalState) *compendiumDialog {
 		out = append(out, entry(ui.RelicSpec(gs, record, "", true, false), bleedStyle(true),
 			all.Total(session.StatRelicBought+key), "BOUGHT", title, lines))
 	}
-	return catalogDialog("RELICS", out)
+	return catalogDialog(gs, "RELICS", out)
 }
 
 func cantripsDialog(gs *state.GlobalState) *compendiumDialog {
@@ -307,7 +320,7 @@ func cantripsDialog(gs *state.GlobalState) *compendiumDialog {
 		out = append(out, entry(ui.CantripSpec(gs, c, true), bleedStyle(false),
 			all.Total(session.StatCantripCast+c.Record), "CAST", c.Name, cantripTipLines(c)))
 	}
-	return catalogDialog("CANTRIPS", out)
+	return catalogDialog(gs, "CANTRIPS", out)
 }
 
 func potionsDialog(gs *state.GlobalState) *compendiumDialog {
@@ -318,7 +331,7 @@ func potionsDialog(gs *state.GlobalState) *compendiumDialog {
 		out = append(out, entry(potionSpec(gs, p, true), bleedStyle(false),
 			all.Total(session.StatPotionDrunk+p.Record), "DRUNK", title, lines))
 	}
-	return catalogDialog("POTIONS", out)
+	return catalogDialog(gs, "POTIONS", out)
 }
 
 func tonicsDialog(gs *state.GlobalState) *compendiumDialog {
@@ -329,7 +342,7 @@ func tonicsDialog(gs *state.GlobalState) *compendiumDialog {
 		out = append(out, entry(tonicSpec(gs, t, true), bleedStyle(false),
 			all.Total(session.StatTonicDrunk+t.Record), "DRUNK", title, lines))
 	}
-	return catalogDialog("TONICS", out)
+	return catalogDialog(gs, "TONICS", out)
 }
 
 func essencesDialog(gs *state.GlobalState) *compendiumDialog {
@@ -340,7 +353,7 @@ func essencesDialog(gs *state.GlobalState) *compendiumDialog {
 		out = append(out, entry(ui.EssenceSpec(gs, w, true), bleedStyle(false),
 			all.Total(session.StatEssenceUsed+w.Record), "USED", title, lines))
 	}
-	return catalogDialog("ESSENCES", out)
+	return catalogDialog(gs, "ESSENCES", out)
 }
 
 func runesDialog(gs *state.GlobalState) *compendiumDialog {
@@ -350,7 +363,7 @@ func runesDialog(gs *state.GlobalState) *compendiumDialog {
 		out = append(out, entry(ui.RuneSpec(gs, p, true, false), bleedStyle(false),
 			all.Total(session.StatRuneUsed+p.Record), "USED", runeTitle(p), runeTipLines(gs, p)))
 	}
-	return catalogDialog("RUNES", out)
+	return catalogDialog(gs, "RUNES", out)
 }
 
 func stonesDialog(gs *state.GlobalState) *compendiumDialog {
@@ -360,7 +373,7 @@ func stonesDialog(gs *state.GlobalState) *compendiumDialog {
 		out = append(out, entry(ui.StoneSpec(gs, st, true), bleedStyle(false),
 			all.Total(session.StatStoneUsed+st.Record), "USED", st.Name, strings.Split(st.Text, "\n")))
 	}
-	return catalogDialog("STONES", out)
+	return catalogDialog(gs, "STONES", out)
 }
 
 func goodsDialog(gs *state.GlobalState) *compendiumDialog {
@@ -375,39 +388,7 @@ func goodsDialog(gs *state.GlobalState) *compendiumDialog {
 		out = append(out, entry(spec, bleedStyle(false),
 			all.Total(session.StatGoodBought+g.Record), "OPENED", title, lines))
 	}
-	return catalogDialog("SEALED GOODS", out)
-}
-
-// traitsDialog is every trait: the relic traits, then the card traits, each in its file's order. A
-// relic trait is had once a relic has been worn with it — bought so, or a cantrip's relic cast — and a
-// card trait once a card carrying it has been taken out of an action bundle.
-//
-// **The tooltip is the trait's own sentence and its odds**, so the book is also where a player reads
-// how rare each one is.
-func traitsDialog(gs *state.GlobalState) *compendiumDialog {
-	all := everything(gs)
-	var out []compendiumEntry
-	for _, t := range session.ShelfTraits() {
-		r := t.Record
-		out = append(out, entry(traitSpec(gs, r.Name, r.ArtKey()), bleedStyle(false),
-			all.Total(session.StatRelicTrait+r.RelicTrait), "WORN", r.Name,
-			[]string{"RELIC TRAIT", r.Text, traitOdds(t.Percent, "relics on the shelf")}))
-	}
-	for _, t := range session.CardTraitCatalog() {
-		r := t.Record
-		out = append(out, entry(traitSpec(gs, r.Name, r.ArtKey()), bleedStyle(false),
-			all.Total(session.StatCardTrait+r.CardTrait), "TAKEN", r.Name,
-			[]string{"CARD TRAIT", r.Text, traitOdds(t.Percent, "cards in an action bundle")}))
-	}
-	return catalogDialog("TRAITS", out)
-}
-
-// traitSpec is a trait's card: its picture, or the placeholder while it has none.
-func traitSpec(gs *state.GlobalState, name, art string) cards.Spec {
-	return cards.Spec{
-		Name: name, Form: cards.FormNone, Element: ui.ArtFor(combat.Basic),
-		Art: ui.Artwork(gs, art), Enabled: true,
-	}
+	return catalogDialog(gs, "SEALED GOODS", out)
 }
 
 // traitOdds is how often a trait turns up, said where it turns up — or that it is never sold.
@@ -451,7 +432,7 @@ func creaturesDialog(gs *state.GlobalState) *compendiumDialog {
 			}
 		}
 	}
-	d := catalogDialog("CREATURES", out)
+	d := catalogDialog(gs, "CREATURES", out)
 	d.roster(gs, func(_ bool, element, motif string) []models.TipLine {
 		return []models.TipLine{ui.TipLine(element), {{Text: motif}}}
 	})

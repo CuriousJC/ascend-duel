@@ -462,8 +462,9 @@ broken:
 
 ```powershell
 go vet ./...; go vet -tags debugtrace ./...; go vet -tags idleexit ./...
-go vet -tags demoplay ./...; go vet -tags scenario ./...
+go vet -tags demoplay ./...; go vet -tags scenario ./...; go vet -tags steam ./...
 go run -tags "debugtrace idleexit" .    # traced and self-closing: the unattended run
+go run -tags steam .    # Steam linked; needs steam_api64.dll in the root, and steam_appid.txt outside Steam
 ```
 
 **`demoplay` is how the combat screen gets looked at without anybody sitting at it.** It plays a
@@ -542,6 +543,11 @@ git tag -a v0.1.0 -m "..."; git push origin v0.1.0
   the failure it prevents is a binary stamped `-X main.version=main`.
 - **A tag the workflow creates cannot re-trigger it.** Pushes made with `GITHUB_TOKEN` raise
   no workflow events, so the manual run publishes once instead of looping.
+- **Each build job also makes a Steam build, and it is never published.** `-tags steam`, same
+  commit and flags, left on the run as the `steam-windows` and `steam-linux` artifacts for 90
+  days. **Publish downloads its two artifacts by name** — a download of everything would put the
+  Steam builds on the public release. Nothing in the workflow touches Steam or Valve's DLL: the
+  owner pairs the Windows build with `steam_api64.dll` and uploads both from a local machine.
 - **Windows ships an `.exe`, Linux a `.tar.gz`.** Release assets carry no file permissions,
   so a bare Linux binary downloads without its execute bit and does not run. The tar keeps it.
 - **Ebitengine is pure Go on Windows and cgo on Linux**, where it links against X11, GL and
@@ -1618,6 +1624,7 @@ before it is touched. What stays here is whether it ships and the rule a change 
 | `internal/tutorial` | yes | It fires on its own for an untaught profile, so a clean machine opens into it. Its seed is held by tests that check each other — if one goes red the fix is a new seed, not a weaker check. |
 | `internal/crashlog` | yes | Nothing here may be fatal, and a report carries no path, machine name or user name. |
 | `internal/journal` | yes | Inputs, never outputs. Starting a run truncates it and a crash takes a copy. |
+| `internal/steam` | **only** a Steam build — `-tags steam` | The untagged build links nothing of Valve's. A tagged build will not start without `steam_api64.dll`; an achievement reaches Steam only from `screens/achieve.go`, after the profile took it. |
 
 Every one of them is under the rule playback speed is under — **it may never change an outcome**, the
 scenario fixture excepted by design — and **`internal/combat` may never import any of them**.

@@ -77,3 +77,7 @@ analysis.md
 !/privateassets/audio/README.md
 # The management scripts beside it are committed; this machine's own paths and bucket are not.
 /privateassets/mgmt/local.psd1
+
+# Steam's App ID for a launch outside the Steam client, read from the working directory by
+# `-tags steam` builds. The DLL beside it is covered by `*.dll` above. See internal/steam.
+/steam_appid.txt

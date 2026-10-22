@@ -20,6 +20,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/steam"
 	"github.com/curiousjc/ascend-duel/privateassets"
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -92,6 +93,13 @@ func windowSize() (int, int) {
 }
 
 func main() {
+	// **Steam first, before the window**, because its overlay hooks the graphics device as it is made
+	// and a launch outside Steam may be told to relaunch through it. Empty without `-tags steam`, and a
+	// tagged build with no Steam plays on without it. See internal/steam.
+	if steam.Start() {
+		return
+	}
+
 	// **The window is not the internal resolution, and that is the point** *(2026-09-04)*. Layout
 	// reports state.ScreenWidth x ScreenHeight whatever the window is, so the two are free to
 	// differ and Ebitengine scales between them. They were the same number until the internal
@@ -274,6 +282,7 @@ func main() {
 		// **Unlocks are re-derived from the awards before the run takes them**, so an achievement that
 		// opens something it did not open when it was earned opens it now. See screens.ReconcileUnlocks.
 		screens.ReconcileUnlocks(g.GlobalState)
+		screens.MirrorAchievementsToSteam(g.GlobalState)
 
 		// **The journal is opened before the run, because BootRun is what writes its first line.** It
 		// touches no file here — a journal that made its file at startup would leave one behind for

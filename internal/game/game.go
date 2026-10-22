@@ -8,6 +8,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/screens"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/steam"
 	"github.com/curiousjc/ascend-duel/internal/trace"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -213,6 +214,9 @@ func (g *Game) update() error {
 
 	// The tick every choice is stamped with, on exactly the same terms. See internal/journal.
 	g.GlobalState.Journal.At(g.GlobalState.Count)
+
+	// Steam's callbacks, pumped once a frame. Empty without `-tags steam`; see internal/steam.
+	steam.Tick()
 
 	// Close an unattended window that nobody is using. Compiled out entirely unless the
 	// idleexit tag is set, so this is a no-op returning false in any build that ships.

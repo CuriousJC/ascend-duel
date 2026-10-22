@@ -36,6 +36,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/steam"
 )
 
 // progresses reports whether what happens now may move the profile: there is a profile to move,
@@ -138,12 +139,12 @@ func earn(gs *state.GlobalState, keys []string) {
 	if !progresses(gs) || len(keys) == 0 {
 		return
 	}
-	changed := false
+	var fresh []string
 	for _, key := range keys {
 		if !gs.Profile.Award(key) {
 			continue
 		}
-		changed = true
+		fresh = append(fresh, key)
 		gs.EarnedThisSession = append(gs.EarnedThisSession, key)
 
 		if a, ok := achieve.Loaded().Find(key); ok {
@@ -152,9 +153,23 @@ func earn(gs *state.GlobalState, keys []string) {
 			}
 		}
 	}
-	if changed {
+	if len(fresh) > 0 {
 		saveProfile(gs)
+		steam.SetAchievements(fresh...)
 	}
+}
+
+// MirrorAchievementsToSteam sends every achievement the profile holds to Steam.
+//
+// **Called once at launch.** Steam's side is idempotent, so this is what catches up a profile that
+// earned achievements before Steam was there to hear about them — a build without the tag, a
+// launch with the client closed. It writes nothing to the profile, so it is not gated on
+// progresses: what it sends was earned on a run that progressed. See internal/steam.
+func MirrorAchievementsToSteam(gs *state.GlobalState) {
+	if gs == nil || gs.Profile == nil {
+		return
+	}
+	steam.SetAchievements(gs.Profile.Achievements...)
 }
 
 // ReconcileUnlocks grants every unlock the achievements already on the profile carry, and saves if

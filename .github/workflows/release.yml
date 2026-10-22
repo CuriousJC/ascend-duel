@@ -29,6 +29,11 @@
 # **Build jobs never publish.** They upload artifacts and a single `publish` job creates the
 # release once, because two jobs both calling `gh release create` is a race where one of them
 # loses.
+#
+# **Four binaries, two of them published.** Each build job also makes a Steam build
+# (`-tags steam`, see internal/steam) and leaves it on the run as the `steam-windows` and
+# `steam-linux` artifacts. Nothing here uploads to Steam: the owner downloads those two, puts
+# `steam_api64.dll` beside the Windows one, and ships from a local machine.
 name: Release
 
 on:
@@ -225,6 +230,7 @@ jobs:
         run: |
           go vet ./...
           go vet -tags debugtrace ./...
+          go vet -tags steam ./...
 
       - name: test
         run: go test ./...
@@ -248,8 +254,30 @@ jobs:
       - uses: actions/upload-artifact@v6
         with:
           name: windows
-          path: duello-*.exe
+          path: duello-${{ env.VERSION }}-windows-amd64.exe
           if-no-files-found: error
+
+      # **The Steam build: same commit, same flags, plus `-tags steam`.** It is kept on the run as
+      # an artifact and never published — see the steam-linux step and the publish job. It does
+      # not start without `steam_api64.dll` beside it, and that DLL is not in this workflow at all:
+      # the owner stages the two side by side locally and uploads to Steam from there. See
+      # internal/steam.
+      - name: build for steam
+        shell: bash
+        run: |
+          go build -trimpath -tags steam \
+            -ldflags "-H=windowsgui -s -w -X main.version=${VERSION}" \
+            -o "duello-${VERSION}-windows-amd64-steam.exe" .
+          ls -l duello-*-steam.exe
+
+      # 90 days is the most a public repository keeps an artifact, and the Steam upload happens
+      # whenever the owner gets to it rather than when the release is cut.
+      - uses: actions/upload-artifact@v6
+        with:
+          name: steam-windows
+          path: duello-${{ env.VERSION }}-windows-amd64-steam.exe
+          if-no-files-found: error
+          retention-days: 90
 
   linux:
     # **22.04 rather than latest, on purpose.** A cgo binary links against the glibc of the
@@ -304,6 +332,7 @@ jobs:
         run: |
           go vet ./...
           go vet -tags debugtrace ./...
+          go vet -tags steam ./...
 
       # Three of the four tested packages link Ebitengine, and on Linux its ui package calls
       # glfw.Init() from an init() — so a test binary panics on a missing DISPLAY before any
@@ -334,8 +363,26 @@ jobs:
       - uses: actions/upload-artifact@v6
         with:
           name: linux
-          path: duello-*.tar.gz
+          path: duello-${{ env.VERSION }}-linux-amd64.tar.gz
           if-no-files-found: error
+
+      # The Steam build, as on the windows job: kept on the run, never published. go-steamworks
+      # carries Valve's Linux library inside the binary, so there is nothing to stage beside it.
+      # Tarred for the execute bit, which an artifact loses exactly as a release asset does.
+      - name: build for steam
+        run: |
+          go build -trimpath -tags steam \
+            -ldflags "-s -w -X main.version=${VERSION}" \
+            -o duello .
+          tar czf "duello-${VERSION}-linux-amd64-steam.tar.gz" duello
+          ls -l duello-*-steam.tar.gz
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: steam-linux
+          path: duello-${{ env.VERSION }}-linux-amd64-steam.tar.gz
+          if-no-files-found: error
+          retention-days: 90
 
   publish:
     needs: [version, windows, linux]
@@ -351,10 +398,18 @@ jobs:
       # Needed for the notes file; the binaries come from the artifacts below.
       - uses: actions/checkout@v5
 
+      # **By name, never everything.** The run also holds the two Steam builds, and a download of
+      # every artifact would publish them — a binary that does not start outside Steam, on a public
+      # page.
       - uses: actions/download-artifact@v7
         with:
+          name: windows
           path: dist
-          merge-multiple: true
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: linux
+          path: dist
 
       - run: ls -lR dist
 

@@ -8,9 +8,8 @@
 //
 //	go run -tags debugtrace .
 //
-// A build tag rather than the `DebugGameplay` / `DebugAnimations` runtime flags, because
-// this is a different kind of thing. Those two are *views* a player could conceivably be
-// given; this exists only for whoever is building the game, and it should not be in the
+// A build tag rather than the `DevTools` runtime flag, because this is a different kind of
+// thing. That flag's tools are *views* a player could conceivably be given; this exists only for whoever is building the game, and it should not be in the
 // binary that ships. Keeping it deletable in one commit is the point — if trace calls start
 // spreading through the screens, that property is gone.
 //

@@ -161,6 +161,7 @@ func drawBuildCard(gs *state.GlobalState, screen *ebiten.Image, vitae int) {
 			op := &ebiten.DrawImageOptions{}
 			op.GeoM.Translate(float64(r.Min.X), float64(r.Min.Y))
 			screen.DrawImage(img, op)
+			ui.DrawRoomPulse(gs, screen, r.Min, ui.RealmElement(gs), fightIndex(gs.Run))
 		}
 	}
 }

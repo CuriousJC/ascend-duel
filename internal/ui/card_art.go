@@ -592,10 +592,10 @@ func EnemySpec(gs *state.GlobalState, c *entities.Combatant, name string, life i
 // Every distinct set of figures is a cache entry, like the enemy's life. Bounded by how many
 // values a fight passes through, which is a handful.
 // `life` is passed in for the reason enemySpec's is — the bar lags a figure still on its way.
-// **`fight` is where the run has got to, and the last two rows are drawn from it**
-// *(owner's call, 2026-09-15)*. The realm and the room were two lines on the ground under the
-// card, which made them the one fact about the duelist not written on the duelist; they are stat
-// rows now, on the same terms as DMG and AP — a label against a figure, true for the whole fight.
+// **`fight` is where the run has got to, and the realm row and the room row are drawn from it**.
+// The realm is a stat row, a label against a figure; the room is three glyphs where the ROOM row's
+// figure was — a door, a double door, a portal, colored in the realm's element as each is reached
+// (RoomKeys). The current room's swell is the screen's to draw over the card: DrawRoomPulse.
 //
 // **They are derived here rather than passed in**, unlike every other figure in this signature.
 // The others are quantities a caller may want to draw differently from the model — a bar lagging a
@@ -617,7 +617,7 @@ func DuelistSpec(gs *state.GlobalState, c *entities.Combatant, name string,
 	spec.Stats[1] = cards.StatLine{Label: "AP", Value: strconv.Itoa(ap)}
 	spec.Stats[2] = cards.StatLine{Label: "VITAE", Value: strconv.Itoa(vitae), ValueInk: VitaeInk}
 	spec.Stats[3] = cards.StatLine{Label: "REALM", Value: strconv.Itoa(JourneyRealm(fight))}
-	spec.Stats[4] = cards.StatLine{Label: "ROOM", Value: JourneyRoom(fight)}
+	spec.Rooms = RoomKeys(RealmElement(gs), fight)
 
 	return spec
 }

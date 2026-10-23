@@ -35,7 +35,7 @@
 // during a duel, on the post-battle screen, or on the transition between them.
 //
 // The gallery's button is the one thing in the strip that is not chrome by that test. It is
-// instrumentation, drawn only while state.DebugAnimations is on, and it is there because the frame
+// instrumentation, drawn only while state.DevTools is on, and it is there because the frame
 // is the only place a debug page is reachable from every screen.
 //
 // state.ModalOpen is what it cost. A scene sets it while it has a dialog up and the chrome neither

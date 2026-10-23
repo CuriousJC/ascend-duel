@@ -51,7 +51,30 @@ var (
 	// soundLevel is how loud the effects are, 0 to 1. **It starts at zero**, for the score's
 	// reason: a fresh profile is silent and the player turns it up.
 	soundLevel float64
+
+	// soundMuted silences the effects without forgetting their level, as muted does the score's.
+	soundMuted bool
 )
+
+// soundVolume is what an effect is played at: the level, or nothing while muted.
+func soundVolume() float64 {
+	if soundMuted {
+		return 0
+	}
+	return soundLevel * soundCeiling
+}
+
+// SoundMuted reports whether the effects are muted.
+func SoundMuted() bool { return soundMuted }
+
+// SetSoundMuted silences the effects or brings them back, the ones already sounding included,
+// leaving the level as it was.
+func SetSoundMuted(m bool) {
+	soundMuted = m
+	for _, p := range liveSounds {
+		p.SetVolume(soundVolume())
+	}
+}
 
 // LoadCue decodes one effect and files it under a cue, after any already filed there — a cue with
 // several sounds plays them in turn, in loading order. `file` is the sound's filename, whose
@@ -80,12 +103,12 @@ func LoadCue(cue, file string, raw []byte) error {
 }
 
 // PlayCue plays the cue's next sound once, over everything else. **A cue with no sound is
-// silence**, and so is a level of zero: neither is an error, since a build without the sounds is a
+// silence**, and so is a level of zero or a mute: none is an error, since a build without the sounds is a
 // build. A silent play does not take a turn.
 func PlayCue(cue string) {
 	sounds := cuePCM[cue]
 	ctx := audio.CurrentContext()
-	if len(sounds) == 0 || ctx == nil || soundLevel == 0 {
+	if len(sounds) == 0 || ctx == nil || soundVolume() == 0 {
 		return
 	}
 	pcm := sounds[cueTurn[cue]%len(sounds)]
@@ -95,7 +118,7 @@ func PlayCue(cue string) {
 		return
 	}
 	p := ctx.NewPlayerFromBytes(pcm)
-	p.SetVolume(soundLevel * soundCeiling)
+	p.SetVolume(soundVolume())
 	p.Play()
 	liveSounds = append(liveSounds, p)
 }
@@ -121,6 +144,6 @@ func SoundLevel() float64 { return soundLevel }
 func SetSoundLevel(l float64) {
 	soundLevel = clamp01(l)
 	for _, p := range liveSounds {
-		p.SetVolume(soundLevel * soundCeiling)
+		p.SetVolume(soundVolume())
 	}
 }

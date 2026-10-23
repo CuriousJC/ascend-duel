@@ -116,7 +116,7 @@ func LoadTrack(file string, w []byte) error {
 		deviceFailed = true
 		return fmt.Errorf("music: opening the audio device for %q: %w", name, err)
 	}
-	p.SetVolume(level * fullVolume)
+	p.SetVolume(scoreVolume())
 
 	tracks[name] = p
 	return nil
@@ -161,7 +161,7 @@ func PlayTrack(name string) {
 			log.Printf("music: rewinding %q: %v", name, err)
 		}
 	}
-	next.SetVolume(level * fullVolume)
+	next.SetVolume(scoreVolume())
 	next.Play()
 }
 

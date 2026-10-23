@@ -42,6 +42,9 @@ import (
 	"path/filepath"
 
 	"github.com/curiousjc/ascend-duel/assets"
+	// The creature portraits on the enemy cards are the motif tree, which only files itself in
+	// when imported.
+	_ "github.com/curiousjc/ascend-duel/assets/motifs"
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 )

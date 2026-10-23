@@ -79,6 +79,7 @@ func (s *CombatScene) drawDuelistCard(gs *state.GlobalState, screen *ebiten.Imag
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(float64(r.Min.X), float64(r.Min.Y))
 	screen.DrawImage(img, op)
+	ui.DrawRoomPulse(gs, screen, r.Min, ui.RealmElement(gs), s.fightIndex)
 }
 
 // Where in the journey this fight is: **the realm, and which of that realm's three rooms**, in

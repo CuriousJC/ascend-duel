@@ -122,8 +122,8 @@ func main() {
 	g.GlobalState.Version = version
 	defer reportLoadPanic(g)
 
-	// The debug views — perfect information, the animation gallery, a revealed Compendium — are the
-	// profile's dev tools, put in force once the profile is read. See screens.ApplyDevTools.
+	// The debug views — the animation gallery, a revealed Compendium — are the profile's dev tools,
+	// put in force once the profile is read. See screens.ApplyDevTools.
 
 	// **The run's seed, chosen once, here, and printed.** Everything random in a run derives
 	// from it, each consumer seeding its own source — see GlobalState.RunSeed and the

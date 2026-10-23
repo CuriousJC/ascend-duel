@@ -37,32 +37,19 @@ const (
 	ParticleMixed
 )
 
-// ParticleMotion is how a field moves.
-type ParticleMotion int
-
-const (
-	// MotionElemental gives each element its own physics: fire rises, ice drifts down and spins,
-	// lightning hops, earth falls, arcane circles.
-	MotionElemental ParticleMotion = iota
-	// MotionOrbit circles every element round its center the way arcane does, so the elements
-	// differ by sprite and color alone.
-	MotionOrbit
-)
-
 // Emitter is one field's settings. The zero value of every field but Element is a usable default.
+//
+// **Each element moves by its own physics**: fire rises, ice drifts down and spins, lightning hops,
+// earth falls, arcane circles.
 type Emitter struct {
 	Element cards.Element
 	Set     ParticleSet
-	Motion  ParticleMotion
 
 	// Rate is particles born per tick, Life how many ticks each lives and Size its drawn width in
 	// pixels at birth.
 	Rate float64
 	Life int
 	Size float64
-
-	// Glow draws each sprite a second time additively, so it brightens in its own color.
-	Glow bool
 
 	// Seed separates two fields drawn at once, so neighbors are not the same cloud.
 	Seed uint32
@@ -168,7 +155,7 @@ func (e Emitter) draw(screen *ebiten.Image, age, emitUntil int,
 		born := float64(i) / rate
 		a := now - born
 		lf := float64(life)
-		if e.Element == cards.Lightning && e.Motion == MotionElemental {
+		if e.Element == cards.Lightning {
 			lf *= 0.6
 		}
 		if a < 0 || a >= lf {
@@ -185,13 +172,7 @@ func (e Emitter) drawOne(screen *ebiten.Image, i int, a, lf, x, y, dx, dy, ox, o
 	speed := 0.6 + 0.8*h(3)
 	var vx, vy float64 // the velocity now, which a pointed sprite faces
 
-	motion := e.Motion
-	el := e.Element
-	if motion == MotionOrbit {
-		el = cards.Arcane
-	}
-
-	switch el {
+	switch e.Element {
 	case cards.Fire:
 		// Rises, drifting a little outward, and sways.
 		vx = dx*0.4*speed + 0.35*math.Sin(a*0.25+h(4)*6)
@@ -243,7 +224,7 @@ func (e Emitter) drawOne(screen *ebiten.Image, i int, a, lf, x, y, dx, dy, ox, o
 
 	t := a / lf
 	size := e.size() * (0.6 + 0.6*h(7)) * (1 - 0.6*t)
-	if el == cards.Fire {
+	if e.Element == cards.Fire {
 		size *= 0.9 + 0.1*math.Sin(a*0.6+h(8)*6)
 	}
 	alpha := float32(1)
@@ -257,7 +238,7 @@ func (e Emitter) drawOne(screen *ebiten.Image, i int, a, lf, x, y, dx, dy, ox, o
 		rot = math.Atan2(vx, -vy)
 	} else {
 		rot = h(9)*2*math.Pi + a*(h(11)*0.12-0.06)
-		if el == cards.Ice {
+		if e.Element == cards.Ice {
 			rot += a * 0.05 * dirSign(h(12))
 		}
 	}
@@ -273,13 +254,6 @@ func (e Emitter) drawOne(screen *ebiten.Image, i int, a, lf, x, y, dx, dy, ox, o
 	}
 	op.ColorScale.ScaleAlpha(alpha)
 	screen.DrawImage(img, op)
-
-	if e.Glow {
-		op.Blend = ebiten.BlendLighter
-		op.ColorScale.Reset()
-		op.ColorScale.ScaleAlpha(alpha * 0.5)
-		screen.DrawImage(img, op)
-	}
 }
 
 // sprite is particle i's picture, and whether it is one of the pointed ones that faces its way.

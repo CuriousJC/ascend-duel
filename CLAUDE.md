@@ -887,7 +887,10 @@ a bevelled face, a cached image repainted only when something visible changed.
   dark screen; this one is painted on `ui.ScreenGround` and passes `ui.GroundInk`. Same reason
   `ColorToward` exists beside `ColorAtStrength`.
 - **Music and sounds are two bars, not one** *(owner's call)*, so either can be down while the other is
-  up. Releasing the sounds bar plays a relic toast, because an effect only sounds when a relic fires
+  up. **Each has an on box to its left, and ticked is on** *(owner's call)*: unticking mutes and stands
+  the bar down without forgetting its level (`music.SetMuted`, `profile.Settings.MusicMuted`), a bar
+  dragged to nothing reads as unticked, and ticking a silent one lifts it to half. `models.Checkbox` +
+  `systems.UpdateCheckbox`/`DrawCheckbox` is the widget, drawn from `assets/checkbox/`. Releasing the sounds bar plays a relic toast, because an effect only sounds when a relic fires
   and a level chosen in silence is chosen blind. **The column is full**:
   `TestTheSettingsColumnClearsTheBottomRow` fails on a row that lands EXIT on BACK.
 ### Cards fly; they never appear
@@ -1563,27 +1566,20 @@ and the face is authored at that color.
 ### Dev tools: one switch in the profile, never a build
 
 **A dev tool is a view a developer wants and a player must never be offered**, and every one sits
-behind `devTools` in `profile.json`. Nothing in the game sets it; it is edited by hand. With it on,
-the settings screen grows a **DEV TOOLS** column with one latched toggle per tool, saved in the
-profile's `dev` block; with it off, every tool is off whatever the toggles say and the column is
-not drawn. **One binary is both the dev build and the shipped one**, so no build tag decides what a
-player can reach. `internal/screens/devtools.go` is the whole of it, and `ApplyDevTools` is the one
-place the toggles become `GlobalState` flags.
+behind `devTools` in `profile.json`. Nothing in the game sets it; it is edited by hand. **It is all
+or nothing** *(owner's call)*: on, every tool is on; off, none is and nothing about them is drawn.
+There are no per-tool toggles and no settings column. **One binary is both the dev build and the
+shipped one**, so no build tag decides what a player can reach. `internal/screens/devtools.go` is
+the whole of it, and `ApplyDevTools` is the one place the profile becomes `GlobalState.DevTools`.
 
-**"This is a dev tool setting" means three edits**: a field on `profile.DevSettings`, a line in
-`ApplyDevTools`, and a row in `devRows`. A tool stays a view — **none may change an outcome**, which
-is why a run with them on still earns achievements. A tool that would change an outcome is not a dev
-tool; it is a scenario.
+**A new dev tool reads `gs.DevTools`** and nothing else. A tool stays a view — **none may change an
+outcome**, which is why a run with them on still earns achievements. A tool that would change an
+outcome is not a dev tool; it is a scenario.
 
-| Toggle | Flag it sets | What it shows |
-|---|---|---|
-| REVEAL COMPENDIUM | `RevealCompendium` | every Compendium entry and achievement as found, writing nothing |
-| ANIMATION GALLERY | `DebugAnimations` | the gallery's door, a square off the end of the frame's bottom strip |
-| PERFECT INFORMATION | `DebugGameplay` | what the player may not know, starting with the opponent's queued actions |
-
-**Perfect information and the gallery answer different questions** — what the player may know, and
-what gestures the game has — which is why they are two toggles. Balance tuned with perfect
-information on is tuned against a view no player has.
+| Tool | What it shows |
+|---|---|
+| the animation gallery | its door, a square off the end of the frame's bottom strip |
+| a revealed Compendium | every Compendium entry and achievement as found, writing nothing |
 
 **The gallery exists to give the gestures names.** There are a dozen distinct movements on the
 combat screen and each is reachable only by producing the situation it belongs to — a break needs a

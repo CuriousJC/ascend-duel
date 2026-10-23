@@ -1680,8 +1680,7 @@ func (s *CombatScene) endOfRound(gs *state.GlobalState) {
 //
 //   - The player picks their round against a hand they can see, which is what the table was
 //     built to make possible and what the opponent's row was missing.
-//   - The opponent's intentions stop being hidden information. `concealEnemy` still governs the
-//     Action Flow pane, but with the cards face up there is nothing left for it to hide.
+//   - The opponent's intentions are not hidden information: the cards are face up.
 //
 // **Nothing about the plan itself changed.** `PlanFor` never sees the player's queue and the
 // opponent's own state does not move between the end of one round and the press of DUEL!, so

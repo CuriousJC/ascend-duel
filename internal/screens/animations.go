@@ -25,7 +25,7 @@ package screens
 // # Why chrome and not the title menu
 //
 // It is reached from a square in the frame's bottom strip, drawn only while
-// `state.DebugAnimations` is on — the placement grid's arrangement, and the same argument:
+// `state.DevTools` is on — the placement grid's arrangement, and the same argument:
 // instrumentation that must be deliberately turned on rather than found. A row on the title menu
 // would be a debug page a player can reach. **Off by default**, set once in `main.go`, no runtime
 // toggle, because the input vocabulary has no keyboard.
@@ -61,7 +61,7 @@ const (
 
 	// animNameSize is a row in the list, animNoteSize the symbol under the stage and
 	// animWhatSize the sentence beside it.
-	animNameSize = systems.TextMedium
+	animNameSize = systems.TextSmall
 	animNoteSize = systems.TextSmall
 	animWhatSize = systems.TextSmall
 
@@ -69,8 +69,8 @@ const (
 
 	// The list is two columns of buttons: a button's width, and the pitch from one column's centers
 	// to the next's.
-	animButtonWidth  = 250
-	animColumnPitch  = 262
+	animButtonWidth  = 150
+	animColumnPitch  = 158
 	animLegendOffset = 34
 )
 
@@ -87,7 +87,7 @@ const (
 	animListLeftPct  = 5
 	animTitleTopPct  = 5
 	animListTopPct   = 12
-	animStageLeftPct = 34
+	animStageLeftPct = 24
 	animStageTopPct  = 24
 	animNotesTopPct  = 84
 )
@@ -115,6 +115,10 @@ type animGesture struct {
 	// down and speeds up with the speed slider exactly as the real thing does.
 	ticks func() int
 
+	// options are the entry's choices, one group per row of buttons under the stage, the first in
+	// each group chosen to begin with. The draw reads the chosen one with `s.choice(group)`.
+	options [][]string
+
 	// draw puts the gesture on the stage. `at` is the card-sized rectangle the gesture is centered
 	// on and `p` is 0..1 through it. **Raw progress, not eased** — the easing belongs to the
 	// gesture and several of them are deliberately not eased at all.
@@ -138,6 +142,18 @@ type AnimationsScene struct {
 	// use is the consumable the four `use:` entries run, rebuilt when the loop restarts for the
 	// morph's reason: a Consume owns its own clock.
 	use ui.Consume
+
+	// loops counts the restarts, for an entry that changes something from one run to the next.
+	loops int
+
+	// choices is what is chosen in each entry's option groups, by entry name, kept for the
+	// session so moving away and back keeps the pick. opt is the selected entry's buttons, and
+	// optFor and optName the entry they were built for — the name kept apart so `choice`, which
+	// the entries' own draws call, does not read animGestures and loop its initialization.
+	choices map[string][]int
+	opt     [][]*models.Button
+	optFor  int
+	optName string
 }
 
 // animGestures is the vocabulary, in the order a card meets them: arriving, changing, acting,
@@ -356,92 +372,45 @@ var animGestures = []animGesture{
 		draw:  drawAnimConsume,
 	},
 	{
-		name:        "pane: tans",
-		definedOnly: true,
-		where:       "drawScrollPane, scrollRect, scrollTans",
-		what:        "The pane under a card's working, unrolling and taking a sum, in five steps of tan from the shipped ground.",
-		ticks:       func() int { return ui.Beat(5, 1) },
+		name:  "pane: scroll",
+		where: "ui.DrawScroll, drawScrollArt",
+		what:  "The scroll under a card's working: the paper runs out from under the card and only the bottom roll moves.",
+		ticks: func() int { return ui.Beat(5, 1) },
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
-			drawScrollOptions(gs, screen, at, p)
+			drawScrollArt(gs, screen, at, p)
 		},
 	},
 	{
-		name:        "pane: scroll",
-		definedOnly: true,
-		where:       "ui.DrawScroll, drawScrollArtOptions",
-		what:        "The scroll art in tans 2, 3 and 4: top roll, stretched paper, bottom roll unrolling down.",
-		ticks:       func() int { return ui.Beat(5, 1) },
-		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
-			drawScrollArtOptions(gs, screen, at, p, true)
-		},
-	},
-	{
-		name:        "pane: scroll, no top",
-		definedOnly: true,
-		where:       "ui.DrawScroll, drawScrollArtOptions",
-		what:        "The same without the top roll: the paper runs out from under the card and only the bottom roll moves.",
-		ticks:       func() int { return ui.Beat(5, 1) },
-		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
-			drawScrollArtOptions(gs, screen, at, p, false)
-		},
-	},
-	{
-		name:  "wrap: elemental",
-		where: "ui.DrawParticleWrap, MotionElemental",
-		what:  "Particles round a resting total, each element its own physics. Rows: shards, sparks, mixed.",
+		name:  "wrap",
+		where: "ui.DrawParticleWrap, wrapEmitter",
+		what:  "Particles round a resting total, pieces and sparks together, each element its own physics.",
 		ticks: func() int { return ui.Beat(4, 1) },
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
-			drawWrapGrid(gs, screen, at.Min, ui.MotionElemental, false)
+			drawWrapRow(gs, screen, at.Min)
 		},
 	},
 	{
-		name:        "wrap: orbit",
-		definedOnly: true,
-		where:       "ui.DrawParticleWrap, MotionOrbit",
-		what:        "The same, but every element circles its total: only the sprite and the color differ.",
-		ticks:       func() int { return ui.Beat(4, 1) },
-		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
-			drawWrapGrid(gs, screen, at.Min, ui.MotionOrbit, false)
-		},
-	},
-	{
-		name:        "wrap: glow",
-		definedOnly: true,
-		where:       "ui.DrawParticleWrap, Emitter.Glow",
-		what:        "Elemental physics with each sprite drawn a second time additively, to brighten in its own color.",
-		ticks:       func() int { return ui.Beat(4, 1) },
-		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
-			drawWrapGrid(gs, screen, at.Min, ui.MotionElemental, true)
-		},
-	},
-	{
-		name:        "trail: shards",
-		definedOnly: true,
-		where:       "ui.DrawParticleTrail, ParticleShards",
-		what:        "The hit's figure flying into a card, trailing pieces of its element.",
-		ticks:       trailGalleryTicks,
-		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
-			drawTrailRows(gs, screen, at.Min, ui.ParticleShards, s.t.Age)
-		},
-	},
-	{
-		name:        "trail: sparks",
-		definedOnly: true,
-		where:       "ui.DrawParticleTrail, ParticleSparks",
-		what:        "The hit's figure flying into a card, trailing sparks of its element's color.",
-		ticks:       trailGalleryTicks,
-		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
-			drawTrailRows(gs, screen, at.Min, ui.ParticleSparks, s.t.Age)
-		},
-	},
-	{
-		name:  "trail: mixed",
-		where: "ui.DrawParticleTrail, ParticleMixed",
+		name:  "trail",
+		where: "ui.DrawParticleTrail, trailEmitter",
 		what:  "The hit's figure flying into a card, trailing pieces and sparks together.",
 		ticks: trailGalleryTicks,
 		draw: func(s *AnimationsScene, gs *state.GlobalState, screen *ebiten.Image, at image.Rectangle, p float64) {
-			drawTrailRows(gs, screen, at.Min, ui.ParticleMixed, s.t.Age)
+			drawTrailRows(gs, screen, at.Min, s.t.Age)
 		},
+	},
+	{
+		name:  "room row",
+		where: "cards.Spec.Rooms, ui.DrawRoomPulse",
+		what:  "The duelist card's rooms, walking outer, inner and portal room; a realm per loop. The current room swells.",
+		ticks: func() int { return ui.Beat(6, 1) },
+		draw:  drawRoomRow,
+	},
+	{
+		name:  "checkbox",
+		where: "systems.DrawCheckbox, settings.go",
+		what:  "The checkbox at 68, 44 and 32: ticking, on, disabled. The mark pops in and settles.",
+		ticks: func() int { return ui.Beat(4, 1) },
+		draw:  drawCheckboxes,
 	},
 }
 
@@ -532,6 +501,56 @@ func (s *AnimationsScene) pick(gs *state.GlobalState, i int) {
 	s.at = i
 	s.t = ui.NewTravel(0, animGestures[i].ticks()+animHoldTicks())
 	s.raiseMorph(gs)
+	s.buildOptions(gs)
+}
+
+// The option buttons' shape: a row per group under the stage.
+const (
+	animOptionWidth = 120
+	animOptionPitch = 128
+	animOptionGap   = 36
+	animOptionTop   = 50
+)
+
+// buildOptions lays out the selected entry's option buttons. **Only when the entry changes**, not
+// on every loop restart, so a press is never cut off by the buttons being rebuilt under it.
+func (s *AnimationsScene) buildOptions(gs *state.GlobalState) {
+	if s.choices == nil {
+		s.choices = map[string][]int{}
+		s.optFor = -1
+	}
+	if s.optFor == s.at && s.opt != nil {
+		return
+	}
+	g := animGestures[s.at]
+	if len(s.choices[g.name]) != len(g.options) {
+		s.choices[g.name] = make([]int, len(g.options))
+	}
+	s.optFor, s.optName, s.opt = s.at, g.name, nil
+	left := gs.PctX(animStageLeftPct)
+	top := gs.PctY(animStageTopPct) + cardHeight + animOptionTop
+	for gi, group := range g.options {
+		var row []*models.Button
+		for oi, label := range group {
+			gi, oi, name := gi, oi, g.name
+			b := models.NewButton(animOptionWidth, ui.ButtonTiny, label, func() { s.choices[name][gi] = oi })
+			b.TextSize = animNameSize
+			b.BaseColor = systems.ButtonJade
+			b.ScreenX = left + oi*animOptionPitch + animOptionWidth/2
+			b.ScreenY = top + gi*animOptionGap
+			row = append(row, b)
+		}
+		s.opt = append(s.opt, row)
+	}
+}
+
+// choice is the option chosen in the selected entry's group.
+func (s *AnimationsScene) choice(group int) int {
+	c := s.choices[s.optName]
+	if group < len(c) {
+		return c[group]
+	}
+	return 0
 }
 
 // raiseMorph builds the morph the three morph entries draw, if this gesture is one of them.
@@ -556,11 +575,18 @@ func (s *AnimationsScene) Update(gs *state.GlobalState) error {
 		systems.UpdateButton(gs, b)
 	}
 	systems.UpdateButton(gs, s.back)
+	for gi, row := range s.opt {
+		for oi, b := range row {
+			b.Latched = s.choice(gi) == oi
+			systems.UpdateButton(gs, b)
+		}
+	}
 
 	s.t.Tick()
 	s.m.Tick()
 	s.use.Tick()
 	if s.t.Done() {
+		s.loops++
 		s.pick(gs, s.at)
 	}
 	return nil
@@ -583,6 +609,11 @@ func (s *AnimationsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		systems.DrawButton(gs, screen, b)
 	}
 	systems.DrawButton(gs, screen, s.back)
+	for _, row := range s.opt {
+		for _, b := range row {
+			systems.DrawButton(gs, screen, b)
+		}
+	}
 
 	g := animGestures[s.at]
 	stage := image.Rect(

@@ -24,17 +24,9 @@
 // inventing a field name per fraction. Percentages anchor a group; offsets within a group stay in
 // pixels, and sizes are never percentages.
 //
-// # The two debug flags
+// # The dev tools flag
 //
-// They answer different questions and are wanted at different times, which is why each is its own
-// flag rather than a lodger on another.
-//
-//   - DebugGameplay is about what the player is allowed to know. With it on you are inspecting the
-//     game rather than playing it, which is how balance gets tuned against a view no player will
-//     ever have.
-//   - DebugAnimations opens the animation gallery's door, which is about what gestures the game
-//     has and what each one is called.
-//
-// Both are set once in main — a runtime toggle would need a hotkey, and the input vocabulary
-// has no keyboard — and none of them may ever change an outcome.
+// DevTools is one switch for every dev tool, read off the profile once in main — nothing in the
+// game sets it, and the input vocabulary has no keyboard to flip it with. No tool behind it may
+// ever change an outcome.
 package state

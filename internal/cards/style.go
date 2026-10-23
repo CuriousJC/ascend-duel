@@ -159,6 +159,12 @@ type Style struct {
 	StatRuleAfter int
 	StatRuleGap   int
 
+	// The room row, from Spec.Rooms: the top of the band its glyphs stand in and the side of each
+	// glyph's canvas. Zero RoomsSize means the style has no row. The glyphs share the width inside
+	// the text margins.
+	RoomsTop  int
+	RoomsSize int
+
 	// The one figure written under a portrait, from Spec.PortraitStat. Zero PortraitStatSize
 	// means the style writes none, which is every style but the opponent's. See fighter.go,
 	// which owns the offsets of the block it sits in.
@@ -448,6 +454,8 @@ func (st Style) Scaled(num, den int) Style {
 
 	out.PortraitStatTop, out.PortraitStatSize = i(st.PortraitStatTop), f(st.PortraitStatSize)
 
+	out.RoomsTop, out.RoomsSize = i(st.RoomsTop), i(st.RoomsSize)
+
 	out.HealthBarInset, out.HealthBarTop = i(st.HealthBarInset), i(st.HealthBarTop)
 	out.HealthBarHeight = i(st.HealthBarHeight)
 	out.HealthTextSize = f(st.HealthTextSize)
@@ -625,24 +633,22 @@ var GuideStyle = func() Style {
 // opposite corners in the same format, which is what makes them read as the two sides of one
 // fight rather than as a HUD and a monster.
 //
-// The face reads top to bottom: stat rows, a rule, more stat rows, bar, numbers.
+// The face reads top to bottom: stat rows, a rule, the realm, the room row, bar, numbers.
 //
 //	 30  DMG               30..47    label left, figure right
 //	 57  AP                57..74
 //	 84  VITAE             84..101
 //	110  rule                        a hairline, centered in the gap
 //	129  REALM            129..146
-//	156  ROOM             156..173
+//	147  room row         147..197   three glyphs, door, double door, portal — see rooms.go
 //	207  health bar       207..225
 //	229  hit points       229..247   "42/60", centered
 //	272  inside of the bottom border
 //
-// **The realm and the room are stat rows as of 2026-09-15** *(owner's call)*. They were two lines
-// written on the ground *under* the card, which is the one place on the screen a fact about the
-// duelist was not on the duelist. Moving them up cost the row pitch — 38 to 27, and the figures
-// from 21.25 to 19 — and cost nothing else, because three rows at the old pitch finished 36 pixels
-// clear of the bar. The bar came down 6 with them, which is why every figure below it moved: see
-// MaxStatLines, and note the block below the bar is packed.
+// **Where the run has got to is on the card** *(owner's call)*: the realm as a stat row and the
+// room as a row of glyphs, each room colored in the realm's element once it is reached. The glyphs
+// take the ROOM row's place and the air below it down to the bar, which is what lets them stand 40
+// tall where a stat row is 17. Note the block below the bar is packed.
 //
 // **It names nobody** *(owner's call, 2026-09-15)*. It carried "Duelist" across the top from the
 // day it became a card, and the argument that retired it is the one the bleeding cards were
@@ -682,6 +688,11 @@ var DuelistStyle = Style{
 
 	StatRuleAfter: 3,
 	StatRuleGap:   18,
+
+	// **The room row stands where the ROOM row's figure was, and runs down to just above the bar**:
+	// a 50 canvas whose art fills four fifths of it, so each glyph is about 40 tall.
+	RoomsTop:  147,
+	RoomsSize: 50,
 
 	// **The bar is the opponent's seat exactly**, out of fighter.go — the two are read across the
 	// table against each other. The row above it is the opponent's DMG and this card leaves it

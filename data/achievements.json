@@ -47,7 +47,7 @@
     "AchievedIcon": "look-mom-no-hands",
     "Draw": "Two open hands raised and spread in a shrug, palms out, holding nothing at all.",
     "Said": [
-      "Congrats...you forgot to form a hand...do you need to the tutorial again?"
+      "Congrats...you forgot to form a hand...do you need to get the tutorial again?"
     ],
     "Unlocks": ["no-hand-relics"],
     "Trigger": { "Kind": "moment", "Moment": "hand-formed", "Value": "no-hand" }
@@ -531,9 +531,7 @@
     "Hidden": false,
     "AchievedIcon": "four-figures",
     "Draw": "A broad sword blade driven straight down through a thick stone block, the block split clean in two halves tipping apart around it.",
-    "Said": [
-      "Now we're getting somewhere."
-    ],
+    "Said": ["Now we're getting somewhere."],
     "Trigger": {
       "Kind": "moment",
       "Moment": "hit-landed",
@@ -548,9 +546,7 @@
     "Hidden": false,
     "AchievedIcon": "five-figures",
     "Draw": "A huge two-handed war hammer striking the ground head first, three thick jagged cracks splitting the ground outward from the point of impact.",
-    "Said": [
-      "That one's going to leave a mark."
-    ],
+    "Said": ["That one's going to leave a mark."],
     "Trigger": {
       "Kind": "moment",
       "Moment": "hit-landed",
@@ -565,9 +561,7 @@
     "Hidden": false,
     "AchievedIcon": "true-colors",
     "Draw": "Five playing cards fanned out in a hand, each face blank except for the same single round faceted gem at its center.",
-    "Said": [
-      "Pick a color, any color. Just the one."
-    ],
+    "Said": ["Pick a color, any color. Just the one."],
     "Trigger": {
       "Kind": "moment",
       "Moment": "deck-one-element"
@@ -581,9 +575,7 @@
     "Hidden": false,
     "AchievedIcon": "one-trick",
     "Draw": "A weapon rack holding four identical spears standing upright side by side, points up.",
-    "Said": [
-      "If it works, it works."
-    ],
+    "Said": ["If it works, it works."],
     "Trigger": {
       "Kind": "moment",
       "Moment": "deck-one-form"
@@ -597,9 +589,7 @@
     "Hidden": false,
     "AchievedIcon": "journey-won",
     "Draw": "A sword standing point down in the ground with a thick laurel wreath hung over its crossguard.",
-    "Said": [
-      "The journey is won."
-    ],
+    "Said": ["The journey is won."],
     "Trigger": {
       "Kind": "moment",
       "Moment": "journey-won"
@@ -613,9 +603,7 @@
     "Hidden": false,
     "AchievedIcon": "cartographer",
     "Draw": "A large compass rose with four long chunky points and four short ones between them, around a round center boss.",
-    "Said": [
-      "Every corner of every realm. You can put the map away now."
-    ],
+    "Said": ["Every corner of every realm. You can put the map away now."],
     "Trigger": {
       "Kind": "moment",
       "Moment": "realms-complete"
@@ -629,9 +617,7 @@
     "Hidden": false,
     "AchievedIcon": "bestiary",
     "Draw": "A thick closed leather-bound tome standing upright, a horned beast's skull embossed large on its cover.",
-    "Said": [
-      "Nothing left out there you haven't met."
-    ],
+    "Said": ["Nothing left out there you haven't met."],
     "Trigger": {
       "Kind": "moment",
       "Moment": "bestiary-complete"
@@ -645,9 +631,7 @@
     "Hidden": false,
     "AchievedIcon": "five-crowns",
     "Draw": "A horned great helm seen from the front, five large round gems set in a row across its brow band.",
-    "Said": [
-      "Five realms, five crowns."
-    ],
+    "Said": ["Five realms, five crowns."],
     "Trigger": {
       "Kind": "moment",
       "Moment": "boss-every-element"

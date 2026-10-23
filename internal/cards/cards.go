@@ -483,6 +483,12 @@ type Spec struct {
 	// for why the size is what the card fits rather than a round number.
 	Stats [MaxStatLines]StatLine
 
+	// Rooms is the duelist card's room row: one art key per room of the realm, left to right — a
+	// door, a double door, a portal — each already naming whether that room is reached. An empty
+	// key draws nothing, so a card whose style has no row, or a Spec that names none, is unchanged.
+	// See drawRooms.
+	Rooms [RoomSlots]string
+
 	// PortraitStat is the one figure written under a portrait, on a card whose face is a picture
 	// and therefore has no room for a ladder of stat rows. It is the opponent's DMG and nothing
 	// else uses it.

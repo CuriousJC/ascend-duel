@@ -75,6 +75,10 @@ func SliderRect(s *models.Slider) image.Rectangle {
 	return image.Rect(left, top, left+s.Width, top+s.Height)
 }
 
+// SliderTrack is the groove, for a control laid out against it — a box beside the bar sits on the
+// track rather than on the whole control, whose label band is above.
+func SliderTrack(s *models.Slider) image.Rectangle { return sliderTrack(s) }
+
 // sliderTrack is the groove inside the control: the full width, below the label band.
 func sliderTrack(s *models.Slider) image.Rectangle {
 	r := SliderRect(s)

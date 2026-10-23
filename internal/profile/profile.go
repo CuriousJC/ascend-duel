@@ -126,6 +126,12 @@ type Settings struct {
 	// A fresh profile is silent here too, and so is a profile written before the bar existed.
 	SoundVolume float64 `json:"soundVolume"`
 
+	// MusicMuted and SoundMuted silence the score and the effects without forgetting the volume
+	// beside them, so unmuting returns to the level that was set. **Muted rather than on**, so a
+	// profile written before the boxes existed reads as not muted.
+	MusicMuted bool `json:"musicMuted"`
+	SoundMuted bool `json:"soundMuted"`
+
 	// Fullscreen is whether the game takes the whole display rather than a window.
 	//
 	// **Its zero value is the right default, unlike the two below it.** A game that seizes the
@@ -148,31 +154,10 @@ type Settings struct {
 	// this moves pictures and nothing else — the same constraint the debug flags are under.
 	Speed float64 `json:"speed"`
 
-	// DevTools puts the dev column on the settings screen. **No control sets it**: it is turned on by
-	// editing profile.json by hand, so a shipped build carries the tools and no player is ever shown
-	// a way in. Written out even when false, so the key is in the file to be found.
+	// DevTools turns every dev tool on — see screens.ApplyDevTools. **No control sets it**: it is
+	// turned on by editing profile.json by hand, so a shipped build carries the tools and no player
+	// is ever shown a way in. Written out even when false, so the key is in the file to be found.
 	DevTools bool `json:"devTools"`
-
-	// Dev is the dev column's toggles. **Read only while DevTools is on** — see
-	// screens.ApplyDevTools — so turning DevTools off turns every one of them off without forgetting
-	// how they were set.
-	Dev DevSettings `json:"dev"`
-}
-
-// DevSettings is every dev tool, one switch each. **A view, never a rule**: none of these may change
-// an outcome, which is why a run with them on still earns achievements. A new dev tool is a field
-// here and a row in the settings screen's dev column.
-type DevSettings struct {
-	// RevealCompendium reads every Compendium entry and every achievement as found. Nothing is
-	// written; the counts under the entries are still the profile's own.
-	RevealCompendium bool `json:"revealCompendium"`
-
-	// AnimationGallery puts the animation gallery's door in the frame's bottom strip.
-	AnimationGallery bool `json:"animationGallery"`
-
-	// PerfectInformation shows what the player is not allowed to know, starting with the opponent's
-	// queued actions. What you see with it on is not what a player sees.
-	PerfectInformation bool `json:"perfectInformation"`
 }
 
 // Speed limits. **A slider that can reach zero would stop the game**, and one that can reach ten

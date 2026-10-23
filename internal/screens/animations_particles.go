@@ -1,7 +1,7 @@
 package screens
 
-// animations_particles.go — the gallery's particle entries: every element in every sprite set, side
-// by side, so the options can be compared before any of them is wired into a fight.
+// animations_particles.go — the gallery's particle entries: the wrap round a resting total and the
+// trail behind a flying one, in every element, off the game's own emitters.
 //
 // **The figure is the game's own.** The number is `drawMathText` at the total's size in
 // `hitInkFor`'s color, and the flight is `drawHits`' easing, scale and fade — so what is being judged
@@ -31,32 +31,16 @@ const (
 // particleElements is the five, in the order the grid draws them.
 var particleElements = []cards.Element{cards.Fire, cards.Ice, cards.Lightning, cards.Earth, cards.Arcane}
 
-// particleSets is the grid's rows.
-var particleSets = []struct {
-	name string
-	set  ui.ParticleSet
-}{
-	{"shards", ui.ParticleShards},
-	{"sparks", ui.ParticleSparks},
-	{"mixed", ui.ParticleMixed},
-}
-
-// drawWrapGrid draws a resting total in each element, wrapped in its particles, once per sprite set.
-// **On the free clock**, because a wrap has no start and no end: it is up for as long as the line is.
-func drawWrapGrid(gs *state.GlobalState, screen *ebiten.Image, origin image.Point, motion ui.ParticleMotion, glow bool) {
+// drawWrapRow draws a resting total in each element, wrapped in its particles. **On the free
+// clock**, because a wrap has no start and no end: it is up for as long as the line is.
+func drawWrapRow(gs *state.GlobalState, screen *ebiten.Image, origin image.Point) {
+	y := origin.Y + particleCellH/2
 	for c, el := range particleElements {
 		x := origin.X + c*particleCellW + particleCellW/2
 		animText(gs, screen, el.String(), x-30, origin.Y-24, floatLabelSize, ui.GroundInk)
-	}
-	for r, row := range particleSets {
-		y := origin.Y + r*particleCellH + particleCellH/2
-		animText(gs, screen, row.name, origin.X-90, y, floatLabelSize, animStageInk)
-		for c, el := range particleElements {
-			center := image.Pt(origin.X+c*particleCellW+particleCellW/2, y)
-			em := ui.Emitter{Element: el, Set: row.set, Motion: motion, Glow: glow, Seed: uint32(r*7 + c + 1)}
-			ui.DrawParticleWrap(screen, em, center, particleWrapRX, particleWrapRY, -1, gs.Count)
-			drawMathText(gs, screen, strconv.Itoa(particleFigure), mathTotalSize, hitInkFor(el), center, 1, 1, false)
-		}
+		center := image.Pt(x, y)
+		ui.DrawParticleWrap(screen, wrapEmitter(el, uint32(c+1), 0), center, particleWrapRX, particleWrapRY, -1, gs.Count)
+		drawMathText(gs, screen, strconv.Itoa(particleFigure), mathTotalSize, hitInkFor(el), center, 1, 1, false)
 	}
 }
 
@@ -71,7 +55,7 @@ func trailGalleryTicks() int {
 
 // drawTrailRows flies a hit's figure across the stage once per element, wrapped while it rests and
 // trailing its particles as it goes. `age` is the gallery's own clock, so the trail outlives the hold.
-func drawTrailRows(gs *state.GlobalState, screen *ebiten.Image, origin image.Point, set ui.ParticleSet, age int) {
+func drawTrailRows(gs *state.GlobalState, screen *ebiten.Image, origin image.Point, age int) {
 	wrap := trailWrapTicks()
 	fly := float64(hitFlyTicks())
 	for r, el := range particleElements {
@@ -85,13 +69,8 @@ func drawTrailRows(gs *state.GlobalState, screen *ebiten.Image, origin image.Poi
 			return float64(from.X) + float64(to.X-from.X)*p, float64(from.Y) + float64(to.Y-from.Y)*p
 		}
 
-		em := ui.Emitter{Element: el, Set: set, Seed: uint32(r + 11)}
-		ui.DrawParticleWrap(screen, em, from, particleWrapRX, particleWrapRY, wrap, age)
-		trail := em
-		trail.Seed += 100
-		trail.Rate = 1.2
-		trail.Size = 22
-		ui.DrawParticleTrail(screen, trail, path, wrap+int(fly), age)
+		ui.DrawParticleWrap(screen, wrapEmitter(el, uint32(r+11), 0), from, particleWrapRX, particleWrapRY, wrap, age)
+		ui.DrawParticleTrail(screen, trailEmitter(el, uint32(r+111)), path, wrap+int(fly), age)
 
 		// The figure, drawn as drawHits draws it.
 		if age < wrap {

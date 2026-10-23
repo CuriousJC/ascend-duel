@@ -52,7 +52,7 @@ func Start(midi []byte) error {
 		deviceFailed = true
 		return fmt.Errorf("music: opening the audio device: %w", err)
 	}
-	p.SetVolume(level * fullVolume)
+	p.SetVolume(scoreVolume())
 
 	// **Only if it is what should be sounding.** A screen may have put a track on before the
 	// score finished rendering, and the score then waits its turn like any other.
@@ -73,10 +73,29 @@ func Start(midi []byte) error {
 // settings screen writes the saved level in before the device is opened, so a returning player
 // gets back the level they chose rather than silence.
 //
-// **There is no separate mute flag** *(owner's call, 2026-08-27)*. A mute latch and a volume bar
-// are two controls over one number that have to be kept from disagreeing; zero on the bar is
-// silence, and it is the only way to be silent.
+// **A mute leaves it alone** *(owner's call)*: muted is a second fact beside the level, so turning
+// the score back on returns to the level it had rather than to wherever the bar was dragged to.
 var level float64
+
+// muted silences the score without forgetting its level. See SetMuted.
+var muted bool
+
+// scoreVolume is what every player of the score is set to: the level, or nothing while muted.
+func scoreVolume() float64 {
+	if muted {
+		return 0
+	}
+	return level * fullVolume
+}
+
+// Muted reports whether the score is muted.
+func Muted() bool { return muted }
+
+// SetMuted silences the score or brings it back, every player alike, leaving the level as it was.
+func SetMuted(m bool) {
+	muted = m
+	applyScoreVolume()
+}
 
 // Available reports whether there is anything to hear.
 //
@@ -118,11 +137,16 @@ func Level() float64 { return level }
 // control for. See track.go.
 func SetLevel(l float64) {
 	level = clamp01(l)
+	applyScoreVolume()
+}
+
+// applyScoreVolume sets every player of the score, the paused ones included, to scoreVolume.
+func applyScoreVolume() {
 	if player != nil {
-		player.SetVolume(level * fullVolume)
+		player.SetVolume(scoreVolume())
 	}
 	for _, p := range tracks {
-		p.SetVolume(level * fullVolume)
+		p.SetVolume(scoreVolume())
 	}
 }
 

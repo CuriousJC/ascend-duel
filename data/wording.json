@@ -1,14 +1,53 @@
 {
   "payout": {
-    "heading": "{vitae:Vitae} {vitae:¤}",
-    "interest": "Proliferation For Each {per} (max {max})",
+    "heading": "{vitae:Vitae Earned}",
+    "interest": "Proliferation Per {per} (Max {max})",
     "life": "Duelist Health",
     "room": "Fallen Enemy",
-    "total": "Total Vitae",
-    "gain": "+{n} ¤",
-    "purse": "{n} ¤",
     "leader": "·",
     "essence": "Choose an Essence..."
+  },
+
+  "fighter": {
+    "dmg": "{n} DMG",
+    "ap": "{n} AP",
+    "ap-surge": "{n} AP ({surge} surge)",
+    "vitae": "{n} Vitae",
+    "hp": "{life} of {max} HP",
+    "where": "{realm}, {room}"
+  },
+
+  "journey": {
+    "outer": "Outer Room",
+    "inner": "Inner Room",
+    "portal": "Portal Room",
+    "realm": "{ordinal} Realm",
+    "realm-deep": "Realm {n}",
+    "ordinal-1": "First",
+    "ordinal-2": "Second",
+    "ordinal-3": "Third",
+    "ordinal-4": "Fourth",
+    "ordinal-5": "Fifth",
+    "ordinal-6": "Sixth",
+    "ordinal-7": "Seventh",
+    "ordinal-8": "Eighth",
+    "ordinal-9": "Ninth",
+    "ordinal-10": "Tenth",
+    "ordinal-11": "Eleventh",
+    "ordinal-12": "Twelfth",
+    "ordinal-13": "Thirteenth",
+    "ordinal-14": "Fourteenth",
+    "ordinal-15": "Fifteenth",
+    "ordinal-16": "Sixteenth",
+    "ordinal-17": "Seventeenth",
+    "ordinal-18": "Eighteenth",
+    "ordinal-19": "Nineteenth",
+    "ordinal-20": "Twentieth",
+    "ordinal-21": "Twenty-First",
+    "ordinal-22": "Twenty-Second",
+    "ordinal-23": "Twenty-Third",
+    "ordinal-24": "Twenty-Fourth",
+    "ordinal-25": "Twenty-Fifth"
   },
 
   "act": {

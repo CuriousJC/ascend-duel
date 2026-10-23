@@ -1,5 +1,7 @@
 package cards
 
+import "image/color"
+
 // Style is a card's geometry at one size.
 //
 // **A *generated* glyph cannot be made smaller**, and that is still true: its rim is derived one
@@ -18,6 +20,11 @@ type Style struct {
 	// contact sheet is worth having.
 	CornerRadius int
 	BorderWidth  int
+
+	// Ground is the face's own color on a card that is not the off-white Surface. Zero keeps the
+	// Surface. **Only a card that carries no type of its own may set it**: every ink in this
+	// package is written against the off-white.
+	Ground color.RGBA
 
 	// What this size is big enough to show.
 	ShowName bool
@@ -51,25 +58,17 @@ type Style struct {
 
 	// The cost dashes, hamburger-style, below the category glyph.
 	//
-	// **They are the whole of the cost column now.** A card used to stack a category glyph, the
-	// dashes and a damage badge down the same 64 pixels; the badge is gone and the glyph has
-	// moved into the corner above the column, so what is left is one stack of bars whose width
-	// sets how much of the card the effect text gets. A cost above four grows the stack
-	// downward, and TestLeftColumnDoesNotCollide fails rather than letting it off the card.
+	// **They are the whole of the cost column**: one stack of bars under the form mark, whose width
+	// sets how much of the card the effect text gets. A cost above four grows the stack downward,
+	// and TestLeftColumnDoesNotCollide fails rather than letting it off the card.
 	DashLeft   int
 	DashTop    int
 	DashWidth  int
 	DashHeight int
 	DashGap    int
 
-	// The form mark's left edge, and the scale a glyph would be blown up by.
-	//
-	// **There is no damage badge at all any more** *(2026-08-14)*. It went in two steps: the
-	// 64-pixel generated sword first, because it said what the corner mark already says
-	// while taking the room the effect text needed, and then the figure beside it — because
-	// the text says what the card does, and "Deal 2x DMG" is the same fact stated once instead
-	// of twice. The generated sword that used to draw it was deleted with the rest of the
-	// silhouette generator on 2026-09-16.
+	// The form mark's left edge, and the scale a glyph would be blown up by. The badge's slot
+	// shares the left edge — see BadgeTop.
 	//
 	// GlyphScale is the whole-number pixel repeat a mark is blitted at, applied by placeInk on
 	// top of whatever size the art came back at. It is 1 on every style: a form mark is already
@@ -133,43 +132,16 @@ type Style struct {
 	// for two answers to one question.
 	ArtUnder bool
 
-	// The stat rows: Spec.Stats drawn one per row, label against the left margin and
-	// figure against the right. Zero StatRowPitch means the style has none, which is
-	// every style but DuelistStyle.
-	//
-	// **One size for both halves of a row.** A quieter label and a louder figure was the
-	// character block's shape and it worked there because the two were stacked; on one
-	// baseline, two sizes read as a typo rather than as a hierarchy. The label is set in
-	// LabelInk instead, which is the same distinction made with color.
-	StatsTop     int
-	StatRowPitch int
-	StatSize     float64
-
-	// A horizontal rule between two stat rows, and the extra air it takes.
-	//
-	// **It exists because five rows are two kinds of thing** *(owner's call, 2026-09-15)*. DMG, AP
-	// and VITAE are what the duelist *is*; REALM and ROOM are where the run has got to. Stacked at
-	// one pitch they read as one list of five figures, which is the reading a rule breaks without
-	// a second type size or a heading — both of which the card has no room for and neither of
-	// which would survive a sixth row.
-	//
-	// StatRuleAfter is how many rows sit above the rule, and zero means the style has none.
-	// StatRuleGap is the extra pitch that row gap takes; the rule is centered in it, so the
-	// renderer owns the geometry and nothing outside this package computes a y.
-	StatRuleAfter int
-	StatRuleGap   int
+	// StatOrbs is where Spec.Stats is drawn: entry i is Spec.Stats[i]'s orb, and a zero Size draws
+	// that stat nowhere. See orbs.go. **A fixed array** for the reason Spec.Stats is
+	// one — a Style is compared and copied by value.
+	StatOrbs [MaxStatLines]StatOrb
 
 	// The room row, from Spec.Rooms: the top of the band its glyphs stand in and the side of each
 	// glyph's canvas. Zero RoomsSize means the style has no row. The glyphs share the width inside
 	// the text margins.
 	RoomsTop  int
 	RoomsSize int
-
-	// The one figure written under a portrait, from Spec.PortraitStat. Zero PortraitStatSize
-	// means the style writes none, which is every style but the opponent's. See fighter.go,
-	// which owns the offsets of the block it sits in.
-	PortraitStatTop  int
-	PortraitStatSize float64
 
 	// The health bar, drawn from Spec.Life and Spec.MaxLife, with the fraction written across
 	// it. Zero HealthBarHeight means the style has no health and none of it is drawn.
@@ -218,18 +190,15 @@ type Style struct {
 	// of it and below it for a corner ornament to live in.
 	Bleed int
 
-	// BadgeTop, BadgeSize and BadgeTextSize are the MOCKUP badge in the bottom-left corner: a disc
-	// carrying an attack's multiplier, or the defend mark carrying the shields a card raises.
-	//
-	// **This is a mockup and it reverses a decision that was taken twice** *(2026-08-14, restated
-	// 2026-08-26)*: a card carried a damage badge, the badge went because the effect text says the
-	// same thing, and then the bare figure went too. It is here to be looked at rather than kept —
-	// see drawBadge, which holds what it costs the text band.
-	//
-	// A zero BadgeSize draws none, which is every style but Hand and the sizes derived from it.
-	BadgeTop      int
-	BadgeSize     int
-	BadgeTextSize float64
+	// BadgeTop and BadgeSize are the badge's slot in the bottom-left corner: what an attack's damage
+	// orb is centered on and a defense's shield stack stands on. See drawBadge. A zero BadgeSize
+	// draws none, which is every style but Hand and the sizes derived from it.
+	BadgeTop  int
+	BadgeSize int
+
+	// BadgeOrbSize is an attack's damage orb, in the card's element, this many pixels across and
+	// centered on the badge's slot — see orbs.go.
+	BadgeOrbSize int
 
 	// BadgeStackSize and BadgeStackGap are one shield in the stacked count, and the air between
 	// two of them. **Smaller than BadgeSize**, because three of them have to climb out of the
@@ -373,9 +342,11 @@ var Hand = Style{
 	// The badge sits under the cost column, the same 32 wide as the form mark above it and on the
 	// same left edge, with the same 10 pixels of air under it that FormTop leaves over the mark.
 	// 280 - 10 - 32 = 238.
-	BadgeTop:      238,
-	BadgeSize:     32,
-	BadgeTextSize: 19,
+	BadgeTop:  238,
+	BadgeSize: 32,
+
+	// The damage orb, a quarter bigger than the slot, centered on it.
+	BadgeOrbSize: 40,
 
 	BadgeStackSize: 24,
 	BadgeStackGap:  2,
@@ -446,13 +417,9 @@ func (st Style) Scaled(num, den int) Style {
 
 	out.ArtTop, out.ArtInset, out.ArtMaxH = i(st.ArtTop), i(st.ArtInset), i(st.ArtMaxH)
 
-	out.StatsTop, out.StatRowPitch, out.StatSize = i(st.StatsTop), i(st.StatRowPitch), f(st.StatSize)
-
-	// **StatRuleAfter is a count of rows and must not be scaled**, unlike every other figure in
-	// this block — it is an index into Spec.Stats, not a measurement. StatRuleGap is pixels and is.
-	out.StatRuleAfter, out.StatRuleGap = st.StatRuleAfter, i(st.StatRuleGap)
-
-	out.PortraitStatTop, out.PortraitStatSize = i(st.PortraitStatTop), f(st.PortraitStatSize)
+	for k, o := range st.StatOrbs {
+		out.StatOrbs[k] = StatOrb{Art: o.Art, X: i(o.X), Y: i(o.Y), Size: i(o.Size)}
+	}
 
 	out.RoomsTop, out.RoomsSize = i(st.RoomsTop), i(st.RoomsSize)
 
@@ -472,7 +439,7 @@ func (st Style) Scaled(num, den int) Style {
 	out.Bleed = i(st.Bleed)
 
 	out.BadgeTop, out.BadgeSize = i(st.BadgeTop), i(st.BadgeSize)
-	out.BadgeTextSize = f(st.BadgeTextSize)
+	out.BadgeOrbSize = i(st.BadgeOrbSize)
 	out.BadgeStackSize, out.BadgeStackGap = i(st.BadgeStackSize), i(st.BadgeStackGap)
 
 	// GlyphScale is a whole-number pixel repeat, not a measurement. Scaling it would ask for a
@@ -570,21 +537,15 @@ func stackOf(st Style) Style {
 //
 // What is left on the face reads bottom-up:
 //
-//	216  scrim             216..276  the dark band the figure is written on
-//	222  DMG               222..247  label left, figure right
+//	162  DMG and AP orbs   162..246  amber left, lapis right, in the portrait's bottom corners
 //	250  health bar        250..274  with the fraction written across it
 //	276  inside of the bottom border
 //
-// The offsets are fighter.go's, shared with DuelistStyle.
+// The offsets are fighter.go's.
 //
-// **DMG is on the face and the rest of the stat line is not** *(owner's call)*. What a player is
-// deciding is how much the next blow takes off them, and that is the one figure they cannot work
-// out from the cards on the table. Life is already two things — a bar and a fraction — and the
-// action budget is visible as the cards the creature queues.
-//
-// **The bar sits where the duelist card's does.** See DuelistStyle, which is where the argument
-// for the figures lives — the two cards face each other across the table and a bar at a different
-// height on each would make comparing them an act of measurement.
+// **DMG and AP are the figures the two fighters share** *(owner's call)*, so they are on both
+// cards in the same orbs: the same figure on the two sides of the table is the same object. Life is
+// the bar and its fraction.
 //
 // **Every offset here scales with the card**, unlike Hand's — nothing on this face is fixed-size
 // art, so the whole layout is a proportion of the card and stays one.
@@ -601,11 +562,12 @@ var EnemyStyle = Style{
 
 	TextLeft: 15,
 
-	// **The one figure a portrait leaves no room for**, written under it. Its offsets and the
-	// bar's all come out of fighter.go, so the seats the two fighter cards
-	// share cannot be moved on one of them.
-	PortraitStatTop:  fighterStatTop,
-	PortraitStatSize: fighterStatSize,
+	// **The two figures the fighters share**, DMG and AP, in the orbs the duelist card wears them in,
+	// standing in the portrait's bottom corners on the bar. Spec.Stats[0] and [1], as on the duelist.
+	StatOrbs: [MaxStatLines]StatOrb{
+		{Art: OrbDMG, X: enemyOrbInset + enemyOrbSize/2, Y: enemyOrbY, Size: enemyOrbSize},
+		{Art: OrbAP, X: 200 - enemyOrbInset - enemyOrbSize/2, Y: enemyOrbY, Size: enemyOrbSize},
+	},
 
 	HealthBarInset:  fighterBarInset,
 	HealthBarTop:    fighterBarTop,
@@ -619,7 +581,7 @@ var EnemyStyle = Style{
 // an opponent, and an empty bar would read as one that has already lost.
 var GuideStyle = func() Style {
 	st := EnemyStyle
-	st.PortraitStatTop, st.PortraitStatSize = 0, 0
+	st.StatOrbs = [MaxStatLines]StatOrb{}
 	st.HealthBarInset, st.HealthBarTop, st.HealthBarHeight, st.HealthTextSize = 0, 0, 0, 0
 	return st
 }()
@@ -633,22 +595,21 @@ var GuideStyle = func() Style {
 // opposite corners in the same format, which is what makes them read as the two sides of one
 // fight rather than as a HUD and a monster.
 //
-// The face reads top to bottom: stat rows, a rule, the realm, the room row, bar, numbers.
+// The face reads top to bottom: four orbs in a square, the room row, the health bar.
 //
-//	 30  DMG               30..47    label left, figure right
-//	 57  AP                57..74
-//	 84  VITAE             84..101
-//	110  rule                        a hairline, centered in the gap
-//	129  REALM            129..146
-//	147  room row         147..197   three glyphs, door, double door, portal — see rooms.go
-//	207  health bar       207..225
-//	229  hit points       229..247   "42/60", centered
-//	272  inside of the bottom border
+//	 10  DMG, AP          10..94    amber left, lapis right
+//	 98  REALM, VITAE     98..182   rainbow marble left, blood right
+//	192  room row        192..242   three glyphs, door, double door, portal — see rooms.go
+//	250  health bar      250..274   with the fraction written across it, at the opponent's height
+//	276  inside of the bottom border
 //
-// **Where the run has got to is on the card** *(owner's call)*: the realm as a stat row and the
-// room as a row of glyphs, each room colored in the realm's element once it is reached. The glyphs
-// take the ROOM row's place and the air below it down to the bar, which is what lets them stand 40
-// tall where a stat row is 17. Note the block below the bar is packed.
+// **It carries no words** *(owner's call)*. Each figure is written in white across the orb that
+// says what it is — see orbs.go — so the card states its whole situation in pictures and numbers.
+// DMG and AP wear the same orbs on the opponent's card, being the figures the two fighters share.
+//
+// **Where the run has got to is on the card** *(owner's call)*: the realm as its orb and the room
+// as a row of glyphs under the orbs, each room colored in the realm's element once it is
+// reached.
 //
 // **It names nobody** *(owner's call, 2026-09-15)*. It carried "Duelist" across the top from the
 // day it became a card, and the argument that retired it is the one the bleeding cards were
@@ -656,15 +617,6 @@ var GuideStyle = func() Style {
 // best line on the card to repeat what the position already says. It is the one card in the game
 // that is neither named nor a picture, which is why `Spec.Name` is still set — the render cache
 // keys on the whole spec, and two duelists would otherwise share one face.
-//
-// **The rule is what stops five rows reading as one list.** DMG, AP and VITAE are what the duelist
-// *is*; REALM and ROOM are where the run has got to. See Style.StatRuleAfter.
-//
-// **The bar and the fraction are at exactly the enemy card's offsets**, deliberately: the two
-// cards face each other across the screen and a health bar that sat at a different height on
-// each would make comparing them an act of measurement. Everything above the bar is free to
-// differ, because that is where the two cards say different things — a portrait against three
-// numbers.
 //
 // What it drops is everything describing a *play*, like EnemyStyle and RelicStyle: a duelist
 // is not something you put down from a hand. `Element` is Basic, so the border is the neutral
@@ -682,22 +634,23 @@ var DuelistStyle = Style{
 
 	TextLeft: 15,
 
-	StatsTop:     30,
-	StatRowPitch: 27,
-	StatSize:     19,
+	// **A black face** *(owner's call)*, which the orbs, the doors and the bar all stand on: none of
+	// them is type, so none needs the off-white the inks are written against.
+	Ground: color.RGBA{R: 14, G: 14, B: 16, A: 255},
 
-	StatRuleAfter: 3,
-	StatRuleGap:   18,
+	// Spec.Stats as ui.DuelistSpec fills it: DMG, AP, VITAE, REALM.
+	StatOrbs: [MaxStatLines]StatOrb{
+		{Art: OrbDMG, X: 100 - duelistOrbPitch/2, Y: duelistOrbTop, Size: duelistOrbSize},
+		{Art: OrbAP, X: 100 + duelistOrbPitch/2, Y: duelistOrbTop, Size: duelistOrbSize},
+		{Art: OrbVitae, X: 100 + duelistOrbPitch/2, Y: duelistOrbTop + duelistOrbPitch, Size: duelistOrbSize},
+		{Art: OrbRealm, X: 100 - duelistOrbPitch/2, Y: duelistOrbTop + duelistOrbPitch, Size: duelistOrbSize},
+	},
 
-	// **The room row stands where the ROOM row's figure was, and runs down to just above the bar**:
-	// a 50 canvas whose art fills four fifths of it, so each glyph is about 40 tall.
-	RoomsTop:  147,
+	// **The room row stands between the orbs and the bar**: a 50 canvas whose art fills four fifths of
+	// it, so each glyph is about 40 tall.
+	RoomsTop:  192,
 	RoomsSize: 50,
 
-	// **The bar is the opponent's seat exactly**, out of fighter.go — the two are read across the
-	// table against each other. The row above it is the opponent's DMG and this card leaves it
-	// empty: the duelist writes its DMG at the top, where it has a ladder of stat rows and the
-	// opponent has a picture.
 	HealthBarInset:  fighterBarInset,
 	HealthBarTop:    fighterBarTop,
 	HealthBarHeight: fighterBarHeight,

@@ -30,10 +30,15 @@ func TestTheRoomRowColorsWhatIsReached(t *testing.T) {
 	}
 }
 
-// The glyphs stand clear of the health bar under them.
-func TestTheRoomRowClearsTheHealthBar(t *testing.T) {
+// The glyphs stand between the orbs and the health bar, touching neither.
+func TestTheRoomRowStandsBetweenTheOrbsAndTheBar(t *testing.T) {
 	st := DuelistStyle
 	if bottom := st.RoomsTop + st.RoomsSize; bottom > st.HealthBarTop {
 		t.Errorf("the room row reaches y=%d, into the health bar at y=%d", bottom, st.HealthBarTop)
+	}
+	for i := range st.StatOrbs {
+		if box, ok := StatOrbBox(st, i); ok && box.Max.Y > st.RoomsTop {
+			t.Errorf("orb %d reaches y=%d, into the room row at y=%d", i, box.Max.Y, st.RoomsTop)
+		}
 	}
 }

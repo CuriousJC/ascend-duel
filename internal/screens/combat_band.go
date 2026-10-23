@@ -105,7 +105,7 @@ func (s *CombatScene) refit(gs *state.GlobalState) {
 	} else {
 		bare = s.equippedWorn(gs, nil)
 	}
-	s.cantripLife, s.cantripDMG = d.MaxLife-bare.MaxLife, d.DMG-bare.DMG
+	s.cantripLife = d.MaxLife - bare.MaxLife
 
 	wound := live.MaxLife - live.CurrentLife
 	d.CurrentLife = min(max(d.MaxLife-wound, 1), d.MaxLife)

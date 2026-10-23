@@ -27,6 +27,7 @@ import (
 	"image/color"
 	_ "image/png"
 	"log"
+	"math"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -43,6 +44,36 @@ const DefaultFigureSet = "v3"
 // DefaultFigureSet** with a line in the log, because a misspelled review knob must not cost the
 // game its numbers.
 const FigureSetEnv = "DUELLO_FIGURES"
+
+// VitaeMark is the vitae mark, `¤`. **It is drawn as the vitae orb, never as its cell on the
+// sheet**, in the orb's own colors whatever ink the figure is set in, and as tall as a digit: the
+// cell is kept only for the room it takes in a line.
+const VitaeMark = '¤'
+
+// vitaeOrbArt is the vitae orb's asset key, the picture VitaeMark is drawn as.
+const vitaeOrbArt = "orb-vitae"
+
+// vitaeOrbStep is the grain the orb's texture is reduced to, so a figure set at many heights does
+// not ask ArtMarkImage for a new size at every one.
+const vitaeOrbStep = 16
+
+// drawVitaeOrb draws the vitae mark centered on (cx, cy), `size` across.
+func drawVitaeOrb(dst *ebiten.Image, cx, cy, size float64, alpha float32) {
+	if size <= 0 {
+		return
+	}
+	n := int(math.Ceil(size/vitaeOrbStep)) * vitaeOrbStep
+	img := ArtMarkImage(vitaeOrbArt, n, n)
+	if img == nil {
+		return
+	}
+	k := size / float64(n)
+	op := &ebiten.DrawImageOptions{Filter: ebiten.FilterLinear}
+	op.GeoM.Scale(k, k)
+	op.GeoM.Translate(cx-size/2, cy-size/2)
+	op.ColorScale.ScaleAlpha(alpha)
+	dst.DrawImage(img, op)
+}
 
 // FigureNeutral is the sheet a caller multiplies by an ink of its own. It is pure gray under a
 // black contour, so any ink comes through as itself and the outline stays black.
@@ -235,6 +266,12 @@ func DrawFigure(dst *ebiten.Image, str, sheet string, ink color.RGBA, cx, cy, he
 	for _, r := range str {
 		g, ok := fs.glyphs[r]
 		if !ok {
+			continue
+		}
+		if r == VitaeMark {
+			local := float64(pens[i]) + float64(g.Right-g.Left)/2 - float64(width)/2
+			drawVitaeOrb(dst, cx+local*s, cy, float64(fs.meta.DigitHeight)*s, alpha)
+			i++
 			continue
 		}
 		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterLinear}

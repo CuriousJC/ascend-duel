@@ -152,17 +152,6 @@ var sheets = []sheet{
 			"invisible one drawing at a time.",
 	},
 	{
-		Dir:   "badgesheet",
-		Tool:  "./tools/badgesheet",
-		Title: "Badge sheet",
-		Blurb: "Every damage badge, as a matrix: eleven multipliers down, five elements and a " +
-			"neutral across, at both sizes the game draws them. **The numeral is part of the " +
-			"drawing**, so the six in a row are one picture in six inks — and a numeral that " +
-			"sits lower or reads heavier in one color is invisible one file at a time. The " +
-			"three outlines are underneath, unnumbered, because which shape the badge takes " +
-			"is still open.",
-	},
-	{
 		Dir:   "interfacesheet",
 		Tool:  "./tools/interfacesheet",
 		Title: "Interface sheet",

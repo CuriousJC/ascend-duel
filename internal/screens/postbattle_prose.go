@@ -26,6 +26,7 @@ package screens
 import (
 	"image"
 
+	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/ui"
@@ -65,6 +66,33 @@ type proseSpan struct {
 	// made**, never off what has been typed of it, so "+5 ¤" does not start in one lettering and
 	// finish in the other.
 	figure bool
+
+	// orb draws the span as `dots` vitae dots in a row — a payment on its row, one dot a vitae.
+	// **It appears whole** the moment typing reaches it, rather than a digit at a time.
+	orb  bool
+	dots int
+
+	// gone is how many of the dots have already left for the purse, which the row no longer draws.
+	gone int
+}
+
+// A payment's dots on its row: each one's side, and the air between two.
+const (
+	payoutDotSize = 24
+	payoutDotGap  = 4
+)
+
+// dotsWidth is how wide n dots stand.
+func dotsWidth(n int) float64 {
+	if n <= 0 {
+		return 0
+	}
+	return float64(n*payoutDotSize + (n-1)*payoutDotGap)
+}
+
+// dotCenterX is the middle of dot i of n, in a row centered on cx.
+func dotCenterX(cx float64, i, n int) float64 {
+	return cx - dotsWidth(n)/2 + float64(i*(payoutDotSize+payoutDotGap)) + payoutDotSize/2
 }
 
 // proseLine is one line of the block, and pays is what claiming it hands over — nil for a line
@@ -98,6 +126,9 @@ func (l proseLine) plain() string {
 
 // spanWidth is how wide a span draws at the block's type size, on whichever sheet it is set on.
 func spanWidth(r proseSpan, face *text.GoTextFace) float64 {
+	if r.orb {
+		return dotsWidth(r.dots)
+	}
 	if r.figure {
 		return systems.MeasureFigure(r.text, systems.UIHeightOf(face.Size))
 	}
@@ -150,6 +181,53 @@ func (t *typewriter) filled() bool {
 	return t.line >= len(t.lines) && !t.flying
 }
 
+// inFlight is the part of the payment still in the air: claimed, and not yet in the purse the card
+// draws. **Each dot pays its vitae as it lands**, so the purse counts up one at a time.
+func (t *typewriter) inFlight() int {
+	if !t.flying {
+		return 0
+	}
+	landed := 0
+	for i := 0; i < t.flight.amount; i++ {
+		if t.flight.dotProgress(i) >= 1 {
+			landed++
+		}
+	}
+	return t.flight.amount - landed
+}
+
+// withDeparted marks, on line i's amount, the dots that have left it for the purse, so the row stops
+// drawing each one as it sets off. Only the line being paid has any in the air.
+func (t *typewriter) withDeparted(i int, right []proseSpan) []proseSpan {
+	if !t.flying || i != t.line || len(right) == 0 {
+		return right
+	}
+	gone := 0
+	for d := 0; d < t.flight.amount; d++ {
+		if t.flight.dotProgress(d) > 0 {
+			gone++
+		}
+	}
+	out := append([]proseSpan(nil), right...)
+	for k := range out {
+		if out[k].orb {
+			out[k].gone = gone
+		}
+	}
+	return out
+}
+
+// dotStagger is the gap between one dot setting off and the next, so a row pours rather than jumps.
+func dotStagger() int { return ui.Beat(1, 12) }
+
+// vitaeFlightTotal is the whole of a payment of n dots: the last one's delay plus its flight.
+func vitaeFlightTotal(n int) int { return vitaeFlightTicks() + max(0, n-1)*dotStagger() }
+
+// dotProgress is how far dot i is along its flight, 0 to 1.
+func (f vitaeFlight) dotProgress(i int) float64 {
+	return ui.Clamp01(float64(f.trip.Age-i*dotStagger()) / float64(vitaeFlightTicks()))
+}
+
 // release hands the screen on. **Nothing in here calls it** - a block does not decide when it is
 // done being looked at, and the beat it used to hold before moving on by itself was what put the
 // essences up over a total still being read.
@@ -190,7 +268,7 @@ func (t *typewriter) tick(gs *state.GlobalState, at func(line int) image.Point) 
 	// The sentence is complete: pay what it named, then hold a beat before the next one.
 	if line.pays != nil {
 		if paid := line.pays(gs); paid > 0 {
-			t.flight = vitaeFlight{amount: paid, from: at(t.line), trip: ui.NewTravel(0, vitaeFlightTicks())}
+			t.flight = vitaeFlight{amount: paid, from: at(t.line), trip: ui.NewTravel(0, vitaeFlightTotal(paid))}
 			t.flying = true
 		}
 		t.lines[t.line].pays = nil
@@ -240,6 +318,11 @@ func (t *typewriter) visible(i int) ([]proseSpan, []proseSpan, bool) {
 			if left <= 0 {
 				break
 			}
+			if r.orb {
+				out = append(out, r)
+				left -= len(runes)
+				continue
+			}
 			if left < len(runes) {
 				r.text = string(runes[:left])
 				out = append(out, r)
@@ -282,7 +365,9 @@ func drawProseSpans(screen *ebiten.Image, face *text.GoTextFace, spans []proseSp
 			ink = ui.GroundInk
 		}
 		w := spanWidth(r, face)
-		if r.figure {
+		if r.orb {
+			drawDots(face, screen, r.dots, x+w/2, float64(y+proseLineHeight/2), r.gone)
+		} else if r.figure {
 			drawPayoutFigure(screen, face, r.text, ink, x+w/2, y, 1)
 		} else {
 			op := &text.DrawOptions{}
@@ -306,8 +391,18 @@ func drawPayoutFigure(screen *ebiten.Image, face *text.GoTextFace, s string, ink
 	systems.DrawFigure(screen, s, sheet, tint, cx, cy, h, 1, alpha)
 }
 
-// drawVitaeFlight draws the figure on its way to the purse: the row's own amount, on the vitae
-// sheet, crossing to the duelist card and easing out so it lands rather than stops.
+// drawDots draws n vitae dots in a row centered on (cx, cy), leaving out the first `gone` of them —
+// the ones already on their way to the purse.
+func drawDots(face *text.GoTextFace, screen *ebiten.Image, n int, cx, cy float64, gone int) {
+	for i := max(0, gone); i < n; i++ {
+		ui.DrawOrb(face.Source, screen, cards.OrbVitae, "", dotCenterX(cx, i, n), cy, payoutDotSize)
+	}
+}
+
+// drawVitaeFlight draws the payment on its way to the purse: the row's dots leaving it one after
+// another, each crossing to the duelist card's vitae orb and easing out so it lands rather than
+// stops. The card's orb takes each dot's vitae and swells on the frame it arrives — see
+// ui.OrbSwells.
 func (t *typewriter) drawVitaeFlight(gs *state.GlobalState, screen *ebiten.Image,
 	face *text.GoTextFace) {
 
@@ -316,14 +411,26 @@ func (t *typewriter) drawVitaeFlight(gs *state.GlobalState, screen *ebiten.Image
 	}
 
 	card := buildCardRect(gs)
-	to := image.Pt((card.Min.X+card.Max.X)/2, (card.Min.Y+card.Max.Y)/2)
-	p := ui.EaseOut(t.flight.trip.Progress())
+	to, ok := ui.StatOrbCenter(card, cards.DuelistStyle, vitaeStat)
+	if !ok {
+		to = image.Pt((card.Min.X+card.Max.X)/2, (card.Min.Y+card.Max.Y)/2)
+	}
 
-	x := float64(t.flight.from.X) + (float64(to.X-t.flight.from.X))*p
-	y := float64(t.flight.from.Y) + (float64(to.Y-t.flight.from.Y))*p
-
-	// **The same figure the row ends on, set off from where it sat**, so the amount leaving the row
-	// and the amount crossing the screen are one thing moving. `from` is the row's figure center on
-	// its baseline row, and the figure is drawn on that row's terms as it travels.
-	drawPayoutFigure(screen, face, payoutGain(t.flight.amount).text, ui.VitaeInk, x, int(y), 1)
+	// **The dots the row ends on, set off from where each sat**, so the payment leaving the row and
+	// the payment crossing the screen are one thing moving. `from` is the middle of the row's dots.
+	n := t.flight.amount
+	fromY := float64(t.flight.from.Y + proseLineHeight/2)
+	for i := 0; i < n; i++ {
+		p := t.flight.dotProgress(i)
+		if p >= 1 {
+			continue
+		}
+		e := ui.EaseOut(p)
+		fx := dotCenterX(float64(t.flight.from.X), i, n)
+		ui.DrawOrb(face.Source, screen, cards.OrbVitae, "",
+			fx+(float64(to.X)-fx)*e, fromY+(float64(to.Y)-fromY)*e, payoutDotSize)
+	}
 }
+
+// vitaeStat is the purse's row in ui.DuelistSpec's Stats.
+const vitaeStat = 2

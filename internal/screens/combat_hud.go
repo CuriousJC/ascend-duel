@@ -60,15 +60,8 @@ func (s *CombatScene) drawDuelistCard(gs *state.GlobalState, screen *ebiten.Imag
 		s.shownVitae(gs.Run.Vitae()),
 		s.shownLife(combat.SideA, s.fighter.CurrentLife),
 		s.shownMaxLife(combat.SideA, s.fighter.MaxLife),
-		s.fighter.ActionPoints(),
+		s.shownAP(),
 		s.fightIndex)
-
-	// **A DMG a cantrip has moved is written in the relic pink**, the ink the game already uses for
-	// "something you are carrying moved this figure" — so a Might reads on the card for the whole
-	// fight rather than as a number the player has to remember was 10.
-	if s.cantripDMG > 0 {
-		spec.Stats[0].ValueInk = cards.BorderOf(cards.Relic)
-	}
 
 	img := ui.CardImage(gs, spec, cards.DuelistStyle)
 	if img == nil {
@@ -80,6 +73,7 @@ func (s *CombatScene) drawDuelistCard(gs *state.GlobalState, screen *ebiten.Imag
 	op.GeoM.Translate(float64(r.Min.X), float64(r.Min.Y))
 	screen.DrawImage(img, op)
 	ui.DrawRoomPulse(gs, screen, r.Min, ui.RealmElement(gs), s.fightIndex)
+	s.orbSwells.Draw(gs, screen, r.Min, spec, cards.DuelistStyle)
 }
 
 // Where in the journey this fight is: **the realm, and which of that realm's three rooms**, in

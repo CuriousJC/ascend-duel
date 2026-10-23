@@ -41,7 +41,7 @@ func TestPastFightsAreOneLineAndTheLiveOneIsOpen(t *testing.T) {
 
 	var headings, lines []string
 	for _, r := range rows {
-		if r.fight != 0 || strings.HasPrefix(r.row.Text(), "-  Realm") || strings.HasPrefix(r.row.Text(), "+  Realm") {
+		if r.fight != 0 || ledgerHeadingText(r.row.Text(), "-") || ledgerHeadingText(r.row.Text(), "+") {
 			headings = append(headings, r.row.Text())
 			continue
 		}
@@ -51,10 +51,10 @@ func TestPastFightsAreOneLineAndTheLiveOneIsOpen(t *testing.T) {
 	if len(headings) != 2 {
 		t.Fatalf("the ledger has %d fight headings, want 2: %v", len(headings), headings)
 	}
-	if want := "+  Realm 1, Outer Room - Giant Bat - 40 Damage Dealt"; headings[0] != want {
+	if want := "+  First Realm, Outer Room - Giant Bat - 40 Damage Dealt"; headings[0] != want {
 		t.Errorf("the finished fight's line is %q, want %q", headings[0], want)
 	}
-	if !strings.HasPrefix(headings[1], "-  Realm") {
+	if !ledgerHeadingText(headings[1], "-") {
 		t.Errorf("the live fight's line is %q, which is not drawn open", headings[1])
 	}
 
@@ -310,7 +310,7 @@ func TestAnOpenedFightIsBanded(t *testing.T) {
 	pair := -1
 	for _, r := range rows {
 		switch {
-		case r.fight != 0 || strings.HasPrefix(r.row.Text(), "-  Realm"):
+		case r.fight != 0 || ledgerHeadingText(r.row.Text(), "-"):
 			heads++
 			pair++
 			if want := ledgerBands[pair%2]; r.row.Band != want {
@@ -368,4 +368,10 @@ func panelDeck() []combat.Card {
 		{Concept: combat.Bash, Element: combat.Lightning},
 		{Concept: combat.Bash, Element: combat.Fire},
 	}
+}
+
+// ledgerHeadingText reports whether a row's text is a fight's heading under marker: the marker,
+// then the realm the fight was in.
+func ledgerHeadingText(text, marker string) bool {
+	return strings.HasPrefix(text, marker+"  ") && strings.Contains(text, "Realm")
 }

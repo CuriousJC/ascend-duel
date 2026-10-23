@@ -211,6 +211,9 @@ type CombatScene struct {
 	fighter *entities.Combatant
 	enemy   *entities.Combatant
 
+	// orbSwells swells the duelist card's orbs as their figures grow — see ui.OrbSwells.
+	orbSwells ui.OrbSwells
+
 	// enemyElement is the colour this fight's opponent was dealt as — the realm's theme. The
 	// scene keeps it because the deck is built from it and the card faces are drawn from it, and
 	// both happen after the opponent itself has been hydrated.
@@ -442,13 +445,11 @@ type CombatScene struct {
 	fightIndex int
 	died       bool
 
-	// cantripLife and cantripDMG are what this fight's cantrips have added to the fighter: the
-	// ceiling raised and the DMG added, summed over every cast. **Both are the fight's and die with
-	// it** — Init zeroes them, because the fighter is rebuilt from the run there and carries none of
-	// it. cantripLife is what the ceiling sheds when the run takes the fighter's life back (see
-	// session.ShedCantrips); cantripDMG is only ever read to color the DMG row.
+	// cantripLife is what this fight's cantrips have raised the fighter's ceiling by, summed over
+	// every cast. **It is the fight's and dies with it** — Init zeroes it, because the fighter is
+	// rebuilt from the run there and carries none of it. It is what the ceiling sheds when the run
+	// takes the fighter's life back (see session.ShedCantrips).
 	cantripLife int
-	cantripDMG  int
 
 	// won is the other exit: the fight was won, so the run advances and the post-battle screen
 	// takes over. Same shape as died and for the same reason — raised by a button, consumed by
@@ -584,7 +585,7 @@ func (s *CombatScene) newDuel(gs *state.GlobalState) {
 	// entered — see nextFight.
 	// The run says which room this is; the scene keeps a copy for the frame. See fightIndex.
 	s.fightIndex = gs.Run.Fight()
-	s.cantripLife, s.cantripDMG = 0, 0
+	s.cantripLife = 0
 	s.cast = nil
 	s.rowOrder = nil
 
@@ -1927,6 +1928,8 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawShieldPiles(gs, screen)
 	// The hits stopped on their way in, over the heaps their shields left.
 	s.drawIntercepts(gs, screen)
+	// The surges those breaks banked, on their way to the AP orb.
+	s.drawSurges(gs, screen)
 
 	// **The signals, over everything on the table and under the panels.** A burst thrown out of a
 	// card has to ride over the card and its neighbors, and the figure that leaves with it is the

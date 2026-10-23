@@ -176,7 +176,6 @@ go run ./tools/traitsheet    # every relic and card trait: its sentence, what it
 go run ./tools/achievementsheet  # every achievement's Steam fields and icon pair, at 256 and 64: the upload set
 go run ./tools/upgradesheet  # every visible card upgrade, on every form mark, in every upgrade style
 go run ./tools/goodsheet     # every sealed good beside the offer it actually makes
-go run ./tools/badgesheet    # every damage badge: eleven values by six colors, and the blank fallback
 go run ./tools/interfacesheet # the lettering in every ink, every button face, square button, glyph and bar cell
 go run ./tools/scenariosheet # every debug fixture: what it plugs in and the command that launches it
 go run ./tools/scenariodeck -form slash -size 40   # writes a scenario's Deck block to stdout
@@ -1027,8 +1026,11 @@ run code, the seed wheels. Classify a new line as one or the other; "neither" is
 - **The card faces read the same sheets through `systems.GlyphSheet`**, which decodes them as plain
   images and composites with `x/image/draw`, because `internal/cards` has no graphics context. It
   shares the cells, advances and span arithmetic with the screen's drawing, so a word lays out the
-  same on a card and on the table. A card's names, stat rows and effect text are prose; its life
-  fraction, badge numeral and relic counter are figures.
+  same on a card and on the table. A card's names and effect text are prose; its life fraction,
+  orb figures and relic counter are figures.
+- **The vitae mark `¤` is drawn as the vitae orb**, never as a cell of the sheet — in the orb's
+  own colors, a digit tall, whatever the line's ink (`systems.VitaeMark`). `¤` stays the character
+  in every string, so a price is still written `12 ¤`.
 
 **A button's color picks its face**, in `internal/systems/button_face.go`: `systems.ButtonRed`
 names `button-carnelian`, and `ButtonJade` and the default name `button-jade`. **Red commits or leaves;
@@ -1114,12 +1116,11 @@ the page it is all reviewed on.
   make a **26px column**; and **the effect text takes everything right of that**, centered in it
   both ways, at 18pt. `blitGlyph` clips whatever it composites to the rounded shape, which is what
   keeps a mark placed hard into a corner from squaring the card off.
-- **The damage badge carries the card's multiplier, and the numeral is drawn into the art.**
-  `cards.BadgeArtKey` picks it by value and element out of `assets/damage/`; a value with
-  no drawn badge falls back to the blank badge with its figure printed on top, which is the one
-  fallback in the interface art. **The outline is the diamond**, and `go run ./tools/badgesheet`
-  is the matrix the set is reviewed on. `cards.Spec` still has no `Damage` field: the badge says
-  what the *card* multiplies by, never what the wielder would deal with it.
+- **The badge carries the card's multiplier on an orb of the card's element**, the figure in white
+  across it as a decimal — `0.5`, `2`, `4.5`, never a fraction. `cards.DamageOrbArtKey` picks the
+  orb out of `assets/orb/`, the DMG orb for a card with no element of the five, and the figure fades
+  with the card. `cards.Spec` still has no `Damage` field: the badge says what the *card*
+  multiplies by, never what the wielder would deal with it.
 - **A card's picture is a function of the card *and who is holding it*.** A slash in the hands
   of someone wearing The Sickle must not read "2x DMG" and deal four times their DMG — the card's
   multiplier and the relic's scaling are applied in different places. `ui.HeldBy` is the
@@ -1150,7 +1151,7 @@ the page it is all reviewed on.
 
 **`go run ./tools/marksheet` is where every mark in the game is reviewed** — the form marks by
 element, the neutral set and the cost ticks, all on one page at the sizes the game draws them
-and enlarged. The damage badges have their own matrix, `go run ./tools/badgesheet`.
+and enlarged.
 
 **The question the page exists for is the matrix.** A player counts a hand by comparing four
 silhouettes along a row and five hues down a column, so the two failures are a form that cannot be
@@ -1485,7 +1486,7 @@ native resolution one crystal is most of a capital and the word reads as a blotc
 **A change here moves the art out of step with the type, and nothing fails.** The form marks and
 cost ticks in `assets/form/` are authored in their element, and **every prompt under `docs/art/`
 writes the ramps out in full** — the closed-set prompts (`card_art_prompt.MD`,
-`damage_art_prompt.MD`, `glyph_art_prompt.MD`) as their element table, and the subject prompts as a
+`glyph_art_prompt.MD`, `orb_art_prompt.MD`) as their element table, and the subject prompts as a
 shared **The color words** block, which is what lets a brief say "a purple orb" and land in arcane.
 `icon_button_art_prompt.MD` is the one without an element ramp, since its buttons are jade, which is
 no element. **Move a
@@ -1900,10 +1901,20 @@ cost tens of megabytes of resident memory for pictures most runs never show.
 
 **Nothing in the game draws a loose sprite.** There are no creature sprites in `assets/`;
 `Combatant` has no `Sprite` field and `entities` imports no Ebitengine at all. **Both duelists
-are cards**, in opposite corners, and both state their life the same way — a bar over a
-fraction, at identical offsets on the two styles so the pair can be compared across the
-screen without measuring. The enemy's carries its DMG figure in the block above its bar; the
-player's has nothing there, its shields being heaped over the cards that raised them.
+are cards**, in opposite corners, and both state their life the same way — a bar with the
+fraction across it, at identical offsets on the two styles so the pair can be compared across the
+screen without measuring.
+
+**A fighter card's figures are orbs, and it carries no words for them** *(owner's call)*. Each
+figure is written in white across the orb that says what it is — `cards.Style.StatOrbs`, drawn by
+`internal/cards/orbs.go`: amber is DMG, lapis AP, the blood orb vitae and the rainbow marble the
+realm. The duelist card is four orbs in a square on a black face, the room row under them and the
+bar along the bottom; the opponent's carries DMG and AP in its portrait's bottom corners, in the
+same orbs, being the two figures the fighters share. **The tooltip is where the figures are named**
+— `ui.PlayerTip` and `ui.DuelistTip`, on every screen the card is drawn on. An orb whose figure
+grows swells (`ui.OrbSwells`, which watches the figures rather than the events), and whatever pays
+into one flies there as a small orb of its own: a surge into AP, a payout's vitae dots into the
+purse.
 
 **A creature is one still picture and there is no animation anywhere.** Animating one means
 generating frames from the same brief `tools/creatureprompt` assembles, not going back for a sprite

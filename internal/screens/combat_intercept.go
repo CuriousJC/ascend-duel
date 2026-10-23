@@ -101,6 +101,11 @@ type intercept struct {
 	// -1 for any other intercept.
 	stopped int
 
+	// surge says the player's shield matched and banked an action point, and paid that the orb
+	// carrying it has been thrown from meetAt, the break. See combat_surge.go.
+	surge, paid bool
+	meetAt      image.Point
+
 	t ui.Travel
 
 	// figureImg is the figure drawn once onto its own image at the moment of impact, so it can be
@@ -184,6 +189,7 @@ func (s *CombatScene) noteBlock(gs *state.GlobalState, e combat.Event) {
 	ic.label = blockLabel(e)
 	if e.Target == combat.SideA {
 		ic.stopped = seat
+		ic.surge = e.Surged
 	}
 	s.raiseIntercept(gs, ic)
 }
@@ -217,7 +223,9 @@ func (s *CombatScene) interceptLine(gs *state.GlobalState, col *mathColumn, e co
 
 // raiseIntercept aims one along its path and puts it on stage, with the trail behind its figure.
 func (s *CombatScene) raiseIntercept(gs *state.GlobalState, ic intercept) {
-	ic.aim(interceptShare(gs, interceptAt, s.interceptOrigin(gs, ic), fighterCenter(gs, ic.target)))
+	origin, target := s.interceptOrigin(gs, ic), fighterCenter(gs, ic.target)
+	ic.aim(interceptShare(gs, interceptAt, origin, target))
+	ic.meetAt = interceptMeet(ic, origin, target)
 	s.Theater.intercepts = append(s.Theater.intercepts, ic)
 	s.raiseInterceptTrail(ic)
 }

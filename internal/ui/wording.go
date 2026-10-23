@@ -23,21 +23,52 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 )
 
-// The reward screen's payout, read out a line at a time. See screens.payoutLines. The heading, the
-// three claims and the total are rows of one block; the code puts the amounts — SayPayoutGain and
-// SayPayoutPurse, `¤` being the vitae mark — at its right edge and fills the gap with
-// SayPayoutLeader.
+// The reward screen's payout, read out a line at a time. See screens.payoutLines. The three claims
+// are rows of one box titled SayPayoutHeading; the code puts each amount — as that many vitae dots —
+// at its row's right edge and fills the gap with SayPayoutLeader.
 var (
 	SayPayoutHeading  = word("payout.heading")
 	SayPayoutInterest = word("payout.interest", "per", "max")
 	SayPayoutLife     = word("payout.life")
 	SayPayoutRoom     = word("payout.room")
-	SayPayoutTotal    = word("payout.total")
-	SayPayoutGain     = word("payout.gain", "n")
-	SayPayoutPurse    = word("payout.purse", "n")
 	SayPayoutLeader   = word("payout.leader")
 	SayPayoutEssence  = word("payout.essence")
 )
+
+// A fighter card's tooltip: every figure on the card, in words. See DuelistTip and PlayerTip.
+var (
+	SayFighterDMG     = word("fighter.dmg", "n")
+	SayFighterAP      = word("fighter.ap", "n")
+	SayFighterAPSurge = word("fighter.ap-surge", "n", "surge")
+	SayFighterVitae   = word("fighter.vitae", "n")
+	SayFighterHP      = word("fighter.hp", "life", "max")
+	SayFighterWhere   = word("fighter.where", "realm", "room")
+)
+
+// Where the journey is: the three rooms of a realm, and a realm by its ordinal — written out to the
+// twenty-fifth, and by its number past that. See RoomNames and RealmName.
+var (
+	SayRoomOuter     = word("journey.outer")
+	SayRoomInner     = word("journey.inner")
+	SayRoomPortal    = word("journey.portal")
+	SayRealm         = word("journey.realm", "ordinal")
+	SayRealmDeep     = word("journey.realm-deep", "n")
+	SayRealmOrdinals = ordinals("journey.ordinal-")
+)
+
+// ordinals is every `prefix-1`, `prefix-2`, … sentence the file carries, in order, stopping at the
+// first number it lacks.
+func ordinals(prefix string) []string {
+	var out []string
+	for n := 1; ; n++ {
+		key := fmt.Sprintf("%s%d", prefix, n)
+		section, name, _ := strings.Cut(key, ".")
+		if _, ok := wording[section][name]; !ok {
+			return out
+		}
+		out = append(out, word(key))
+	}
+}
 
 // A card being played: "Duelist attacks with a fire strike (1.5x)". {verb} is the marked verb and
 // {card} arrives with its article already chosen — "a" or "an" — by the code.

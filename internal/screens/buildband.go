@@ -127,6 +127,28 @@ func hoverGuideCard(gs *state.GlobalState, at image.Point, tip *models.Tooltip) 
 	return true
 }
 
+// hoverBuildCard explains the band's duelist card with the tooltip it carries in a fight: every
+// figure on it, in words. The figures are the ones drawBuildCard draws it with.
+func hoverBuildCard(gs *state.GlobalState, at image.Point, tip *models.Tooltip) bool {
+	seat := buildCardRect(gs)
+	if gs.Run == nil || !at.In(seat) {
+		return false
+	}
+	fighter := ui.BuildFighter(gs)
+	if fighter == nil {
+		return false
+	}
+	name := fighter.Name
+	if name == "" {
+		name = ui.DuelistName
+	}
+	d := fighter.Duelist
+	d.CurrentLife = gs.Run.LifeAtFightStart(fighter.MaxLife)
+	title, lines := ui.PlayerTip(name, d, gs.Run.Vitae(), fightIndex(gs.Run))
+	tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
+	return true
+}
+
 // drawBuildCard is the duelist half of the band on its own.
 //
 // **It is split out for the shop** *(2026-08-22)*, which draws the relic row itself: a relic there is
@@ -162,9 +184,15 @@ func drawBuildCard(gs *state.GlobalState, screen *ebiten.Image, vitae int) {
 			op.GeoM.Translate(float64(r.Min.X), float64(r.Min.Y))
 			screen.DrawImage(img, op)
 			ui.DrawRoomPulse(gs, screen, r.Min, ui.RealmElement(gs), fightIndex(gs.Run))
+			buildSwells.Draw(gs, screen, r.Min, spec, cards.DuelistStyle)
 		}
 	}
 }
+
+// buildSwells swells the band's duelist card's orbs as their figures grow — a payment landing in
+// the purse on the reward screen, a sale on the shop's. **One for every screen the band is on**,
+// because it is one card moving from screen to screen with the same figures.
+var buildSwells ui.OrbSwells
 
 // drawBuildRelics is the row of worn relics: what is on your fingers, in firing order.
 //
@@ -254,6 +282,9 @@ func hoverBuildRelics(gs *state.GlobalState, at image.Point, tip *models.Tooltip
 		return true
 	}
 	if hoverGuideCard(gs, at, tip) {
+		return true
+	}
+	if hoverBuildCard(gs, at, tip) {
 		return true
 	}
 

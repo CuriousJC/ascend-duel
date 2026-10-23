@@ -33,7 +33,7 @@ func RealmElement(gs *state.GlobalState) string {
 const (
 	roomPulseSwell = 0.07
 	roomPulseNum   = 3
-	roomPulseDen   = 2
+	roomPulseDen   = 1
 )
 
 // DrawRoomPulse draws the current room's glyph over a duelist card whose top-left is `card`, for a

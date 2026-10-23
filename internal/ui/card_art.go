@@ -566,11 +566,10 @@ func EnemySpec(gs *state.GlobalState, c *entities.Combatant, name string, life i
 		Enabled: true,
 	}
 
-	// **The one figure a player cannot read off the table.** Life is already the bar and the
-	// fraction, and the action budget is visible as the cards the creature queues; what the next
-	// blow takes off them is not anywhere else. It is written under the portrait, above the bar —
-	// see cards.FighterBlockTop, which is what the art is composed against.
-	spec.PortraitStat = cards.StatLine{Label: "DMG", Value: strconv.Itoa(c.DMG)}
+	// **The two figures the fighters share**, in the rows DuelistSpec puts them in, so the two
+	// cards' orbs read the same figure off the same row — see cards.EnemyStyle.
+	spec.Stats[0] = cards.StatLine{Label: "DMG", Value: strconv.Itoa(c.DMG)}
+	spec.Stats[1] = cards.StatLine{Label: "AP", Value: strconv.Itoa(c.ActionPoints())}
 	return spec
 }
 
@@ -615,7 +614,7 @@ func DuelistSpec(gs *state.GlobalState, c *entities.Combatant, name string,
 	}
 	spec.Stats[0] = cards.StatLine{Label: "DMG", Value: strconv.Itoa(dmg)}
 	spec.Stats[1] = cards.StatLine{Label: "AP", Value: strconv.Itoa(ap)}
-	spec.Stats[2] = cards.StatLine{Label: "VITAE", Value: strconv.Itoa(vitae), ValueInk: VitaeInk}
+	spec.Stats[2] = cards.StatLine{Label: "VITAE", Value: strconv.Itoa(vitae)}
 	spec.Stats[3] = cards.StatLine{Label: "REALM", Value: strconv.Itoa(JourneyRealm(fight))}
 	spec.Rooms = RoomKeys(RealmElement(gs), fight)
 

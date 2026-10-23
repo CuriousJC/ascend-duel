@@ -277,6 +277,13 @@ var roomArt embed.FS
 //go:embed checkbox/*.png
 var checkboxArt embed.FS
 
+// THE ORBS: the fighter cards' figures, each a glossy sphere a white figure is written across, keyed
+// by filename stem — `orb-<material>`. Which figure wears which orb is cards.DuelistStyle's and
+// cards.EnemyStyle's. See docs/art/orb_art_prompt.MD.
+//
+//go:embed orb/*.png
+var orbArt embed.FS
+
 // The relic faces, globbed as a family and keyed by filename stem — `relic/fire.png` is
 // `fire`, which is what `data/relics.json` writes in its Art field.
 //
@@ -326,13 +333,6 @@ var cardArt embed.FS
 //
 //go:embed enemy-card
 var enemyCardArt embed.FS
-
-// The damage badges, globbed the same way — `damage/damage-diamond-fire.png` is the key
-// `damage-diamond-fire`, which is what cards.BadgeFallbackArtKey builds, and every numbered one is
-// what cards.BadgeArtKey builds.
-//
-//go:embed damage/*.png
-var damageArt embed.FS
 
 // The stone faces, the same way. A stone with no Art draws the placeholder — see
 // data.DefaultStoneArt.
@@ -443,7 +443,6 @@ func LoadImageData() map[string][]byte {
 	embedFamily(images, cantripArt, "cantrip")
 	embedFamily(images, cardArt, "card")
 	embedFamily(images, enemyCardArt, "enemy-card")
-	embedFamily(images, damageArt, "damage")
 	embedFamily(images, stoneArtFS, "stone")
 	embedFamily(images, otherArt, "other")
 	embedFamily(images, formArt, "form")
@@ -463,6 +462,7 @@ func LoadImageData() map[string][]byte {
 	embedFamily(images, scrollArt, "scroll")
 	embedFamily(images, roomArt, "room")
 	embedFamily(images, checkboxArt, "checkbox")
+	embedFamily(images, orbArt, "orb")
 
 	// Bob's face, for the reason the relic art is here: the tutorial draws him into a card
 	// through internal/cards, which has no graphics context.

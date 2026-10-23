@@ -34,8 +34,8 @@ func (s *PostBattleScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor
 		return one(buildCardRect(gs)), true
 	}
 
-	// The payout's account: its first four lines — interest, health kept, the enemy's vitae and the
-	// total — across the payout column, measured off the same layout drawProse types them on.
+	// The payout's account: its three claims — interest, health kept and the enemy's vitae —
+	// across the payout column, measured off the same layout drawProse types them on.
 	if a == tutorial.AnchorPayout {
 		n := len(s.prose.lines)
 		if n < payoutAccountLines {

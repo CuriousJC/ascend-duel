@@ -993,7 +993,9 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// **The build is on screen for the whole visit**, every stage of it: what the payout landed on,
 	// and what an essence is about to change.
-	drawBuildBand(gs, screen, gs.Run.Vitae(), &s.band, s.tip.Showing())
+	// **The purse is drawn without the payment still in the air**, so the vitae orb takes it on the
+	// frame it lands and swells there — the claim is made as the payment sets off.
+	drawBuildBand(gs, screen, gs.Run.Vitae()-s.prose.inFlight(), &s.band, s.tip.Showing())
 	drawDeckPile(gs, screen)
 
 	// **The narration stays up for the whole visit, in its own column** — the payout is what the

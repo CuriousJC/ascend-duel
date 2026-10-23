@@ -33,7 +33,6 @@ func TestTheScriptNamesEveryFigureItPays(t *testing.T) {
 
 	for _, want := range []string{
 		itoaTest(spoils.Propagated), itoaTest(spoils.FromLife), itoaTest(spoils.FromRoom),
-		itoaTest(gs.Run.Vitae() + spoils.Total()),
 	} {
 		if !strings.Contains(joined, want) {
 			t.Errorf("the script never says %q:\n%s", want, joined)
@@ -76,7 +75,7 @@ func TestALineIsTypedLeftToRight(t *testing.T) {
 	w.setLines(payoutLines(gs))
 
 	// The first claim, which has both a left part and an amount to type.
-	const row = 1
+	const row = 0
 	for i := 0; i < 2000 && w.line < row; i++ {
 		w.tick(gs, func(int) image.Point { return image.Point{} })
 	}
@@ -118,10 +117,9 @@ func TestTheInterestLineIsThereWithNoInterest(t *testing.T) {
 	t.Error("a run earning no interest was not told about interest at all")
 }
 
-// TestEveryClaimIsARowAndItsAmountIsAFigure. The account reads as a rectangle only if every claim
-// puts its amount on the right edge, and the amount carries the vitae mark only if it is drawn on
-// the figure sheet — the prose sheet has no `¤`.
-func TestEveryClaimIsARowAndItsAmountIsAFigure(t *testing.T) {
+// TestEveryClaimIsARowAndItsAmountIsAnOrb. The account reads as a rectangle only if every claim
+// puts its amount on the right edge, and the amount is that many vitae dots, which fly to the purse.
+func TestEveryClaimIsARowAndItsAmountIsAnOrb(t *testing.T) {
 	for _, l := range payoutLines(wonRun(63)) {
 		if l.pays == nil {
 			continue
@@ -130,8 +128,8 @@ func TestEveryClaimIsARowAndItsAmountIsAFigure(t *testing.T) {
 			t.Errorf("claim %q is not a row ending on one amount", l.plain())
 			continue
 		}
-		if !l.right[0].figure {
-			t.Errorf("claim %q sets its amount %q in prose", l.plain(), l.right[0].text)
+		if !l.right[0].orb || itoaTest(l.right[0].dots) != l.right[0].text {
+			t.Errorf("claim %q draws %d dots for its amount %q", l.plain(), l.right[0].dots, l.right[0].text)
 		}
 	}
 }

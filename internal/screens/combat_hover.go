@@ -159,7 +159,7 @@ func (s *CombatScene) hoverFighters(gs *state.GlobalState, at image.Point) {
 		return
 	}
 	if seat := ui.DuelistCardRect(gs); at.In(seat) {
-		title, lines := ui.DuelistTip(s.fighter.Name, s.fighter.Element, s.fighter.Duelist)
+		title, lines := ui.PlayerTip(s.fighter.Name, s.fighter.Duelist, gs.Run.Vitae(), s.fightIndex)
 		s.tip.Point(seat, ui.TipLine(title), ui.TipLines(lines))
 	}
 }

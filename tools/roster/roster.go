@@ -397,18 +397,20 @@ func label(el string) string {
 // record's HP and a bar drawn at some fraction of it would be inviting the question of which
 // fraction.
 func opponentSpec(e Entry, art image.Image) cards.Spec {
-	return cards.Spec{
+	spec := cards.Spec{
 		Name:    e.Name,
 		Element: cards.Basic,
 		Art:     art,
 		Life:    e.HP,
 		MaxLife: e.HP,
 		Enabled: true,
-
-		// **The figure under the portrait, as the game writes it.** A card here missing a row the
-		// combat screen draws is a page about a card that does not exist.
-		PortraitStat: cards.StatLine{Label: "DMG", Value: strconv.Itoa(e.DMG)},
 	}
+
+	// **The two orbs, as the game writes them.** A card here missing a figure the combat screen
+	// draws is a page about a card that does not exist.
+	spec.Stats[0] = cards.StatLine{Label: "DMG", Value: strconv.Itoa(e.DMG)}
+	spec.Stats[1] = cards.StatLine{Label: "AP", Value: strconv.Itoa(e.Actions)}
+	return spec
 }
 
 // cardSpec is one of an opponent's cards as the combat screen draws it when the creature plays it:

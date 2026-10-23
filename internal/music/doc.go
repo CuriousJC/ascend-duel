@@ -65,7 +65,8 @@
 //     silence mid-duel would drop the player into a phrase they had already heard.
 //   - **Failing to open the audio device is logged, never fatal.** A machine with no sound card still
 //     plays the game, and `Available` reports it so the settings screen's volume bar disables itself
-//     rather than silently doing nothing.
+//     rather than silently doing nothing. `DeviceFailed` says which silence it is — a device that
+//     refused, or a build with no audio in it — so the note under the bar names the right one.
 //   - **The game boots silent for a new player** — a fresh `profile.Settings` has `MusicVolume: 0`, and
 //     `main` applies the saved settings *before* `Start` opens the device, so a returning player gets the
 //     level they chose rather than a moment of the wrong one.

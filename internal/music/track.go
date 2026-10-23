@@ -113,6 +113,7 @@ func LoadTrack(file string, w []byte) error {
 
 	p, err := ctx.NewPlayer(audio.NewInfiniteLoop(s, s.Length()))
 	if err != nil {
+		deviceFailed = true
 		return fmt.Errorf("music: opening the audio device for %q: %w", name, err)
 	}
 	p.SetVolume(level * fullVolume)

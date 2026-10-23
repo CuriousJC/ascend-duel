@@ -427,13 +427,19 @@ func (s *SettingsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 
 	// **The note under a dead music bar, and nothing when it is live.** A control that has gone
-	// gray for a reason outside the game has to say what the reason was, or it reads as a bug.
+	// gray for a reason outside the game has to say what the reason was, or it reads as a bug —
+	// and there are two reasons: a device that refused to open, and a build carrying no audio,
+	// which is every clean clone. See music.DeviceFailed.
 	if s.music.Disabled {
 		r := systems.SliderRect(s.music)
 		note := &text.DrawOptions{}
 		note.GeoM.Translate(float64(r.Min.X), float64(r.Max.Y+8))
 		note.ColorScale.ScaleWithColor(systems.ColorToward(ui.GroundInk, ui.ScreenGround, 40))
-		systems.DrawText(screen, "no audio device on this machine",
+		why := "no music or sounds in this build"
+		if music.DeviceFailed() {
+			why = "no audio device on this machine"
+		}
+		systems.DrawText(screen, why,
 			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextSmall}, note)
 	}
 

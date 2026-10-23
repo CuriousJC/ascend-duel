@@ -49,6 +49,7 @@ func Start(midi []byte) error {
 	// which is what InfiniteLoop crossfades the joint with. See blendSeconds.
 	p, err := ctx.NewPlayer(audio.NewInfiniteLoop(bytes.NewReader(pcm), loopBytes))
 	if err != nil {
+		deviceFailed = true
 		return fmt.Errorf("music: opening the audio device: %w", err)
 	}
 	p.SetVolume(level * fullVolume)
@@ -87,6 +88,15 @@ var level float64
 // **The score or any track counts**: a build can hold loops and no score, and a volume bar that
 // went dead while the shop's loop played would be lying the other way.
 func Available() bool { return player != nil || len(tracks) > 0 }
+
+// deviceFailed is set when there was audio to play and the device refused it.
+var deviceFailed bool
+
+// DeviceFailed reports whether the reason nothing can be heard is the machine rather than the
+// build. **Nothing being Available has two causes and they want different sentences**: a build
+// with an empty privateassets/audio/ never asks for the device at all, and saying it has none
+// sends the player after a sound card that works.
+func DeviceFailed() bool { return deviceFailed }
 
 // Level reports how loud the score is, from 0 to 1.
 func Level() float64 { return level }

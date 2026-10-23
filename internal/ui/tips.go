@@ -220,7 +220,10 @@ func EssenceTip(w session.Essence, targets int) (string, []string) {
 	return w.Name, strings.Split(w.TextAt(targets), "\n")
 }
 
-// DuelistTip explains one of the two fighters: what they hit for and what is left of them.
+// DuelistTip explains the opponent's card: what each of its orbs says and what is left of it.
+//
+// **Every figure on the card is named**, since the card carries no words: an orb says which stat it
+// is by its picture alone.
 //
 // **The element is the line under the name** *(owner's call)*, ahead of the figures. It is the one
 // thing about an opponent that nothing else on the screen says in words — the card states it in the
@@ -235,11 +238,39 @@ func DuelistTip(name, element string, d combat.Duelist) (string, []string) {
 	if element != "" {
 		lines = append(lines, ElementWord(element))
 	}
-	lines = append(lines,
-		strconv.Itoa(d.DMG)+" DMG",
-		fmt.Sprintf("%d of %d HP", d.CurrentLife, d.MaxLife),
-	)
+	lines = append(lines, fighterDMG(d), fighterAP(d), fighterHP(d))
 	return name, lines
+}
+
+// The tooltip's lines for a fighter's own figures, out of data/wording.json.
+func fighterDMG(d combat.Duelist) string {
+	return SayText(SayFighterDMG, Slots{"n": Plain(strconv.Itoa(d.DMG))})
+}
+
+func fighterAP(d combat.Duelist) string {
+	if d.Surge > 0 {
+		return SayText(SayFighterAPSurge, Slots{
+			"n": Plain(strconv.Itoa(d.ActionPoints())), "surge": Plain(strconv.Itoa(d.Surge))})
+	}
+	return SayText(SayFighterAP, Slots{"n": Plain(strconv.Itoa(d.ActionPoints()))})
+}
+
+func fighterHP(d combat.Duelist) string {
+	return SayText(SayFighterHP, Slots{
+		"life": Plain(strconv.Itoa(d.CurrentLife)), "max": Plain(strconv.Itoa(d.MaxLife))})
+}
+
+// PlayerTip explains the duelist card: every figure on it, in words. `vitae` and `fight` are the
+// run's, which the duelist does not carry.
+func PlayerTip(name string, d combat.Duelist, vitae, fight int) (string, []string) {
+	return name, []string{
+		fighterDMG(d),
+		fighterAP(d),
+		SayText(SayFighterVitae, Slots{"n": Plain(strconv.Itoa(vitae))}),
+		SayText(SayFighterWhere, Slots{
+			"realm": Plain(RealmName(JourneyRealm(fight))), "room": Plain(JourneyRoom(fight))}),
+		fighterHP(d),
+	}
 }
 
 // ElementWord is an element key as it is written for a reader: "lightning" becomes "Lightning".

@@ -473,7 +473,7 @@ func fightToggle(f session.LedgerFight, live bool) int {
 	return f.Number
 }
 
-// ledgerHeading is a fight's one line — "Realm 1, Outer Room - Ice Cheetah - 1,160 Damage Dealt"
+// ledgerHeading is a fight's one line — "First Realm, Outer Room - Ice Cheetah - 1,160 Damage Dealt"
 // *(owner's call)*: where it was, who was in it, and what the player's blows came to. The rounds
 // are under it, each opening on both duelists' figures. The marker says whether clicking will open
 // it. A fight saved without its room names the realm alone.
@@ -482,7 +482,7 @@ func ledgerHeading(f session.LedgerFight, open bool) string {
 	if open {
 		marker = "-"
 	}
-	where := fmt.Sprintf("Realm %d", f.Realm)
+	where := ui.RealmName(f.Realm)
 	if f.Room != "" {
 		where += ", " + f.Room
 	}

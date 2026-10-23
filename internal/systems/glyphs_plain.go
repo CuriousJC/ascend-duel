@@ -194,6 +194,13 @@ func (g *GlyphSheet) Draw(dst *image.RGBA, s string, ink color.RGBA, x, y, heigh
 		if !ok {
 			continue
 		}
+		if r == VitaeMark {
+			size := int(math.Round(height))
+			cx := x + (float64(pens[i])+float64(gl.Right-gl.Left)/2)*scale
+			drawVitaeOrbPlain(dst, int(math.Round(cx))-size/2, int(math.Round(y-height/2))-size/2, size, ink.A)
+			i++
+			continue
+		}
 		// The cell's top-left on the destination: the pen, less the contour's own left edge, and
 		// the cell's baseline on the line's.
 		ox := x + float64(pens[i]-gl.Left)*scale
@@ -201,6 +208,17 @@ func (g *GlyphSheet) Draw(dst *image.RGBA, s string, ink color.RGBA, x, y, heigh
 		g.drawGlyph(dst, gl, ink, ox, oy, scale)
 		i++
 	}
+}
+
+// drawVitaeOrbPlain lays the vitae orb `size` square over dst with its top-left at (x, y), at the
+// ink's alpha — the plain-image half of drawVitaeOrb, for a card face.
+func drawVitaeOrbPlain(dst *image.RGBA, x, y, size int, alpha uint8) {
+	orb := ArtMark(vitaeOrbArt, size, size)
+	if orb == nil || alpha == 0 {
+		return
+	}
+	at := image.Rect(x, y, x+size, y+size)
+	draw.DrawMask(dst, at, orb, orb.Bounds().Min, image.NewUniform(color.Alpha{A: alpha}), image.Point{}, draw.Over)
 }
 
 // drawGlyph resamples one cell into a scratch image the size of its footprint, then lays it over

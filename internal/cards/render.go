@@ -76,6 +76,9 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	}
 
 	border, surface, ink := s.colors()
+	if st.Ground.A > 0 {
+		surface = st.Ground
+	}
 	roundedBorder(img, 0, 0, st.Width, st.Height, st.CornerRadius, st.BorderWidth, border, surface)
 
 	// **The bleeding card's picture is drawn before anything else, and everything else is drawn
@@ -149,7 +152,7 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 			return nil, err
 		}
 	}
-	if err := drawStats(img, s, st, f, ink); err != nil {
+	if err := drawStats(img, s, st, f); err != nil {
 		return nil, err
 	}
 	drawRooms(img, s, st)
@@ -173,9 +176,6 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	if err := drawEffectText(img, s, st, f, ink); err != nil {
 		return nil, err
 	}
-	if err := drawPortraitStat(img, s, st, f, ink); err != nil {
-		return nil, err
-	}
 	if st.HealthBarHeight > 0 {
 		if err := drawHealth(img, s, st, f); err != nil {
 			return nil, err
@@ -195,27 +195,17 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	return img, nil
 }
 
-// drawBadge is the MOCKUP badge in the bottom-left corner: a damage figure on a drawn badge for
-// an attack, or a stack of shields for a defense.
+// drawBadge is the badge in the bottom-left corner: an attack's multiplier on the orb of the card's
+// element, or a stack of shields for a defense.
 //
-// **It is a mockup and it reverses a decision taken twice.** The 64-pixel generated sword went on
-// 2026-08-14 because it said what the corner mark already says, and the bare figure that replaced
-// it went on 2026-08-26 because the effect text states what the card deals — "Deal 2x DMG" and a
-// "2" beside it are the same fact printed twice. What this is for is seeing whether a figure reads
-// faster than a sentence when the row is compressed, which is the one case the text argument does
-// not cover: at twenty-five cards in hand the text is not visible at all and the left column is.
+// **The two halves say their number differently, on purpose** *(owner's call)*. An attack's
+// multiplier runs from a quarter up and is written; a defense raises one, two or three shields,
+// which is few enough to *see* rather than read, so it is stacked, the way the shields themselves
+// heap over the card once it is played.
 //
-// **The two halves say their number differently, on purpose** *(owner's call, 2026-09-16)*. An
-// attack's multiplier runs 1/4 to 4 and has a fraction in it, so it is printed; a defense raises
-// one, two or three shields, which is few enough to *see* rather than read, so it is stacked, the
-// way the shields themselves heap over the card once it is played.
-//
-// **It stands in the text band, which is what it costs.** TextColumnLeft is 33 and the badge runs
-// to GlyphInset+BadgeSize — 45 on Hand — so it overlaps the text column by twelve pixels, and the
-// band runs to 268 where the badge starts at 238. A stack of three climbs further, finishing at
-// 194 against a text band whose lower line ends at 174. Keeping this means either pulling
-// TextBandBottom up or narrowing the column; both are layout decisions rather than a nudge, which
-// is why the mockup does neither.
+// **It stands in the text band.** The orb overlaps the text column's left edge and the band's
+// bottom, and a stack of three climbs further; a layout that moves the column or the band is a
+// layout that has to be checked against both.
 func drawBadge(dst *image.RGBA, s Spec, st Style, f *Faces) error {
 	if st.BadgeSize <= 0 {
 		return nil
@@ -224,47 +214,10 @@ func drawBadge(dst *image.RGBA, s Spec, st Style, f *Faces) error {
 		drawShieldStack(dst, s, st)
 		return nil
 	}
-	if s.Badge == "" {
+	if s.Badge == "" || st.BadgeOrbSize <= 0 {
 		return nil
 	}
-
-	box := image.Rect(st.GlyphInset, st.BadgeTop,
-		st.GlyphInset+st.BadgeSize, st.BadgeTop+st.BadgeSize)
-
-	// **The numeral is part of the drawing for every value somebody drew**, in the card's own
-	// element and one shape across the whole catalog — see BadgeValues. Type
-	// and art do not reduce the same way, and the badge is drawn at 32 and at 16.
-	if key := BadgeArtKey(s.BadgePct, s.Element); key != "" {
-		if glyph := systems.ArtMark(key, st.BadgeSize, st.BadgeSize); glyph != nil {
-			placeInk(dst, glyph, box, st.GlyphScale, glyphFade(s), st)
-			return nil
-		}
-	}
-
-	// **A value nobody drew gets the blank badge and printed type**, which is what the whole
-	// mechanic looked like before the numerals arrived. It is reachable: a boss deck carries 60,
-	// 120 and 250, and the `add-dmg` essence scales a card to 150% of whatever it was.
-	if glyph := systems.ArtMark(BadgeFallbackArtKey(s.Element), st.BadgeSize, st.BadgeSize); glyph != nil {
-		placeInk(dst, glyph, box, st.GlyphScale, glyphFade(s), st)
-	}
-
-	width, _, err := span(uiLetters, f, st.BadgeTextSize, s.Badge)
-	if err != nil {
-		return err
-	}
-	_, lineHeight, err := f.Measure(st.BadgeTextSize, s.Badge)
-	if err != nil {
-		return err
-	}
-
-	cx, cy := box.Min.X+st.BadgeSize/2, box.Min.Y+st.BadgeSize/2
-
-	// **Derived from what the figure actually lands on, not named.** The badge is a painting with
-	// its own contour and shading, so a fixed near-black was black on black on half the colors.
-	// Sampling the center and inverting through counterInk is the relic badge's own rule, and it
-	// survives the art being redrawn — which a second named color would not.
-	ink := counterInk(sampleAt(dst, cx, cy))
-	return drawTextAs(uiLetters, dst, f, st.BadgeTextSize, s.Badge, cx-width/2, cy-lineHeight/2, ink)
+	return drawDamageOrb(dst, s, st, f)
 }
 
 // drawShieldStack draws Spec.Shields shield marks in a column, climbing from the badge's own slot.
@@ -296,82 +249,6 @@ func drawShieldStack(dst *image.RGBA, s Spec, st Style) {
 		placeInk(dst, glyph, image.Rect(left, top, left+size, top+size),
 			st.GlyphScale, glyphFade(s), st)
 	}
-}
-
-// sampleAt is the color already standing at one pixel of the card, opaque.
-//
-// **Transparent reads as the surface**, which is what is actually behind the figure there: a
-// shield's ink does not fill its box, so a figure centered on the box can land beside the drawing
-// rather than on it, and treating alpha-zero as black would put a light figure on an off-white card.
-func sampleAt(dst *image.RGBA, x, y int) color.RGBA {
-	if !image.Pt(x, y).In(dst.Bounds()) {
-		return Surface
-	}
-	c := dst.RGBAAt(x, y)
-	if c.A == 0 {
-		return Surface
-	}
-	c.A = 255
-	return c
-}
-
-// badgeShape is the damage badge's outline, as it is spelled in the badge files' names.
-const badgeShape = "diamond"
-
-// BadgeValues is every multiplier the numbered badges are drawn for, in ladder order.
-//
-// **A closed set is what makes the figure drawable at all** *(owner's call, 2026-09-16)*. Type and
-// art do not reduce the same way: the badge is rasterized at 32 and at 16, and a drawn numeral
-// averages down with the contour around it because it was drawn knowing it would, where a printed
-// glyph is rasterized separately at final size and arrives at 16 as a few unsupported strokes. So
-// the numeral belongs in the picture — but only for values somebody drew.
-//
-// **It runs from a quarter to nine**, which covers the whole player deck (50, 100, 300)
-// and every creature (50, 100, 200) with room above for what a relic or an essence can push a card
-// to. It does **not** cover everything the rules can produce — the `add-dmg` essence scales a card
-// to 150%, so a Skewer reaches 4.5x and a Jab lands on 0.75x, and a boss deck carries 60, 120 and
-// 250 — and that is what BadgeFallbackArtKey is for.
-var BadgeValues = []int{25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900}
-
-// badgeValueTokens is the filename token for each drawn value. **Words for the fractions**, because
-// `damage-diamond-1-4-fire` cannot be read back unambiguously and a filename is a key here.
-var badgeValueTokens = map[int]string{
-	25: "quarter", 50: "half", 100: "1", 200: "2", 300: "3", 400: "4",
-	500: "5", 600: "6", 700: "7", 800: "8", 900: "9",
-}
-
-// BadgeValueToken is the filename token for one multiplier, or "" for a value nobody drew.
-func BadgeValueToken(pct int) string { return badgeValueTokens[pct] }
-
-// BadgeArtKey is the badge for one multiplier in one element — the numeral included, because it is
-// part of the drawing.
-//
-// **Total over elements and partial over values**, and the difference is deliberate. Anything that
-// is not one of the five elements answers the neutral drawing, exactly as MarkArtKey does, so a
-// creature's card draws a hueless badge rather than none. A value nobody drew answers **""**, and
-// the caller falls back to the blank badge with the figure printed on it — see
-// BadgeFallbackArtKey. A missing value has to be a visible difference rather than a missing badge.
-func BadgeArtKey(pct int, e Element) string {
-	tok := badgeValueTokens[pct]
-	if tok == "" {
-		return ""
-	}
-	if !hasArt(e) {
-		return "damage-" + badgeShape + "-" + tok + "-neutral"
-	}
-	return "damage-" + badgeShape + "-" + tok + "-" + e.String()
-}
-
-// BadgeFallbackArtKey is the blank badge, with no numeral drawn on it, for a multiplier outside
-// BadgeValues. The figure is printed on top of it in the card's own type.
-//
-// A value nobody drew still has to show *something*, and a blank badge under printed type is the
-// honest picture of it.
-func BadgeFallbackArtKey(e Element) string {
-	if !hasArt(e) {
-		return "damage-" + badgeShape + "-neutral"
-	}
-	return "damage-" + badgeShape + "-" + e.String()
 }
 
 // drawCounter puts Spec.Counter on a disc centered on the card’s bottom-right corner.
@@ -497,81 +374,25 @@ func fitInto(dst *image.RGBA, src image.Image, box image.Rectangle) {
 // **ShowForm is deliberately not in the list.** The corner mark is drawn art, not type.
 func (st Style) needsFont() bool {
 	return st.ShowName ||
-		st.HealthBarHeight > 0 || st.StatRowPitch > 0 || st.TextLineHeight > 0 ||
+		st.HealthBarHeight > 0 || st.hasStatOrbs() || st.TextLineHeight > 0 ||
 		st.CounterHeight > 0
 }
 
-// drawStats writes the labeled figures down the face: label against the left margin,
-// figure against the right, one per row at the style's pitch.
-//
-// **A blank entry leaves its row empty rather than closing up.** The rows are a fixed
-// ladder the health bar is placed under, so a card with two figures has to put them where a
-// card with three puts its first two — otherwise the same card at two moments in a run
-// would have its numbers at different heights.
-func drawStats(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.RGBA) color.RGBA) error {
-	if st.StatRowPitch <= 0 {
-		return nil
-	}
-	right := st.Width - st.TextLeft
-
+// drawStats draws Spec.Stats as the style's orbs, one figure across each — see orbs.go. **A blank
+// entry leaves its orb out rather than closing up**: the orbs are fixed seats, so the same card at
+// two moments in a run has its figures in the same places.
+func drawStats(dst *image.RGBA, s Spec, st Style, f *Faces) error {
 	for i, line := range s.Stats {
 		if line.Label == "" && line.Value == "" {
 			continue
 		}
-		y := statRowTop(st, i)
-
-		if err := drawText(dst, f, st.StatSize, line.Label, st.TextLeft, y, ink(LabelInk)); err != nil {
-			return err
+		if _, ok := StatOrbBox(st, i); !ok {
+			continue
 		}
-		value := NumberInk
-		if line.ValueInk.A > 0 {
-			value = line.ValueInk
-		}
-		if err := drawTextRightAligned(dst, f, st.StatSize, line.Value, right, y, ink(value)); err != nil {
+		if err := drawStatOrb(dst, s, st, f, i, line); err != nil {
 			return err
 		}
 	}
-
-	return drawStatRule(dst, st, f, ink)
-}
-
-// statRowTop is where stat row i is drawn, which is the pitch plus whatever the rule pushed it
-// down by.
-//
-// **One function rather than the arithmetic at each site**, because the rule's gap has to reach
-// the rows, the rule itself and every test that asks where a row is — see TestStatRowsClearTheHealthBar.
-func statRowTop(st Style, i int) int {
-	y := st.StatsTop + i*st.StatRowPitch
-	if st.StatRuleAfter > 0 && i >= st.StatRuleAfter {
-		y += st.StatRuleGap
-	}
-	return y
-}
-
-// drawStatRule draws the hairline between two groups of stat rows, centered in the air the gap
-// opened for it.
-//
-// **Centered on the space rather than placed at an offset**, so it stays put when the pitch, the
-// figure size or the gap move — the same rule the shatter's underline follows. It is measured off
-// the text's own metrics, which is why it is here and not a constant.
-//
-// It takes LabelInk lightened toward the surface: a rule is the quietest mark on the card, and at
-// full label strength it reads as a border cutting the card in two.
-func drawStatRule(dst *image.RGBA, st Style, f *Faces, ink func(color.RGBA) color.RGBA) error {
-	if st.StatRuleAfter <= 0 || st.StatRuleGap <= 0 {
-		return nil
-	}
-	face, err := f.at(st.StatSize)
-	if err != nil {
-		return err
-	}
-	m := face.Metrics()
-
-	above := statRowTop(st, st.StatRuleAfter-1) + m.Ascent.Ceil() + m.Descent.Ceil()
-	below := statRowTop(st, st.StatRuleAfter)
-
-	y := above + (below-above)/2
-	fillRect(dst, st.TextLeft, y, st.Width-2*st.TextLeft, statRuleHeight, ink(statRuleInk))
 	return nil
 }
 

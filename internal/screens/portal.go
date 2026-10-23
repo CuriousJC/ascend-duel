@@ -30,7 +30,6 @@ import (
 	"bytes"
 	"image"
 	_ "image/png"
-	"strconv"
 	"strings"
 
 	"github.com/curiousjc/ascend-duel/data"
@@ -219,7 +218,7 @@ func (s *PortalScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	sub.PrimaryAlign = text.AlignCenter
 	sub.SecondaryAlign = text.AlignCenter
 	sub.ColorScale.ScaleWithColor(systems.ColorToward(ui.GroundInk, ui.ScreenGround, 30))
-	systems.DrawText(screen, "REALM "+strconv.Itoa(gs.Run.Realm()),
+	systems.DrawText(screen, strings.ToUpper(ui.RealmName(gs.Run.Realm())),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: portalSubSize}, sub)
 
 	offers := gs.Run.PortalOffers()

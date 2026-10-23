@@ -497,9 +497,12 @@ how `KindGrantedDMG`, `KindGrantedLife` and `KindHealed` reach the screen.
   it composes with whatever row that table already has, and that is what lets the next thing wanting
   fireworks (a scored card, a relic firing) reuse it without the table growing a row per decoration.
   A `gestureBurst` is worth adding the day something bursts and sends nothing anywhere.
-- **The flight** is the figure traveling into the figure it changed: the DMG row, the VITAE row or
-  the health bar. The rows come off `cards.DuelistStyle`'s own `StatsTop`/`StatRowPitch` rather than
-  from constants typed here, so a card that re-lays out moves the target with it.
+- **The flight** is the figure traveling into the figure it changed: the DMG orb, the vitae orb or
+  the health bar. The orbs come off `cards.DuelistStyle`'s own `StatOrbs` through `cards.StatOrbBox`,
+  never constants typed here, so a card that re-lays out moves the target with it. The orb swells as
+  the figure lands — `ui.OrbSwells`.
+- **A surge flies too**: a SURGE break throws a small lapis orb into the AP orb (`combat_surge.go`),
+  and from DUEL! until the round's end the AP orb reads the base budget plus each surge landed.
 
 **A signal is drawn in the tint of the rider that threw it** — `ui.UpgradeForRider` into
 `systems.UpgradeTint`, the same table the card's own face is washed with. The wheel is full, so a
@@ -688,9 +691,9 @@ row top by a constant: a constant picked against one pitch clips the text at ano
 `text.Measure` once per pane, center everything on it, and any pitch works.
 
 **Caps in kubasta are a size question, not a ban.** At 12px `VITAE` reads as `VITRE` — the
-uppercase A carries a diagonal that reads as an R with no lowercase around it to set the shape. **The duelist card's `DMG`
-and `AP` are caps at 17px and read correctly**, checked on the contact sheet rather than
-assumed. So: title case below about 14px, and look at anything set in caps before shipping it.
+uppercase A carries a diagonal that reads as an R with no lowercase around it to set the shape.
+Caps around 17px read correctly, checked on the contact sheet rather than assumed. So: title case
+below about 14px, and look at anything set in caps before shipping it.
 
 **It has no phase headings, and that is a space constraint rather than a decision.** The pane
 holds nine rows between `paneFirstRow` and its bottom edge, and five player actions plus the

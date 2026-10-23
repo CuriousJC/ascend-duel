@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"strconv"
+
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/entities"
 	"github.com/curiousjc/ascend-duel/internal/journey"
@@ -105,7 +107,7 @@ func runeSpec(gs *state.GlobalState, p session.Rune, enabled, selected bool) car
 // RoomNames is what each of a realm's three fights is called, in order. Indexed by the
 // fight's position within its realm, so it must stay fightsPerRealm long — the two are checked
 // against each other by TestEveryRoomInARealmIsNamed.
-var RoomNames = [FightsPerRealm]string{"Outer Room", "Inner Room", "Portal Room"}
+var RoomNames = [FightsPerRealm]string{SayRoomOuter, SayRoomInner, SayRoomPortal}
 
 // JourneyRealm is which realm a fight is on, counting from one.
 //
@@ -117,6 +119,15 @@ func JourneyRealm(fight int) int { return fight/FightsPerRealm + 1 }
 
 // JourneyRoom names which of its realm's fights this is.
 func JourneyRoom(fight int) string { return RoomNames[fight%FightsPerRealm] }
+
+// RealmName is how realm n, counting from one, is written for a reader: "First Realm", out to the
+// last ordinal data/wording.json writes out, and "Realm 26" past it.
+func RealmName(n int) string {
+	if n >= 1 && n <= len(SayRealmOrdinals) {
+		return SayText(SayRealm, Slots{"ordinal": Plain(SayRealmOrdinals[n-1])})
+	}
+	return SayText(SayRealmDeep, Slots{"n": Plain(strconv.Itoa(n))})
+}
 
 // BuildFighter is the player as a combatant, equipped with what they are wearing.
 //

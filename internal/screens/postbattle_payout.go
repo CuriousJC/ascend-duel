@@ -19,32 +19,29 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 // payoutLines is the script. **The words are `ui.SayPayout*`, out of data/wording.json**; this
 // fills their holes and lays them out.
 //
-// **The account is a rectangle** *(owner's call)*: a heading ruled out to the block's two edges,
-// then a row per claim — what pays on the left, a leader, the amount on the right — then the total
-// as one more row. The prompt for the essences is not part of the account and is not here: it is in
-// a box above the way out — see drawEssencePrompt.
+// **The account is a rectangle** *(owner's call)*: a row per claim — what pays on the left, a
+// leader, and the amount on the right as that many vitae dots, so how much each part paid is seen
+// rather than read. There is no heading and no total: the purse on the duelist card is the total,
+// climbing as the dots land in it. The prompt for the essences is not part of the account and is not
+// here: it is in a box above the way out — see drawEssencePrompt.
 //
-// **Each row that names a figure claims it**, and the claim is what the flight to the duelist card
-// is paying in — see typewriter.tick. The three parts are read out in the order the run decided
-// them: interest on what you were carrying, the third of your life you kept, then what the room pays.
-//
-// **The total is computed here and not read off the purse**, because the purse is still climbing
-// while the line is typed. It is the figure the three claims are about to add up to.
+// **Each row claims what it names**, and the claim is what the dots flying to the duelist card are
+// paying in — see typewriter.tick. The three parts are read out in the order the run decided them:
+// interest on what you were carrying, the third of your life you kept, then what the room pays.
 func payoutLines(gs *state.GlobalState) []proseLine {
 	if gs.Run == nil {
 		return nil
 	}
 	spoils := gs.Run.Spoils()
-	total := gs.Run.Vitae() + spoils.Total()
 	face := payoutFace(gs)
 
 	var lines []proseLine
-	lines = append(lines, payoutHeading(face))
 
 	// **The interest row is always there, +0 included**, like the other two: a purse too small to
 	// earn any is the row telling the player what holding more would have paid. A zero claim flies
@@ -60,18 +57,12 @@ func payoutLines(gs *state.GlobalState) []proseLine {
 	lines = append(lines, payoutRow(face, saidProse(ui.SayPayoutRoom, nil), payoutGain(spoils.FromRoom),
 		func(gs *state.GlobalState) int { return gs.Run.ClaimFromRoom() }))
 
-	lines = append(lines, proseLine{centered: true})
-
-	// The total is a row like the claims, and claims nothing: the purse the three are adding up to.
-	lines = append(lines, payoutRow(face, saidProse(ui.SayPayoutTotal, nil),
-		vitaeFigure(ui.SayText(ui.SayPayoutPurse, ui.Slots{"n": ui.Plain(strconv.Itoa(total))})), nil))
-
 	return lines
 }
 
-// payoutAccountLines is how many lines the account is — the heading, the three claims, the gap and
-// the total. The prompt for the essences is not one of them; it has a box of its own beside them.
-const payoutAccountLines = 6
+// payoutAccountLines is how many lines the account is — the three claims. The prompt for the
+// essences is not one of them; it has a box of its own beside them.
+const payoutAccountLines = 3
 
 // payoutBlockWidth is how wide the account is: every row starts on its left edge and ends on its
 // right, which is what makes the block a rectangle. It sits centered in the payout column.
@@ -90,18 +81,6 @@ func payoutBlockOf(gs *state.GlobalState) payoutBlock {
 // payoutFace is the type the block is set in.
 func payoutFace(gs *state.GlobalState) *text.GoTextFace {
 	return &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: proseTextSize}
-}
-
-// payoutHeading is the title ruled out to both edges with the leader mark.
-func payoutHeading(face *text.GoTextFace) proseLine {
-	title := saidProse(ui.SayPayoutHeading, nil)
-	n := leaderCount(face, (float64(payoutBlockWidth)-spansWidth(title, face))/2-systems.MeasureText(" ", face))
-	dots := strings.Repeat(ui.SayPayoutLeader, n)
-
-	spans := []proseSpan{leaderSpan(dots + " ")}
-	spans = append(spans, title...)
-	spans = append(spans, leaderSpan(" "+dots))
-	return proseLine{centered: true, spans: spans}
 }
 
 // payoutRow is one claim: its words, a leader filling the block to the amount, and the amount.
@@ -132,14 +111,10 @@ func leaderSpan(s string) proseSpan {
 	return proseSpan{text: s, ink: systems.ColorToward(ui.GroundInk, ui.ScreenGround, 55)}
 }
 
-// payoutGain is a figure being paid in, on the vitae sheet.
+// payoutGain is an amount being paid in: that many vitae dots, which are what fly to the purse. The
+// text is the amount, so the line still says its figure to whatever reads it as words.
 func payoutGain(n int) proseSpan {
-	return vitaeFigure(ui.SayText(ui.SayPayoutGain, ui.Slots{"n": ui.Plain(strconv.Itoa(n))}))
-}
-
-// vitaeFigure is an amount in the vitae crimson, set on the figure sheet whenever it can be.
-func vitaeFigure(s string) proseSpan {
-	return proseSpan{text: s, ink: ui.VitaeInk, figure: systems.FigureCovers(s)}
+	return proseSpan{text: strconv.Itoa(n), orb: true, dots: n}
 }
 
 // saidProse fills a template and colors its spans for the typewriter. **A span the prose sheet
@@ -178,16 +153,51 @@ func (s *PostBattleScene) drawProse(gs *state.GlobalState, screen *ebiten.Image,
 	face *text.GoTextFace) {
 
 	block := payoutBlockOf(gs)
+	drawPayoutBox(gs, screen, face, block, len(s.prose.lines))
 	for i, line := range s.prose.lines {
 		left, right, on := s.prose.visible(i)
 		if !on {
 			break
 		}
+		right = s.prose.withDeparted(i, right)
 		drawProseLine(screen, face, line, left, right, block,
 			proseTop(gs, len(s.prose.lines))+i*proseLineGap)
 	}
 
 	s.prose.drawVitaeFlight(gs, screen, face)
+}
+
+// The box the account stands in: how far it stands off the rows on each side, and its line's weight.
+const (
+	payoutBoxPadX  = 22
+	payoutBoxPadY  = 26
+	payoutBoxLine  = 2
+	payoutTitleGap = 12
+)
+
+// drawPayoutBox frames the account, n rows of it, with its title set into the middle of the top
+// line — the line stops either side of the words rather than running through them. It is drawn from
+// the first frame, so the rows type into a frame that is already there.
+func drawPayoutBox(gs *state.GlobalState, screen *ebiten.Image, face *text.GoTextFace, block payoutBlock, n int) {
+	if n < 1 {
+		return
+	}
+	top := proseTop(gs, n)
+	l := float32(block.left - payoutBoxPadX)
+	r := float32(block.right + payoutBoxPadX)
+	t := float32(top - payoutBoxPadY)
+	b := float32(top + (n-1)*proseLineGap + proseLineHeight + payoutBoxPadY)
+	ink := systems.ColorToward(ui.GroundInk, ui.ScreenGround, 55)
+
+	title := saidProse(ui.SayPayoutHeading, nil)
+	w := float32(spansWidth(title, face))
+	mid := float32(block.mid())
+	vector.StrokeLine(screen, l, t, mid-w/2-payoutTitleGap, t, payoutBoxLine, ink, true)
+	vector.StrokeLine(screen, mid+w/2+payoutTitleGap, t, r, t, payoutBoxLine, ink, true)
+	vector.StrokeLine(screen, l, t, l, b, payoutBoxLine, ink, true)
+	vector.StrokeLine(screen, r, t, r, b, payoutBoxLine, ink, true)
+	vector.StrokeLine(screen, l, b, r, b, payoutBoxLine, ink, true)
+	drawProseSpans(screen, face, title, float64(mid-w/2), int(t)-proseLineHeight/2)
 }
 
 // flyEssencesIn starts the offer's arrival: the essences come in from the sides of the screen.

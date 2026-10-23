@@ -3,8 +3,8 @@
 A set of **display symbols** to go with a sheet of bold inked capitals and digits that already
 exists: the punctuation and math signs a card game writes beside its words and numbers. Delivered
 as one sprite sheet per color plus a JSON file saying where each glyph is. The letters themselves
-are drawn from `figure_letters_art_prompt.MD`, and the currency mark from
-`figure_vitae_art_prompt.MD`.
+are drawn from `figure_letters_art_prompt.MD`. The currency mark is not on any sheet: the game draws
+the vitae orb in its place, from `vitae_orb_art_prompt.MD`.
 
 **Attach two images when using this prompt**: the finished preview of the letters sheet, which
 every symbol matches, and the previous symbols sheet, whose `!`, `?`, `/`, `%`, `'`, `,` and `:` are

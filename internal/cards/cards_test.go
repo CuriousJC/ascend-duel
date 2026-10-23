@@ -774,10 +774,10 @@ func duelist(life, of int) Spec {
 	return s
 }
 
-func TestTheTwoFighterCardsShareTheirHealthGeometry(t *testing.T) {
-	// **They face each other across the screen.** A bar at a different height on each would
-	// turn comparing them into an act of measurement, which is the one thing a bar exists to
-	// avoid.
+// The two fighter cards face each other across the screen, so they are the same size and draw the
+// same bar at the same height: a bar at a different height on each would turn comparing them into
+// an act of measurement.
+func TestTheTwoFighterCardsShareTheirSizeAndBar(t *testing.T) {
 	for _, c := range []struct {
 		what             string
 		duelist, enemyAt int
@@ -798,39 +798,102 @@ func TestTheTwoFighterCardsShareTheirHealthGeometry(t *testing.T) {
 	}
 }
 
-// The opponent has a picture where the duelist has a ladder, so it writes its one figure under the
-// portrait and the duelist writes its DMG up top with the rest.
-func TestTheOpponentWritesItsDamageUnderItsPortrait(t *testing.T) {
-	if EnemyStyle.PortraitStatSize <= 0 {
-		t.Error("the enemy card writes no figure under its portrait")
-	}
-	if EnemyStyle.StatRowPitch != 0 {
-		t.Errorf("the enemy card draws stat rows at pitch %d, over its own picture",
-			EnemyStyle.StatRowPitch)
-	}
-	if DuelistStyle.PortraitStatSize != 0 {
-		t.Error("the duelist card writes a figure under a portrait it does not have")
-	}
-	if DuelistStyle.StatRowPitch <= 0 {
-		t.Error("the duelist card draws no stat rows")
+// DMG and AP are the figures the two fighters share, so they wear the same orb on both cards, off
+// the same row of Spec.Stats.
+func TestTheFightersWearTheSameOrbsForWhatTheyShare(t *testing.T) {
+	for _, row := range []int{0, 1} {
+		d, e := DuelistStyle.StatOrbs[row], EnemyStyle.StatOrbs[row]
+		if d.Size <= 0 || e.Size <= 0 {
+			t.Errorf("stat %d is not an orb on both fighter cards", row)
+			continue
+		}
+		if d.Art != e.Art {
+			t.Errorf("stat %d is %q on the duelist card and %q on the enemy's", row, d.Art, e.Art)
+		}
 	}
 }
 
-func TestTheFigureUnderThePortraitClearsTheBar(t *testing.T) {
-	// The DMG figure is written under the opponent's portrait, above the bar. A figure running into
-	// the bar puts type through a solid shape, which is not obvious by eye at that size.
-	st := EnemyStyle
-	f := faces(t)
-
-	face, err := f.at(st.PortraitStatSize)
-	if err != nil {
-		t.Fatal(err)
+// Every orb sits inside the card, clear of the border, the bar and every other orb — an orb run
+// into the bar puts a sphere through a solid shape.
+func TestEveryOrbClearsTheBorderTheBarAndTheOthers(t *testing.T) {
+	for name, st := range map[string]Style{"duelist": DuelistStyle, "enemy": EnemyStyle} {
+		inside := image.Rect(st.BorderWidth, st.BorderWidth, st.Width-st.BorderWidth, st.Height-st.BorderWidth)
+		var boxes []image.Rectangle
+		for i := range st.StatOrbs {
+			box, ok := StatOrbBox(st, i)
+			if !ok {
+				continue
+			}
+			if !box.In(inside) {
+				t.Errorf("%s: orb %d at %v leaves the inside of the border %v", name, i, box, inside)
+			}
+			if box.Overlaps(HealthBarRect(st)) {
+				t.Errorf("%s: orb %d at %v runs into the health bar %v", name, i, box, HealthBarRect(st))
+			}
+			for j, other := range boxes {
+				if box.Overlaps(other) {
+					t.Errorf("%s: orb %d overlaps orb %d", name, i, j)
+				}
+			}
+			boxes = append(boxes, box)
+		}
 	}
-	m := face.Metrics()
+}
 
-	if figure := st.PortraitStatTop + m.Ascent.Ceil() + m.Descent.Ceil(); figure > st.HealthBarTop {
-		t.Errorf("the DMG row ends at y=%d, %dpx into the health bar at y=%d",
-			figure, figure-st.HealthBarTop, st.HealthBarTop)
+// An orb draws its picture and its figure: the square it stands in is not bare surface.
+func TestEveryDuelistOrbDrawsSomething(t *testing.T) {
+	st := DuelistStyle
+	s := duelist(74, 120)
+	s.Stats[3] = StatLine{Label: "REALM", Value: "2"}
+	img := render(t, s, st)
+	for i := range st.StatOrbs {
+		box, ok := StatOrbBox(st, i)
+		if !ok {
+			continue
+		}
+		cx, cy := (box.Min.X+box.Max.X)/2, (box.Min.Y+box.Max.Y)/2
+		if img.RGBAAt(cx, cy) == st.Ground {
+			t.Errorf("orb %d drew nothing at its center (%d,%d)", i, cx, cy)
+		}
+	}
+}
+
+func TestAStyleWithNoStatsDrawsNone(t *testing.T) {
+	// Every other style draws no stats, and a Spec carrying stats must not put them on one. The hand
+	// card is the case that matters: its left column is exactly where a row would land.
+	s := strike(Fire)
+	s.Stats[0] = StatLine{Label: "DMG", Value: "10"}
+
+	plain, withStats := render(t, strike(Fire), Hand), render(t, s, Hand)
+	for i := range plain.Pix {
+		if plain.Pix[i] != withStats.Pix[i] {
+			t.Fatalf("stats on a Spec changed a hand card, which draws none (byte %d)", i)
+		}
+	}
+}
+
+func TestABlankStatLeavesItsOrbEmptyAndTheOthersInPlace(t *testing.T) {
+	// The orbs are fixed seats, so a card with a gap in its figures must not close up — otherwise
+	// the same card at two moments in a run has its numbers in different places.
+	st := DuelistStyle
+
+	full := duelist(74, 120)
+	gapped := full
+	gapped.Stats[1] = StatLine{}
+
+	fullImg, gappedImg := render(t, full, st), render(t, gapped, st)
+
+	box, _ := StatOrbBox(st, 2)
+	for y := box.Min.Y; y < box.Max.Y; y++ {
+		for x := box.Min.X; x < box.Max.X; x++ {
+			if fullImg.RGBAAt(x, y) != gappedImg.RGBAAt(x, y) {
+				t.Fatalf("the VITAE orb changed when AP was blanked, at (%d,%d)", x, y)
+			}
+		}
+	}
+	blank, _ := StatOrbBox(st, 1)
+	if c := blank.Min.Add(blank.Size().Div(2)); gappedImg.RGBAAt(c.X, c.Y) != st.Ground {
+		t.Errorf("a blank AP still drew an orb at (%d,%d)", c.X, c.Y)
 	}
 }
 
@@ -872,146 +935,6 @@ func subImage(src *image.RGBA, r image.Rectangle) *image.RGBA {
 		}
 	}
 	return out
-}
-
-func TestStatRowsClearTheHealthBar(t *testing.T) {
-	// MaxStatLines is a *layout* cap, so this is what makes it one: the full ladder has to
-	// finish above the bar. Raising the constant without moving the bar fails here rather
-	// than printing "Vitae" through the player's health.
-	st := DuelistStyle
-	f := faces(t)
-	face, err := f.at(st.StatSize)
-	if err != nil {
-		t.Fatal(err)
-	}
-	m := face.Metrics()
-	rowHeight := m.Ascent.Ceil() + m.Descent.Ceil()
-
-	// **statRowTop rather than the pitch**, so the rule's extra gap is counted — the arithmetic
-	// here disagreeing with the renderer's is exactly how a guard comes to pass while the last row
-	// is drawn through the bar.
-	bottom := statRowTop(st, MaxStatLines-1) + rowHeight
-	if bottom > st.HealthBarTop {
-		t.Errorf("%d stat rows end at y=%d, %dpx into the health bar at y=%d",
-			MaxStatLines, bottom, bottom-st.HealthBarTop, st.HealthBarTop)
-	}
-
-	// And they start inside the card rather than on its top border. **There is no name to clear
-	// any more** — the check that used to be here went with it; see
-	// TestTheEnemyNamesItselfAboveItsPortrait, which holds the absence.
-	if st.StatsTop < st.BorderWidth {
-		t.Errorf("the first stat row is at y=%d, on the %dpx border", st.StatsTop, st.BorderWidth)
-	}
-}
-
-// The rule is what stops five rows reading as one list, so where it lands is the whole of it: in
-// the air between the two groups, touching neither.
-func TestTheStatRuleSitsBetweenTheTwoGroups(t *testing.T) {
-	st := DuelistStyle
-	if st.StatRuleAfter <= 0 || st.StatRuleGap <= 0 {
-		t.Fatal("the duelist card has no rule between its stat groups")
-	}
-	if st.StatRuleAfter >= MaxStatLines {
-		t.Fatalf("the rule sits after row %d of %d, so it is under every row rather than between two",
-			st.StatRuleAfter, MaxStatLines)
-	}
-
-	f := faces(t)
-	face, err := f.at(st.StatSize)
-	if err != nil {
-		t.Fatal(err)
-	}
-	m := face.Metrics()
-	rowHeight := m.Ascent.Ceil() + m.Descent.Ceil()
-
-	above := statRowTop(st, st.StatRuleAfter-1) + rowHeight
-	below := statRowTop(st, st.StatRuleAfter)
-
-	if below-above < statRuleHeight+2 {
-		t.Errorf("the gap the rule sits in is %dpx, too tight for a %dpx rule and any air",
-			below-above, statRuleHeight)
-	}
-
-	// The rows either side of it are still at the plain pitch, so the gap is the rule's alone.
-	if plain := statRowTop(st, 1) - statRowTop(st, 0); below-statRowTop(st, st.StatRuleAfter-1) <= plain {
-		t.Errorf("the rule's row gap is %dpx against a plain pitch of %dpx; it opened no air",
-			below-statRowTop(st, st.StatRuleAfter-1), plain)
-	}
-}
-
-func TestStatRowsAreDrawnAsALabelLeftAndAFigureRight(t *testing.T) {
-	// The figures line up as a column whatever their width, which is what right-aligning
-	// them buys and the reason they are not simply drawn after the label.
-	st := DuelistStyle
-	img := render(t, duelist(74, 120), st)
-
-	for i := 0; i < 3; i++ {
-		top := st.StatsTop + i*st.StatRowPitch
-		left, right := st.Width, 0
-		for y := top; y < top+st.StatRowPitch-4; y++ {
-			for x := st.BorderWidth; x < st.Width-st.BorderWidth; x++ {
-				if img.RGBAAt(x, y) != Surface {
-					if x < left {
-						left = x
-					}
-					if x > right {
-						right = x
-					}
-				}
-			}
-		}
-		if right <= left {
-			t.Fatalf("stat row %d drew nothing", i)
-		}
-		// Within a pixel of it: a glyph's resampled edge can reach one column past its outline.
-		if d := left - st.TextLeft; d < -1 || d > 1 {
-			t.Errorf("stat row %d starts at x=%d, want the left margin at x=%d", i, left, st.TextLeft)
-		}
-		// Within a pixel of the right margin: the glyph's own bearing can leave one column
-		// clear, and demanding an exact hit would be measuring the font rather than the layout.
-		if want := st.Width - st.TextLeft; want-right > 2 {
-			t.Errorf("stat row %d ends at x=%d, %dpx short of the right margin at x=%d",
-				i, right, want-right, want)
-		}
-	}
-}
-
-func TestAStyleWithNoStatsDrawsNone(t *testing.T) {
-	// Every other style leaves StatRowPitch at zero, and a Spec carrying stats must not put
-	// them on one. The hand card is the case that matters: its left column is exactly where
-	// the rows would land.
-	s := strike(Fire)
-	s.Stats[0] = StatLine{Label: "DMG", Value: "10"}
-
-	plain, withStats := render(t, strike(Fire), Hand), render(t, s, Hand)
-	for i := range plain.Pix {
-		if plain.Pix[i] != withStats.Pix[i] {
-			t.Fatalf("stats on a Spec changed a hand card, which draws none (byte %d)", i)
-		}
-	}
-}
-
-func TestABlankStatRowLeavesItsRowEmpty(t *testing.T) {
-	// The rows are a fixed ladder with a health bar placed under them, so a card with a gap
-	// in its figures must not close up — otherwise the same card at two moments in a run has
-	// its numbers at different heights.
-	st := DuelistStyle
-
-	full := duelist(74, 120)
-	gapped := full
-	gapped.Stats[1] = StatLine{}
-
-	fullImg, gappedImg := render(t, full, st), render(t, gapped, st)
-
-	// The third row is identical in both, which is only true if the blank row held its place.
-	top := st.StatsTop + 2*st.StatRowPitch
-	for y := top; y < top+st.StatRowPitch; y++ {
-		for x := st.BorderWidth; x < st.Width-st.BorderWidth; x++ {
-			if fullImg.RGBAAt(x, y) != gappedImg.RGBAAt(x, y) {
-				t.Fatalf("the last stat row moved when the one above it was blanked, at (%d,%d)", x, y)
-			}
-		}
-	}
 }
 
 func TestACardWhosePictureIsItsFaceNamesItselfNowhere(t *testing.T) {

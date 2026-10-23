@@ -396,6 +396,10 @@ type combatTheater struct {
 	// combat_intercept.go.
 	intercepts []intercept
 
+	// surges are banked action points on their way from a SURGE break to the AP orb. See
+	// combat_surge.go.
+	surges []surgeFlight
+
 	// pendingRaises are the turn's raises and wards, reached but not yet formed: they form once
 	// the turn's arithmetic is done. See CombatScene.formPendingShields.
 	pendingRaises []combat.Event
@@ -463,6 +467,8 @@ func (t *combatTheater) Tick() {
 	for i := range t.intercepts {
 		t.intercepts[i].Tick()
 	}
+	t.raiseSurges()
+	t.advanceSurges()
 	t.fades = ui.Advance(t.fades)
 
 	// **The signals tick and land in one pass**, for the breaks' reason: a figure has to be noticed
@@ -491,7 +497,8 @@ func (t *combatTheater) Tick() {
 // holds it up; a damage figure crossing to a health bar does, because the bar must not drop before
 // the number reaches it. Adding a mover here is deciding that the round should wait for it.
 func (t *combatTheater) Running() bool {
-	return ui.Running(t.hits) || ui.Running(t.drains) || t.shieldsMoving() || ui.Running(t.signals)
+	return ui.Running(t.hits) || ui.Running(t.drains) || t.shieldsMoving() || ui.Running(t.signals) ||
+		len(t.surges) > 0
 }
 
 // shieldsMoving reports a shield still forming or a stopped hit still meeting its shield, which the

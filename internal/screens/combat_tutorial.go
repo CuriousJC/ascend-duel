@@ -231,9 +231,9 @@ func (s *CombatScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([
 		return one(buttonRect(s.hands.Button)), true
 
 	case tutorial.AnchorFightFrame:
-		// The opponent, where you are, and how long you have: the card, the REALM and ROOM rows,
-		// and the clock when the fight is on one.
-		lit := []image.Rectangle{ui.EnemyCardRect(gs), duelistRows(gs, duelistRowRealm, duelistRowRoom)}
+		// The opponent, where you are, and how long you have: the card, the realm's orb and the room
+		// row, and the clock when the fight is on one.
+		lit := []image.Rectangle{ui.EnemyCardRect(gs), duelistOrb(gs, duelistRowRealm), duelistRooms(gs)}
 		if s.roundTimerLimit() > 0 {
 			lit = append(lit, s.roundTimerRect(gs))
 		}
@@ -258,7 +258,7 @@ func (s *CombatScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([
 		return lit, true
 
 	case tutorial.AnchorDuelistDMG:
-		return one(duelistRows(gs, duelistRowDMG, duelistRowDMG)), true
+		return one(duelistOrb(gs, duelistRowDMG)), true
 
 	case tutorial.AnchorMatchingCard:
 		match := s.matchingCards(gs)
@@ -278,20 +278,25 @@ func (s *CombatScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([
 	return nil, false
 }
 
-// The duelist card's stat rows a step can point at, by their place in ui.DuelistSpec.
+// The duelist card's stats a step can point at, by their place in ui.DuelistSpec.
 const (
 	duelistRowDMG   = 0
 	duelistRowRealm = 3
-	duelistRowRoom  = 4
 )
 
-// duelistRows is the band of the duelist card holding stat rows from..to, read off the card's own
-// style — the card is drawn at 1:1 into its rectangle, so a row is the corner plus the style's
-// offset. See signalTarget, which lands figures on the same rows.
-func duelistRows(gs *state.GlobalState, from, to int) image.Rectangle {
+// duelistOrb is the duelist card's orb for stat i, read off the card's own style — the card is
+// drawn at 1:1 into its rectangle, so an orb is the corner plus the style's offset. See
+// signalTarget, which lands figures on the same orbs.
+func duelistOrb(gs *state.GlobalState, i int) image.Rectangle {
+	r := ui.DuelistCardRect(gs)
+	orb, _ := cards.StatOrbBox(cards.DuelistStyle, i)
+	return orb.Add(r.Min)
+}
+
+// duelistRooms is the band of the duelist card its room row stands in.
+func duelistRooms(gs *state.GlobalState) image.Rectangle {
 	r, st := ui.DuelistCardRect(gs), cards.DuelistStyle
-	return image.Rect(r.Min.X, r.Min.Y+statRowTopOf(st, from)-2,
-		r.Max.X, r.Min.Y+statRowTopOf(st, to)+st.StatRowPitch-4)
+	return image.Rect(r.Min.X, r.Min.Y+st.RoomsTop, r.Max.X, r.Min.Y+st.RoomsTop+st.RoomsSize)
 }
 
 // namedSeats is the hand seat each name points at: the first seat holding a card of that name that

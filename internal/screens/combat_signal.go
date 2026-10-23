@@ -210,6 +210,9 @@ type signalShown struct {
 	maxLife int
 	vitae   int
 
+	// ap is the surge landed this round, on the base budget — see combat_surge.go.
+	ap int
+
 	// raise is DMG that is true for the length of one turn — a rung relic's — and is dropped when
 	// the hand dialog ends rather than when the round is adopted. See signalRaise.
 	raise int
@@ -668,25 +671,13 @@ func (s *CombatScene) signalOrigin(gs *state.GlobalState, c cardSignal) (image.P
 	return image.Pt(at.X+cardWidth/2, at.Y+cardHeight/2), true
 }
 
-// statRowTopOf is where stat row i is drawn on a card in this style.
-//
-// **It counts the rule's gap**, exactly as cards.statRowTop does for the renderer — a figure flying
-// to a row measured without it lands short of every row under the rule.
-func statRowTopOf(st cards.Style, i int) int {
-	y := st.StatsTop + i*st.StatRowPitch
-	if st.StatRuleAfter > 0 && i >= st.StatRuleAfter {
-		y += st.StatRuleGap
-	}
-	return y
-}
-
-// signalTarget is the figure the signal lands on — a stat row or the health bar of the acting
+// signalTarget is the figure the signal lands on — a stat's orb or the health bar of the acting
 // side's fighter card.
 //
-// **The rows are read off the card's own style rather than measured here.** `cards.DuelistStyle`
-// already says where DMG, AP and VITAE sit and where the bar is, and the card is drawn at 1:1 into
-// its rectangle, so the arithmetic is the rectangle's corner plus the style's own offset. A
-// constant typed in here would be a second opinion about a layout that has one.
+// **The orbs are read off the card's own style rather than measured here.** `cards.DuelistStyle`
+// already says where DMG and VITAE sit and where the bar is, and the card is drawn at 1:1 into its
+// rectangle, so the arithmetic is the rectangle's corner plus the style's own offset. A constant
+// typed in here would be a second opinion about a layout that has one.
 func (s *CombatScene) signalTarget(gs *state.GlobalState, c cardSignal) image.Point {
 	r := ui.EnemyCardRect(gs)
 	st := cards.EnemyStyle
@@ -694,17 +685,17 @@ func (s *CombatScene) signalTarget(gs *state.GlobalState, c cardSignal) image.Po
 		r = ui.DuelistCardRect(gs)
 		st = cards.DuelistStyle
 	}
-	x := (r.Min.X + r.Max.X) / 2
 
-	// **The enemy card has no stat rows**, so anything aimed at one lands on its bar instead. That
-	// cannot happen today — nothing deals a creature a metal — but a figure flying to a row that is
-	// not drawn would be a number landing on nothing, and the check is cheaper than the assumption.
-	if c.dest != signalLife && st.StatRowPitch > 0 {
+	// **A stat the card draws no orb for lands on the bar instead.** The enemy card has no purse,
+	// and a figure flying to an orb that is not drawn would be a number landing on nothing.
+	if c.dest != signalLife {
 		row := 0
 		if c.dest == signalVitae {
 			row = 2
 		}
-		return image.Pt(x, r.Min.Y+statRowTopOf(st, row)+st.StatRowPitch/3)
+		if orb, ok := cards.StatOrbBox(st, row); ok {
+			return r.Min.Add(image.Pt((orb.Min.X+orb.Max.X)/2, (orb.Min.Y+orb.Max.Y)/2))
+		}
 	}
-	return image.Pt(x, r.Min.Y+st.HealthBarTop+st.HealthBarHeight/2)
+	return image.Pt((r.Min.X+r.Max.X)/2, r.Min.Y+st.HealthBarTop+st.HealthBarHeight/2)
 }

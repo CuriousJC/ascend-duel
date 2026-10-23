@@ -277,28 +277,13 @@ var (
 	// NameInk is the concept's name across the top, the thing read first.
 	NameInk = color.RGBA{R: 28, G: 30, B: 36, A: 255}
 
-	// NumberInk is a figure: a stat row's value, the health fraction. It used to be the glyph
-	// palette's Specular (pure white), which was legible on a colored surface and is not on
-	// this one.
+	// NumberInk is a figure written straight on the off-white surface.
 	NumberInk = color.RGBA{R: 40, G: 43, B: 52, A: 255}
 
-	// LabelInk is the word half of a stat row — "DMG", "AP", "Vitae". Quieter than the
-	// figure beside it, because the figure is what is read and the label is what says
-	// which figure it is. Color is what carries that hierarchy here; the two halves share
-	// a baseline, so they cannot differ in size without reading as a mistake.
+	// LabelInk is the quiet ink: a line of card text with no color of its own, set a step under
+	// the name above it.
 	LabelInk = color.RGBA{R: 108, G: 112, B: 124, A: 255}
-
-	// statRuleInk is the hairline between two groups of stat rows.
-	//
-	// **Quieter than LabelInk and thinner than a border.** What it has to do is separate two
-	// groups without becoming a thing on the card in its own right — at label strength it reads
-	// as the card being cut in two, and at two pixels it reads as a border. See
-	// Style.StatRuleAfter.
-	statRuleInk = color.RGBA{R: 180, G: 183, B: 192, A: 255}
 )
-
-// statRuleHeight is how thick that hairline is. One pixel, and the card is drawn at 1:1.
-const statRuleHeight = 1
 
 // StatLine is one labeled figure on a card face: a word on the left, a number on the
 // right, both on the same baseline.
@@ -309,15 +294,6 @@ const statRuleHeight = 1
 type StatLine struct {
 	Label string
 	Value string
-
-	// ValueInk overrides the color the figure is set in. **Zero alpha means the default**, the
-	// same convention TextInk follows, so a caller that never thinks about it gets NumberInk.
-	//
-	// **It exists because vitae is crimson everywhere it is written** *(2026-08-22)*: the purse on
-	// the duelist card is the figure the reward screen makes climb, and it is the same red the
-	// word is set in while that screen reads the payout out. The state coloring still applies on
-	// top, so a disabled card fades with everything else.
-	ValueInk color.RGBA
 }
 
 // MaxTextHighlights is how many separately colored spans one card's text can carry.
@@ -340,19 +316,9 @@ type TextSpan struct {
 	Ink color.RGBA
 }
 
-// MaxStatLines is how many stat rows a card can carry.
-//
-// **It is what the layout fits, not headroom over it.** DuelistStyle's five rows run from y=64 to
-// y=189 against a health bar at y=207, and a sixth at that pitch lands on the bar —
-// TestStatRowsClearTheHealthBar fails rather than drawing it. So another figure is a layout change
-// and the cost of that is charged here on purpose, exactly as a fifth cost tier is by
-// TestLeftColumnDoesNotCollide.
-//
-// **It went from three to five on 2026-09-15** *(owner's call)*, when the realm and the room moved
-// off the ground under the card and onto the card itself. They are stat rows because that is what
-// they are — a label against a figure, saying something true about the duelist for the whole fight
-// — and the row the pitch had to give up to fit them was air the block was not using: three rows at
-// a pitch of 38 finished 36 pixels above the bar.
+// MaxStatLines is how many figures a card can carry as orbs — Spec.Stats and Style.StatOrbs are
+// both this long. An orb is a seat a style places; a figure with no seat is drawn nowhere, and
+// TestEveryOrbClearsTheBorderTheBarAndTheOthers holds every seat a style does place.
 const MaxStatLines = 5
 
 // Spec is everything about one card that changes what it looks like.
@@ -488,15 +454,6 @@ type Spec struct {
 	// key draws nothing, so a card whose style has no row, or a Spec that names none, is unchanged.
 	// See drawRooms.
 	Rooms [RoomSlots]string
-
-	// PortraitStat is the one figure written under a portrait, on a card whose face is a picture
-	// and therefore has no room for a ladder of stat rows. It is the opponent's DMG and nothing
-	// else uses it.
-	//
-	// **It is its own field rather than an entry in Stats** because it is not on that ladder: the
-	// rows in Stats stack from the top of the card at one pitch, and this one sits in the block at
-	// the bottom, above the health bar. See fighter.go.
-	PortraitStat StatLine
 
 	// Life and MaxLife draw a health bar and a "42/60" line, on the styles that ask for
 	// it. The enemy and duelist cards do — see EnemyStyle and DuelistStyle.

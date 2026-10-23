@@ -163,16 +163,15 @@ func (m mathScroll) belowCard(screen image.Rectangle) image.Rectangle {
 // drawScroll is one scroll: the art with no top roll, or the flat pane while the art is not filed.
 func drawScroll(dst *ebiten.Image, m mathScroll) {
 	if !ui.DrawScroll(dst, scrollKey, m.full, m.open(), false) {
-		drawScrollPane(dst, m.full, m.open(), scrollGround)
+		drawScrollPane(dst, m.full, m.open())
 	}
 }
 
-// drawScrollPane is one pane, `open` of the way down from its top edge, in a ground. Shared with the
-// animation gallery's tan options, so what is compared there is the pane the game draws.
-func drawScrollPane(screen *ebiten.Image, full image.Rectangle, open float64, ground color.RGBA) {
+// drawScrollPane is one flat pane in scrollGround, `open` of the way down from its top edge.
+func drawScrollPane(screen *ebiten.Image, full image.Rectangle, open float64) {
 	h := int(float64(full.Dy()) * open)
 	if h <= 0 {
 		return
 	}
-	systems.BevelRect(screen, full.Min.X, full.Min.Y, full.Dx(), h, systems.PaneBevelWidth, ground, false)
+	systems.BevelRect(screen, full.Min.X, full.Min.Y, full.Dx(), h, systems.PaneBevelWidth, scrollGround, false)
 }

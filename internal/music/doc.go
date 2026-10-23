@@ -55,9 +55,9 @@
 //   - **`SetLevel` sets every player, not the one that is sounding.** A paused track keeps the volume it
 //     was set to, so a level changed while a loop is up would otherwise be the level the score came back
 //     at — the bar and the music disagreeing about the number the bar is the only control for.
-//   - **There is no mute, only a level.** `SetLevel(0..1)` is the whole control and zero is the only
-//     silence there is; a latch beside a bar would be two controls over one number that then have to be
-//     kept from disagreeing. The bar is on the settings screen — a control, never a hotkey.
+//   - **A mute is beside the level, never instead of it** *(owner's call)*. `SetMuted` and
+//     `SetSoundMuted` silence without touching `Level`, so turning the sound back on returns to the
+//     level it had. Both controls are on the settings screen — a box beside each bar, never a hotkey.
 //   - **`fullVolume` is the ceiling the bar's 1 actually means**, a third of the device's range because
 //     this is background music under combat sounds that do not exist yet. "How loud may the score get"
 //     stays one decision here rather than a figure typed into a scene.

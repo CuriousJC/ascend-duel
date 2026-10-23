@@ -43,22 +43,11 @@ const (
 // and none of them were anyone else's business.
 type GlobalState struct {
 	//Global Game Stuff
-	// DebugGameplay changes what the player is allowed to know, so leaving it on means not playing
-	// the real game. It may never change an outcome; it is a view.
-	DebugGameplay bool
-
-	// DebugAnimations opens the animation gallery's door: a square in the frame's bottom strip that
-	// is drawn only while this is on. **A second flag rather than a lodger on DebugGameplay**,
-	// because they answer different questions and are wanted at different times — "what may the
-	// player know" is not "what movements does the game have". Like both of them it is a *view*, set once in main.go, off by default, and it may
-	// never change an outcome. See screens.AnimationsScene.
-	DebugAnimations bool
-
-	// RevealCompendium reads every Compendium entry and every achievement as found, writing nothing.
-	//
-	// **All three are set from the profile's dev tools**, never by hand — see screens.ApplyDevTools
-	// and profile.DevSettings. Off unless the profile says devTools.
-	RevealCompendium bool
+	// DevTools is every dev tool at once: the animation gallery's door in the frame's bottom strip,
+	// and every Compendium entry and achievement read as found, writing nothing. **One switch, not
+	// one per tool**: set from the profile's `devTools` by screens.ApplyDevTools and never by hand,
+	// off unless the profile says so. Every tool is a view and may never change an outcome.
+	DevTools bool
 
 	// Version is what this build calls itself, set once by main from a linker-injected
 	// string. It is genuinely global — the window title and the title screen both want it
@@ -456,7 +445,7 @@ const (
 	Achievements
 
 	// Animations is the gallery: every gesture the game can make, by name, on a loop. **A debug
-	// page behind DebugAnimations**, reached from a square in the frame that is not drawn with the
+	// page behind DevTools**, reached from a square in the frame that is not drawn with the
 	// flag off — the placement grid's arrangement. Not a station of a run, like the four above it,
 	// and appended because ActiveScreen is append-only.
 	Animations

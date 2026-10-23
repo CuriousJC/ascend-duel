@@ -20,12 +20,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-// The scroll art's three files, lightest first.
-const (
-	ScrollLight = "scroll-light"
-	ScrollMid   = "scroll-mid"
-	ScrollDeep  = "scroll-deep"
-)
+// ScrollMid is the scroll art's one file.
+const ScrollMid = "scroll-mid"
 
 // The art's own measurements, in its pixels: the canvas, where the paper runs across it, and the
 // two rolls' bands. Every row between the bands is the same, so the middle stretches.

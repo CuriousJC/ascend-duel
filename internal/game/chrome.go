@@ -263,7 +263,7 @@ func (g *Game) openAnimations() {
 // the page is not part of the game. Same reason the placement grid draws nothing rather than
 // drawing a grayed-out one.
 func (g *Game) updateAnimButton(gs *state.GlobalState) {
-	if !gs.DebugAnimations {
+	if !gs.DevTools {
 		return
 	}
 	if g.animButton == nil {
@@ -330,8 +330,8 @@ func (g *Game) drawChrome(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// The gallery's door, off the end of the strip. **Only with the flag on**, which is what keeps
 	// a debug page out of a played game without keeping it out of the binary — the same trade the
-	// placement grid and the perfect-information view are under.
-	if g.animButton != nil && gs.DebugAnimations {
+	// placement grid is under.
+	if g.animButton != nil && gs.DevTools {
 		systems.DrawButton(gs, screen, g.animButton)
 	}
 	systems.DrawTooltip(gs, screen, &g.chromeTip)

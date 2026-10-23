@@ -259,11 +259,23 @@ var particleArt embed.FS
 var shieldArt embed.FS
 
 // THE SCROLLS: the papyrus a card's working is written on, keyed by filename stem —
-// `scroll-light`, `scroll-mid`, `scroll-deep`. A top roll, a middle that stretches, a bottom roll.
+// `scroll-mid`. A top roll, a middle that stretches, a bottom roll.
 // See docs/art/scroll_art_prompt.MD and ui.DrawScroll.
 //
 //go:embed scroll/*.png
 var scrollArt embed.FS
+
+// THE ROOMS: the duelist card's room row, keyed by filename stem — `room-<door|double-door|portal>-
+// <element>` for a room reached, `-neutral` for one still ahead. See docs/art/room_glyph_art_prompt.MD.
+//
+//go:embed room/*.png
+var roomArt embed.FS
+
+// THE CHECKBOX: a box in three stones and the mark laid over it, each on the same 256 canvas with
+// the box at its center, so any mark over any box lines up. See docs/art/checkbox_art_prompt.MD.
+//
+//go:embed checkbox/*.png
+var checkboxArt embed.FS
 
 // The relic faces, globbed as a family and keyed by filename stem — `relic/fire.png` is
 // `fire`, which is what `data/relics.json` writes in its Art field.
@@ -449,6 +461,8 @@ func LoadImageData() map[string][]byte {
 	embedFamily(images, particleArt, "particle")
 	embedFamily(images, shieldArt, "shield")
 	embedFamily(images, scrollArt, "scroll")
+	embedFamily(images, roomArt, "room")
+	embedFamily(images, checkboxArt, "checkbox")
 
 	// Bob's face, for the reason the relic art is here: the tutorial draws him into a card
 	// through internal/cards, which has no graphics context.

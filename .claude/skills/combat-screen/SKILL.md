@@ -464,8 +464,7 @@ physics on the mixed set (`particle-*` pieces and `spark-*` flecks together).
   field is an age and a seed, and the same hit throws the same cloud.
 - **An elementless card throws none**, the rule the figure's ink keeps, and a defense's `= 0` line is
   not wrapped. A reflected blow comes out of a ring and has no trail.
-- **The options page is the animation gallery's `wrap:` and `trail:` entries**, which draw the same
-  emitter in every set and motion side by side.
+- **The animation gallery's `wrap` and `trail` entries draw these same emitters**, in every element.
 
 ### A consumable is used up in the middle of the table
 
@@ -831,22 +830,14 @@ Two things here that a change to this screen can break silently:
 - **An anchor names what a step is asking for, not what it is about.** `matching-cards` and
   `matching-cards-left` are two anchors over one set for that reason.
 
-## Hidden information is gated on `DebugGameplay`
+## There is no hidden information
 
-The opponent's queued actions are concealed in the enemy rows of the queued-actions pane
-unless `DebugGameplay` is on. `CombatScene.concealEnemy` is the single predicate —
-`!gs.DebugGameplay && s.planning()` — and anything else that becomes secret should join it
-rather than growing a second rule.
+**The duel is open-information** *(owner's call)*: the opponent plans at the start of the planning
+phase and its row is drawn face up on the table, so the player picks against cards they can see.
+Nothing on the screen is concealed and there is no concealment predicate. **The lever is still
+built**: `cards.Spec.FaceDown` draws a back instead of a face, so hiding a row is one field rather
+than a second drawing path.
 
-**The ledger needs no concealment rule at all**, and that falls out of its design rather than
-being a second decision: a round is written into the run's account when it *ends*, so the panel
-can only ever hold rounds that have finished playing. The round being watched is not in it yet, so
-there is nothing for it to leak.
-
-- **Concealment lifts once playback starts**, for the same reason.
-- **Concealed rows keep their real count**, so the opponent's AP spend stays readable even
-  when the actions do not. Deliberate: collapsing the rows would hide the spend and destroy the
-  pane's account of who acts when, which is the one thing that pane exists to show.
-- Debug is a *view*, never a rule. `ResolveRound` never sees the flag, so turning debug on
-  or off cannot change an outcome — the same constraint that applies to playback speed.
+**The ledger could not leak a round anyway**: a round is written into the run's account when it
+*ends*, so the panel only ever holds rounds that have finished playing.
 

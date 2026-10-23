@@ -152,6 +152,7 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	if err := drawStats(img, s, st, f, ink); err != nil {
 		return nil, err
 	}
+	drawRooms(img, s, st)
 	if s.Art != nil && !st.ArtBleed && !st.ArtUnder {
 		drawArt(img, s, st)
 	}

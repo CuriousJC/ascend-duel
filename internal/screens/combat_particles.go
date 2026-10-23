@@ -68,13 +68,13 @@ func stackExtent(gs *state.GlobalState, items []mathItem) (image.Point, float64,
 // wrapEmitter is the field round a resting total: each element its own physics, pieces and sparks
 // together.
 func wrapEmitter(el cards.Element, seed uint32, rate float64) ui.Emitter {
-	return ui.Emitter{Element: el, Set: ui.ParticleMixed, Motion: ui.MotionElemental, Rate: rate, Seed: seed}
+	return ui.Emitter{Element: el, Set: ui.ParticleMixed, Rate: rate, Seed: seed}
 }
 
 // trailEmitter is the field behind a flying figure: denser and a little smaller than the wrap,
 // because it is spread along a path rather than gathered round a point.
 func trailEmitter(el cards.Element, seed uint32) ui.Emitter {
-	return ui.Emitter{Element: el, Set: ui.ParticleMixed, Motion: ui.MotionElemental,
+	return ui.Emitter{Element: el, Set: ui.ParticleMixed,
 		Rate: 1.2, Size: 22, Seed: seed}
 }
 

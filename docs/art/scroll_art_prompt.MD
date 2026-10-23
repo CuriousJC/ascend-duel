@@ -7,8 +7,8 @@ it is drawn as **a top roll, a bottom roll, and a middle that repeats vertically
 top roll, then the middle repeated as many times as it needs, then the bottom roll; when the scroll
 **unrolls**, the bottom roll travels down and the paper appears behind it.
 
-**Draw each color once, on its own.** The game sizes and places the scrolls; never draw writing on the
-paper, a hand holding it, or more than one scroll in a file.
+**Draw one scroll, on its own.** The game sizes and places it; never draw writing on the paper, a hand
+holding it, or more than one scroll in the file.
 
 ---
 
@@ -43,20 +43,15 @@ fights the numbers and is wrong.
   sides, the way a real scroll's rod does.
 - **No rods, knobs, ribbons, seals, tassels or gold.** Just paper rolled on itself.
 
-### The three colors
+### The color
 
 | File            | dark      | core      | light     |
 | --------------- | --------- | --------- | --------- |
-| `scroll-light`  | `#8E7F6A` | `#CBB698` | `#DDD0BC` |
 | `scroll-mid`    | `#8A775E` | `#C5AA86` | `#D9C8B0` |
-| `scroll-deep`   | `#866F51` | `#C09E74` | `#D6C0A5` |
-
-**The three are the same drawing, recolored.** Same rolls, same fibers in the same places, same
-contour; only the three values change. Draw one, then recolor it.
 
 ### The canvas, and the repeat
 
-Each file is **exactly 512 x 1024**, a **transparent** PNG: nothing but the scroll on a fully
+The file is **exactly 512 x 1024**, a **transparent** PNG: nothing but the scroll on a fully
 transparent ground.
 
 - **The rolls span the full width**, x 0–511. **The sheet sits inside them**, x 32–479, its contour
@@ -87,9 +82,7 @@ burn marks, glow, gradients, drop shadows, and anything dark or busy on the pape
    there all the way round, and do the rolls still read as rolled paper?
 4. **Write a big red `40` and a blue `x 4` across the paper** in thick white-outlined figures. Can both
    be read instantly, or do the fibers fight them?
-5. **Are the three files the same drawing?** Toggle between any two; only the color should change.
-6. **Is the ground fully transparent**, with no halo of near-white or near-black pixels round the
+5. **Is the ground fully transparent**, with no halo of near-white or near-black pixels round the
    contour?
 
-Name the three files exactly as in the table, each ending `.png`, and give me a single zip file of
-everything so I can download it all at once — never a link per file.
+Name the file exactly as in the table, ending `.png`.

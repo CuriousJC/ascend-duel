@@ -53,6 +53,11 @@ const (
 	// row of buttons that is harder to hit.
 	settingsSliderWidth = 460
 
+	// settingsBoxSize is the on box beside each volume bar, and settingsBoxGap the air between the
+	// box and the bar's left end.
+	settingsBoxSize = 44
+	settingsBoxGap  = 26
+
 	// settingsSliderHeight is the label band plus the track plus the knob's overhang.
 	settingsSliderHeight = 56
 
@@ -107,15 +112,6 @@ const (
 	settingsExitGap   = 92
 )
 
-// The dev column, on the screen's right: a heading and one latched button per tool. Small buttons,
-// because these are instrumentation rather than settings.
-const (
-	settingsDevPct   = 82
-	settingsDevWidth = 360
-	settingsDevGap   = 64
-	settingsDevTitle = "DEV TOOLS"
-)
-
 // The bottom row: the Compendium beside Back. **Beside rather than above**, because the column is
 // full down to Back and a row inserted into it would land EXIT on BACK. Both are ways off this
 // screen, so they share the row the way off a screen is on.
@@ -139,8 +135,15 @@ const settingsSeedCaption = "SEED"
 type SettingsScene struct {
 	music  *models.Slider
 	sounds *models.Slider
-	speed  *models.Slider
-	back   *models.Button
+
+	// musicOn and soundsOn are the boxes beside the two volume bars: **ticked is on** *(owner's
+	// call)*. Unticking mutes without touching the level and stands the bar down, a level dragged
+	// to nothing unticks, and ticking a silent one brings it back. See turnOn.
+	musicOn  *models.Checkbox
+	soundsOn *models.Checkbox
+
+	speed *models.Slider
+	back  *models.Button
 
 	// compendium opens the Compendium over this screen; its Back comes back here.
 	compendium *models.Button
@@ -162,10 +165,6 @@ type SettingsScene struct {
 	// strip is the hand of relic cards under the speed bar: what the game-speed setting looks
 	// like, rather than what it reads as. See settings_speed.go.
 	strip speedStrip
-
-	// dev is the dev column, one latched button per row of devRows. **Built always, drawn and live
-	// only while the profile says devTools** — see devtools.go.
-	dev []*models.Button
 }
 
 // Init builds the controls on first entry and positions them every time.
@@ -189,6 +188,16 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 		// **A toast on release, so the bar says what it set.** An effect only plays when a relic fires,
 		// and a level chosen in silence is a level chosen blind.
 		s.sounds.OnCommit = func(v float64) { music.PlayCue(data.CueRelicToast); s.commit(gs) }
+
+		s.musicOn = &models.Checkbox{Size: settingsBoxSize, OnToggle: func(on bool) {
+			s.turnOn(gs, on, music.SetMuted, music.SetLevel, music.Level)
+		}}
+		s.soundsOn = &models.Checkbox{Size: settingsBoxSize, OnToggle: func(on bool) {
+			s.turnOn(gs, on, music.SetSoundMuted, music.SetSoundLevel, music.SoundLevel)
+			if on {
+				music.PlayCue(data.CueRelicToast)
+			}
+		}}
 
 		s.speed = models.NewSlider(settingsSliderWidth, settingsSliderHeight, "GAME SPEED", 0)
 		s.speed.Ink = ui.GroundInk
@@ -216,11 +225,6 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 		s.exit = models.NewButton(760, ui.ButtonLarge, settingsExitLabel, func() { askExit(gs, &s.confirm) })
 		s.exit.TextSize = 40
 
-		for _, row := range devRows {
-			row := row
-			b := models.NewButton(settingsDevWidth, ui.ButtonSmall, row.label, func() { s.flipDev(gs, row) })
-			s.dev = append(s.dev, b)
-		}
 	}
 
 	// **The question does not survive a visit**, for the reason the title screen's does not: Init
@@ -234,17 +238,18 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 	s.speed.Value = speedValue(ui.Speed())
 	s.full.Latched = Fullscreen()
 
-	// **The bar is only live if there is anything to hear.** Opening the audio device is allowed
-	// to fail, and a volume control that silently did nothing would be worse than one that says
-	// it cannot — the same rule the chrome's mute button was under before it became a cog.
-	s.music.Disabled = !music.Available()
-	s.sounds.Disabled = s.music.Disabled
+	// **The bars and boxes are only live if there is anything to hear.** Opening the audio device is
+	// allowed to fail, and a volume control that silently did nothing would be worse than one that
+	// says it cannot. syncBoxes, below and every frame, is what stands them down.
 
 	center := gs.PctX(50)
 	rows := settingsRows(gs)
 
 	s.music.ScreenX, s.music.ScreenY = center, rows.music
 	s.sounds.ScreenX, s.sounds.ScreenY = center, rows.sounds
+	s.placeBox(s.musicOn, s.music)
+	s.placeBox(s.soundsOn, s.sounds)
+	s.syncBoxes()
 	s.speed.ScreenX, s.speed.ScreenY = center, rows.speed
 	s.full.ScreenX, s.full.ScreenY = center, rows.full
 
@@ -256,34 +261,40 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 	s.compendium.ScreenX, s.compendium.ScreenY = center-half, rows.bottom
 	s.back.ScreenX, s.back.ScreenY = center+half, rows.bottom
 
-	// **The dev column stands beside the settings rather than in them**: the column is full, and a
-	// tool a player never sees has no business being read as one of their settings.
-	for i, b := range s.dev {
-		b.ScreenX, b.ScreenY = gs.PctX(settingsDevPct), rows.music+i*settingsDevGap
-	}
-	s.latchDev(gs)
 }
 
-// latchDev sets each dev toggle's latch from the profile.
-func (s *SettingsScene) latchDev(gs *state.GlobalState) {
-	if gs.Profile == nil {
-		return
-	}
-	for i, row := range devRows {
-		s.dev[i].Latched = *row.on(&gs.Profile.Settings.Dev)
-	}
+// placeBox stands an on box to the left of its bar, centered on the bar's track.
+func (s *SettingsScene) placeBox(box *models.Checkbox, bar *models.Slider) {
+	track := systems.SliderTrack(bar)
+	box.ScreenX = systems.SliderRect(bar).Min.X - settingsBoxGap - box.Size/2
+	box.ScreenY = (track.Min.Y + track.Max.Y) / 2
 }
 
-// flipDev turns one dev tool over, puts the set in force and saves it.
-func (s *SettingsScene) flipDev(gs *state.GlobalState, row devRow) {
-	if gs.Profile == nil {
-		return
+// syncBoxes reads both boxes and both bars off the audio every frame: a box is ticked while its
+// sound is unmuted and above nothing, and a bar stands down while its sound is muted. **Read rather
+// than remembered**, so a level dragged to zero unticks its box with nothing else told.
+func (s *SettingsScene) syncBoxes() {
+	dead := !music.Available()
+	s.musicOn.Checked = !music.Muted() && music.Level() > 0
+	s.soundsOn.Checked = !music.SoundMuted() && music.SoundLevel() > 0
+	s.musicOn.Disabled, s.soundsOn.Disabled = dead, dead
+	s.music.Disabled = dead || music.Muted()
+	s.sounds.Disabled = dead || music.SoundMuted()
+}
+
+// volumeOnLevel is what ticking a box brings a sound back at when its level is nothing: the box
+// would otherwise tick and stay silent.
+const volumeOnLevel = 0.5
+
+// turnOn is a click on one of the boxes. **Off mutes and keeps the level**; on unmutes, and lifts a
+// level of nothing to volumeOnLevel so that ticking the box is always heard. Either way it is saved.
+func (s *SettingsScene) turnOn(gs *state.GlobalState, on bool, mute func(bool), set func(float64), level func() float64) {
+	mute(!on)
+	if on && level() == 0 {
+		set(volumeOnLevel)
 	}
-	on := row.on(&gs.Profile.Settings.Dev)
-	*on = !*on
-	ApplyDevTools(gs)
-	s.latchDev(gs)
-	saveProfile(gs)
+	s.syncBoxes()
+	s.commit(gs)
 }
 
 // settingsLayout is where every row on this screen sits, in screen pixels.
@@ -359,15 +370,13 @@ func (s *SettingsScene) Update(gs *state.GlobalState) error {
 
 	systems.UpdateSlider(gs, s.music)
 	systems.UpdateSlider(gs, s.sounds)
+	s.syncBoxes()
+	systems.UpdateCheckbox(gs, s.musicOn)
+	systems.UpdateCheckbox(gs, s.soundsOn)
 	systems.UpdateSlider(gs, s.speed)
 	systems.UpdateButton(gs, s.full)
 	systems.UpdateButton(gs, s.compendium)
 	systems.UpdateButton(gs, s.back)
-	if devToolsOn(gs) {
-		for _, b := range s.dev {
-			systems.UpdateButton(gs, b)
-		}
-	}
 
 	// **Re-read every tick, not only on entry.** Nothing else in the game changes it today, but a
 	// window manager can drop a game out of fullscreen on its own and a latch that then disagreed
@@ -403,6 +412,8 @@ func (s *SettingsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	systems.DrawSlider(gs, screen, s.music)
 	systems.DrawSlider(gs, screen, s.sounds)
+	systems.DrawCheckbox(screen, s.musicOn)
+	systems.DrawCheckbox(screen, s.soundsOn)
 	systems.DrawSlider(gs, screen, s.speed)
 	s.strip.draw(gs, screen, settingsRows(gs).strip)
 	systems.DrawButton(gs, screen, s.full)
@@ -422,15 +433,12 @@ func (s *SettingsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	systems.DrawButton(gs, screen, s.compendium)
 	systems.DrawButton(gs, screen, s.back)
-	if devToolsOn(gs) {
-		s.drawDev(gs, screen)
-	}
 
 	// **The note under a dead music bar, and nothing when it is live.** A control that has gone
 	// gray for a reason outside the game has to say what the reason was, or it reads as a bug —
 	// and there are two reasons: a device that refused to open, and a build carrying no audio,
 	// which is every clean clone. See music.DeviceFailed.
-	if s.music.Disabled {
+	if !music.Available() {
 		r := systems.SliderRect(s.music)
 		note := &text.DrawOptions{}
 		note.GeoM.Translate(float64(r.Min.X), float64(r.Max.Y+8))
@@ -491,6 +499,8 @@ func (s *SettingsScene) commit(gs *state.GlobalState) {
 	}
 	gs.Profile.Settings.MusicVolume = music.Level()
 	gs.Profile.Settings.SoundVolume = music.SoundLevel()
+	gs.Profile.Settings.MusicMuted = music.Muted()
+	gs.Profile.Settings.SoundMuted = music.SoundMuted()
 	gs.Profile.Settings.Speed = ui.Speed()
 	gs.Profile.Settings.Fullscreen = Fullscreen()
 	saveProfile(gs)
@@ -527,6 +537,8 @@ func speedValue(speed float64) float64 {
 func ApplySettings(s profile.Settings) {
 	music.SetLevel(s.MusicVolume)
 	music.SetSoundLevel(s.SoundVolume)
+	music.SetMuted(s.MusicMuted)
+	music.SetSoundMuted(s.SoundMuted)
 
 	// A zero speed is ignored by SetSpeed rather than applied, and profile.LoadProfile has
 	// already normalized one off disk — so an older profile with no settings block at all lands
@@ -552,17 +564,3 @@ func SetFullscreen(on bool) { ebiten.SetFullscreen(on) }
 // and the clock. A screen that read the file would show a state the game is not in on a machine
 // where the file could not be written.
 func Fullscreen() bool { return ebiten.IsFullscreen() }
-
-// drawDev draws the dev column: its heading, then the toggles.
-func (s *SettingsScene) drawDev(gs *state.GlobalState, screen *ebiten.Image) {
-	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(gs.PctX(settingsDevPct)), float64(settingsRows(gs).music-settingsDevGap))
-	op.PrimaryAlign = text.AlignCenter
-	op.SecondaryAlign = text.AlignCenter
-	op.ColorScale.ScaleWithColor(ui.GroundInk)
-	systems.DrawText(screen, settingsDevTitle,
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: systems.TextMedium}, op)
-	for _, b := range s.dev {
-		systems.DrawButton(gs, screen, b)
-	}
-}

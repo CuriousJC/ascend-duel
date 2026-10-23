@@ -130,7 +130,7 @@ const (
 	ChromeSlotSettings = iota
 
 	// ChromeSlotAnimations is the animation gallery's door, and it is **the last slot on purpose**:
-	// it is drawn only while state.DebugAnimations is on, so with the flag off the strip ends where
+	// it is drawn only while state.DevTools is on, so with the flag off the strip ends where
 	// it always did and nothing moves. A debug square taking a seat between two real controls would
 	// shift them the moment the flag was turned on.
 	ChromeSlotAnimations

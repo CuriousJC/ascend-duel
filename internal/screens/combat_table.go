@@ -265,10 +265,8 @@ func (s *CombatScene) enemyCardAt(gs *state.GlobalState, d dealtCard, total int)
 // opponent now plans at the start of the planning phase instead, so the row is this round's and
 // the player chooses their own cards against it.
 //
-// **What that gives up: the opponent's intentions are no longer hidden.** `concealEnemy` is
-// still the screen's single concealment predicate and the Action Flow pane still obeys it, but
-// with the cards face up on the table there is nothing left for it to hide — this is an
-// open-information duel now, on the owner's call. **The lever is still built**:
+// **What that gives up: the opponent's intentions are not hidden.** This is an open-information
+// duel, on the owner's call. **The lever is still built**:
 // `cards.Spec.FaceDown` draws a back instead of a face, so hiding this row again is one field
 // rather than a second drawing path.
 //

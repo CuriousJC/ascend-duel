@@ -318,11 +318,13 @@ func duelistSpecs() []cards.Spec {
 		name           string
 		dmg, ap, vitae int
 		life, of       int
+		realm, room    int
+		element        string
 	}{
-		{"Duelist", 10, 6, 5, 120, 120},
-		{"Duelist", 10, 8, 3, 74, 120},
-		{"Stormcaller", 24, 11, 12, 96, 180},
-		{"Duelist", 7, 4, 0, 6, 120},
+		{"Duelist", 10, 6, 5, 120, 120, 1, 0, "fire"},
+		{"Duelist", 10, 8, 3, 74, 120, 2, 1, "ice"},
+		{"Stormcaller", 24, 11, 12, 96, 180, 5, 2, "lightning"},
+		{"Duelist", 7, 4, 0, 6, 120, 8, 1, "arcane"},
 	}
 
 	out := make([]cards.Spec, 0, len(each))
@@ -334,7 +336,9 @@ func duelistSpecs() []cards.Spec {
 		}
 		spec.Stats[0] = cards.StatLine{Label: "DMG", Value: fmt.Sprintf("%d", d.dmg)}
 		spec.Stats[1] = cards.StatLine{Label: "AP", Value: fmt.Sprintf("%d", d.ap)}
-		spec.Stats[2] = cards.StatLine{Label: "Vitae", Value: fmt.Sprintf("%d", d.vitae)}
+		spec.Stats[2] = cards.StatLine{Label: "VITAE", Value: fmt.Sprintf("%d", d.vitae)}
+		spec.Stats[3] = cards.StatLine{Label: "REALM", Value: fmt.Sprintf("%d", d.realm)}
+		spec.Rooms = cards.RoomArtKeys(d.element, d.room)
 		out = append(out, spec)
 	}
 	return out

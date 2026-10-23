@@ -826,3 +826,11 @@ func TestEveryDeckBackIsEmbeddedAtTheCardsOwnSize(t *testing.T) {
 		}
 	}
 }
+
+// The duelist card's room row has a glyph for every fight in a realm, so no room goes undrawn and
+// none is drawn twice.
+func TestTheRoomRowHasARoomPerFight(t *testing.T) {
+	if cards.RoomSlots != FightsPerRealm {
+		t.Errorf("the room row has %d glyphs for %d fights a realm", cards.RoomSlots, FightsPerRealm)
+	}
+}

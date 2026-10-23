@@ -61,7 +61,7 @@ type Game struct {
 	// animButton opens the animation gallery, and it is **the one thing in the frame that is not
 	// chrome by the frame's own test**: it is not true of the whole session, it is instrumentation.
 	// It is here because it is the only place a debug page can be reached from every screen, and it
-	// is drawn only while state.DebugAnimations is on — so with the flag off the frame is exactly
+	// is drawn only while state.DevTools is on — so with the flag off the frame is exactly
 	// the two controls it was. See screens.AnimationsScene.
 	animButton *models.Button
 
@@ -129,7 +129,7 @@ func NewGame() *Game {
 			// it draws, which is why it reads a summary off the state rather than the run.
 			state.RunOver: &screens.RunOverScene{},
 
-			// **The animation gallery**, behind state.DebugAnimations. Registered unconditionally
+			// **The animation gallery**, behind state.DevTools. Registered unconditionally
 			// because the registry is the only place a screen exists at all and a conditional entry
 			// would be a scene the fallback quietly swaps for the title; what the flag gates is the
 			// button that reaches it. See screens.AnimationsScene.

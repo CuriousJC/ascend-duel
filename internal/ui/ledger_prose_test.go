@@ -32,7 +32,7 @@ func anAct() session.LedgerRecord {
 // the one mistake this arrangement makes easy, so it fails here instead.
 //
 // **It checks that the record changed what was written, not that it reads well.** Whether a
-// sentence is any good is a thing to look at; whether it exists at all is a thing to test.
+// sentence is any booster is a thing to look at; whether it exists at all is a thing to test.
 func TestEveryRecordKindReadsAsSomething(t *testing.T) {
 	base := lineText(LedgerLines([]session.LedgerRecord{anAct()}))
 

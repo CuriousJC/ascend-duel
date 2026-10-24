@@ -509,7 +509,7 @@ func TestTheSortTabsAreOneBlockTiedToTheCards(t *testing.T) {
 
 // The panel buttons stand under the pile on every screen, because the bottom third is one layout.
 func TestThePanelButtonsStandUnderThePile(t *testing.T) {
-	for _, screen := range []state.ActiveScreen{state.Combat, state.PostBattle, state.Shop, state.Goods} {
+	for _, screen := range []state.ActiveScreen{state.Combat, state.PostBattle, state.Shop, state.Boosters} {
 		gs := testState()
 		gs.ActiveScreen = screen
 		checkPanelButtonsUnderThePile(t, gs)

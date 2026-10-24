@@ -312,7 +312,7 @@ func wornSpecs(r record) section {
 				s.specs = append(s.specs, missingSpec(key))
 				continue
 			}
-			s.specs = append(s.specs, goodSpec(p.Name))
+			s.specs = append(s.specs, boosterSpec(p.Name))
 		}
 	}
 	if len(r.Essences) > 0 {
@@ -323,7 +323,7 @@ func wornSpecs(r record) section {
 				s.specs = append(s.specs, missingSpec(key))
 				continue
 			}
-			s.specs = append(s.specs, goodSpec(w.Name))
+			s.specs = append(s.specs, boosterSpec(w.Name))
 		}
 	}
 	if len(r.Cantrips) > 0 {
@@ -334,7 +334,7 @@ func wornSpecs(r record) section {
 				s.specs = append(s.specs, missingSpec(key))
 				continue
 			}
-			s.specs = append(s.specs, goodSpec(c.Name))
+			s.specs = append(s.specs, boosterSpec(c.Name))
 		}
 	}
 	if len(r.Stones) > 0 {
@@ -346,16 +346,16 @@ func wornSpecs(r record) section {
 				s.specs = append(s.specs, missingSpec(key))
 				continue
 			}
-			s.specs = append(s.specs, goodSpec(st.Name))
+			s.specs = append(s.specs, boosterSpec(st.Name))
 		}
 	}
 	return s
 }
 
-// goodSpec is a rune, an essence or a stone as a face. **The name and nothing else** — what any of
+// boosterSpec is a rune, an essence or a stone as a face. **The name and nothing else** — what any of
 // them does is `tools/runesheet`, `tools/essencesheet` and `tools/stonesheet`'s subject, and
 // repeating their text here would be a third place the same sentence can go stale.
-func goodSpec(name string) cards.Spec {
+func boosterSpec(name string) cards.Spec {
 	return cards.Spec{Name: name, Element: cards.Relic, Art: artwork(placeholderArt), Enabled: true}
 }
 

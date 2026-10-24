@@ -69,7 +69,7 @@ one record kind. That is what makes the translator total by construction rather 
 
 **Choice kinds** — the player acted. These are the journal.
 
-`select` · `unselect` · `duel` · `rune` · `essence` · `potion` · `stone` · `good` · `buy` · `take` ·
+`select` · `unselect` · `duel` · `rune` · `essence` · `potion` · `stone` · `booster` · `buy` · `take` ·
 `cut` · `phase` · `screen` · `run`
 
 **Outcome kinds** — the engine decided. These are the ledger.

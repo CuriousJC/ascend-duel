@@ -656,7 +656,7 @@
   },
   {
     "ScenarioRecord": "shop-full-pane",
-    "Note": "The shop with the consumables pane already full - two runes in it, which is session.MaxConsumables - and 100 vitae, enough to buy anything on the shelves several times over. It is the fixture for what the shop does when a purchase would put one more consumable in a pane that has no room: whether the sealed goods and anything else that lands in the pane read as unbuyable, and what selling or spending one frees up. Fight 3, so the shelves are the ones a run sees partway into the first realm.",
+    "Note": "The shop with the consumables pane already full - two runes in it, which is session.MaxConsumables - and 100 vitae, enough to buy anything on the shelves several times over. It is the fixture for what the shop does when a purchase would put one more consumable in a pane that has no room: whether the boosters and anything else that lands in the pane read as unbuyable, and what selling or spending one frees up. Fight 3, so the shelves are the ones a run sees partway into the first realm.",
     "Relics": [],
     "Runes": [
       "two-into-fire",
@@ -726,7 +726,7 @@
   },
   {
     "ScenarioRecord": "bag-of-rocks",
-    "Note": "The shop with a bag of rocks standing on the goods row and the vitae to buy it. Buy the bag and click a stone: it is lifted to the middle of the screen, crumbles, and its dust goes to the duelist card whose ladder it raised. The seed is pinned because the goods row is a roll off the run code and the fight.",
+    "Note": "The shop with a bag of rocks standing on the boosters row and the vitae to buy it. Buy the bag and click a stone: it is lifted to the middle of the screen, crumbles, and its dust goes to the duelist card whose ladder it raised. The seed is pinned because the boosters row is a roll off the run code and the fight.",
     "Relics": [
       "hp-scale"
     ],
@@ -1148,7 +1148,7 @@
   },
   {
     "ScenarioRecord": "vial-of-essence",
-    "Note": "The shop with a large vial of essence standing on the goods row, which is the only place in the game an essence is bought rather than given. The seed is pinned so the row is the same every launch: shop-shelf rolls its two goods off a fresh run code and stocks rocks and runes often enough that looking at the vial meant relaunching until one turned up. Buy the vial, pick a card in the lower row, then click a lit essence.",
+    "Note": "The shop with a large vial of essence standing on the boosters row, which is the only place in the game an essence is bought rather than given. The seed is pinned so the row is the same every launch: shop-shelf rolls its two boosters off a fresh run code and stocks rocks and runes often enough that looking at the vial meant relaunching until one turned up. Buy the vial, pick a card in the lower row, then click a lit essence.",
     "Screen": "shop",
     "Seed": "000009",
     "Fight": 3,
@@ -1748,7 +1748,7 @@
   },
   {
     "ScenarioRecord": "vial-cost-shift",
-    "Note": "The shop with a large vial of essence on the goods row that holds all three essences that move a card's AP: Essence of Ease takes 1 AP off a card's cost and leaves it the same card, Essence of Strength promotes it a rung up its form's ladder for 1 AP more, and Essence of Weakness demotes it a rung for 1 AP less. The seed is pinned because the vial's five are a roll off the run code and the fight, so any other seed or room deals a different five. Buy the vial, pick a card in the lower row, then click a lit essence.",
+    "Note": "The shop with a large vial of essence on the boosters row that holds all three essences that move a card's AP: Essence of Ease takes 1 AP off a card's cost and leaves it the same card, Essence of Strength promotes it a rung up its form's ladder for 1 AP more, and Essence of Weakness demotes it a rung for 1 AP less. The seed is pinned because the vial's five are a roll off the run code and the fight, so any other seed or room deals a different five. Buy the vial, pick a card in the lower row, then click a lit essence.",
     "Screen": "shop",
     "Seed": "00002Q",
     "Fight": 3,
@@ -2131,7 +2131,7 @@
   },
   {
     "ScenarioRecord": "compendium-open",
-    "Note": "The whole Compendium found: every relic, cantrip, potion, tonic, essence, rune, stone, sealed good, trait, creature in every colour, realm and achievement reads as found, so the books can be reviewed record by record without a profile that has played them all. A view only - nothing is written to the profile, and the captions still count what the profile holds, so a record nobody has had reads 0. Opens on the Compendium over the first duel, whose Back lands in the fight.",
+    "Note": "The whole Compendium found: every relic, cantrip, potion, tonic, essence, rune, stone, booster, trait, creature in every colour, realm and achievement reads as found, so the books can be reviewed record by record without a profile that has played them all. A view only - nothing is written to the profile, and the captions still count what the profile holds, so a record nobody has had reads 0. Opens on the Compendium over the first duel, whose Back lands in the fight.",
     "Reveal": true,
     "Screen": "compendium"
   },

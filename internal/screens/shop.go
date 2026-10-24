@@ -165,23 +165,23 @@ type ShopScene struct {
 	rerolls map[shopPane]int
 
 	// drunk is which potions have been bought this visit, by record key. **Per visit, like a
-	// sealed good's flag**: the catalog is the same three every shop, and a run that could buy
+	// booster's flag**: the catalog is the same three every shop, and a run that could buy
 	// three Salves in a row would be buying a life bar rather than a potion.
 	drunk map[string]bool
 
 	// visit is which shop visit the state below belongs to — the run and the fight it follows.
 	//
-	// **It exists because this screen can now be left and come back to.** A sealed good is its own
+	// **It exists because this screen can now be left and come back to.** A booster is its own
 	// screen, so returning from one runs Init again, and a shelf re-dealt at that moment would be a
 	// second offer the player did not earn. See Init.
 	visit shopVisit
 
-	// opened is which of this visit's sealed goods have been taken, by record key.
+	// opened is which of this visit's boosters have been taken, by record key.
 	//
 	// **Once each per visit** *(owner's call, 2026-08-27)*, restocked on the next. It bounds what a
 	// rich run can do in one stop and keeps the shop a short offer rather than a vending machine —
 	// the same argument the three-ring shelf is under. **A map rather than a flag each** since the
-	// catalog became data/goods.json: a fourth good is a record, not a field on this scene.
+	// catalog became data/boosters.json: a fourth booster is a record, not a field on this scene.
 	opened map[string]bool
 
 	// tip explains a relic: what it does, what it costs, and where it would sit in the firing order.
@@ -193,8 +193,8 @@ type ShopScene struct {
 // Init deals the shelf. **Re-entered on every visit**, because each fight earns its own.
 //
 // **A visit is one deal, however many times the screen is entered** *(2026-09-19)*. Opening a
-// sealed good is a screen now, so coming back from one re-enters the shop — and a second deal would
-// restock the shelf, forget which goods had been opened and un-drink the potions. `visit` is which visit the state on this scene belongs to, and a matching one is
+// booster is a screen now, so coming back from one re-enters the shop — and a second deal would
+// restock the shelf, forget which boosters had been opened and un-drink the potions. `visit` is which visit the state on this scene belongs to, and a matching one is
 // picked up rather than dealt again.
 func (s *ShopScene) Init(gs *state.GlobalState) {
 	if gs.Run != nil {
@@ -466,7 +466,7 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 	// the one on top is the last drawn.
 	//
 	// **A seat nothing is drawn in answers an empty rectangle**, which HoveredSeat then walks past.
-	// That is how a sold relic, an opened good and a drunk potion stay out of the way rather than
+	// That is how a sold relic, an opened booster and a drunk potion stay out of the way rather than
 	// swallowing the card behind them — they are skipped in the drawing too, and a seat that
 	// blocked a tooltip while showing nothing would be the worst version of this bug.
 	if i := ui.HoveredSeat(at, len(s.shelf), func(i int) image.Rectangle {
@@ -483,14 +483,14 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 	}
 
 	if i := ui.HoveredSeat(at, len(s.offered), func(i int) image.Rectangle {
-		if _, ok := session.GoodByKey(s.offered[i]); !ok || s.goodTaken(s.offered[i]) {
+		if _, ok := session.BoosterByKey(s.offered[i]); !ok || s.boosterTaken(s.offered[i]) {
 			return image.Rectangle{}
 		}
-		return s.goodSlot(gs, s.offered[i])
+		return s.boosterSlot(gs, s.offered[i])
 	}); i >= 0 {
-		good, _ := session.GoodByKey(s.offered[i])
-		title, lines := goodTip(good, shopPrice(gs, good.Price))
-		s.tip.Point(s.goodSlot(gs, s.offered[i]), ui.TipLine(title), ui.TipLines(lines))
+		booster, _ := session.BoosterByKey(s.offered[i])
+		title, lines := boosterTip(booster, shopPrice(gs, booster.Price))
+		s.tip.Point(s.boosterSlot(gs, s.offered[i]), ui.TipLine(title), ui.TipLines(lines))
 		return
 	}
 
@@ -552,10 +552,10 @@ func (s *ShopScene) click(gs *state.GlobalState) {
 	}
 
 	if i := ui.HoveredSeat(at, len(s.offered), func(i int) image.Rectangle {
-		return s.goodSlot(gs, s.offered[i])
+		return s.boosterSlot(gs, s.offered[i])
 	}); i >= 0 {
 		s.band.sale.armed = shopSale{}
-		s.openGood(gs, s.offered[i])
+		s.openBooster(gs, s.offered[i])
 		return
 	}
 
@@ -680,7 +680,7 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// **The four panes, left to right.** Each paints its own surface first and its cards on top;
 	// see shop_panes.go, which owns where they stand.
-	s.drawGoods(gs, screen)
+	s.drawBoosters(gs, screen)
 	s.drawShelf(gs, screen)
 	s.drawPotions(gs, screen)
 	s.drawTonic(gs, screen)
@@ -823,14 +823,14 @@ func priceLabel(n int) string {
 // it. A relic losing its price would otherwise be a shelf of free relics rather than a build failure.
 var _ = func(r data.RelicData) (string, data.Rarity) { return r.Name, r.Rarity }
 
-// The sealed goods on the shelf: where they sit, what a click on one does, and what they say.
+// The boosters on the shelf: where they sit, what a click on one does, and what they say.
 //
-// **They are a row of their own under the relics** — see goodsRowPct, and shop_goods.go for the
+// **They are a row of their own under the relics** — see boostersRowPct, and shop_boosters.go for the
 // dialog a purchase opens.
 
-// goodSlot is where one good is drawn, and the rectangle it is clicked in. **Two seats, centered**,
+// boosterSlot is where one booster is drawn, and the rectangle it is clicked in. **Two seats, centered**,
 // so the row reads as a pair rather than as two things that happen to be near each other.
-func (s *ShopScene) goodSlot(gs *state.GlobalState, key string) image.Rectangle {
+func (s *ShopScene) boosterSlot(gs *state.GlobalState, key string) image.Rectangle {
 	for i, offered := range s.offered {
 		if offered == key {
 			return shopSeatRect(gs, shopPanePacks, i)
@@ -844,101 +844,101 @@ func (s *ShopScene) goodSlot(gs *state.GlobalState, key string) image.Rectangle 
 // at one solved pitch now, and there is no label anywhere on the shelf. `rowWidth` went with it —
 // nothing counts the shelf's seats any more, because each pane knows its own.
 
-// goodTaken is whether this visit's copy has already been opened.
-func (s *ShopScene) goodTaken(key string) bool { return s.opened[key] }
+// boosterTaken is whether this visit's copy has already been opened.
+func (s *ShopScene) boosterTaken(key string) bool { return s.opened[key] }
 
-// goodAffordable is whether the purse covers one. **Asked of the run rather than compared here**,
+// boosterAffordable is whether the purse covers one. **Asked of the run rather than compared here**,
 // which is the line RelicPrice already draws: what a thing costs is the shop's arithmetic and this
 // file only decides where it is drawn.
-func goodAffordable(gs *state.GlobalState, key string) bool {
+func boosterAffordable(gs *state.GlobalState, key string) bool {
 	if gs.Run == nil {
 		return false
 	}
-	return gs.Run.CanAffordGood(key)
+	return gs.Run.CanAffordBooster(key)
 }
 
-// goodAvailable is whether a seat can be clicked at all: the purse covers it.
+// boosterAvailable is whether a seat can be clicked at all: the purse covers it.
 //
-// **A full consumables pane does not dim a carried good** *(owner's call, 2026-10-04)*. The sack
+// **A full consumables pane does not dim a carried booster** *(owner's call, 2026-10-04)*. The sack
 // and the bundle open whatever the pane holds, so the player sees what is inside before deciding;
-// the goods screen then holds the cards back until a carried one is sold to make room, or the good
-// is skipped. See GoodsScene.roomFull.
-func goodAvailable(gs *state.GlobalState, key string) bool {
-	if !goodAffordable(gs, key) {
+// the boosters screen then holds the cards back until a carried one is sold to make room, or the booster
+// is skipped. See BoostersScene.roomFull.
+func boosterAvailable(gs *state.GlobalState, key string) bool {
+	if !boosterAffordable(gs, key) {
 		return false
 	}
-	_, ok := session.GoodByKey(key)
+	_, ok := session.BoosterByKey(key)
 	return ok
 }
 
-// carried is whether what a good holds goes into the consumables pane rather than being spent in the
+// carried is whether what a booster holds goes into the consumables pane rather than being spent in the
 // dialog that opened it.
-func carried(c session.GoodContents) bool {
+func carried(c session.BoosterContents) bool {
 	return c == session.ContentsRunes || c == session.ContentsCantrips
 }
 
-// openGood pays for a sealed good and opens it.
+// openBooster pays for a booster and opens it.
 //
 // **The purse moves first and the dialog opens second**, exactly as `Buy` wears the relic after
 // spending: a refusal has to leave the run as it was, and `SpendVitae` is the one place that
 // refuses. A dialog opened before the payment would be four cards the player could take for free
 // if the purse turned out to be short.
-func (s *ShopScene) openGood(gs *state.GlobalState, key string) {
-	if gs.Run == nil || s.goodTaken(key) || !goodAvailable(gs, key) {
+func (s *ShopScene) openBooster(gs *state.GlobalState, key string) {
+	if gs.Run == nil || s.boosterTaken(key) || !boosterAvailable(gs, key) {
 		return
 	}
 
-	good, ok := session.GoodByKey(key)
-	if !ok || !gs.Run.BuyGood(key) {
+	booster, ok := session.BoosterByKey(key)
+	if !ok || !gs.Run.BuyBooster(key) {
 		return
 	}
 
 	s.opened[key] = true
 	s.tip.Forget()
 
-	// **Buying the good and taking what is inside it are two lines**, because they are two
-	// choices: the good is paid for before its contents are seen. See goods.take for the second.
-	gs.Journal.Write(journal.Record{Kind: journal.KindGood, Key: key, Amount: gs.Run.Price(good.Price)})
+	// **Buying the booster and taking what is inside it are two lines**, because they are two
+	// choices: the booster is paid for before its contents are seen. See boosters.take for the second.
+	gs.Journal.Write(journal.Record{Kind: journal.KindBooster, Key: key, Amount: gs.Run.Price(booster.Price)})
 
-	openGoods(gs, key)
-	music.PlayCue(data.CueGoodOpened)
+	openBoosters(gs, key)
+	music.PlayCue(data.CueBoosterOpened)
 
-	trace.Logf("shop", "opened %s, %d vitae left", good.Name, gs.Run.Vitae())
+	trace.Logf("shop", "opened %s, %d vitae left", booster.Name, gs.Run.Vitae())
 }
 
-// drawGoods draws the two sealed goods with their price under them, on the same terms as the
+// drawBoosters draws the two boosters with their price under them, on the same terms as the
 // shelf: an unaffordable one is dimmed rather than hidden, and one already opened leaves an empty
 // seat rather than closing the row up.
-func (s *ShopScene) drawGoods(gs *state.GlobalState, screen *ebiten.Image) {
+func (s *ShopScene) drawBoosters(gs *state.GlobalState, screen *ebiten.Image) {
 	drawShopPaneBack(gs, screen, shopPanePacks)
 
 	for _, key := range s.offered {
-		good, ok := session.GoodByKey(key)
-		if !ok || s.goodTaken(key) {
+		booster, ok := session.BoosterByKey(key)
+		if !ok || s.boosterTaken(key) {
 			continue
 		}
-		at := s.goodSlot(gs, key)
+		at := s.boosterSlot(gs, key)
 
-		lit := goodAvailable(gs, key)
-		ui.DrawGoodCard(gs, screen, at.Min, good.Name, goodArt(gs, good), lit)
-		s.figure(gs, screen, at, shopPrice(gs, good.Price), lit)
+		lit := boosterAvailable(gs, key)
+		ui.DrawBoosterCard(gs, screen, at.Min, booster.Name, boosterArt(gs, booster), lit)
+		s.figure(gs, screen, at, shopPrice(gs, booster.Price), lit)
 	}
 }
 
-// goodArt is the picture a sealed good draws.
+// boosterArt is the picture a booster draws.
 //
 // **A record naming its own Art wins, and since 2026-09-15 all three do** — the bag, the vial and
 // the sack are painted as the vessels they are named after.
 //
-// **The borrow is what is left underneath**: a good with no Art draws the default face of whatever
-// is inside it — the stone catalog's, the essence catalog's, the rune catalog's. It is kept rather than deleted because it is what a *new* good draws on the day it is
+// **The borrow is what is left underneath**: a booster with no Art draws the default face of whatever
+// is inside it — the stone catalog's, the essence catalog's, the rune catalog's. It is kept rather than deleted because it is what a *new* booster draws on the day it is
 // authored and before it is drawn, and a picture of its contents says more than a fourth
 // placeholder would.
-func goodArt(gs *state.GlobalState, good session.Good) image.Image {
-	if good.Art != "" {
-		return ui.Artwork(gs, good.Art)
+func boosterArt(gs *state.GlobalState, booster session.Booster) image.Image {
+	if booster.Art != "" {
+		return ui.Artwork(gs, booster.Art)
 	}
-	switch good.Contains {
+	switch booster.Contains {
 	case session.ContentsStones:
 		return ui.Artwork(gs, data.DefaultStoneArt)
 	case session.ContentsRunes:
@@ -952,20 +952,20 @@ func goodArt(gs *state.GlobalState, good session.Good) image.Image {
 	}
 }
 
-// goodTip is what resting on one says. **It is the whole of what the card says** *(owner's call,
+// boosterTip is what resting on one says. **It is the whole of what the card says** *(owner's call,
 // 2026-09-15)* — the face is a picture and a price now, so the count, the noun and what that noun
 // even is are all read here, by a player who on realm one has never seen a stone.
 //
 // **The prose is the record's and the figures are not** *(2026-09-14)*. The Tip lines say what a
-// stone or an essence or a rune *is*; how many are in the good and what it costs are computed from
+// stone or an essence or a rune *is*; how many are in the booster and what it costs are computed from
 // the same fields the face and the purse read, so a tooltip cannot quote a price the shop does not
 // charge. It also gave the sack a tooltip of its own — it fell through to the vial's until the
 // catalog landed.
 //
 // price is what the shop charges for it, discounts included.
-func goodTip(good session.Good, price int) (string, []string) {
-	lines := make([]string, 0, len(good.Tip)+2)
-	lines = append(lines, fmt.Sprintf("%d %s, and you keep one", good.Size, good.Contains.Noun()))
-	lines = append(lines, good.Tip...)
-	return good.Name, append(lines, fmt.Sprintf("%d vitae", price))
+func boosterTip(booster session.Booster, price int) (string, []string) {
+	lines := make([]string, 0, len(booster.Tip)+2)
+	lines = append(lines, fmt.Sprintf("%d %s, and you keep one", booster.Size, booster.Contains.Noun()))
+	lines = append(lines, booster.Tip...)
+	return booster.Name, append(lines, fmt.Sprintf("%d vitae", price))
 }

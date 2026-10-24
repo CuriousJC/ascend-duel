@@ -167,3 +167,15 @@ func fillRect(dst *image.RGBA, x, y, w, h int, c color.RGBA) {
 		}
 	}
 }
+
+// Frame is a bare card of any size: the card's rounded silhouette and bevelled ring, with the corner
+// and the ring scaled to the width as a card's are, and nothing on its face. **It is the shape a
+// screen borrows when something should read as a card without being one** — the Compendium's
+// statistics sections — and it lives here because every rounded shape does.
+func Frame(w, h int, border, fill color.RGBA) *image.RGBA {
+	dst := image.NewRGBA(image.Rect(0, 0, w, h))
+	radius := w * DuelistStyle.CornerRadius / DuelistStyle.Width
+	width := max(w*DuelistStyle.BorderWidth/DuelistStyle.Width, DuelistStyle.BorderWidth)
+	roundedBorder(dst, 0, 0, w, h, radius, width, border, fill)
+	return dst
+}

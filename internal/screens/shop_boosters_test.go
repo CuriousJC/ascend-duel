@@ -12,19 +12,19 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/state"
 )
 
-// The sealed goods: what a bag holds, where the row puts them, and the one thing about the
+// The boosters: what a bag holds, where the row puts them, and the one thing about the
 // dialog that would be a lock-up rather than a bug — a stage with nothing clickable in it.
 //
 // **The three are looked up rather than named** *(2026-09-14)*, since the catalog is
-// data/goods.json: a test naming "bag" would fail on a renamed record instead of on a broken shop.
+// data/boosters.json: a test naming "bag" would fail on a renamed record instead of on a broken shop.
 
-// goodHolding is the record that holds one catalog, or a fatal — every test below wants one and
+// boosterHolding is the record that holds one catalog, or a fatal — every test below wants one and
 // none of them can say anything useful without it.
-func goodHolding(t *testing.T, c session.GoodContents) session.Good {
+func boosterHolding(t *testing.T, c session.BoosterContents) session.Booster {
 	t.Helper()
-	g, ok := session.GoodHolding(c)
+	g, ok := session.BoosterHolding(c)
 	if !ok {
-		t.Fatalf("no good in goods.json holds %s", c.Noun())
+		t.Fatalf("no booster in boosters.json holds %s", c.Noun())
 	}
 	return g
 }
@@ -32,7 +32,7 @@ func goodHolding(t *testing.T, c session.GoodContents) session.Good {
 func TestABagHoldsFourDifferentStones(t *testing.T) {
 	gs := testRun()
 
-	bag := goodHolding(t, session.ContentsStones)
+	bag := boosterHolding(t, session.ContentsStones)
 
 	got := dealStones(gs, bag.Record, bag.Size)
 	if len(got) != bag.Size {
@@ -51,7 +51,7 @@ func TestABagHoldsFourDifferentStones(t *testing.T) {
 func TestACanHoldsFourDifferentEssences(t *testing.T) {
 	gs := testRun()
 
-	vial := goodHolding(t, session.ContentsEssences)
+	vial := boosterHolding(t, session.ContentsEssences)
 
 	got := dealVialEssences(gs, vial.Record, vial.Size)
 	if len(got) != vial.Size {
@@ -72,7 +72,7 @@ func TestACanHoldsFourDifferentEssences(t *testing.T) {
 func TestTheSameFightOpensTheSameBag(t *testing.T) {
 	gs := testRun()
 
-	bag := goodHolding(t, session.ContentsStones)
+	bag := boosterHolding(t, session.ContentsStones)
 
 	a, b := dealStones(gs, bag.Record, bag.Size), dealStones(gs, bag.Record, bag.Size)
 	if len(a) != len(b) {
@@ -94,8 +94,8 @@ func TestTheBagAndTheCanDrawFromTheirOwnStreams(t *testing.T) {
 	shelf := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil, nil))
 	before := append([]string(nil), shelf...)
 
-	bag := goodHolding(t, session.ContentsStones)
-	vial := goodHolding(t, session.ContentsEssences)
+	bag := boosterHolding(t, session.ContentsStones)
+	vial := boosterHolding(t, session.ContentsEssences)
 
 	// Drawing a bag and a vial must not have consumed anything the shelf reads.
 	dealStones(gs, bag.Record, bag.Size)
@@ -141,22 +141,22 @@ func TestAVisitOffersTwoDifferentPacks(t *testing.T) {
 			t.Errorf("fight %d put the same pack in both seats", fight)
 		}
 		for _, key := range offered {
-			if _, ok := session.GoodByKey(key); !ok {
+			if _, ok := session.BoosterByKey(key); !ok {
 				t.Errorf("fight %d put %q on the shelf, which is no record", fight, key)
 			}
 		}
 	}
 }
 
-// The pack seats are the pane's, so a good is drawn and clicked where the row solved for it.
-func TestTheGoodsStandInTheirPane(t *testing.T) {
+// The pack seats are the pane's, so a booster is drawn and clicked where the row solved for it.
+func TestTheBoostersStandInTheirPane(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
-	bagKey := goodHolding(t, session.ContentsStones).Record
-	vialKey := goodHolding(t, session.ContentsEssences).Record
-	sackKey := goodHolding(t, session.ContentsRunes).Record
+	bagKey := boosterHolding(t, session.ContentsStones).Record
+	vialKey := boosterHolding(t, session.ContentsEssences).Record
+	sackKey := boosterHolding(t, session.ContentsRunes).Record
 	s := &ShopScene{shelf: make([]shelfItem, shelfSize), offered: []string{bagKey, vialKey}}
 
-	bag, can := s.goodSlot(gs, bagKey), s.goodSlot(gs, vialKey)
+	bag, can := s.boosterSlot(gs, bagKey), s.boosterSlot(gs, vialKey)
 	if bag.Empty() || can.Empty() {
 		t.Fatal("an offered pack has no seat")
 	}
@@ -170,7 +170,7 @@ func TestTheGoodsStandInTheirPane(t *testing.T) {
 
 	// A pack this visit did not put up has no seat at all, which is what stops a click landing on
 	// one that is not drawn.
-	if got := s.goodSlot(gs, sackKey); !got.Empty() {
+	if got := s.boosterSlot(gs, sackKey); !got.Empty() {
 		t.Errorf("a pack that was not offered has a seat at %v", got)
 	}
 }
@@ -180,42 +180,42 @@ func TestTheGoodsStandInTheirPane(t *testing.T) {
 func TestADialogAlwaysHasSomethingToClick(t *testing.T) {
 	gs := testRun()
 
-	var g goods
-	for _, good := range session.Goods() {
-		g.open(gs, good)
+	var g boosters
+	for _, booster := range session.Boosters() {
+		g.open(gs, booster)
 		if g.count() == 0 {
-			t.Errorf("%s opened with nothing in it", good.Record)
+			t.Errorf("%s opened with nothing in it", booster.Record)
 		}
-		if good.Contains == session.ContentsEssences && len(g.row.offer) == 0 {
-			t.Errorf("%s opened with no cards to aim at", good.Record)
+		if booster.Contains == session.ContentsEssences && len(g.row.offer) == 0 {
+			t.Errorf("%s opened with no cards to aim at", booster.Record)
 		}
 		g.reset()
 	}
 }
 
-// Every good says the same thing in its dialog and in its tooltip, and every figure in both is the
+// Every booster says the same thing in its dialog and in its tooltip, and every figure in both is the
 // record's own. **A price quoted in one place and charged in another is the failure this catches**,
 // and it is the reason none of those strings is authored.
 //
-// **The face is not one of the places any more** *(owner's call, 2026-09-15)*: a sealed good is a
+// **The face is not one of the places any more** *(owner's call, 2026-09-15)*: a booster is a
 // picture and a price, and everything it used to write across its lower half is in the tooltip. So
 // the count and the noun are checked there, which is where a player now reads them.
-func TestAGoodSaysTheSameThingEverywhere(t *testing.T) {
-	for _, good := range session.Goods() {
-		if good.Title == "" || good.Hint == "" {
-			t.Errorf("%s opens a dialog with no title or no hint", good.Record)
+func TestABoosterSaysTheSameThingEverywhere(t *testing.T) {
+	for _, booster := range session.Boosters() {
+		if booster.Title == "" || booster.Hint == "" {
+			t.Errorf("%s opens a dialog with no title or no hint", booster.Record)
 		}
 
-		title, lines := goodTip(good, good.Price)
-		if title != good.Name {
-			t.Errorf("%s is headed %q on the shelf and %q in its tooltip", good.Record, good.Name, title)
+		title, lines := boosterTip(booster, booster.Price)
+		if title != booster.Name {
+			t.Errorf("%s is headed %q on the shelf and %q in its tooltip", booster.Record, booster.Name, title)
 		}
 		got := strings.Join(lines, " ")
-		if want := fmt.Sprintf("%d %s", good.Size, good.Contains.Noun()); !strings.Contains(got, want) {
-			t.Errorf("%s holds %q and its tooltip says %q", good.Record, want, got)
+		if want := fmt.Sprintf("%d %s", booster.Size, booster.Contains.Noun()); !strings.Contains(got, want) {
+			t.Errorf("%s holds %q and its tooltip says %q", booster.Record, want, got)
 		}
-		if !strings.Contains(got, fmt.Sprintf("%d vitae", good.Price)) {
-			t.Errorf("%s costs %d and its tooltip says %q", good.Record, good.Price, got)
+		if !strings.Contains(got, fmt.Sprintf("%d vitae", booster.Price)) {
+			t.Errorf("%s costs %d and its tooltip says %q", booster.Record, booster.Price, got)
 		}
 	}
 }
@@ -226,8 +226,8 @@ func TestAGoodSaysTheSameThingEverywhere(t *testing.T) {
 func TestAEssenceIsDeadUntilACardIsSelected(t *testing.T) {
 	gs := testRun()
 
-	var g goods
-	g.open(gs, goodHolding(t, session.ContentsEssences))
+	var g boosters
+	g.open(gs, boosterHolding(t, session.ContentsEssences))
 
 	for _, w := range g.essences {
 		if g.essenceSpendable(gs, w) {
@@ -263,8 +263,8 @@ func TestAEssenceIsDeadUntilACardIsSelected(t *testing.T) {
 func TestTheCanAppliesTheEssenceToTheSelectedCard(t *testing.T) {
 	gs := testRun()
 
-	var g goods
-	g.open(gs, goodHolding(t, session.ContentsEssences))
+	var g boosters
+	g.open(gs, boosterHolding(t, session.ContentsEssences))
 	g.selectCard(gs, 0)
 
 	picked := g.selectedDeckIndexes()
@@ -297,7 +297,7 @@ func TestTheCanAppliesTheEssenceToTheSelectedCard(t *testing.T) {
 	size := gs.Run.Size()
 	g.take(gs, pick)
 
-	if g.stage != goodsShowing {
+	if g.stage != boostersShowing {
 		t.Fatal("the essence was taken and the dialog did not show what it did")
 	}
 	if now, ok := gs.Run.Card(idx); gs.Run.Size() != size || (ok && now != before) {
@@ -321,8 +321,8 @@ func TestTheCanAppliesTheEssenceToTheSelectedCard(t *testing.T) {
 func TestTakingAStoneRaisesTheRunsRung(t *testing.T) {
 	gs := testRun()
 
-	var g goods
-	g.open(gs, goodHolding(t, session.ContentsStones))
+	var g boosters
+	g.open(gs, boosterHolding(t, session.ContentsStones))
 	stone := g.stones[0]
 
 	before := map[string]int{}
@@ -339,7 +339,7 @@ func TestTakingAStoneRaisesTheRunsRung(t *testing.T) {
 			t.Errorf("%s pays %d after the stone, want %d", hand, after, want)
 		}
 	}
-	// **The rung moved on the click; the screen only shows it.** The good stays up while the stone is
+	// **The rung moved on the click; the screen only shows it.** The booster stays up while the stone is
 	// used and closes when that has played.
 	for i := 0; i < 1000 && g.update(gs, func(image.Point) bool { return false }); i++ {
 	}
@@ -353,17 +353,17 @@ func TestTakingAStoneRaisesTheRunsRung(t *testing.T) {
 //
 // **The failure this exists for shipped once**: the offer row ended exactly on the bottom edge,
 // which was survivable while it was the only row on screen and was not once the essences stayed up
-// beside it. **What it measures against moved on 2026-09-19** — the good is a screen rather than a
+// beside it. **What it measures against moved on 2026-09-19** — the booster is a screen rather than a
 // modal, so the ceiling is the build band's own type and the floor is the screen.
 func TestTheVialsTwoRowsFitOnTheScreen(t *testing.T) {
 	gs := testRun()
 	gs.ScreenWidth, gs.ScreenHeight = state.ScreenWidth, state.ScreenHeight
 
-	var g goods
-	g.open(gs, goodHolding(t, session.ContentsEssences))
+	var g boosters
+	g.open(gs, boosterHolding(t, session.ContentsEssences))
 
 	essences := g.slot(gs, 0)
-	if hint := goodsHintTop(gs); essences.Min.Y < hint {
+	if hint := boostersHintTop(gs); essences.Min.Y < hint {
 		t.Errorf("the essences start at %d, over the hint at %d", essences.Min.Y, hint)
 	}
 
@@ -382,11 +382,11 @@ func TestTheBagsRowClearsTheBuildBand(t *testing.T) {
 	gs := testRun()
 	gs.ScreenWidth, gs.ScreenHeight = state.ScreenWidth, state.ScreenHeight
 
-	var g goods
-	g.open(gs, goodHolding(t, session.ContentsStones))
+	var g boosters
+	g.open(gs, boosterHolding(t, session.ContentsStones))
 
 	row := g.slot(gs, 0)
-	if hint := goodsHintTop(gs); row.Min.Y < hint {
+	if hint := boostersHintTop(gs); row.Min.Y < hint {
 		t.Errorf("the stones start at %d, over the hint at %d", row.Min.Y, hint)
 	}
 	if row.Max.Y > gs.ScreenHeight {
@@ -397,17 +397,17 @@ func TestTheBagsRowClearsTheBuildBand(t *testing.T) {
 // **Two sizes of one catalog must not hold nested contents** *(2026-09-15)*.
 //
 // This is the whole reason `seeds.ForFightSeat` exists. Every deal is `shuffle(catalog)[:size]`, so
-// two goods sharing a stream would hand the small bag literally the first three rocks of the large
+// two boosters sharing a stream would hand the small bag literally the first three rocks of the large
 // one — at a lower price, in the same shop, on the same fight. Nothing in play could show that: the
 // contents are sealed until bought, and a player who bought both would see an overlap and read it
-// as luck. `loadGoods` used to refuse a second good per catalog outright to prevent it; this is what
+// as luck. `loadBoosters` used to refuse a second booster per catalog outright to prevent it; this is what
 // replaced that rule, so this test is what holds the replacement up.
 func TestTwoSizesOfOneCatalogDealDifferently(t *testing.T) {
 	gs := testRun()
 
-	var bags []session.Good
-	for _, key := range session.GoodKeys() {
-		if g, ok := session.GoodByKey(key); ok && g.Contains == session.ContentsStones {
+	var bags []session.Booster
+	for _, key := range session.BoosterKeys() {
+		if g, ok := session.BoosterByKey(key); ok && g.Contains == session.ContentsStones {
 			bags = append(bags, g)
 		}
 	}
@@ -443,9 +443,9 @@ func TestAShelfNeverHoldsTwoOfOneCatalog(t *testing.T) {
 		rng := rand.New(rand.NewSource(int64(fight) * 7919))
 		keys := dealPacks(rng)
 
-		held := map[session.GoodContents]string{}
+		held := map[session.BoosterContents]string{}
 		for _, key := range keys {
-			g, ok := session.GoodByKey(key)
+			g, ok := session.BoosterByKey(key)
 			if !ok {
 				t.Fatalf("the shelf holds %q, which is in no catalog", key)
 			}

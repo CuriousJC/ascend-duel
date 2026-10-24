@@ -40,7 +40,7 @@
 //     essence's grammar plus a target *count*, aimed at card identities rather than deck
 //     positions, and the one alteration that can happen while a duel is going on.
 //   - stone.go, potion.go — the run's own opinion about what a hand is worth, and about the body.
-//   - good.go, shop.go, spoils.go — what is sold, what it costs, and what winning pays.
+//   - booster.go, shop.go, spoils.go — what is sold, what it costs, and what winning pays.
 //
 // What the run says about itself:
 //

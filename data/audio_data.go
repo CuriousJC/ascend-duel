@@ -128,12 +128,12 @@ const (
 	// hand is dealt. Once per relic per toast.
 	CueRelicToast = "relic-toast"
 
-	// CueGoodOpened is a sealed good bought off the shop's shelf and opened.
-	CueGoodOpened = "good-opened"
+	// CueBoosterOpened is a booster bought off the shop's shelf and opened.
+	CueBoosterOpened = "booster-opened"
 )
 
 // SoundCues is every cue there is.
-var SoundCues = []string{CueRelicToast, CueGoodOpened}
+var SoundCues = []string{CueRelicToast, CueBoosterOpened}
 
 // MusicExts is what a track can be: MP3, Ogg Vorbis and WAV, which Ebitengine decodes, and MIDI,
 // which internal/music synthesizes. privateassets.audioExts and music.decoders take the same set.

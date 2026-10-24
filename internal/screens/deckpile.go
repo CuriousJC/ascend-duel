@@ -16,7 +16,7 @@ package screens
 // duel ends.
 //
 // **It is free functions rather than a scene's** *(owner's call, 2026-09-19)*, because three
-// between-fights screens draw it now — the shop, the reward screen and the sealed good. Each owns
+// between-fights screens draw it now — the shop, the reward screen and the booster. Each owns
 // its own DeckToggle and its own click, and what they share is where the pile stands and what it
 // looks like. A second copy of this geometry is how one screen's pile comes to sit a few pixels off
 // the others.

@@ -131,7 +131,7 @@ const (
 	// over it, both centered in it. See essenceRowSeats.
 	essenceExitSeat = 400
 
-	// The reward screen's SKIP: half again the sealed good's, which is lost in a row of two
+	// The reward screen's SKIP: half again the booster's, which is lost in a row of two
 	// full-size cards. The height is the nearest tier to half again.
 	essenceSkipWidth    = 210
 	essenceSkipHeight   = ui.ButtonMedium
@@ -219,7 +219,7 @@ type PostBattleScene struct {
 	// 2026-09-19)*. The offer is a hand's worth off a deck of fifty-odd, and judging "do I want one
 	// fewer earth Bash" against eight of them and nothing else was the one screen in the game where
 	// the deck mattered most and could not be read. The same widget and the same pile the shop and
-	// the sealed good carry — see deckpile.go.
+	// the booster carry — see deckpile.go.
 	deck ui.DeckToggle
 
 	// hands is the panel over every hand the deck can build, opened from the button under the pile —
@@ -316,7 +316,7 @@ func (s *PostBattleScene) Init(gs *state.GlobalState) {
 		s.visit = now
 	}
 	if s.skipButton == nil {
-		s.skipButton = models.NewButton(essenceSkipWidth, essenceSkipHeight, goodsSkipLabel,
+		s.skipButton = models.NewButton(essenceSkipWidth, essenceSkipHeight, boostersSkipLabel,
 			func() { s.skipping = true })
 		s.skipButton.BaseColor = ui.ButtonJade
 		s.skipButton.TextSize = essenceSkipTextSize

@@ -4,7 +4,7 @@ package screens
 //
 // **A visit offers two of the three** *(owner's call, 2026-09-06)*. The bag, the can and the sack
 // were all on the shelf every time, which meant the shop asked no question about them: three seats,
-// three goods, and the only decision was what the purse could cover. Two of three makes a visit
+// three boosters, and the only decision was what the purse could cover. Two of three makes a visit
 // something to read — and it is what buys the room the potions pane needed on a row that was
 // already too long. All three catalogs stay reachable; which two you meet is the roll.
 //
@@ -48,7 +48,7 @@ const rerollBase = 2
 // taken this visit.
 //
 // **Computed rather than stored**, so the figure on the button and the figure charged cannot
-// disagree — the split `goodPrice` already makes between a face and a purse.
+// disagree — the split `boosterPrice` already makes between a face and a purse.
 func (s *ShopScene) rerollPrice(p shopPane) int {
 	price := rerollBase
 	for i := 0; i < s.rerolls[p]; i++ {
@@ -71,11 +71,11 @@ func shopRNG(gs *state.GlobalState, stream seeds.Stream) *rand.Rand {
 // dealPacks picks which two of the catalog stand on the shelf.
 //
 // **A shuffle of the catalog, cut to two** rather than two draws without replacement, because the
-// goods are equally weighted: there is no rarity here, so a weighted draw would be the relic shelf's
+// boosters are equally weighted: there is no rarity here, so a weighted draw would be the relic shelf's
 // machinery doing nothing. The order is the roll's, so the bag is not always on the left.
 //
-// **The catalog is data/goods.json** *(2026-09-14)*, so a fourth good joins the roll by being
-// authored. A catalog no longer than the shelf is not shuffled at all — every good stands, and
+// **The catalog is data/boosters.json** *(2026-09-14)*, so a fourth booster joins the roll by being
+// authored. A catalog no longer than the shelf is not shuffled at all — every booster stands, and
 // rolling an order for a row that can only be one row would spend the stream saying nothing.
 //
 // **One catalog per shelf** *(owner's call, 2026-09-15)*, since each catalog is now held at three
@@ -86,15 +86,15 @@ func shopRNG(gs *state.GlobalState, stream seeds.Stream) *rand.Rand {
 // does to see a different size. The shuffle still decides which, so nothing here is a preference
 // for the middle bag.
 func dealPacks(rng *rand.Rand) []string {
-	keys := session.GoodKeys()
+	keys := session.BoosterKeys()
 	if rng != nil && len(keys) > 1 {
 		rng.Shuffle(len(keys), func(i, j int) { keys[i], keys[j] = keys[j], keys[i] })
 	}
 
 	out := make([]string, 0, packsOffered)
-	held := map[session.GoodContents]bool{}
+	held := map[session.BoosterContents]bool{}
 	for _, key := range keys {
-		g, ok := session.GoodByKey(key)
+		g, ok := session.BoosterByKey(key)
 		if !ok || held[g.Contains] {
 			continue
 		}
@@ -142,7 +142,7 @@ func (s *ShopScene) rerollPacks(gs *state.GlobalState) {
 	out := make([]string, len(s.offered))
 	taken := map[string]bool{}
 	for i, key := range s.offered {
-		if s.goodTaken(key) {
+		if s.boosterTaken(key) {
 			out[i] = key
 			taken[key] = true
 		}
@@ -220,7 +220,7 @@ func (s *ShopScene) paneHasSomethingToReroll(gs *state.GlobalState, p shopPane) 
 		return false
 	case shopPanePacks:
 		for _, key := range s.offered {
-			if !s.goodTaken(key) {
+			if !s.boosterTaken(key) {
 				return true
 			}
 		}

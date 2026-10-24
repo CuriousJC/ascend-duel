@@ -1,19 +1,20 @@
 package screens
 
-// **The Compendium's realm book: every motif in every element it can theme, as its portal room.**
+// **The Compendium's realm book: every motif in every element it can theme, room by room.**
 //
-// A realm is a motif and an element — see MECHANICS.md §A realm is a motif and an element — so the
-// book holds one entry per pair, motif by motif in the roster's order and each in the affinity order.
-// **Its picture is the realm's portal room**, the motif's boss-tier backdrop in that element, reduced
-// to a landscape thumbnail rather than squeezed onto a card: the room is the realm's face, and a
-// player who has stood in it knows it on sight. A found realm with no portal room painted yet draws
-// the default backdrop darkened, on the catalogs' found-but-undrawn rule; an unfound one draws the
-// portal swirl and nothing of its room, and its whole name is masked.
+// A realm is a motif and an element — see MECHANICS.md §A realm is a motif and an element — and it
+// has three rooms, outer, inner and portal, so the book holds one entry per realm per room, motif by
+// motif in the roster's order, each in the affinity order, each room in the order they are walked.
+// **Its picture is the room**, the motif's first backdrop of that tier in that element, reduced to a
+// landscape thumbnail rather than squeezed onto a card: a player who has stood in it knows it on
+// sight. A found room with no picture painted yet draws the default backdrop darkened, on the
+// catalogs' found-but-undrawn rule; an unfound one draws the portal swirl and nothing of its room.
 //
-// **A realm is found once any of its creatures has been fought in its colour**, won or lost, off the
-// bestiary's own per-element families — so the two books cannot disagree about whether a player has
-// been somewhere. Its caption is its name; its tooltip is what the portal said about it and the fights
-// won there.
+// **A room is found once any of its tier's creatures has been fought in its colour**, won or lost,
+// off the bestiary's own per-element families — so the two books cannot disagree about whether a
+// player has been somewhere. **Nothing is set under the picture**: its tooltip carries the realm and
+// the room, what the portal said about the realm, how often the room has been fought in and how often
+// won.
 
 import (
 	"bytes"
@@ -21,6 +22,7 @@ import (
 	"image/color"
 	"image/draw"
 	_ "image/jpeg"
+	"strings"
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
@@ -28,16 +30,15 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
-	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-// The thumbnail: the size that stands three across and four down between the filter columns, at
+// The thumbnail: the size that stands four across and five down between the filter columns, at
 // the room's own 16:9.
 const (
-	realmThumbW = 304
-	realmThumbH = 171
+	realmThumbW = 290
+	realmThumbH = 163
 
 	// realmThumbsPerFrame is how many rooms are decoded in one frame. **A room is a full-size JPEG**,
 	// so a page of them decoded at once is a visible hitch on opening the book; one a frame fills the
@@ -49,6 +50,25 @@ const (
 // room, which is eight megabytes a picture.
 var realmThumbs = map[string]*ebiten.Image{}
 
+// realmRooms is a realm's three rooms in the order they are walked, each with the word its chip
+// and its tooltip use. The portal room is the boss tier's.
+var realmRooms = []struct{ tier, label string }{
+	{data.TierOuter, "OUTER"},
+	{data.TierInner, "INNER"},
+	{data.TierBoss, "PORTAL"},
+}
+
+// roomLabel is the chip word for a tier: which room of a realm it is, or which room a creature
+// stands in.
+func roomLabel(tier string) string {
+	for _, r := range realmRooms {
+		if r.tier == tier {
+			return r.label
+		}
+	}
+	return ""
+}
+
 // realmsDialog is the realm book.
 func realmsDialog(gs *state.GlobalState) *compendiumDialog {
 	all := everything(gs)
@@ -56,47 +76,51 @@ func realmsDialog(gs *state.GlobalState) *compendiumDialog {
 	for _, key := range data.MotifOrder(gs.Motifs) {
 		motif := gs.Motifs[key]
 		for _, element := range data.AffinityElements {
-			beaten, fell, deals := 0, 0, false
-			for _, r := range motif.Records {
-				if !r.HasAffinity(element) {
-					continue
-				}
-				deals = true
-				beaten += all.Total(session.CreatureAs(session.StatCreatureDefeatedAs, r.Record, element))
-				fell += all.Total(session.CreatureAs(session.StatCreatureKillerAs, r.Record, element))
-			}
-			if !deals {
+			if !dealsIn(motif, element) {
 				continue
 			}
-
 			name := elementTitle(element) + " " + motifName(motif)
 			about, inElement := motif.PortalLines(element)
-			e := entry(cards.Spec{}, bleedStyle(false), beaten, "WON", name, []string{about, inElement})
-			e.found = beaten+fell > 0
-			e.element, e.motif = element, key
-			e.backdrop = portalRoom(motif, element)
-			out = append(out, e)
+			for _, room := range realmRooms {
+				beaten, fell := 0, 0
+				for _, r := range motif.Records {
+					if r.Tier != room.tier || !r.HasAffinity(element) {
+						continue
+					}
+					beaten += all.Total(session.CreatureAs(session.StatCreatureDefeatedAs, r.Record, element))
+					fell += all.Total(session.CreatureAs(session.StatCreatureKillerAs, r.Record, element))
+				}
+				e := entry(cards.Spec{}, bleedStyle(false), beaten, "WON", name+" - "+titleCase(strings.ToLower(room.label)),
+					[]string{about, inElement, "ENCOUNTERED " + times(beaten+fell)})
+				e.found = beaten+fell > 0
+				e.element, e.motif, e.room = element, key, room.label
+				e.backdrop = realmRoom(motif, room.tier, element)
+				out = append(out, e)
+			}
 		}
 	}
 	d := catalogDialog(gs, "REALMS", out)
 	d.pic = image.Pt(realmThumbW, realmThumbH)
-	d.countInTip = true
-	// **A realm not yet entered names nothing**, even where its element and its motif are both known
-	// from somewhere else: the name is the realm, so it stays masked until the realm is found.
-	d.roster(gs, func(found bool, element, motif string) []models.TipLine {
-		if !found {
-			return []models.TipLine{{{Text: masked(element) + " " + masked(motif)}}}
-		}
-		return []models.TipLine{ui.TipLine(element + " " + motif)}
-	})
+	d.roster(gs, func(bool, string, string) []models.TipLine { return nil })
+	d.rooms(gs)
 	return d
 }
 
-// portalRoom is the realm's portal room: the motif's first boss-tier backdrop drawn in the element,
+// dealsIn reports whether a motif fields any creature in an element: whether it is a realm at all.
+func dealsIn(m data.MotifData, element string) bool {
+	for _, r := range m.Records {
+		if r.HasAffinity(element) {
+			return true
+		}
+	}
+	return false
+}
+
+// realmRoom is one of a realm's rooms: the motif's first backdrop of the tier drawn in the element,
 // in file order, or the default backdrop when it has none.
-func portalRoom(m data.MotifData, element string) string {
+func realmRoom(m data.MotifData, tier, element string) string {
 	for _, b := range m.Backdrops {
-		if b.Tier == data.TierBoss && b.HasAffinity(element) {
+		if b.Tier == tier && b.HasAffinity(element) {
 			return b.ArtKey(element)
 		}
 	}

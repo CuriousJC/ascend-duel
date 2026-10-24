@@ -82,7 +82,7 @@ gold, copper, bone) is an ordinary word and carries no ramp.
 ## The object is whole
 
 The object is **solid, finished and intact**. Nothing here is dissolving, fading, coming apart or
-being unmade. A potion or a tonic is a stoppered vessel and a sealed good is sealed. Draw them as objects
+being unmade. A potion or a tonic is a stoppered vessel and a booster is sealed. Draw them as objects
 that would still be there tomorrow.
 
 Wear is allowed and unmaking is not: a chipped edge, a scuffed facet, a worn stopper or a
@@ -113,10 +113,10 @@ half carrying the recognition should be the upper one.
 ## The subject
 
 The block pasted below this prompt is one record, in JSON. Its key field is `PotionRecord` for a
-potion, `TonicRecord` for a tonic and `GoodRecord` for a sealed good. A cantrip has its own
+potion, `TonicRecord` for a tonic and `BoosterRecord` for a booster. A cantrip has its own
 prompt, `cantrip_relic_art_prompt.MD`.
 
-**A sealed good is the vessel and never its contents.** The bag, the vial and the sack each hold
+**A booster is the vessel and never its contents.** The bag, the vial and the sack each hold
 four of a catalog the player cannot read before paying, so the picture is a closed container — a
 cinched sack, a stoppered vial, a tied pouch — with what is inside suggested by the shape pressing
 against it and never drawn loose beside it. A picture that showed the four would be saying the one

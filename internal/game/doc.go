@@ -71,7 +71,7 @@
 //     rather than a flower. Both are constraints on any replacement drawing.
 //   - **The ledger's panel scrolls with `models.Scrollbar`**, built the way `models.Button` and
 //     `models.Slider` are. It **counts rows, not pixels**, so a panel cannot land half a line off, and it
-//     is a drag because the input vocabulary has no wheel.
+//     is a drag and a pair of arrows because the input vocabulary has no wheel.
 //
 // # Which music a screen plays
 //
@@ -86,7 +86,7 @@
 //     rejects everywhere else. `TestEveryScreenNamesItsMusic` walks `state.ActiveScreen`, so a new screen
 //     fails the suite rather than falling back quietly.
 //   - **A screen gives one of two answers**: it names a piece of music, or it **leaves whatever is
-//     sounding alone**. Settings, Achievements, Credits, the debug gallery and an opened sealed good are
+//     sounding alone**. Settings, Achievements, Credits, the debug gallery and an opened booster are
 //     reached *from* somewhere and go back to it, so they are transparent to the music the way they are
 //     transparent to the run — a player who opens the volume bar to turn the shop's loop up must not have
 //     the loop stop to let them. Coming back asks for a track that is already sounding, so the loop plays

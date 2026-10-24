@@ -41,12 +41,12 @@ const (
 	KindPotion  = "potion"
 	KindTonic   = "tonic"
 
-	// The shop. KindGood is a sealed good paid for and KindTake is the one thing taken out of it,
-	// which is two choices and two lines: the good is bought before its contents are seen.
-	KindBuy  = "buy"
-	KindSell = "sell"
-	KindGood = "good"
-	KindTake = "take"
+	// The shop. KindBooster is a booster paid for and KindTake is the one thing taken out of it,
+	// which is two choices and two lines: the booster is bought before its contents are seen.
+	KindBuy     = "buy"
+	KindSell    = "sell"
+	KindBooster = "booster"
+	KindTake    = "take"
 
 	// KindPortal is the realm walked into after a portal room: Key is the motif, Action the element
 	// it is dealt as, Seat which of the portals it stood behind and Fight the room it opens onto.
@@ -92,7 +92,7 @@ type Record struct {
 	Kind string `json:"kind"`
 
 	// Key is what a catalog calls the thing chosen — a relic, a rune, a stone, an essence, a
-	// potion, a sealed good. **A key rather than a name**, because a name is wording and a key is
+	// potion, a booster. **A key rather than a name**, because a name is wording and a key is
 	// what data/ is indexed by.
 	Key string `json:"key,omitempty"`
 

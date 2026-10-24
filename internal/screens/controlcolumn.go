@@ -2,7 +2,7 @@ package screens
 
 // The controls of the bottom third that are not cards: the sort tabs and the two panel buttons.
 // **The bottom third is one layout on every screen that draws it** — the fight, the reward screen,
-// the shop, the sealed good and the portal — so these are placed here once rather than by each
+// the shop, the booster and the portal — so these are placed here once rather than by each
 // screen.
 //
 //   - **The sort tabs** are a block of three, no air between them, standing at the right end of the

@@ -1,12 +1,13 @@
 package systems
 
-// The behavior half of models.Scrollbar: dragging a thumb down a track, and drawing it.
+// The behavior half of models.Scrollbar: dragging a thumb down a track, stepping a row with the
+// arrows at either end, and drawing all three.
 //
-// **Everything here is a drag, which is already in the input vocabulary.** There is no wheel and
-// no keyboard — see CLAUDE.md — so the thumb is the whole of how a long list is reached, and it
-// therefore has to be forgiving: a press anywhere on the track jumps the thumb to the cursor, and
-// a drag that wanders off the control keeps its grip until the button comes up. Both are the
-// slider's rules, for the slider's reason.
+// **Everything here is a click or a drag, which are already in the input vocabulary.** There is
+// no wheel and no keyboard — see CLAUDE.md. The thumb is forgiving: a press anywhere on the track
+// jumps it to the cursor, and a drag that wanders off the control keeps its grip until the button
+// comes up — the slider's rules, for the slider's reason. The arrows are the discrete step a drag
+// does not have, one row a click, and an arrow with nowhere to go is disabled.
 //
 // **It works in rows and converts to pixels here.** A panel says how many rows it has and how
 // many fit; this decides how tall the thumb is and where it sits. The panel never sees a pixel of
@@ -47,11 +48,55 @@ var defaultScrollColor = color.RGBA{R: 92, G: 96, B: 108, A: 255}
 // defaultScrollGround is what the track is toned toward for a bar that names no ground.
 var defaultScrollGround = color.RGBA{R: 46, G: 48, B: 56, A: 255}
 
-// ScrollbarRect is where a bar sits, derived from its center exactly as a button's is.
+// scrollArrowGap is the air between an arrow and the end of the track.
+const scrollArrowGap = 4
+
+// scrollArrowText is the arrows' label size, filling the tiny square the way the seed wheel's do
+// their taller one.
+const scrollArrowText = 22
+
+// ScrollbarRect is the track, derived from the bar's center exactly as a button's rectangle is,
+// with an arrow and its gap taken off each end.
 func ScrollbarRect(s *models.Scrollbar) image.Rectangle {
 	left := s.ScreenX - s.Width/2
 	top := s.ScreenY - s.Height/2
-	return image.Rect(left, top, left+s.Width, top+s.Height)
+	end := models.ScrollArrowSize + scrollArrowGap
+	return image.Rect(left, top+end, left+s.Width, top+s.Height-end)
+}
+
+// placeArrows stands the two arrows on the bar's ends, centered on the track. **They overhang a
+// track narrower than they are**, because a button is on a height tier and a square on the
+// smallest one is still wider than a groove.
+func placeArrows(s *models.Scrollbar) {
+	half := models.ScrollArrowSize / 2
+	s.Up.ScreenX, s.Up.ScreenY = s.ScreenX, s.ScreenY-s.Height/2+half
+	s.Down.ScreenX, s.Down.ScreenY = s.ScreenX, s.ScreenY+s.Height/2-half
+	s.Up.TextSize, s.Down.TextSize = scrollArrowText, scrollArrowText
+}
+
+// arrowLive enables an arrow that has somewhere to go and disables one that does not, without
+// clobbering a live arrow's hover or press.
+func arrowLive(b *models.Button, live bool) {
+	switch {
+	case !live:
+		b.State = models.ButtonStateDisabled
+		b.PressedInside = false
+	case b.State == models.ButtonStateDisabled:
+		b.State = models.ButtonStateNormal
+	}
+}
+
+// updateArrows runs the two arrows for a frame, each stepping the offset by one row.
+func updateArrows(gs *state.GlobalState, s *models.Scrollbar) {
+	placeArrows(s)
+	needed := ScrollbarNeeded(s)
+	arrowLive(s.Up, needed && s.Offset > 0)
+	arrowLive(s.Down, needed && s.Offset < s.Total-s.Visible)
+	if s.Dragging {
+		return
+	}
+	UpdateButton(gs, s.Up)
+	UpdateButton(gs, s.Down)
 }
 
 // ScrollbarNeeded reports whether there is anything to scroll. A bar with everything on show is
@@ -101,6 +146,8 @@ func scrollThumb(s *models.Scrollbar) image.Rectangle {
 
 // UpdateScrollbar runs one frame: hit testing, dragging, and the offset that comes out of it.
 func UpdateScrollbar(gs *state.GlobalState, s *models.Scrollbar) {
+	ClampScroll(s)
+	updateArrows(gs, s)
 	ClampScroll(s)
 
 	if !ScrollbarNeeded(s) {
@@ -164,18 +211,20 @@ func ScrollOffsetAt(s *models.Scrollbar, y int) int {
 	return (top*max + travel/2) / travel
 }
 
-// DrawScrollbar paints the groove and the thumb.
+// DrawScrollbar paints the groove, the thumb and the two arrows.
 //
 // **The whole control is one cached image**, repainted only when the offset, the list or the
 // cursor state changed — Button's and Slider's rule, and it matters more here: this is drawn over
 // a scrim every frame a panel is open.
 func DrawScrollbar(gs *state.GlobalState, screen *ebiten.Image, s *models.Scrollbar) {
 	r := ScrollbarRect(s)
+	w, h := max(r.Dx(), 1), max(r.Dy(), 1)
 
-	if !s.PaintedIsCurrent() {
-		if s.Image == nil || s.Image.Bounds().Dx() != s.Width || s.Image.Bounds().Dy() != s.Height {
-			s.Image = ebiten.NewImage(s.Width, s.Height)
-		}
+	remade := s.Image == nil || s.Image.Bounds().Dx() != w || s.Image.Bounds().Dy() != h
+	if remade {
+		s.Image = ebiten.NewImage(w, h)
+	}
+	if remade || !s.PaintedIsCurrent() {
 		s.Image.Clear()
 
 		ground := s.Ground
@@ -189,7 +238,7 @@ func DrawScrollbar(gs *state.GlobalState, screen *ebiten.Image, s *models.Scroll
 
 		// The groove is sunken: this is a track cut into the panel, not a panel floating on it.
 		// See systems.BevelRect and the sunken-is-a-meaning note in CLAUDE.md.
-		BevelRect(s.Image, 0, 0, s.Width, s.Height, PaneBevelWidth, ground, true)
+		BevelRect(s.Image, 0, 0, w, h, PaneBevelWidth, ground, true)
 
 		if thumb := scrollThumb(s); !thumb.Empty() {
 			strength := scrollRestStrength
@@ -213,4 +262,8 @@ func DrawScrollbar(gs *state.GlobalState, screen *ebiten.Image, s *models.Scroll
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(float64(r.Min.X), float64(r.Min.Y))
 	screen.DrawImage(s.Image, op)
+
+	placeArrows(s)
+	DrawButton(gs, screen, s.Up)
+	DrawButton(gs, screen, s.Down)
 }

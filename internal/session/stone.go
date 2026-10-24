@@ -125,9 +125,9 @@ func loadStones() (map[string]Stone, []string) {
 	}
 
 	// The bag offers four, so a catalog of three cannot fill it. Caught here rather than producing
-	// a shelf with a gap in it. **The figure is the bag's own record** — see data/goods.json — so
+	// a shelf with a gap in it. **The figure is the bag's own record** — see data/boosters.json — so
 	// authoring a bigger bag moves what this catalog has to cover.
-	if bag, ok := GoodHolding(ContentsStones); ok && len(keys) < bag.Size {
+	if bag, ok := BoosterHolding(ContentsStones); ok && len(keys) < bag.Size {
 		panic(fmt.Sprintf("stones.json: %d stones, and %s needs %d",
 			len(keys), bag.Name, bag.Size))
 	}

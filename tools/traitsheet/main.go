@@ -3,7 +3,7 @@
 //
 //	go run ./tools/traitsheet
 //
-// It exists for the reason tools/goodsheet does. A trait turns up on one shelf relic in twenty or one
+// It exists for the reason tools/boostersheet does. A trait turns up on one shelf relic in twenty or one
 // bundled card in twenty, so meeting them all in a launched game is a great many shops; this puts the
 // whole of both catalogs on one page.
 //
@@ -127,7 +127,7 @@ func run(dir string) error {
 		}
 		if t.Percent > 0 {
 			pl.Odds = []string{fmt.Sprintf("%d%% of cards in an action bundle", t.Percent)}
-			for _, g := range session.Goods() {
+			for _, g := range session.Boosters() {
 				if g.Contains == session.ContentsCards {
 					pl.Odds = append(pl.Odds, fmt.Sprintf("%s of %s hold at least one",
 						atLeastOne(t.Percent, g.Size), strings.ToLower(g.Name)+"s"))

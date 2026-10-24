@@ -79,7 +79,7 @@ func (s *Session) ConsumablesFull() bool { return s.WeightedConsumables() >= Max
 // ConsumableSalePrice is what one carried thing fetches when the shop buys it back, whatever kind
 // it is.
 //
-// **One figure for every kind.** A sealed good of four costs 5 and one of the four is kept, so a
+// **One figure for every kind.** A booster of four costs 5 and one of the four is kept, so a
 // sale at 2 is a loss against what the thing cost to find — the relic rule, where selling never
 // pays back the purchase. A record that should be worth more is a multiplier on that record in its
 // own catalog, read over this base, rather than a second constant here.

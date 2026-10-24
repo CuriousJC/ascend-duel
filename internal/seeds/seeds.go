@@ -70,7 +70,7 @@ const (
 	//
 	// **Its own stream, on exactly the argument VialStock is under.** A rune catalog and a
 	// essence catalog grow on different schedules and are drawn at the same station, so sharing
-	// either of the other two goods' streams would make one good's contents a function of the
+	// either of the other two boosters' streams would make one booster's contents a function of the
 	// other's — and authoring a rune would silently reroll every bag every run has ever
 	// opened.
 	SackStock
@@ -92,7 +92,7 @@ const (
 	//
 	// **Its own stream, on the argument every other shop stream is under.** Sharing ShopStock
 	// would make which packs appear a function of the relic shelf, so authoring a relic would
-	// silently change which good every run was ever offered — and the shelf is redrawn by a
+	// silently change which booster every run was ever offered — and the shelf is redrawn by a
 	// reroll, which would then reroll the packs beside it. Sharing any of the three stock streams
 	// would be worse still: those decide what is *inside* a pack, and the choice of which two
 	// stand on the shelf would move whenever a stone or an essence was written.
@@ -311,13 +311,13 @@ func ForFight(runSeed int64, s Stream, fightIndex int) int64 {
 //
 // **It is not a way to avoid adding a stream, and the distinction is the whole of when to use it.**
 // A `Stream` separates two *concerns* — the shop's essences from the reward screen's, so that
-// authoring one cannot move the other. This separates two *seats of one concern*: the sealed goods
+// authoring one cannot move the other. This separates two *seats of one concern*: the boosters
 // are the case it was added for *(2026-09-15)*, when a catalog could be held by three bags of
 // different sizes. Those are the same decision at three prices, so they share a salt; what they
 // must not share is the shuffle, because `dealStones` takes the first N of one shuffled catalog and
 // two bags on one shelf would then hold nested contents — the small bag being literally the first
-// three rocks of the large one, at a lower price. That is the failure `loadGoods` used to refuse by
-// forbidding a second good per catalog outright.
+// three rocks of the large one, at a lower price. That is the failure `loadBoosters` used to refuse by
+// forbidding a second booster per catalog outright.
 //
 // **`seat` must be stable across builds and across launches**, so pass a record key rather than an
 // index into a slice: a catalog reordered in its JSON would otherwise re-point every seat.

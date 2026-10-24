@@ -105,7 +105,7 @@ skill that does not exist.
 | [`motifs`](.claude/skills/motifs/SKILL.md) | adding a motif directory, adding or changing a creature or a backdrop under `data/motifs/`, authoring creatures, bosses or rooms, touching `data/journey.json`, wiring anything that picks an opponent or a backdrop, or asking what a motif is still missing and what to author next |
 | [`relics`](.claude/skills/relics/SKILL.md) | designing, **discussing** or **analysing** a proposed relic, adding to `relics.json`, adding a moment or an effect verb, wiring anything that reads a worn relic, or deciding whether a relic is locked behind an achievement |
 | [`art-batch`](.claude/skills/art-batch/SKILL.md) | generating art options for a record and choosing between them, a folder of generated pictures turning up to be looked at, or installing, replacing or comparing anything in `assets/` |
-| [`relic-balance`](.claude/skills/relic-balance/SKILL.md) | any question about the relic catalog **as a whole** — is offense over-weighted at common, does every element have a cost relic, what a batch of new relics does to the shape of the shelf — or adding a category, an axis, or a verb that has to be classified |
+| [`relic-balance`](.claude/skills/relic-balance/SKILL.md) | any question about the relic catalog **as a whole** — is offense over-weighted at common, does every element have a cost relic, what a batch of new relics does to the shape of the shelf — or adding an axis, or a verb that has to be classified against the build aspects in `docs/design/build-aspects.md` |
 | [`achievements`](.claude/skills/achievements/SKILL.md) | adding or changing an achievement, a moment, a counter or an unlock, adding any new kind of progress the profile keeps, or touching `internal/screens/achieve.go` — a chosen-seed run must progress nothing |
 | [`unlocks`](.claude/skills/unlocks/SKILL.md) | pairing an achievement with a relic, locking or unlocking a relic, or asking which achievements open nothing and which relics are still in the default pool (`python .claude/skills/unlocks/unlocks.py`) |
 | [`bug-hunter`](.claude/skills/bug-hunter/SKILL.md) | any bug the owner found while playing — before diagnosing it, before fixing it, and before authoring a scenario record to reproduce it |
@@ -175,7 +175,7 @@ go run ./tools/tonicsheet    # every tonic: its rule, its tooltip, and the realm
 go run ./tools/traitsheet    # every relic and card trait: its sentence, what it does, how often a run meets it
 go run ./tools/achievementsheet  # every achievement's Steam fields and icon pair, at 256 and 64: the upload set
 go run ./tools/upgradesheet  # every visible card upgrade, on every form mark, in every upgrade style
-go run ./tools/goodsheet     # every sealed good beside the offer it actually makes
+go run ./tools/boostersheet     # every booster beside the offer it actually makes
 go run ./tools/interfacesheet # the lettering in every ink, every button face, square button, glyph and bar cell
 go run ./tools/scenariosheet # every debug fixture: what it plugs in and the command that launches it
 go run ./tools/scenariodeck -form slash -size 40   # writes a scenario's Deck block to stdout
@@ -184,7 +184,7 @@ go run ./tools/relicart -kind essence       # the same, for data/essences.json a
 go run ./tools/relicart -kind rune   # the same, for data/runes.json and assets/rune
 go run ./tools/relicart -kind stone  # the same, for data/stones.json and assets/stone
 go run ./tools/relicart -kind cantrip-relic  # a cantrip's one transparent spirit: makes its relic and its scroll
-go run ./tools/relicart -kind other  # the potions, the tonics and the sealed goods together, into assets/other
+go run ./tools/relicart -kind other  # the potions, the tonics and the boosters together, into assets/other
 go run ./tools/relicart -kind deck   # the card backs, for data/decks.json and assets/deck
 go run ./tools/relicart -kind achievement  # the achievement icons, square at Steam's 256, into assets/achievement
 go run ./tools/relicart -kind enemy-card   # the creature cards, <flavor>-<weight>-<element>.png, fitted into the card's open field
@@ -779,7 +779,7 @@ standing.
 
 ### The band: the top third is one scene
 
-**The combat screen, the reward screen, the shop, a sealed good and the portal share their top
+**The combat screen, the reward screen, the shop, a booster and the portal share their top
 third** *(owner's call, 2026-10-04)*: the duelist card, the worn relics, the consumables pane and a
 card in the opponent's corner — the creature in a fight, **The Prismatic** everywhere else
 (`ui.GuideSpec`, `cards.GuideStyle`). The panes span the gap between the two corner cards on every
@@ -802,9 +802,9 @@ on a tab press, never every frame, so a drag holds until the player asks for an 
 
 ### Six screens that are not stations of a run
 
-**Settings, the Compendium, Achievements, Credits, RunOver and Goods.** None appears in
+**Settings, the Compendium, Achievements, Credits, RunOver and Boosters.** None appears in
 `screens/flow.go` — which is what "not a station" means mechanically — and the chrome stands down on
-the first five. Goods keeps the reward screen's corner: the cog, the ledger and its own hands
+the first five. Boosters keeps the reward screen's corner: the cog, the ledger and its own hands
 button. The first four are reached by an `actions.Open*` call, which pushes the screen the player was on
 onto `gs.Returns`, and Back pops it — **a stack, because these screens open each other**: a fight,
 then Settings, then the Compendium (a button on Settings as well as the title), then Achievements,
@@ -812,16 +812,16 @@ and every Back lands one step nearer the fight. **RunOver is the exception and g
 outright, emptying the stack**, because the screen it came from was drawing a run that has ended
 and there is nowhere to put the player back to.
 
-**Goods is the fifth and it is the one with a door of its own**. It is a sealed good, opened:
+**Boosters is the fifth and it is the one with a door of its own**. It is a booster, opened:
 the three to five things inside it, and the one of them the player takes. It is reached from
-exactly one place and returns to exactly one place — the shop's shelf — so `screens.openGoods`
+exactly one place and returns to exactly one place — the shop's shelf — so `screens.openBoosters`
 sits beside the screen rather than in `actions`, whose explicit list is about screens openable
 from anywhere. **The ways out are taking a card or SKIP**, which takes nothing and forfeits the
-price; the good travels as `gs.PendingGood`, a record key, since a screen cannot be handed an argument.
-See `internal/screens/goods.go`.
+price; the booster travels as `gs.PendingBooster`, a record key, since a screen cannot be handed an argument.
+See `internal/screens/boosters.go`.
 
-**What it cost the shop is a re-entry guard.** Leaving for a good and coming back runs
-`ShopScene.Init` again, and a second deal would restock the shelf, forget which goods had been
+**What it cost the shop is a re-entry guard.** Leaving for a booster and coming back runs
+`ShopScene.Init` again, and a second deal would restock the shelf, forget which boosters had been
 opened, un-drink the potions and replay the shopkeeper. `ShopScene.visit` is the run and the fight
 the scene's state belongs to, and a matching one is picked up rather than dealt again — read it
 before adding anything to that Init.
@@ -1210,7 +1210,7 @@ the element is said by **the left column — the form mark and the cost ticks un
 . `internal/cards/bleed.go` owns the second path: the art is scaled to
 *cover* the card, clipped to the border's inner curve, and drawn first with everything else on
 top. `RelicStyle` and `EssenceStyle` bleed — so relics, runes, essences, stones and the two
-sealed goods are all one format — and `EnemyStyle` and `DuelistStyle` still fit a picture into
+boosters are all one format — and `EnemyStyle` and `DuelistStyle` still fit a picture into
 `ArtTop`/`ArtInset`/`ArtMaxH`. The two do not compose, and the art is authored against the choice:
 a fitted box wants a square and a bleeding card wants the card's own 200x280. Five things follow:
 
@@ -1222,8 +1222,8 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
 - **What survives on top of the art is one scrim, and only a card with something to say gets one.**
   A relic draws its counter disc in the bottom-right. `EssenceStyle` declares a text band from 140
   to 265, derived from the offsets the type is drawn at rather than authored twice — and **no card
-  in the game fills it**: the essences joined the runes, the stones, the potions and the sealed
-  goods in saying their rule in a tooltip, so every `EssenceStyle` face
+  in the game fills it**: the essences joined the runes, the stones, the potions and the
+  boosters in saying their rule in a tooltip, so every `EssenceStyle` face
   is the whole picture. A scrim is a ground for type and a ground under nothing is a stain.
 - **Type on a scrim needs the other ink set.** Every ink in `internal/cards` is near-black,
   because it is written against the off-white `Surface`; `cards.onScrim` swaps the three named
@@ -1249,12 +1249,12 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   essence card prints across the lower half of its picture. `docs/art/rune_art_prompt.MD` is not a
   prompt but the closed list of rune body plans, pasted into the essence one.
   **`docs/art/stone_art_prompt.MD` and `docs/art/other_card_art_prompt.MD` cover the rest of
-  `EssenceStyle`** — the stones, and then the potions, the tonics and the three sealed
-  goods. Both share the style and composition blocks verbatim, and both say the object is
+  `EssenceStyle`** — the stones, and then the potions, the tonics and the three
+  boosters. Both share the style and composition blocks verbatim, and both say the object is
   **whole** where the essence prompt says it is coming apart. **A stone's material is a rule
   rather than a record's own idea**, which is what earns it a file: the stones are one silica
   ladder that ascends in finish, topped by the one gem. A new
-  `EssenceStyle` good starts in the catch-all and earns a file the same way.
+  `EssenceStyle` card starts in the catch-all and earns a file the same way.
 - **A prompt reserves nothing.** No title band, no counter disc, no corner kept clear. The card
   draws its counter over the bottom-right and its sentence on a scrim across the lower half, and
   both go on top of a picture that carries on underneath — so a prompt describing either produces
@@ -1270,7 +1270,7 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   lands on the lower: a placement hint, not a band to leave empty.
 
 - **Six catalogs carry `Family` and `Draw`, and nothing that plays the game reads either** .
- `relics.json`, `essences.json`, `runes.json`, `potions.json` and `goods.json` carry `Art`
+ `relics.json`, `essences.json`, `runes.json`, `potions.json` and `boosters.json` carry `Art`
  beside them; every record under `data/motifs/` carries `Draw` and `Art`, and a `Draw` is
  the brief that record's pictures are generated from. **`Family` is the motif a record was
  authored beside** and is what its
@@ -1352,7 +1352,7 @@ are priced against. `handodds` stays the tuning view — the axes kept apart, an
 a turn holding cost discounts.
 
 **`tools/stonesheet` and `tools/runesheet` do it for the two consumable catalogs**
-. Both arrive four at a time inside a sealed good, so the whole of either is several
+. Both arrive four at a time inside a booster, so the whole of either is several
 shop visits and a lot of luck away in a launched game. The stone sheet is **walked by shape rather
 than by stone** — the catalog is one stone per shape, so walking the ladder orders the page for
 free *and* makes a shape nobody authored a stone for show as a gap rather than as an absence nobody

@@ -140,8 +140,8 @@ rotation rather than a roll, so what a player hears spends no stream.
   of the deal's cascade (`internal/screens/combat_sound.go`). Toasts raised on one frame are spread
   a sixth of a beat apart in the sound only, so two relics firing into one figure are two sounds
   rather than one twice as loud.
-- **`data.CueGoodOpened` is raised once a sealed good is paid for**, in `ShopScene.openGood`
-  beside `openGoods`, so a refused purchase opens nothing and sounds nothing.
+- **`data.CueBoosterOpened` is raised once a booster is paid for**, in `ShopScene.openBooster`
+  beside `openBoosters`, so a refused purchase opens nothing and sounds nothing.
 - **A cue may never change an outcome**: it is raised by playback, after the round is resolved, or
   after the decision it marks has already been made.
 

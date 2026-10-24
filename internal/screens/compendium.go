@@ -43,16 +43,16 @@ const (
 	compendiumBookGapX    = 40
 	compendiumBookGapY    = 28
 
-	// The dialog's insides: where the body starts under the panel's title, the line under the title,
-	// and the scrollbar down the right.
-	compendiumBodyTop      = 120
-	compendiumSubtitleTop  = 82
-	compendiumBodyBottom   = 30
-	compendiumBodyInset    = 48
-	compendiumScrollWidth  = 14
-	compendiumScrollGap    = 24
-	compendiumCaptionSize  = systems.TextSmall
-	compendiumSubtitleSize = systems.TextSmall
+	// The dialog's insides: where the body starts under the panel's title, and the scrollbar down
+	// the right. **Nothing stands between a book's title and its body** — a catalog's tally rides on
+	// the title and the statistics book's record buttons stand down the left — so the body starts
+	// where a title-only panel's does.
+	compendiumCatalogTop  = 72
+	compendiumBodyBottom  = 30
+	compendiumBodyInset   = 24
+	compendiumScrollWidth = 14
+	compendiumScrollGap   = 24
+	compendiumCaptionSize = systems.TextSmall
 )
 
 // The inks a dialog's words are written in. **The panel is dark**, so these are light, and a quiet
@@ -86,26 +86,24 @@ var compendiumBooks = []compendiumBook{
 	{label: "ESSENCES", open: essencesDialog},
 	{label: "RUNES", open: runesDialog},
 	{label: "STONES", open: stonesDialog},
-	{label: "SEALED GOODS", open: goodsDialog},
+	{label: "BOOSTERS", open: boostersDialog},
 	{label: "TRAITS", open: traitsDialog},
 }
 
 // compendiumDialog is one open book. **Either a grid of cards or a column of figures**, and which
 // is said by which of the two lists is filled — the statistics book is rows, every catalog is cards.
 type compendiumDialog struct {
-	title    string
-	subtitle string
-	entries  []compendiumEntry
-	rows     []statRow
+	// title is the book's name, and tally the "(N/M)" found count written after it on the one line.
+	title   string
+	tally   string
+	entries []compendiumEntry
+	cards   []statCard
 
-	// pic and captionH are one catalog entry's picture and the caption under it: the reduced card
-	// for every book but the realms, whose rooms are landscape.
+	// pic and captionH are one catalog entry's picture and the tag lines under it: the reduced card
+	// for every book but the realms, whose rooms are landscape. **A count is never under a card**;
+	// it is the last line of the card's tooltip, so a page holds another row of cards.
 	pic      image.Point
 	captionH int
-
-	// countInTip leaves the count off the caption and in the tooltip alone, so a book with large
-	// pictures fits another row: the realms.
-	countInTip bool
 
 	// facets are the book's filter chips, and shown the indices of the entries they let through, in
 	// book order. **A book with no facets shows everything** — see compendium_filter.go.
@@ -117,10 +115,10 @@ type compendiumDialog struct {
 	perCol     int
 	refiltered bool
 
-	// stats is the statistics book's: it is rebuilt when its tabs move between the rolled and the
-	// chosen-seed record, so it remembers which it is showing.
+	// stats is the statistics book's: it is rebuilt when its buttons move between the records, so it
+	// remembers which it is showing.
 	stats  bool
-	chosen bool
+	record statRecord
 }
 
 // CompendiumScene is the Compendium screen.
@@ -140,8 +138,8 @@ type CompendiumScene struct {
 	peek     *creaturePeek
 	peekSeat image.Rectangle
 
-	// The statistics book's two tabs: rolled runs, and runs on a chosen seed.
-	rolledTab, chosenTab *models.Button
+	// The statistics book's record buttons, one per statRecord in statRecords' order.
+	recordTabs []*models.Button
 }
 
 // Init builds the widgets on first entry and positions them every time.
@@ -156,9 +154,12 @@ func (s *CompendiumScene) Init(gs *state.GlobalState) {
 			s.books = append(s.books, btn)
 		}
 		s.scroll = models.NewScrollbar(compendiumScrollWidth, 100)
-		s.rolledTab = models.NewButton(300, ui.ButtonSmall, "ROLLED RUNS", func() { s.showStats(gs, false) })
-		s.chosenTab = models.NewButton(300, ui.ButtonSmall, "CHOSEN SEEDS", func() { s.showStats(gs, true) })
-		s.rolledTab.TextSize, s.chosenTab.TextSize = 26, 26
+		for _, r := range statRecords {
+			rec := r
+			btn := models.NewButton(statTabWidth, ui.ButtonSmall, rec.label(), func() { s.showStats(gs, rec) })
+			btn.TextSize = 26
+			s.recordTabs = append(s.recordTabs, btn)
+		}
 	}
 	s.back.ScreenX, s.back.ScreenY = gs.PctX(50), gs.PctY(88)
 
@@ -190,12 +191,12 @@ func (s *CompendiumScene) openBook(gs *state.GlobalState, b compendiumBook) {
 	s.scroll.Offset = 0
 }
 
-// showStats moves the statistics book between its two records.
-func (s *CompendiumScene) showStats(gs *state.GlobalState, chosen bool) {
-	if s.open == nil || !s.open.stats || s.open.chosen == chosen {
+// showStats moves the statistics book between its records.
+func (s *CompendiumScene) showStats(gs *state.GlobalState, rec statRecord) {
+	if s.open == nil || !s.open.stats || s.open.record == rec {
 		return
 	}
-	s.open = statsDialogFor(gs, chosen)
+	s.open = statsDialogFor(gs, rec)
 	s.scroll.Offset = 0
 }
 
@@ -224,10 +225,12 @@ func (s *CompendiumScene) Update(gs *state.GlobalState) error {
 	s.scroll.ScreenX, s.scroll.ScreenY = track.Min.X+track.Dx()/2, track.Min.Y+track.Dy()/2
 
 	if s.open.stats {
-		s.placeTabs(gs)
-		systems.UpdateButton(gs, s.rolledTab)
-		systems.UpdateButton(gs, s.chosenTab)
-		s.scroll.Total, s.scroll.Visible = len(s.open.rows), statRowsVisible(body)
+		s.placeTabs(body)
+		for _, b := range s.recordTabs {
+			systems.UpdateButton(gs, b)
+		}
+		cols, rows := statCardGrid(body)
+		s.scroll.Total, s.scroll.Visible = (len(s.open.cards)+cols-1)/cols, rows
 	} else {
 		s.updateChips(gs)
 		cols, rows := s.open.catalogGrid(body)
@@ -263,26 +266,20 @@ func (s *CompendiumScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	systems.DrawTooltip(gs, screen, &s.tip)
 }
 
-// drawDialog puts the open book up: the panel, its title and the line under it, its body, its
-// scrollbar and its X.
+// drawDialog puts the open book up: the panel, its title and tally, its body, its scrollbar and its X.
 func (s *CompendiumScene) drawDialog(gs *state.GlobalState, screen *ebiten.Image) {
-	r := ui.DrawModalFrame(gs, screen, ui.ModalHead{Title: s.open.title})
-
-	if s.open.subtitle != "" {
-		sub := &text.DrawOptions{}
-		sub.GeoM.Translate(float64(r.Min.X+r.Dx()/2), float64(r.Min.Y+compendiumSubtitleTop))
-		sub.PrimaryAlign = text.AlignCenter
-		sub.SecondaryAlign = text.AlignCenter
-		sub.ColorScale.ScaleWithColor(compendiumQuietInk)
-		systems.DrawText(screen, s.open.subtitle,
-			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: compendiumSubtitleSize}, sub)
+	title := s.open.title
+	if s.open.tally != "" {
+		title += " " + s.open.tally
 	}
+	ui.DrawModalFrame(gs, screen, ui.ModalHead{Title: title})
 
 	body := compendiumBody(gs, s.open)
 	if s.open.stats {
-		systems.DrawButton(gs, screen, s.rolledTab)
-		systems.DrawButton(gs, screen, s.chosenTab)
-		s.drawStatRows(gs, screen, body)
+		for _, b := range s.recordTabs {
+			systems.DrawButton(gs, screen, b)
+		}
+		s.drawStatCards(gs, screen, body)
 	} else {
 		s.drawChips(gs, screen)
 		s.drawCatalog(gs, screen, body)
@@ -292,13 +289,16 @@ func (s *CompendiumScene) drawDialog(gs *state.GlobalState, screen *ebiten.Image
 }
 
 // compendiumBody is the rectangle a book's contents are drawn in: inside the panel, under its title,
-// between any filter chips, and clear of the scrollbar down the right.
+// between any filter chips or record buttons, and clear of the scrollbar down the right.
 func compendiumBody(gs *state.GlobalState, d *compendiumDialog) image.Rectangle {
 	r := ui.ModalPanelRect(gs)
 	left, right := d.chipSides()
+	if d.stats {
+		left += statTabWidth + compendiumScrollGap
+	}
 	return image.Rect(
 		r.Min.X+compendiumBodyInset+left,
-		r.Min.Y+compendiumBodyTop,
+		r.Min.Y+compendiumCatalogTop,
 		r.Max.X-compendiumBodyInset-compendiumScrollGap-compendiumScrollWidth-right,
 		r.Max.Y-compendiumBodyBottom,
 	)

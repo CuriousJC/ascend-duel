@@ -614,7 +614,7 @@ func (s *Session) ApplyRune(p Rune, ids []int) bool {
 // mechanic nobody designed, and it would be invisible. Everything else ignores the source, which
 // is what lets `ApplyRune` go on being the call every other site makes.
 //
-// **The caller owns the seeding**, exactly as the shop's three sealed goods do: the run does not
+// **The caller owns the seeding**, exactly as the shop's three boosters do: the run does not
 // know its own seed — `Snapshot` is handed one — so the screen derives the stream and passes the
 // source. See `seeds.StoneShower` for what has to be mixed into it.
 func (s *Session) ApplyRuneRolling(p Rune, ids []int, rng *rand.Rand) bool {

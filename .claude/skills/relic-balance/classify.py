@@ -1,115 +1,137 @@
-"""What every ring in the catalogue *is*, derived from its rules rather than authored.
+"""What every relic in the catalogue *is*, derived from its rules rather than authored.
 
     python .claude/skills/relic-balance/classify.py                 # the summary, every axis by rarity
-    python .claude/skills/relic-balance/classify.py --by category element
+    python .claude/skills/relic-balance/classify.py --by aspect breadth
     python .claude/skills/relic-balance/classify.py --list defense
-    python .claude/skills/relic-balance/classify.py --ring "Fire Ring"
+    python .claude/skills/relic-balance/classify.py --relic "Fire Ring"
     python .claude/skills/relic-balance/classify.py --shelf           # counts against what a player actually sees
-    python .claude/skills/relic-balance/classify.py --holes          # a filled family with an empty sibling
+    python .claude/skills/relic-balance/classify.py --holes           # a filled family with an empty sibling
 
-Run from the repo root. It reads data/relics.json and puts
-each ring on several axes. Nothing is written down in rings.json: a ring's
-category is a fact about its verbs, so the file cannot disagree with the rules.
+Run from the repo root. It reads data/relics.json and puts each relic on several axes. Nothing is
+written down in relics.json: a relic's aspects are a fact about its verbs and its predicates, so the
+file cannot disagree with the rules.
 
-The tables below are the whole taxonomy. A new verb in internal/combat/ring.go
-must be added to VERBS or this refuses to run -- the same rule the game's own
-loaders follow, and the reason it cannot go quietly stale.
+The aspects are the nine in docs/design/build-aspects.md, and that document is where they are
+defined. The tables below are only the sorting of the grammar into them. A new verb, moment or
+predicate in internal/combat/relic.go must be added here or this refuses to run -- the same rule the
+game's own loaders follow, and the reason it cannot go quietly stale.
 """
 import json
 import sys
 
 # --- the taxonomy -----------------------------------------------------------
 #
-# categories are many-to-many: a ring may be offense and growth at once.
-# payload, scope and breadth are one value per rule, so several per ring.
+# A relic carries a primary aspect -- the first aspect of its first effect -- and every aspect any of
+# its effects or predicates reaches. payload, scope and breadth are one value per rule, so several per
+# relic.
 
-# verb -> (categories, payload)
+ASPECTS = ["economy", "composition", "hands", "action-capacity", "tempo", "consistency",
+           "offense", "defense", "engine-capacity"]
+
+# verb -> (aspects, primary first; payload)
 VERBS = {
     # offense
     "scale-damage":            (("offense",), "multiplicative"),
-    "scale-hand-damage":       (("offense",), "multiplicative"),
-    "scale-damage-per-vitae":  (("offense",), "multiplicative"),
-    "add-hand-dmg":            (("offense",), "flat"),
-    "add-dmg-per-held":        (("offense",), "flat"),
-    "add-dmg-per-vitae":       (("offense",), "flat"),
     "add-dmg":                 (("offense",), "flat"),
+    "add-dmg-per-held":        (("offense",), "flat"),
     "repeat-card":             (("offense",), "repeat"),
     "echo-attack":             (("offense",), "repeat"),
+    "awaken":                  (("offense",), "flat"),
+    # a hit landing where it would have fizzled is damage that was not thrown before
+    "pierce-element":          (("offense",), "enabler"),
+    # luck: widens the paying band on every roll
+    "scale-rolls":             (("offense",), "multiplicative"),
+    # damage read off the purse: offense, priced by how much economy the run kept
+    "add-dmg-per-vitae":       (("offense", "economy"), "flat"),
+    "scale-damage-per-vitae":  (("offense", "economy"), "multiplicative"),
+    # hands
+    "add-hand-dmg":            (("hands", "offense"), "flat"),
+    "scale-hand-damage":       (("hands", "offense"), "multiplicative"),
     # defense
     "add-hp":                  (("defense",), "flat"),
     "scale-hp":                (("defense",), "multiplicative"),
-    # sustain is defense: it buys life back rather than stopping the blow, and the share
-    # scales with what the blow was worth, so it reads as multiplicative
-    "drain-damage":            (("defense",), "multiplicative"),
-    # a share of the maximum every turn: sustain, and the figure does not move with the fight
     "heal-share":              (("defense",), "flat"),
-    # luck: widens the paying band on every roll
-    "scale-rolls":             (("offense",), "multiplicative"),
-    # tempo -- buys action points, never damage
-    "adjust-cost":             (("tempo",), "flat"),
-    "demote-card":             (("tempo",), "flat"),
-    # economy -- the run's purse and its picks
+    "heal-on-block":           (("defense",), "flat"),
+    # sustain off a blow: the share scales with what the blow was worth
+    "drain-damage":            (("defense", "offense"), "multiplicative"),
+    "raise-shield":            (("defense",), "flat"),
+    "shield-per-card":         (("defense",), "flat"),
+    "keep-shields":            (("defense", "tempo"), "flat"),
+    "match-foe-shields":       (("defense",), "enabler"),
+    # thorns: a block that hits back
+    "reflect-damage":          (("defense", "offense"), "multiplicative"),
+    # action capacity -- what a turn can commit
+    "adjust-cost":             (("action-capacity",), "flat"),
+    "demote-card":             (("action-capacity",), "flat"),
+    "surge-per-card":          (("action-capacity",), "flat"),
+    # a block that banks AP: the design document's own example of the overlap
+    "surge-on-block":          (("action-capacity", "defense"), "flat"),
+    # tempo -- the fight's deadline
+    "adjust-round-limit":      (("tempo",), "flat"),
+    # economy -- the run's purse
     "scale-propagation":       (("economy",), "multiplicative"),
     "adjust-prize-vitae":      (("economy",), "flat"),
-    "adjust-picks":            (("economy",), "flat"),
-    # tempo -- rounds are the turn budget of the whole fight, and a relic may take them away
-    "adjust-round-limit":      (("tempo", "drawback"), "flat"),
-    # enabler -- changes what you are holding so something else can fire
-    "set-element":             (("enabler",), "enabler"),
-    "set-form":                (("enabler",), "enabler"),
-    # defense -- the shield relics: a free shield, a better shield, a shield that lasts
-    "raise-shield":            (("defense",), "flat"),
-    "match-foe-shields":       (("defense", "tempo"), "enabler"),
-    "keep-shields":            (("defense",), "flat"),
-    # paid per block: thorns are damage, the heal is sustain, the tithe is the purse
-    "reflect-damage":          (("offense", "defense"), "multiplicative"),
-    "heal-on-block":           (("defense",), "flat"),
-    "vitae-on-block":          (("economy",), "flat"),
-    # tempo -- a block that banks action points for the next turn
-    "surge-on-block":          (("tempo", "defense"), "flat"),
-    # enabler -- does nothing on its own; it widens what an essence reaches, so the value is
-    # entirely in the deck the player goes on to build
-    "adjust-essence-targets":  (("enabler",), "flat"),
-    # growth -- value is a function of time, and the accumulator is state
-    "grow-on-hit":             (("offense", "growth"), "stateful"),
-    "grow-on-win":             (("growth",), "stateful"),
-    "grow-on-turn":            (("growth",), "stateful"),
-    "grow-per-card":           (("growth",), "stateful"),
-    "reset-growth":            (("growth",), "stateful"),
-    "grow-on-streak":          (("offense", "growth"), "stateful"),
+    "vitae-on-block":          (("economy", "defense"), "flat"),
+    # consistency -- what the deck can be made to deliver
+    "adjust-picks":            (("consistency", "composition"), "flat"),
+    "adjust-essence-targets":  (("consistency", "composition"), "flat"),
+    # composition -- changes what you are holding so something else can fire
+    "set-element":             (("composition",), "enabler"),
+    "set-form":                (("composition",), "enabler"),
+    # engine capacity -- more resources carried at once
+    "copy-consumable":         (("engine-capacity",), "flat"),
+    # growth: value is a function of time, which is tempo -- a build that is strong later. The
+    # accumulator is read by the relic's other effects, which carry their own aspects.
+    "grow-on-hit":             (("offense", "tempo"), "stateful"),
+    "grow-on-streak":          (("offense", "tempo"), "stateful"),
+    "grow-on-win":             (("tempo",), "stateful"),
+    "grow-on-turn":            (("tempo",), "stateful"),
+    "grow-per-card":           (("tempo",), "stateful"),
+    "reset-growth":            (("tempo",), "stateful"),
 }
 
 # When -> scope. How often the rule gets to matter.
 SCOPES = {
-    "card-cost":    "per-card",
-    "card-damage":  "per-card",
-    "card-drawn":   "per-card",
-    "attack-lands": "per-blow",
+    "card-cost":     "per-card",
+    "card-damage":   "per-card",
+    "card-drawn":    "per-card",
+    "attack-lands":  "per-blow",
     # one per incoming hit a shield eats, which is the enemy's blow landing on nothing
-    "hit-blocked":  "per-blow",
-    "blow-formed":  "per-blow",
-    "turn-taken":   "per-turn",
-    "turn-start":   "per-turn",
-    "equipped":  "per-fight",
-    "fight-won":    "per-run",
-    "prizes-dealt": "per-run",
+    "hit-blocked":   "per-blow",
+    "blow-formed":   "per-blow",
+    "turn-taken":    "per-turn",
+    "turn-start":    "per-turn",
+    "equipped":      "per-fight",
+    "fight-begun":   "per-fight",
+    "fight-won":     "per-run",
+    "prizes-dealt":  "per-run",
     # an essence edits the deck the whole climb is played with, so its reach is the run's
     "essence-spent": "per-run",
 }
 
-# predicate key -> breadth. How much of the deck a rule can see.
+# predicate key -> (breadth, the aspect a rule narrowed by it reaches, or None)
+#
+# A rule keyed on an element, a form or a concept rewards a deck built toward it, which is
+# composition; one keyed on a rung rewards assembling it, which is hands.
 BREADTHS = {
-    "Element": "element", "Form": "form", "Concept": "concept",
-    "Tier": "tier", "Hand": "hand", "Hands": "hand", "MinForms": "hand",
-    "Lead": "positional", "Preceding": "positional", "Favored": "favored",
+    "Element":   ("element", "composition"),
+    "Form":      ("form", "composition"),
+    "Concept":   ("concept", "composition"),
+    "Tier":      ("tier", "composition"),
+    "Favored":   ("favored", "composition"),
+    "Hand":      ("hand", "hands"),
+    "Hands":     ("hand", "hands"),
+    "MinForms":  ("hand", "hands"),
+    "Lead":      ("positional", None),
+    "Preceding": ("positional", None),
 }
 
-AXES = ("category", "payload", "scope", "breadth", "rarity", "build",
-        "when", "do")
+AXES = ("primary", "aspect", "payload", "scope", "breadth", "rarity", "build",
+        "drawback", "when", "do")
 
 # --- deriving ---------------------------------------------------------------
 
-RINGS = json.load(open("data/relics.json"))
+RELICS = json.load(open("data/relics.json", encoding="utf-8"))
 
 
 def unknown(what, word):
@@ -117,11 +139,11 @@ def unknown(what, word):
              ".claude/skills/relic-balance/classify.py" % (what, word))
 
 
-def classify(ring):
-    """Every axis of one ring, as sets of strings."""
+def classify(relic):
+    """Every axis of one relic, as sets of strings."""
     out = {a: set() for a in AXES}
-    out["rarity"].add(ring["Rarity"])
-    for rule in ring["Rules"]:
+    out["rarity"].add(relic["Rarity"])
+    for rule in relic["Rules"]:
         when = rule["When"]
         if when not in SCOPES:
             unknown("moment", when)
@@ -132,8 +154,10 @@ def classify(ring):
         for k in cond:
             if k not in BREADTHS:
                 unknown("predicate", k)
+            if BREADTHS[k][1]:
+                out["aspect"].add(BREADTHS[k][1])
         keys = [k for k in cond if k != "MinForms"] or list(cond)
-        out["breadth"].add(BREADTHS[keys[0]] if keys else "unconditional")
+        out["breadth"].add(BREADTHS[keys[0]][0] if keys else "unconditional")
         for k in keys:
             out["build"].add("%s=%s" % (k, cond[k]))
         if not keys:
@@ -143,29 +167,32 @@ def classify(ring):
             do = effect["Do"]
             if do not in VERBS:
                 unknown("verb", do)
-            cats, payload = VERBS[do]
+            aspects, payload = VERBS[do]
+            if not out["primary"]:
+                out["primary"].add(aspects[0])
             out["do"].add(do)
             out["payload"].add(payload)
-            out["category"].update(cats)
-            # a scaling verb told to scale *down* is a drawback, whatever else it is
-            if payload == "multiplicative" and effect.get("Amount", 100) < 100:
-                out["category"].add("drawback")
+            out["aspect"].update(aspects)
+            # a scaling verb told to scale *down*, or a clock told to shorten, takes something away
+            down = (payload == "multiplicative" and effect.get("Amount", 100) < 100) or \
+                (do == "adjust-round-limit" and effect.get("Amount", 0) < 0)
+            if down:
+                out["drawback"].add("drawback")
     return out
 
 
-TABLE = {r["Name"]: classify(r) for r in RINGS}
+TABLE = {r["Name"]: classify(r) for r in RELICS}
 
 # --- reporting --------------------------------------------------------------
 
 ORDER = {
-    "category": ["offense", "defense", "tempo", "economy", "enabler", "growth",
-                 "drawback"],
-    "payload": ["flat", "multiplicative", "repeat", "stateful",
-                "enabler"],
+    "primary": ASPECTS,
+    "aspect": ASPECTS,
+    "payload": ["flat", "multiplicative", "repeat", "stateful", "enabler"],
     "scope": ["per-card", "per-blow", "per-turn", "per-fight", "per-run"],
-    "breadth": ["unconditional", "element", "form", "concept", "tier", "hand",
+    "breadth": ["unconditional", "element", "form", "concept", "tier", "favored", "hand",
                 "positional"],
-    "rarity": ["common", "uncommon", "rare"],
+    "rarity": ["common", "uncommon", "rare", "mythic"],
 }
 
 
@@ -182,10 +209,10 @@ def values(axis):
 def crosstab(rows, cols):
     rv, cv = values(rows), values(cols)
     width = max([len(str(v)) for v in rv] + [len(rows)]) + 2
-    print("\n%s x %s   (a ring is counted in every cell it occupies)\n"
+    print("\n%s x %s   (a relic is counted in every cell it occupies)\n"
           % (rows, cols))
     head = "".join("%10s" % str(c)[:9] for c in cv)
-    print("%-*s%s%10s" % (width, "", head, "rings"))
+    print("%-*s%s%10s" % (width, "", head, "relics"))
     for r in rv:
         line = "%-*s" % (width, r)
         for c in cv:
@@ -194,12 +221,12 @@ def crosstab(rows, cols):
             line += "%10s" % (n or ".")
         total = sum(1 for k in TABLE if r in TABLE[k][rows])
         print(line + "%10d" % total)
-    print("\n%d rings in the catalogue" % len(TABLE))
+    print("\n%d relics in the catalogue" % len(TABLE))
 
 
 def summary():
-    print("%d rings, classified from their rules alone" % len(TABLE))
-    for axis in ("category", "payload", "scope", "breadth"):
+    print("%d relics, classified from their rules alone" % len(TABLE))
+    for axis in ("primary", "aspect", "payload", "scope", "breadth"):
         crosstab(axis, "rarity")
 
 
@@ -211,12 +238,12 @@ def listing(value):
         for a in AXES:
             print("  %-9s %s" % (a, ", ".join(str(v) for v in values(a))))
         sys.exit(1)
-    print("%d rings matching %r:\n" % (len(hits), value))
+    print("%d relics matching %r:\n" % (len(hits), value))
     for name in hits:
         c = TABLE[name]
-        print("  %-26s %-9s %-26s %s"
-              % (name, "/".join(sorted(c["rarity"])),
-                 "+".join(sorted(c["category"])),
+        print("  %-30s %-9s %-16s %-40s %s"
+              % (name, "/".join(sorted(c["rarity"])), "".join(c["primary"]),
+                 "+".join(a for a in ASPECTS if a in c["aspect"]),
                  "+".join(sorted(c["payload"]))))
 
 
@@ -225,7 +252,7 @@ def one(name):
     if not match:
         match = [k for k in TABLE if name.lower() in k.lower()]
     if not match:
-        sys.exit("no ring named %r" % name)
+        sys.exit("no relic named %r" % name)
     for k in match:
         print("\n%s" % k)
         for axis in AXES:
@@ -233,19 +260,22 @@ def one(name):
                   % (axis, ", ".join(sorted(str(v) for v in TABLE[k][axis]))))
 
 
-SHELF_TICKETS = {"common": 10, "uncommon": 4, "rare": 1}
+# The shelf's tickets per tier. A mythic is not drawn on tickets -- each seat rolls for one on its
+# own stream at data.MythicOdds -- so it holds no share of the ticket draw.
+SHELF_TICKETS = {"common": 10, "uncommon": 4, "rare": 1, "mythic": 0}
 
 
 def shelf():
     """Counts against what a player actually sees. The two are not the same.
 
-    The shelf draws on rarity tickets -- 10 / 4 / 1 -- so a category living at one
-    tier has a share nothing about its record count would tell you.
+    The shelf draws on rarity tickets -- 10 / 4 / 1 -- so an aspect living at one tier has a share
+    nothing about its record count would tell you.
     """
-    total = sum(SHELF_TICKETS[r["Rarity"]] for r in RINGS)
-    print("\n%d rings, %d shelf tickets\n" % (len(TABLE), total))
-    for axis in ("category", "payload", "breadth", "rarity"):
-        print("%-16s %6s %10s %10s" % (axis, "rings", "% of cat", "% of shelf"))
+    total = sum(SHELF_TICKETS[r["Rarity"]] for r in RELICS)
+    print("\n%d relics, %d shelf tickets (mythics roll apart and hold none)\n"
+          % (len(TABLE), total))
+    for axis in ("primary", "aspect", "payload", "breadth", "rarity"):
+        print("%-16s %6s %10s %10s" % (axis, "relics", "% of cat", "% of shelf"))
         for v in values(axis):
             hits = [k for k in TABLE if v in TABLE[k][axis]]
             tickets = sum(SHELF_TICKETS[list(TABLE[k]["rarity"])[0]] for k in hits)
@@ -256,21 +286,21 @@ def shelf():
 
 
 def holes():
-    """A build axis some category never reaches. A question, not a finding."""
+    """A build axis some aspect never reaches. A question, not a finding."""
     print("\ncoverage holes -- a filled family with an empty sibling:\n")
     for prefix in ("Element=", "Form="):
         builds = [b for b in values("build") if b.startswith(prefix)]
-        for cat in values("category"):
+        for aspect in values("aspect"):
             held = [b for b in builds
-                    if any(cat in TABLE[k]["category"] and b in TABLE[k]["build"]
+                    if any(aspect in TABLE[k]["aspect"] and b in TABLE[k]["build"]
                            for k in TABLE)]
-            # A category keyed on nothing at all is not a hole in this family --
-            # economy rings read the purse and never look at a card.
+            # An aspect keyed on nothing at all is not a hole in this family --
+            # economy relics read the purse and never look at a card.
             if not held:
                 continue
             missing = [b for b in builds if b not in held]
             if missing:
-                print("  %-10s never on: %s" % (cat, ", ".join(missing)))
+                print("  %-16s never on: %s" % (aspect, ", ".join(missing)))
     print("\n  A hole is a question. Defend takes no scale-damage because a "
           "defend card\n  deals nothing; that emptiness is the grammar being "
           "right.")
@@ -283,7 +313,7 @@ elif args[0] == "--by" and len(args) == 3:
     crosstab(args[1], args[2])
 elif args[0] == "--list" and len(args) == 2:
     listing(args[1])
-elif args[0] == "--ring" and len(args) == 2:
+elif args[0] == "--relic" and len(args) == 2:
     one(args[1])
 elif args[0] == "--shelf":
     shelf()

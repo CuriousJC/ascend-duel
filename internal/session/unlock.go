@@ -3,7 +3,7 @@ package session
 // **Which relics a run may be offered, read off the player's unlocks.**
 //
 // A relic record may carry an `Unlock` key, and a run started for a player whose profile does not
-// hold that key never sees it on a shelf or inside a sealed good. The profile owns the unlocks and
+// hold that key never sees it on a shelf or inside a booster. The profile owns the unlocks and
 // this package does not import it, so the run is handed the set when it starts — `TakeUnlocks` —
 // and keeps it for its whole life.
 //
@@ -120,7 +120,7 @@ func (s *Session) Offers(key string) bool {
 }
 
 // OfferableRelics is every relic this run may be offered, sorted — Relics with the locked ones it
-// was not started holding left out. **Every shelf and every sealed good draws from this**, never
+// was not started holding left out. **Every shelf and every booster draws from this**, never
 // from Relics.
 func (s *Session) OfferableRelics() []string {
 	var out []string

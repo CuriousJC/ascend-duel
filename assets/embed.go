@@ -341,14 +341,14 @@ var enemyCardArt embed.FS
 var stoneArtFS embed.FS
 
 // The shop's other cards: the potions and tonics in data/potions.json and data/tonics.json, and
-// the sealed goods in data/goods.json. **One directory for several catalogs**, which is the one
+// the boosters in data/boosters.json. **One directory for several catalogs**, which is the one
 // place a family is not one catalog — they share
 // docs/art/other_card_art_prompt.MD, they are generated in one batch and they are filed by one
-// command, so splitting them into assets/potion and assets/good would be two directories of three
+// command, so splitting them into assets/potion and assets/booster would be two directories of three
 // files that nothing ever tells apart. The keys are record ids either way and the map is flat.
 //
-// A potion or tonic with no Art draws the placeholder, and a sealed good borrows the picture of
-// whatever is inside it — see data.PotionData.ArtKey and screens.goodArt.
+// A potion or tonic with no Art draws the placeholder, and a booster borrows the picture of
+// whatever is inside it — see data.PotionData.ArtKey and screens.boosterArt.
 //
 //go:embed other/*.png
 var otherArt embed.FS

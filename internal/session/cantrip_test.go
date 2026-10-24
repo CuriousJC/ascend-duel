@@ -210,13 +210,13 @@ func TestCarriedCantripsSurviveAResume(t *testing.T) {
 // Every bundle of scrolls holds cantrips, and the catalog it draws from is not empty.
 func TestEveryBundleOfScrollsHasSomethingToHold(t *testing.T) {
 	found := false
-	for _, g := range Goods() {
+	for _, g := range Boosters() {
 		if g.Contains == ContentsCantrips {
 			found = true
 		}
 	}
 	if !found {
-		t.Fatal("goods.json has no bundle of scrolls")
+		t.Fatal("boosters.json has no bundle of scrolls")
 	}
 	if len(Cantrips()) == 0 {
 		t.Fatal("cantrips.json is empty and a bundle has nothing to hold")

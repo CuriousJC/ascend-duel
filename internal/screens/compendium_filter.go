@@ -1,6 +1,7 @@
 package screens
 
-// **The bestiary's and the realm book's filter: a row of chips per facet, the element and the motif.**
+// **The Compendium's filter: a column of chips per facet** — the element and the motif in the bestiary
+// and the realm book, the rarity in the relic book.
 //
 // Values within a facet are an OR and facets are an AND, and **a facet with nothing latched lets
 // everything through** — the rule `tools/sheetfilter` keeps on the review pages, so the book and the
@@ -10,6 +11,7 @@ package screens
 // A chip is a button that latches: one press is one discrete step, which a focus ring can walk.
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -20,6 +22,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
 // The chips' shape: one tier of button, one width, each facet in columns of its own.
@@ -31,9 +34,27 @@ const (
 )
 
 // compendiumFacet is one axis a book can be narrowed on, and its chips in the order they stand.
+// of is an entry's one value on it, or many its several — a relic carries as many affinities as its
+// rules name. under stands it beneath the facet before it, in that facet's column, rather than in
+// columns of its own — for a short facet that would otherwise take a whole column of width — and
+// heading is a word set over its chips there, taking a chip's slot.
 type compendiumFacet struct {
-	of    func(e compendiumEntry) string
-	chips []*compendiumChip
+	of      func(e compendiumEntry) string
+	many    func(e compendiumEntry) []string
+	chips   []*compendiumChip
+	under   bool
+	heading string
+
+	// headX and headY are where the heading is set, placed with the chips.
+	headX, headY int
+}
+
+// holds reports whether an entry carries a value on the facet.
+func (f *compendiumFacet) holds(e compendiumEntry, value string) bool {
+	if f.many != nil {
+		return slices.Contains(f.many(e), value)
+	}
+	return f.of(e) == value
 }
 
 // compendiumChip is one value of a facet and the button that latches it.
@@ -90,12 +111,44 @@ func (d *compendiumDialog) roster(gs *state.GlobalState, tags rosterTags) {
 	}
 	d.facets = []*compendiumFacet{element, motif}
 	d.perCol = chipsPerColumn(gs)
+	d.refilter()
 
 	for i := range d.entries {
 		e := &d.entries[i]
 		e.tags = tags(e.found, word("e:", e.element, elementTitle(e.element)), word("m:", e.motif, motifName(gs.Motifs[e.motif])))
 	}
 	d.tagged()
+}
+
+// rooms adds the bestiary's and the realm book's third facet under the elements: which of a realm's
+// rooms an entry is, or stands in — a boss is the portal room's.
+// **A closed vocabulary**, so none of its chips is masked.
+func (d *compendiumDialog) rooms(gs *state.GlobalState) {
+	room := &compendiumFacet{of: func(e compendiumEntry) string { return e.room }, under: true}
+	for _, r := range realmRooms {
+		room.chips = append(room.chips, newChip(d, r.label, r.label, true))
+	}
+	d.facets = []*compendiumFacet{d.facets[0], room, d.facets[1]}
+	d.refilter()
+}
+
+// rarities finishes the relic book: its two facets, the tier in the tiers' own order and under it the
+// affinities (compendium_affinity.go). **Both are closed vocabularies**, so every value has a chip whether
+// or not the catalog holds a relic of it, and none is masked — a tier is printed on every relic the
+// shop offers and an affinity is in every relic's own sentence.
+func (d *compendiumDialog) rarities(gs *state.GlobalState) {
+	tier := &compendiumFacet{of: func(e compendiumEntry) string { return string(e.rarity) }}
+	for _, r := range data.Rarities() {
+		tier.chips = append(tier.chips, newChip(d, string(r), strings.ToUpper(string(r)), true))
+	}
+	affinity := &compendiumFacet{many: func(e compendiumEntry) []string { return e.affinities },
+		under: true, heading: "AFFINITY"}
+	for _, a := range affinityOrder() {
+		affinity.chips = append(affinity.chips, newChip(d, a, strings.ToUpper(a), true))
+	}
+	d.facets = []*compendiumFacet{tier, affinity}
+	d.perCol = chipsPerColumn(gs)
+	d.refilter()
 }
 
 // masked is a word as its question marks, one per letter.
@@ -127,7 +180,7 @@ func (d *compendiumDialog) passes(e compendiumEntry) bool {
 		for _, c := range f.chips {
 			if c.on {
 				picked = true
-				hit = hit || f.of(e) == c.value
+				hit = hit || f.holds(e, c.value)
 			}
 		}
 		if picked && !hit {
@@ -137,20 +190,23 @@ func (d *compendiumDialog) passes(e compendiumEntry) bool {
 	return true
 }
 
-// refilter works out which entries are shown, and the "N of M found" line over them.
+// refilter works out which entries are shown, and the tally after the title: "(N/M)" found over
+// the whole book, and on a book with a filter "(K SHOWN)" for what its chips let through.
 func (d *compendiumDialog) refilter() {
 	d.shown = d.shown[:0]
 	found := 0
 	for i, e := range d.entries {
-		if !d.passes(e) {
-			continue
-		}
-		d.shown = append(d.shown, i)
 		if e.found {
 			found++
 		}
+		if d.passes(e) {
+			d.shown = append(d.shown, i)
+		}
 	}
-	d.subtitle = strconv.Itoa(found) + " of " + strconv.Itoa(len(d.shown)) + " found"
+	d.tally = "(" + strconv.Itoa(found) + "/" + strconv.Itoa(len(d.entries)) + ")"
+	if len(d.facets) > 0 {
+		d.tally += " (" + strconv.Itoa(len(d.shown)) + " SHOWN)"
+	}
 }
 
 // chipsPerColumn is how many chips stand down the body's height.
@@ -165,10 +221,13 @@ func (f *compendiumFacet) columns(perCol int) int {
 }
 
 // chipSides is how wide the chips stand on either side of the grid: **the first facet down the left
-// and every other down the right**, so the grid keeps the whole height of the panel. Nothing for a
-// book with no facets.
+// and every other down the right**, so the grid keeps the whole height of the panel — a facet standing
+// under another taking that one's side and no width of its own. Nothing for a book with no facets.
 func (d *compendiumDialog) chipSides() (left, right int) {
 	for i, f := range d.facets {
+		if f.under {
+			continue
+		}
 		w := f.columns(d.perCol)*(chipWidth+chipGapX) - chipGapX + compendiumScrollGap
 		if i == 0 {
 			left += w
@@ -182,11 +241,26 @@ func (d *compendiumDialog) chipSides() (left, right int) {
 // placeChips stands every chip in its side's columns, top-aligned with the grid.
 func (d *compendiumDialog) placeChips(gs *state.GlobalState) {
 	r := ui.ModalPanelRect(gs)
-	top := r.Min.Y + compendiumBodyTop + ui.ButtonTiny/2
+	top := r.Min.Y + compendiumCatalogTop + ui.ButtonTiny/2
 	leftX := r.Min.X + compendiumBodyInset + chipWidth/2
 	_, rightW := d.chipSides()
 	rightX := r.Max.X - compendiumBodyInset - rightW + compendiumScrollGap + chipWidth/2
+	// A facet standing under another starts a chip's height below the last of it, in its column.
+	lastX, lastEnd := leftX, 0
 	for i, f := range d.facets {
+		if f.under {
+			start := lastEnd + 1
+			if f.heading != "" {
+				f.headX, f.headY = lastX, top+start*(ui.ButtonTiny+chipGapY)
+				start++
+			}
+			for j, c := range f.chips {
+				c.btn.ScreenX = lastX
+				c.btn.ScreenY = top + (start+j)*(ui.ButtonTiny+chipGapY)
+			}
+			lastEnd = start + len(f.chips) - 1
+			continue
+		}
 		x := &rightX
 		if i == 0 {
 			x = &leftX
@@ -195,6 +269,7 @@ func (d *compendiumDialog) placeChips(gs *state.GlobalState) {
 			c.btn.ScreenX = *x + (j/d.perCol)*(chipWidth+chipGapX)
 			c.btn.ScreenY = top + (j%d.perCol)*(ui.ButtonTiny+chipGapY)
 		}
+		lastX, lastEnd = *x, min(len(f.chips), d.perCol)
 		*x += f.columns(d.perCol)*(chipWidth+chipGapX) + compendiumScrollGap - chipGapX
 	}
 }
@@ -220,7 +295,16 @@ func (s *CompendiumScene) updateChips(gs *state.GlobalState) {
 
 // drawChips draws the open book's chips.
 func (s *CompendiumScene) drawChips(gs *state.GlobalState, screen *ebiten.Image) {
+	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: chipText}
 	for _, f := range s.open.facets {
+		if f.heading != "" {
+			op := &text.DrawOptions{}
+			op.GeoM.Translate(float64(f.headX), float64(f.headY))
+			op.PrimaryAlign = text.AlignCenter
+			op.SecondaryAlign = text.AlignCenter
+			op.ColorScale.ScaleWithColor(compendiumQuietInk)
+			systems.DrawText(screen, f.heading, face, op)
+		}
 		for _, c := range f.chips {
 			systems.DrawButton(gs, screen, c.btn)
 		}

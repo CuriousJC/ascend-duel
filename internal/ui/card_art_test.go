@@ -247,17 +247,17 @@ func TestEveryPotionDrawsSomething(t *testing.T) {
 	}
 }
 
-func TestEverySealedGoodDrawsSomething(t *testing.T) {
-	// The sealed goods differ from every other catalog in the empty case: a good with no Art of its
+func TestEverySealedBoosterDrawsSomething(t *testing.T) {
+	// The boosters differ from every other catalog in the empty case: a booster with no Art of its
 	// own borrows the picture of whatever is inside it rather than falling back to a default of its
-	// own — see goodArt, which this walks. What is checked is that every good draws *something*,
+	// own — see boosterArt, which this walks. What is checked is that every booster draws *something*,
 	// named or borrowed, so a misspelled key is a failure here rather than a hole on the shelf.
-	for _, good := range session.Goods() {
-		if good.Art == "" {
+	for _, booster := range session.Boosters() {
+		if booster.Art == "" {
 			continue
 		}
-		if _, ok := assets.LoadImageData()[good.Art]; !ok {
-			t.Errorf("%s draws %q, which is not an embedded image", good.Record, good.Art)
+		if _, ok := assets.LoadImageData()[booster.Art]; !ok {
+			t.Errorf("%s draws %q, which is not an embedded image", booster.Record, booster.Art)
 		}
 	}
 }
@@ -740,8 +740,8 @@ func TestEveryBleedingCardArtIsOpaque(t *testing.T) {
 	for _, st := range session.Stones() {
 		keys[st.Art] = "stone " + st.Record
 	}
-	for _, g := range session.Goods() {
-		keys[g.Art] = "good " + g.Record
+	for _, g := range session.Boosters() {
+		keys[g.Art] = "booster " + g.Record
 	}
 	for _, p := range session.Potions() {
 		keys[p.Art] = "potion " + p.Record

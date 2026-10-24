@@ -3,7 +3,7 @@ package screens
 // **The one thing a screen has to work out before it can write a choice down.**
 //
 // Everything else a journal line carries is already in hand at the click — a relic key, a seat, a
-// price. Deck positions are not: the offer rows on the reward screen and inside a sealed good pick
+// price. Deck positions are not: the offer rows on the reward screen and inside a booster pick
 // cards by where they sit in the run's deck, and a position names a different card the moment
 // anything is cut or copied. See journal.Record.Targets, which is identities for exactly that
 // reason.

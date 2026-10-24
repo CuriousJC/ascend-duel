@@ -103,7 +103,7 @@ func (s *ShopScene) drawTonic(gs *state.GlobalState, screen *ebiten.Image) {
 //
 // **Basic, not an element.** A potion changes the duelist rather than a card, and the duelist is not
 // a color — so its border is the mid gray `cards.BorderOf` gives `basic`, exactly as a stone's and
-// a sealed good's are. The hue wheel is full and a fourth kind of shelf card cannot have one.
+// a booster's are. The hue wheel is full and a fourth kind of shelf card cannot have one.
 //
 // **The picture comes off the record** *(2026-09-14)*, through `data.PotionData.ArtKey` — the shape
 // the relics, essences and runes are already in.
@@ -155,7 +155,7 @@ func (s *ShopScene) drinkPotion(gs *state.GlobalState, key string) {
 		return
 	}
 
-	// **The seat empties for the rest of the visit**, the sealed goods' rule rather than the relic
+	// **The seat empties for the rest of the visit**, the boosters' rule rather than the relic
 	// shelf's: a potion is not taken off a shelf of one-offs, but three of one bottle bought in a
 	// row would be a shop that sells the same thing until the purse is empty.
 	s.drunk[key] = true

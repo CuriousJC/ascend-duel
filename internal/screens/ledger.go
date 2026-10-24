@@ -8,7 +8,7 @@ package screens
 //
 //   - **The run, not the fight.** `session.Session` keeps the account, so it survives the fight
 //     that wrote it and answers "how did my whole journey go" as well as "what just happened".
-//   - **A dragged scrollbar** *(owner's call)*, because the input vocabulary is clicks, drags and
+//   - **A dragged scrollbar with an arrow at each end** *(owner's call)*, because the input vocabulary is clicks, drags and
 //     hover and a wheel would be a fourth verb. See models.Scrollbar.
 //   - **The arithmetic.** Every term of a blow, with the relic that priced it named beside it. See
 //     prose_terms.go.

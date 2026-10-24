@@ -17,7 +17,7 @@ package game
 // # Two answers, and the second is easy to miss
 //
 // A screen either **names a track** or **leaves the music alone**. Settings, Achievements,
-// Credits, the debug gallery and an opened sealed good are all reached *from* somewhere and go
+// Credits, the debug gallery and an opened booster are all reached *from* somewhere and go
 // back to it — so they are transparent to the music the way they are transparent to the run, and
 // a player who opens the volume bar to turn the shop's loop up should not have the shop's loop
 // stop to let them.
@@ -110,9 +110,9 @@ var screenTunes = map[state.ActiveScreen]tune{
 	state.Animations:   {keep: true},
 
 	// Opened from the shop's shelf and returns to it, which is the same shape — and the case
-	// where cutting the music would be most obviously wrong, since the good was bought on the
+	// where cutting the music would be most obviously wrong, since the booster was bought on the
 	// screen still playing it.
-	state.Goods: {keep: true},
+	state.Boosters: {keep: true},
 }
 
 // musicPools is every screen's pool, in data/music.json's file order — the order poolPick draws

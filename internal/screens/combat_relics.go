@@ -223,7 +223,7 @@ func drawPaneCount(gs *state.GlobalState, screen *ebiten.Image, back image.Recta
 // drawRelicPaneFrame is the relic pane on every screen that shows the band: the surface the relics
 // stand on, and `worn / cap` under it.
 //
-// **The one drawing of the pane, called by the fight, the reward screen, the portal, the sealed good
+// **The one drawing of the pane, called by the fight, the reward screen, the portal, the booster
 // and the shop**, because the band is one scene and its pane must not be a different object on one
 // of them. What each screen draws *on* it — the fight's toasting relics, the shop's relics flying to
 // a new seat — is its own; the frame is not.

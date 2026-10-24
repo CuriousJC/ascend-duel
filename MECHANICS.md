@@ -1903,8 +1903,7 @@ knows what comes after the shop — `session.PhaseShop` is a station of the run 
 **All five take the same shape**: **something inside**, and the player keeps **exactly one** — the
 rest are gone. Each comes in three sizes, three, four or five inside, and the bigger one costs more. Each draws on its own per-fight stream
 (`seeds.BagStock`, `seeds.VialStock`, `seeds.SackStock`, `seeds.ScrollStock`, `seeds.ActionStock`),
-and a visit offers two of them. **The bundle of scrolls is the one that repeats**: it draws with replacement while the
-cantrip catalog is shorter than the smallest bundle — see §Cantrips.
+and a visit offers two of them. **None of them repeats**: each is a shuffle of its catalog cut to its size.
 
 - **What is bought is the choice, not the thing.** A relic is read and then paid for; a booster is paid
   for and then read. That is the whole design, and it is why neither card names its contents: the
@@ -3272,10 +3271,10 @@ cantrip's own record key.
   is both, faded and lifted.
 - **A DMG a cantrip moved is written in the relic pink** on the duelist card for the rest of the
   fight. The life fraction carries no mark; it is simply the bigger number.
-- **A bundle of scrolls draws with replacement** while the catalog is shorter than the smallest
-  bundle — a seat that says "3 cantrips" must open on three. `dealScrolls` is the line to move to
-  the other packs' shuffle-and-cut once the catalog outgrows the bundles. Its stream is
-  `seeds.ScrollStock`, its own.
+- **A bundle of scrolls never repeats a cantrip** *(owner's call)*: `dealScrolls` shuffles the
+  catalog and cuts it to the bundle's size, as the other packs do. A seat that says "5 cantrips"
+  must open on five, so the catalog has to stay at least as long as the biggest bundle —
+  `TestEveryScrollBundleFillsWithoutRepeats`. Its stream is `seeds.ScrollStock`, its own.
 - **Every cast is in the run's account**, as is every rune, stone and essence spent from the pane:
   a `used` record — "Duelist casts Cantrip of Might - DMG 10 to 20", "Duelist uses Embermark on a
   jab" — held by `Session.RecordUse` and written at the top of the round it was spent before, since

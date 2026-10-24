@@ -12,9 +12,9 @@ package screens
 //
 // **A room is found once any of its tier's creatures has been fought in its colour**, won or lost,
 // off the bestiary's own per-element families — so the two books cannot disagree about whether a
-// player has been somewhere. **Nothing is set under the picture**: its tooltip carries the realm and
-// the room, what the portal said about the realm, how often the room has been fought in and how often
-// won.
+// player has been somewhere. **Nothing is set under the picture**: resting on a found one opens the
+// room large, with the realm and the room, what the portal said about the realm, how often the room
+// has been fought in and how often won — see compendium_room.go.
 
 import (
 	"bytes"

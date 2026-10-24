@@ -46,10 +46,8 @@ const (
 	ContentsRunes
 
 	// ContentsCantrips is the bundle of scrolls. **A cantrip is carried like a rune**, into the
-	// scroll case, and cast between the turns of a fight onto the fighter for the rest of it.
-	//
-	// **The one pack whose draw repeats** *(owner's call, 2026-09-28)*: the catalog is shorter than
-	// the smallest bundle, so a bundle is drawn with replacement rather than cut short.
+	// scroll case, and cast between the turns of a fight onto the fighter for the rest of it. Drawn
+	// without repeats, like every other pack.
 	ContentsCantrips
 
 	// ContentsCards is the action bundle: playing cards out of the duelist's own pool, any of which

@@ -72,7 +72,8 @@ type compendiumEntry struct {
 	extra []string
 
 	// creature is set on the bestiary's entries, and is what a found one shows in place of a
-	// tooltip — see compendium_creature.go.
+	// tooltip — see compendium_creature.go. A found realm-book entry shows its room the same way —
+	// see compendium_room.go.
 	creature *creaturePeek
 
 	// element and motif are what the book's filter reads — a creature's colour and its motif key, or
@@ -144,6 +145,10 @@ func (s *CompendiumScene) pointAtEntry(gs *state.GlobalState, body image.Rectang
 		}
 		if e.creature != nil {
 			s.peek, s.peekSeat = e.creature, seat
+			return
+		}
+		if e.backdrop != "" {
+			s.roomPeek, s.peekSeat = &e, seat
 			return
 		}
 		lines := append(append([]string{}, e.lines...), e.extra...)

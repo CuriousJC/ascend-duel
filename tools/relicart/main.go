@@ -792,8 +792,12 @@ const scrollBlank = "tools/relicart/cantrip-scroll-blank.png"
 
 var scrollSheet = [4]float64{130.0 / 1060, 330.0 / 1484, 930.0 / 1060, 1080.0 / 1484}
 
-// scrollFill is how much of the sheet the spirit fills, at most, along whichever side binds first.
-const scrollFill = 0.95
+// scrollFill is how much of the sheet the spirit fills, at most, along whichever side binds first,
+// and relicFill the same for the relic's card.
+const (
+	scrollFill = 0.95
+	relicFill  = 0.92
+)
 
 // cutLow and cutHigh are the hard cut every cantrip spirit takes before it is laid on either
 // ground: alpha below cutLow is gone, above cutHigh is solid, a ramp between. **It drops the faint
@@ -838,10 +842,30 @@ func cantripFaces(path string, w, h int) (relic, scroll image.Image, size string
 		}
 	}
 
-	// The relic: the spirit on the near-black, reduced to the card.
+	// **Both faces are fitted to the spirit, never to the canvas.** A generator leaves a different
+	// margin round every figure, so scaling the canvas would make one spirit fill its card and the
+	// next sit small in the middle of it. What survived the cut is the box both faces fit.
+	sb := image.Rectangle{Min: spirit.Bounds().Max, Max: spirit.Bounds().Min}
+	for y := 0; y < spirit.Bounds().Dy(); y++ {
+		for x := 0; x < spirit.Bounds().Dx(); x++ {
+			if spirit.NRGBAAt(x, y).A > 0 {
+				sb = sb.Union(image.Rect(x, y, x+1, y+1))
+			}
+		}
+	}
+	if sb.Empty() {
+		return nil, nil, "", fmt.Errorf("%s draws nothing above the cut", filepath.Base(path))
+	}
+
+	// The relic: the spirit fitted to the card on the near-black, at the card's own scale.
 	full := image.NewRGBA(spirit.Bounds())
 	xdraw.Draw(full, full.Bounds(), &image.Uniform{C: cantripGround}, image.Point{}, xdraw.Src)
-	xdraw.Draw(full, full.Bounds(), spirit, image.Point{}, xdraw.Over)
+	card := full.Bounds()
+	r := relicFill * min(float64(card.Dx())/float64(sb.Dx()), float64(card.Dy())/float64(sb.Dy()))
+	rw, rh := int(float64(sb.Dx())*r), int(float64(sb.Dy())*r)
+	rmin := image.Pt((card.Dx()-rw)/2, (card.Dy()-rh)/2)
+	xdraw.CatmullRom.Scale(full, image.Rectangle{Min: rmin, Max: rmin.Add(image.Pt(rw, rh))},
+		spirit, sb, xdraw.Over, nil)
 	relicFace := image.NewRGBA(image.Rect(0, 0, w, h))
 	xdraw.CatmullRom.Scale(relicFace, relicFace.Bounds(), full, full.Bounds(), xdraw.Src, nil)
 
@@ -855,7 +879,6 @@ func cantripFaces(path string, w, h int) (relic, scroll image.Image, size string
 	xdraw.Draw(page, page.Bounds(), blank, bb.Min, xdraw.Src)
 	sheet := image.Rect(int(scrollSheet[0]*float64(bb.Dx())), int(scrollSheet[1]*float64(bb.Dy())),
 		int(scrollSheet[2]*float64(bb.Dx())), int(scrollSheet[3]*float64(bb.Dy())))
-	sb := spirit.Bounds()
 	k := scrollFill * min(float64(sheet.Dx())/float64(sb.Dx()), float64(sheet.Dy())/float64(sb.Dy()))
 	sw, sh := int(float64(sb.Dx())*k), int(float64(sb.Dy())*k)
 	min0 := image.Pt(sheet.Min.X+(sheet.Dx()-sw)/2, sheet.Min.Y+(sheet.Dy()-sh)/2)

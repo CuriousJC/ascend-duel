@@ -42,17 +42,17 @@
     "Name": "Cantrip of Chill",
     "Family": "The elements",
     "Art": "cantrip-chill",
-    "Text": "ICE CARDS DEAL 2x\nFOR THIS FIGHT",
+    "Text": "ICE CARDS DEAL 3x\nFOR THIS FIGHT",
     "Relic": {
       "Name": "Chilled",
       "Art": "cantrip-chill-relic",
       "Draw": "a blue spirit snowy owl made of glowing blue light, facing the viewer with its wings spread wide, its wingtips dissolving into cold mist",
-      "Text": "Ice cards deal 2x DMG for this fight.",
+      "Text": "Ice cards deal 3x DMG for this fight.",
       "Rules": [
         {
           "When": "card-damage",
           "If": { "Element": "ice" },
-          "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+          "Then": [{ "Do": "scale-damage", "Amount": 300 }]
         }
       ]
     }
@@ -62,17 +62,17 @@
     "Name": "Cantrip of Blaze",
     "Family": "The elements",
     "Art": "cantrip-blaze",
-    "Text": "FIRE CARDS DEAL 2x\nFOR THIS FIGHT",
+    "Text": "FIRE CARDS DEAL 3x\nFOR THIS FIGHT",
     "Relic": {
       "Name": "Blazing",
       "Art": "cantrip-blaze-relic",
       "Draw": "an orange spirit salamander made of glowing orange light, curled in an S with its head raised, its tail dissolving into smoke",
-      "Text": "Fire cards deal 2x DMG for this fight.",
+      "Text": "Fire cards deal 3x DMG for this fight.",
       "Rules": [
         {
           "When": "card-damage",
           "If": { "Element": "fire" },
-          "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+          "Then": [{ "Do": "scale-damage", "Amount": 300 }]
         }
       ]
     }
@@ -82,17 +82,17 @@
     "Name": "Cantrip of Charge",
     "Family": "The elements",
     "Art": "cantrip-charge",
-    "Text": "LIGHTNING CARDS DEAL 2x\nFOR THIS FIGHT",
+    "Text": "LIGHTNING CARDS DEAL 3x\nFOR THIS FIGHT",
     "Relic": {
       "Name": "Charged",
       "Art": "cantrip-charge-relic",
       "Draw": "a yellow spirit electric eel made of glowing yellow light, coiled in a loose spiral with its jaws open, its tail dissolving into crackling mist",
-      "Text": "Lightning cards deal 2x DMG for this fight.",
+      "Text": "Lightning cards deal 3x DMG for this fight.",
       "Rules": [
         {
           "When": "card-damage",
           "If": { "Element": "lightning" },
-          "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+          "Then": [{ "Do": "scale-damage", "Amount": 300 }]
         }
       ]
     }
@@ -102,17 +102,17 @@
     "Name": "Cantrip of Quake",
     "Family": "The elements",
     "Art": "cantrip-quake",
-    "Text": "EARTH CARDS DEAL 2x\nFOR THIS FIGHT",
+    "Text": "EARTH CARDS DEAL 3x\nFOR THIS FIGHT",
     "Relic": {
       "Name": "Quaking",
       "Art": "cantrip-quake-relic",
       "Draw": "a green spirit badger made of glowing green light, braced low and square to the viewer with its claws dug in, its edges dissolving into drifting dust",
-      "Text": "Earth cards deal 2x DMG for this fight.",
+      "Text": "Earth cards deal 3x DMG for this fight.",
       "Rules": [
         {
           "When": "card-damage",
           "If": { "Element": "earth" },
-          "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+          "Then": [{ "Do": "scale-damage", "Amount": 300 }]
         }
       ]
     }
@@ -122,17 +122,115 @@
     "Name": "Cantrip of Aether",
     "Family": "The elements",
     "Art": "cantrip-aether",
-    "Text": "ARCANE CARDS DEAL 2x\nFOR THIS FIGHT",
+    "Text": "ARCANE CARDS DEAL 3x\nFOR THIS FIGHT",
     "Relic": {
       "Name": "Aetherial",
       "Art": "cantrip-aether-relic",
       "Draw": "a purple spirit octopus made of glowing purple light, its eight arms spread wide around it, the tips of its arms dissolving into glittering mist",
-      "Text": "Arcane cards deal 2x DMG for this fight.",
+      "Text": "Arcane cards deal 3x DMG for this fight.",
       "Rules": [
         {
           "When": "card-damage",
           "If": { "Element": "arcane" },
-          "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+          "Then": [{ "Do": "scale-damage", "Amount": 300 }]
+        }
+      ]
+    }
+  },
+  {
+    "CantripRecord": "cantrip-pierce",
+    "Name": "Cantrip of Pierce",
+    "Family": "The forms",
+    "Art": "cantrip-pierce",
+    "Text": "STAB CARDS DEAL 3x\nFOR THIS FIGHT",
+    "Relic": {
+      "Name": "Piercing",
+      "Art": "cantrip-pierce-relic",
+      "Draw": "an ivory spirit stag made of glowing ivory light, facing the viewer with its head lowered and its great branching antlers thrust forward, its legs dissolving into pale mist",
+      "Text": "Stab cards deal 3x DMG for this fight.",
+      "Rules": [
+        {
+          "When": "card-damage",
+          "If": { "Form": "stab" },
+          "Then": [{ "Do": "scale-damage", "Amount": 300 }]
+        }
+      ]
+    }
+  },
+  {
+    "CantripRecord": "cantrip-rend",
+    "Name": "Cantrip of Rend",
+    "Family": "The forms",
+    "Art": "cantrip-rend",
+    "Text": "SLASH CARDS DEAL 3x\nFOR THIS FIGHT",
+    "Relic": {
+      "Name": "Rending",
+      "Art": "cantrip-rend-relic",
+      "Draw": "a steel spirit panther made of glowing cool gray steel light, crouched low in a strong three-quarter view as if about to spring, one forepaw raised with its claws bared, its long tail dissolving into mist",
+      "Text": "Slash cards deal 3x DMG for this fight.",
+      "Rules": [
+        {
+          "When": "card-damage",
+          "If": { "Form": "slash" },
+          "Then": [{ "Do": "scale-damage", "Amount": 300 }]
+        }
+      ]
+    }
+  },
+  {
+    "CantripRecord": "cantrip-smash",
+    "Name": "Cantrip of Smash",
+    "Family": "The forms",
+    "Art": "cantrip-smash",
+    "Text": "CRUSH CARDS DEAL 3x\nFOR THIS FIGHT",
+    "Relic": {
+      "Name": "Smashing",
+      "Art": "cantrip-smash-relic",
+      "Draw": "a granite spirit elephant made of glowing dark gray granite light, facing the viewer with its trunk raised high and its tusks forward, its great ears and feet dissolving into drifting dust",
+      "Text": "Crush cards deal 3x DMG for this fight.",
+      "Rules": [
+        {
+          "When": "card-damage",
+          "If": { "Form": "crush" },
+          "Then": [{ "Do": "scale-damage", "Amount": 300 }]
+        }
+      ]
+    }
+  },
+  {
+    "CantripRecord": "cantrip-ripple",
+    "Name": "Cantrip of Ripple",
+    "Family": "The blow",
+    "Art": "cantrip-ripple",
+    "Text": "EVERY ATTACK LANDS TWICE\nFOR THIS FIGHT",
+    "Relic": {
+      "Name": "Rippling",
+      "Art": "cantrip-ripple-relic",
+      "Draw": "a rainbow spirit eagle made of glowing light in every color of the rainbow, banded red through orange, yellow, green, blue and violet across its feathers, facing the viewer with its wings spread wide, its wingtips rippling outward into soft rings of colored mist",
+      "Text": "Every attack card lands twice, both at full DMG, for this fight.",
+      "Rules": [
+        {
+          "When": "blow-formed",
+          "Then": [{ "Do": "repeat-card", "Amount": 2 }]
+        }
+      ]
+    }
+  },
+  {
+    "CantripRecord": "cantrip-ward",
+    "Name": "Cantrip of Ward",
+    "Family": "The guard",
+    "Art": "cantrip-ward",
+    "Text": "TWO SHIELDS OF RANDOM\nCOLORS EVERY TURN\nFOR THIS FIGHT",
+    "Relic": {
+      "Name": "Warded",
+      "Art": "cantrip-ward-relic",
+      "Draw": "a mother-of-pearl spirit turtle made of glowing pale pearly light, its high domed shell of large faceted plates shimmering with soft orange, blue, yellow, green and purple sheens, in a strong three-quarter view with its head raised toward the viewer, its flippers dissolving into soft mist",
+      "Text": "Two shields of a random color every turn, for this fight.",
+      "Rules": [
+        {
+          "When": "turn-start",
+          "Then": [{ "Do": "raise-shield", "Element": "random", "Amount": 2 }]
         }
       ]
     }

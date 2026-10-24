@@ -31,7 +31,7 @@ import (
 // The beats, in ticks at the game's 60 a second.
 const (
 	splashDarkTicks = 180
-	splashLitTicks  = 300
+	splashLitTicks  = 240
 	splashFadeTicks = 30
 )
 

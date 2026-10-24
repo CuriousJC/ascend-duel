@@ -339,29 +339,23 @@ func dealSackRunes(gs *state.GlobalState, seat string, size int) []session.Rune 
 	return all
 }
 
-// dealScrolls is what a bundle of scrolls holds: its size in cantrips, **drawn with replacement**
-// *(owner's call, 2026-09-28)*.
+// dealScrolls is what a bundle of scrolls holds: its size in cantrips, **without repeats**
+// *(owner's call)*, flat and unweighted on the sack's argument.
 //
-// **Repeats are allowed, unlike every other pack.** The catalog is shorter than the smallest bundle,
-// so a draw without replacement would hand over a bundle short of its own size — a seat that says
-// "3 cantrips" and opens on two. Each seat is an independent pick off the sorted catalog, flat and
-// unweighted on the sack's argument. When the catalog outgrows the bundles this is the line to move
-// to the shuffle-and-cut the others use.
+// **The catalog has to be at least as long as the biggest bundle**, or a seat that says "5 cantrips"
+// opens on fewer — `TestEveryScrollBundleFillsWithoutRepeats` holds it.
 //
 // **Its own stream** (`seeds.ScrollStock`), separate from the sack's — see internal/seeds.
 func dealScrolls(gs *state.GlobalState, seat string, size int) []session.Cantrip {
 	all := session.Cantrips()
-	if len(all) == 0 {
-		return nil
-	}
 	rng := rand.New(rand.NewSource(
 		seeds.ForFightSeat(gs.RunSeed, seeds.ScrollStock, gs.Run.Fight(), seat)))
+	rng.Shuffle(len(all), func(i, j int) { all[i], all[j] = all[j], all[i] })
 
-	out := make([]session.Cantrip, size)
-	for i := range out {
-		out[i] = all[rng.Intn(len(all))]
+	if len(all) > size {
+		all = all[:size]
 	}
-	return out
+	return all
 }
 
 // dealActionCards is what an action bundle holds: `size` of the duelist's card pool, without repeats,

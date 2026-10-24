@@ -138,6 +138,10 @@ type CompendiumScene struct {
 	peek     *creaturePeek
 	peekSeat image.Rectangle
 
+	// roomPeek is the found realm-book room under the cursor, drawn large — see compendium_room.go.
+	// It shares peekSeat and is re-asked every frame the same way.
+	roomPeek *compendiumEntry
+
 	// The statistics book's record buttons, one per statRecord in statRecords' order.
 	recordTabs []*models.Button
 }
@@ -177,7 +181,7 @@ func (s *CompendiumScene) Init(gs *state.GlobalState) {
 	// **Closed on every entry**: a page re-opened with a book already up is a dialog nobody asked
 	// for. Coming back from Achievements lands on the shelf.
 	s.open = nil
-	s.peek = nil
+	s.peek, s.roomPeek = nil, nil
 	s.tip = models.Tooltip{DwellTicks: ui.TipDwell()}
 }
 
@@ -211,7 +215,7 @@ func (s *CompendiumScene) Update(gs *state.GlobalState) error {
 	}
 
 	gs.ModalOpen = true
-	s.peek = nil
+	s.peek, s.roomPeek = nil, nil
 	if s.closer.Update(gs) {
 		s.open = nil
 		systems.UpdateTooltip(gs, &s.tip)
@@ -263,6 +267,7 @@ func (s *CompendiumScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		s.drawDialog(gs, screen)
 	}
 	s.drawPeek(gs, screen)
+	s.drawRoomPeek(gs, screen)
 	systems.DrawTooltip(gs, screen, &s.tip)
 }
 

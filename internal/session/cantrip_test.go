@@ -50,19 +50,42 @@ func TestMightsStackByAddition(t *testing.T) {
 	}
 }
 
-// Chill doubles an ice card and leaves every other color alone.
-func TestChillDoublesIceCards(t *testing.T) {
+// Chill triples an ice card and leaves every other color alone.
+func TestChillTriplesIceCards(t *testing.T) {
 	run := runWith(combat.Plain(combat.Bash))
 	bare := run.Equip(combat.Duelist{DMG: 10})
 	chilled := run.EquipWearing(combat.Duelist{DMG: 10}, casts(cantrip(t, "cantrip-chill"), 1))
 
 	ice := combat.Card{Concept: combat.Bash, Element: combat.Ice}
 	fire := combat.Card{Concept: combat.Bash, Element: combat.Fire}
-	if got, want := chilled.CardDamage(ice), 2*bare.CardDamage(ice); got != want {
+	if got, want := chilled.CardDamage(ice), 3*bare.CardDamage(ice); got != want {
 		t.Errorf("a chilled ice Bash deals %d, want %d", got, want)
 	}
 	if got, want := chilled.CardDamage(fire), bare.CardDamage(fire); got != want {
 		t.Errorf("a chilled fire Bash deals %d, want the unchilled %d", got, want)
+	}
+}
+
+// Ripple lands every attack card twice, whatever its color or form, and gives a defense nothing.
+func TestRippleLandsEveryAttackTwice(t *testing.T) {
+	run := runWith(combat.Plain(combat.Bash))
+	d := run.EquipWearing(combat.Duelist{DMG: 10}, casts(cantrip(t, "cantrip-ripple"), 1))
+	for _, card := range []combat.Card{
+		{Concept: combat.Bash, Element: combat.Ice},
+		{Concept: combat.Bash, Element: combat.Fire},
+	} {
+		if got := combat.LandingsOf(d.WornRelics(), card, false, nil).Count(); got != 2 {
+			t.Errorf("a rippling %v Bash lands %d times, want 2", card.Element, got)
+		}
+	}
+}
+
+// A bundle of scrolls is drawn without repeats, so the catalog has to fill the biggest one.
+func TestEveryScrollBundleFillsWithoutRepeats(t *testing.T) {
+	for _, b := range Boosters() {
+		if b.Contains == ContentsCantrips && b.Size > len(Cantrips()) {
+			t.Errorf("%s holds %d scrolls and the catalog has %d cantrips", b.Record, b.Size, len(Cantrips()))
+		}
 	}
 }
 

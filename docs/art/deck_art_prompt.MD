@@ -84,7 +84,7 @@ Not for the generator. The chosen option drops its `-a`/`-b`/`-c` suffix, and th
 `go run ./tools/relicart -kind deck` files it: reduced to the card's own **200 x 280** and written
 to `assets/deck/<record>.png`, with `Art` set on the record. The game lays it inside a one-pixel
 neutral rim, clipped to the card's rounded corners, and that one picture is every back the game
-draws: the draw pile in the hand row at full size, the smaller pile on the shop, reward and sealed
-good screens, and every card mid-flip as it is dealt. `go run ./tools/cardsheet` draws every deck's
+draws: the draw pile in the hand row at full size, the smaller pile on the shop, reward and
+booster screens, and every card mid-flip as it is dealt. `go run ./tools/cardsheet` draws every deck's
 back at both sizes beside a face, which is where the art is judged; a deck with no picture yet
 draws the plain dark back.

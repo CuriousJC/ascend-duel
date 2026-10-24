@@ -86,7 +86,7 @@ func run(dir string) error {
 	page := page{
 		Ground:  ground,
 		Count:   len(order),
-		Bundles: goodsPhrase(session.ContentsCantrips),
+		Bundles: boostersPhrase(session.ContentsCantrips),
 		Cap:     session.MaxConsumables,
 		Body:    fmt.Sprintf("%d DMG, %d life", body.DMG, body.MaxLife),
 	}
@@ -419,13 +419,13 @@ func artwork(key string) (image.Image, error) {
 	return img, nil
 }
 
-// goodsPhrase is every sealed good holding this catalog, as one sentence: "3 for 3, 4 for 5 or 5
+// boostersPhrase is every booster holding this catalog, as one sentence: "3 for 3, 4 for 5 or 5
 // for 6 vitae". **Asked of the catalog rather than written down**, so the page cannot quote a price
 // the shop does not charge.
-func goodsPhrase(c session.GoodContents) string {
-	var held []session.Good
-	for _, key := range session.GoodKeys() {
-		if g, ok := session.GoodByKey(key); ok && g.Contains == c {
+func boostersPhrase(c session.BoosterContents) string {
+	var held []session.Booster
+	for _, key := range session.BoosterKeys() {
+		if g, ok := session.BoosterByKey(key); ok && g.Contains == c {
 			held = append(held, g)
 		}
 	}

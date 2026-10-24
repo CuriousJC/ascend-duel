@@ -1,8 +1,8 @@
 [
   {
-    "GoodRecord": "bundle-rocks-small",
+    "BoosterRecord": "bundle-rocks-small",
     "Name": "SMALL BAG OF ROCKS",
-    "Family": "Sealed goods",
+    "Family": "Boosters",
     "Art": "bundle-rocks-small",
     "Draw": "a small deep blue silk bag, drawn tight around three lumpy rocks, with a jade drawstring",
     "Contains": "stones",
@@ -13,9 +13,9 @@
     "Tip": ["a stone raises one hand's multiplier", "by a tenth of it"]
   },
   {
-    "GoodRecord": "bundle-rocks",
+    "BoosterRecord": "bundle-rocks",
     "Name": "BAG OF ROCKS",
-    "Family": "Sealed goods",
+    "Family": "Boosters",
     "Art": "bundle-rocks",
     "Draw": "a black silk bag with four lumpy rocks inside, with a jade drawstring",
     "Contains": "stones",
@@ -26,9 +26,9 @@
     "Tip": ["a stone raises one hand's multiplier", "by a tenth of it"]
   },
   {
-    "GoodRecord": "bundle-rocks-large",
+    "BoosterRecord": "bundle-rocks-large",
     "Name": "LARGE BAG OF ROCKS",
-    "Family": "Sealed goods",
+    "Family": "Boosters",
     "Art": "bundle-rocks-large",
     "Draw": "a large wine red silk bag, bulging with five lumpy rocks, with a jade drawstring",
     "Contains": "stones",
@@ -39,9 +39,9 @@
     "Tip": ["a stone raises one hand's multiplier", "by a tenth of it"]
   },
   {
-    "GoodRecord": "bundle-essence-small",
+    "BoosterRecord": "bundle-essence-small",
     "Name": "SMALL VIAL OF ESSENCE",
-    "Family": "Sealed goods",
+    "Family": "Boosters",
     "Art": "bundle-essence-small",
     "Draw": "a small stoppered glass vial with a faceted body, filled with ephemeral rainbow vapor",
     "Contains": "essences",
@@ -52,9 +52,9 @@
     "Tip": ["an essence changes one card of your deck"]
   },
   {
-    "GoodRecord": "bundle-essence",
+    "BoosterRecord": "bundle-essence",
     "Name": "VIAL OF ESSENCE",
-    "Family": "Sealed goods",
+    "Family": "Boosters",
     "Art": "bundle-essence",
     "Draw": "a stoppered glass vial with a faceted body, filled with ephemeral rainbow vapor",
     "Contains": "essences",
@@ -65,9 +65,9 @@
     "Tip": ["an essence changes one card of your deck"]
   },
   {
-    "GoodRecord": "bundle-essence-large",
+    "BoosterRecord": "bundle-essence-large",
     "Name": "LARGE VIAL OF ESSENCE",
-    "Family": "Sealed goods",
+    "Family": "Boosters",
     "Art": "bundle-essence-large",
     "Draw": "a tall broad stoppered glass flagon with a faceted body, brimming with ephemeral rainbow vapor",
     "Contains": "essences",
@@ -78,9 +78,9 @@
     "Tip": ["an essence changes one card of your deck"]
   },
   {
-    "GoodRecord": "bundle-runes-small",
+    "BoosterRecord": "bundle-runes-small",
     "Name": "SMALL SACK OF RUNES",
-    "Family": "Sealed goods",
+    "Family": "Boosters",
     "Art": "bundle-runes-small",
     "Draw": "a small ochre silk pouch, drawn tight around three flat carved shapes, with an ivory drawstring",
     "Contains": "runes",
@@ -91,9 +91,9 @@
     "Tip": ["a rune changes a card during a fight,", "spent between the turns"]
   },
   {
-    "GoodRecord": "bundle-runes",
+    "BoosterRecord": "bundle-runes",
     "Name": "SACK OF RUNES",
-    "Family": "Sealed goods",
+    "Family": "Boosters",
     "Art": "bundle-runes",
     "Draw": "a red silk pouch bulging with four flat carved shapes, with an ivory drawstring",
     "Contains": "runes",
@@ -104,9 +104,9 @@
     "Tip": ["a rune changes a card during a fight,", "spent between the turns"]
   },
   {
-    "GoodRecord": "bundle-runes-large",
+    "BoosterRecord": "bundle-runes-large",
     "Name": "LARGE SACK OF RUNES",
-    "Family": "Sealed goods",
+    "Family": "Boosters",
     "Art": "bundle-runes-large",
     "Draw": "a large deep green silk sack, bulging with five flat carved shapes, with an ivory drawstring",
     "Contains": "runes",
@@ -117,9 +117,9 @@
     "Tip": ["a rune changes a card during a fight,", "spent between the turns"]
   },
   {
-    "GoodRecord": "bundle-scrolls-small",
+    "BoosterRecord": "bundle-scrolls-small",
     "Name": "SMALL BUNDLE OF SCROLLS",
-    "Family": "Sealed goods",
+    "Family": "Boosters",
     "Art": "bundle-scrolls-small",
     "Draw": "a small ochre leather scroll case, a short open tube with a single strap and a brass buckle, exactly three rolled parchment scrolls sticking up out of its mouth, clearly separate and easy to count",
     "Contains": "cantrips",
@@ -130,9 +130,9 @@
     "Tip": ["a cantrip strengthens you for one fight,", "spent between the turns"]
   },
   {
-    "GoodRecord": "bundle-scrolls",
+    "BoosterRecord": "bundle-scrolls",
     "Name": "BUNDLE OF SCROLLS",
-    "Family": "Sealed goods",
+    "Family": "Boosters",
     "Art": "bundle-scrolls",
     "Draw": "a red leather scroll case, an open tube with two straps and brass buckles, exactly four rolled parchment scrolls sticking up out of its mouth, clearly separate and easy to count",
     "Contains": "cantrips",
@@ -143,9 +143,9 @@
     "Tip": ["a cantrip strengthens you for one fight,", "spent between the turns"]
   },
   {
-    "GoodRecord": "bundle-scrolls-large",
+    "BoosterRecord": "bundle-scrolls-large",
     "Name": "LARGE BUNDLE OF SCROLLS",
-    "Family": "Sealed goods",
+    "Family": "Boosters",
     "Art": "bundle-scrolls-large",
     "Draw": "a large deep green leather scroll case, a long wide open tube with three straps and brass buckles and a carrying strap slung along its length, exactly five rolled parchment scrolls sticking up out of its mouth, clearly separate and easy to count",
     "Contains": "cantrips",
@@ -156,9 +156,9 @@
     "Tip": ["a cantrip strengthens you for one fight,", "spent between the turns"]
   },
   {
-    "GoodRecord": "bundle-actions-small",
+    "BoosterRecord": "bundle-actions-small",
     "Name": "SMALL ACTION BUNDLE",
-    "Family": "Sealed goods",
+    "Family": "Boosters",
     "Art": "bundle-actions-small",
     "Draw": "a small stack of three face-down playing cards bound with a thin jade ribbon tied in a bow",
     "Contains": "cards",
@@ -169,9 +169,9 @@
     "Tip": ["a playing card for your deck,", "and it may carry a trait"]
   },
   {
-    "GoodRecord": "bundle-actions",
+    "BoosterRecord": "bundle-actions",
     "Name": "ACTION BUNDLE",
-    "Family": "Sealed goods",
+    "Family": "Boosters",
     "Art": "bundle-actions",
     "Draw": "a stack of four face-down playing cards bound crosswise with a deep blue ribbon and a wax seal",
     "Contains": "cards",
@@ -182,9 +182,9 @@
     "Tip": ["a playing card for your deck,", "and it may carry a trait"]
   },
   {
-    "GoodRecord": "bundle-actions-large",
+    "BoosterRecord": "bundle-actions-large",
     "Name": "LARGE ACTION BUNDLE",
-    "Family": "Sealed goods",
+    "Family": "Boosters",
     "Art": "bundle-actions-large",
     "Draw": "a thick stack of five face-down playing cards bound with a wine red ribbon, a wax seal and a small brass clasp",
     "Contains": "cards",

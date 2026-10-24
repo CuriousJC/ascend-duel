@@ -89,7 +89,7 @@ func SlideTicks() int { return Beat(1, 2) }
 // card, so the sentence is a scrim over the one thing on the card worth looking at. The line has
 // not gone anywhere — it is in the tooltip, which is where a player who does not recognize a
 // picture yet already goes, and where there is room to say the half a face cannot fit. Same call
-// the sealed goods took on 2026-09-15 and the stones took with this one.
+// the boosters took on 2026-09-15 and the stones took with this one.
 //
 // **The chimera's answer went with it.** Its face printed `COPIES <name>` because its authored line
 // cannot say what it would fire; that is now the tooltip's first line — see runeTipLines.

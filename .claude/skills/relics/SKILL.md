@@ -217,6 +217,39 @@ not ignored.
 is charged on purpose, exactly as it is for `combat.Verb` and `session.EssenceTarget`. A file may
 never assert a verb into existence.
 
+## Every moment and every verb has an affinity and an aspect
+
+**The Compendium's relic book filters on AFFINITY** — the five elements, stab, slash and crush, and
+ATTACK, DEFEND, AP, HAND and SUPPORT — and a relic's affinities are **derived from its rules**, never
+authored: `internal/screens/compendium_affinity.go`. An element or a form is whatever a rule matches
+on or turns a card into, so both sides of a flip count. The other four are lists of moments and
+verbs, and a relic naming none of anything is SUPPORT. That is what puts every relic under at least
+one chip.
+
+**So a new moment or a new verb is also an affinity decision, and it is the owner's.** Before it
+ships, say which list it joins — `attackVerbs`, `defendVerbs`, `apVerbs`, `handVerbs`, the matching
+moment lists, or `neutralVerbs` / `neutralMoments` for one that claims nothing of its own — and
+**raise it with the owner rather than picking quietly**, because a neutral verb is how a new kind of
+relic ends up filed under SUPPORT. Two rules decide most cases:
+
+- **A setter's affinity is what it sets.** `set-element` and `set-form` are neutral because the
+  element or form on the effect already carries the affinity.
+- **A growth verb is neutral.** It feeds the relic's own accumulator, which the relic's other
+  effects read and carry the affinity of.
+
+**`TestEveryMomentAndVerbIsSorted` holds this**: it walks `combat.Moments()` and
+`combat.RelicVerbs()` and fails on any that is in no list, so the Go change that adds a verb does
+not pass until the affinity is decided. `TestEveryRelicHasAnAffinity` holds the catalog side — no relic
+under no chip, no chip empty — and logs the SUPPORT list, which is the one to read after a batch: a
+relic landing there that plainly works on an attack or a hand means a list is wrong.
+
+**It also needs a build aspect, which is a different thing.** The nine build aspects in
+[docs/design/build-aspects.md](../../../docs/design/build-aspects.md) — Economy, Composition, Hands,
+Action capacity, Tempo, Consistency, Offense, Defense, Engine capacity — are what the
+`relic-balance` skill classifies the catalog on, and its `classify.py` refuses to run on a verb or a
+moment it has no row for. So a new verb is **two rows**, an affinity here and an aspect there, and
+both are the owner's to agree.
+
 ## Ordering: left to right, and it compounds
 
 **Relics fire in the order they are worn**, left to right along the row *(owner's call,
@@ -339,6 +372,7 @@ Reach for these first when an idea sounds too easy.
 | `prizes-dealt` | `session.Picks` and `session.PrizeVitae`, read by `postbattle.go` |
 | the row on screen | `internal/screens/combat_relics.go` — a lookup from worn key to record |
 | the whole catalog as pictures | `go run ./tools/relicsheet` — **grouped by family**, card, price, `Text` and rules side by side, and each tier's share of a shelf draw |
+| a relic's Compendium affinities, and the sorting of every moment and verb | `internal/screens/compendium_affinity.go`, held by `compendium_affinity_test.go` |
 
 **`relics.json` is parsed in `internal/session`**, which already parses essences and for the same
 reason: a relic belongs to a *run*. It hands `combat` rules types — `RegisterRelic(key, name,
@@ -384,7 +418,8 @@ The questions to put to an idea, in order:
 2. **Does the `If` exist?** The predicates table is the whole list. Anything else is new
    vocabulary.
 3. **Does the `Then` exist?** If not, is it a new verb or a re-use? A new verb is one table row
-   plus one place applying it.
+   plus one place applying it — **and an affinity and a build aspect**, both the owner's to agree:
+   see *Every moment and every verb has an affinity and an aspect*. The same goes for a new moment.
 4. **Does it hold state?** If it grows, it needs the accumulator and it needs saving.
 5. **Does it collide with a relic that exists?** Banker, Soul Taker and Hungry all reach for the
    post-battle screen, and two of them nearly do the same job.

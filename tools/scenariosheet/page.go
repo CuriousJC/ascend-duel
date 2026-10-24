@@ -42,7 +42,7 @@ type named struct {
 	Key  string
 	Name string
 	Text string
-	Kind string // "sack" or "pouch" for a held good; empty for a relic
+	Kind string // "sack" or "pouch" for a held booster; empty for a relic
 }
 
 // line is one row of a hand or a deck, as the fixture writes it.

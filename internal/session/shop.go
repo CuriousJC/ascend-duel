@@ -159,6 +159,6 @@ func (s *Session) Sell(key string) bool {
 	return true
 }
 
-// The sealed goods moved to good.go and data/goods.json on 2026-09-14. The prices, the sizes and
+// The boosters moved to booster.go and data/boosters.json on 2026-09-14. The prices, the sizes and
 // the three pairs of Buy/CanAfford methods that used to sit here are one catalog now — see
-// Session.BuyGood and Session.CanAffordGood, which take a record key.
+// Session.BuyBooster and Session.CanAffordBooster, which take a record key.

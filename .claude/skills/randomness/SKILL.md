@@ -101,13 +101,13 @@ the salt table, so inserting one mid-list re-points every stream after it.
 | `seeds.RewardHand` | fight | `dealOffer` (`internal/screens/postbattle.go`) | which cards a win offers you to alter |
 | `seeds.EssenceOffer` | fight | `dealEssences` (`internal/screens/postbattle.go`) | which alterations are offered, on any change to the reward hand |
 | `seeds.ShopStock` | fight | `dealShelf` (`internal/screens/shop.go`) | which relics are for sale, on any change to the essence catalog |
-| `seeds.BagStock` | fight | `dealStones` (`internal/screens/shop_goods.go`) | which stones a bag of rocks holds, on any change to the relic shelf |
-| `seeds.VialStock` | fight | `dealVialEssences` and `dealVialOffer` (`internal/screens/shop_goods.go`) | which essences a vial holds, on any change to the free offer |
-| `seeds.SackStock` | fight | `dealSackRunes` (`internal/screens/shop_goods.go`) | which runes a sack holds, on any change to the other two packs |
+| `seeds.BagStock` | fight | `dealStones` (`internal/screens/shop_boosters.go`) | which stones a bag of rocks holds, on any change to the relic shelf |
+| `seeds.VialStock` | fight | `dealVialEssences` and `dealVialOffer` (`internal/screens/shop_boosters.go`) | which essences a vial holds, on any change to the free offer |
+| `seeds.SackStock` | fight | `dealSackRunes` (`internal/screens/shop_boosters.go`) | which runes a sack holds, on any change to the other two packs |
 | `seeds.StoneShower` | fight | `CombatScene.showerRNG` (`internal/screens/combat_rune.go`), mixed with the run's placed-stone count | which stones a rock shower drops, on any change to the shop |
 | `seeds.PackOffer` | fight | `ShopScene.packRNG` (`internal/screens/shop_packs.go`) | which two of the three packs a visit puts up, on any change to the relic shelf |
-| `seeds.ScrollStock` | fight | `dealScrolls` (`internal/screens/shop_goods.go`) | which cantrips a bundle of scrolls holds, on any change to the rune catalog |
-| `seeds.ActionStock` | fight | `dealActionCards` (`internal/screens/shop_goods.go`), split per bundle | which playing cards an action bundle holds, on any change to the other packs |
+| `seeds.ScrollStock` | fight | `dealScrolls` (`internal/screens/shop_boosters.go`) | which cantrips a bundle of scrolls holds, on any change to the rune catalog |
+| `seeds.ActionStock` | fight | `dealActionCards` (`internal/screens/shop_boosters.go`), split per bundle | which playing cards an action bundle holds, on any change to the other packs |
 | `seeds.ActionTraits` | fight | `dealActionCards`, split per bundle and per card trait: one roll per card per priced trait | which cards every bundle holds, on any change to a card trait's odds |
 | `seeds.ActionUpgrades` | fight | `dealActionCards` → `session.RollBundleUpgrade`, split per bundle: two draws per card — the hit and the pick — once a Tinker's Tonic is drunk | which traits every bundle's cards carry, on drinking the tonic |
 | `seeds.MythicRoll` | fight | `dealShelf` (`internal/screens/shop.go`): one roll per shelf seat, one in `data.MythicOdds`, before the seat's ticket draw | every ticket draw after the roll, so every ordinary shelf a run is dealt |

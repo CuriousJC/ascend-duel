@@ -12,7 +12,7 @@ import (
 func TestEveryActionBundleDealsItsSizeWithoutRepeats(t *testing.T) {
 	gs := testRun()
 	found := 0
-	for _, g := range session.Goods() {
+	for _, g := range session.Boosters() {
 		if g.Contains != session.ContentsCards {
 			continue
 		}
@@ -31,7 +31,7 @@ func TestEveryActionBundleDealsItsSizeWithoutRepeats(t *testing.T) {
 		}
 	}
 	if found == 0 {
-		t.Fatal("goods.json holds no action bundle")
+		t.Fatal("boosters.json holds no action bundle")
 	}
 }
 
@@ -39,7 +39,7 @@ func TestEveryActionBundleDealsItsSizeWithoutRepeats(t *testing.T) {
 // and the bundle, so opening it again — a resumed shop — shows what it showed.
 func TestAnActionBundleIsTheSameBundleTwice(t *testing.T) {
 	gs := testRun()
-	g := goodHolding(t, session.ContentsCards)
+	g := boosterHolding(t, session.ContentsCards)
 	a, b := dealActionCards(gs, g.Record, g.Size), dealActionCards(gs, g.Record, g.Size)
 	for i := range a {
 		if a[i] != b[i] {
@@ -52,7 +52,7 @@ func TestAnActionBundleIsTheSameBundleTwice(t *testing.T) {
 func TestTheActionBundleDrawsFromItsOwnStream(t *testing.T) {
 	gs := testRun()
 	before := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil, nil))
-	g := goodHolding(t, session.ContentsCards)
+	g := boosterHolding(t, session.ContentsCards)
 	dealActionCards(gs, g.Record, g.Size)
 	if after := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock), nil, nil)); !sameKeys(before, after) {
 		t.Fatalf("the shelf changed after a bundle was dealt: %v then %v", before, after)
@@ -62,7 +62,7 @@ func TestTheActionBundleDrawsFromItsOwnStream(t *testing.T) {
 // TestBundledTraitsTurnUpAtTheirOdds. Over many fights, a card trait priced above zero turns up on
 // some bundled cards and not on all of them.
 func TestBundledTraitsTurnUpAtTheirOdds(t *testing.T) {
-	g := goodHolding(t, session.ContentsCards)
+	g := boosterHolding(t, session.ContentsCards)
 	for _, tr := range session.CardTraitCatalog() {
 		if tr.Percent <= 0 || tr.Percent >= 100 {
 			continue

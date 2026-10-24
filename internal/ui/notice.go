@@ -9,7 +9,7 @@ package ui
 // bevelled panel, same stroke.
 //
 // **It is not a toast, and the difference is the point.** A toast means the player did something
-// good and the box is a reward for it. This is the opposite piece of news, so it takes the modal
+// booster and the box is a reward for it. This is the opposite piece of news, so it takes the modal
 // red rather than the panel blue, and its eyebrow says PROBLEM rather than ACHIEVEMENT. Sharing the
 // geometry and differing in the two things that carry meaning is what keeps the game looking like
 // one game while still saying two different things.

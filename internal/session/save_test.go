@@ -190,7 +190,7 @@ func TestTheIdentityCounterIsSavedRatherThanRecomputed(t *testing.T) {
 func TestASnapshotNamingSomethingThisBuildHasNotGotIsRefused(t *testing.T) {
 	motifs, shape := rosters(t)
 	seed, _ := seeds.Parse(theSeed)
-	good := Start(motifs, shape, seed).Snapshot(seed)
+	booster := Start(motifs, shape, seed).Snapshot(seed)
 
 	for _, tc := range []struct {
 		name string
@@ -205,8 +205,8 @@ func TestASnapshotNamingSomethingThisBuildHasNotGotIsRefused(t *testing.T) {
 		{"a counter below the deck", func(s *profile.RunSnapshot) { s.NextCardID = 0 }},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			bent := *good
-			bent.Deck = append([]profile.CardSnapshot(nil), good.Deck...)
+			bent := *booster
+			bent.Deck = append([]profile.CardSnapshot(nil), booster.Deck...)
 			tc.bend(&bent)
 			if _, _, err := Resume(motifs, shape, &bent); err == nil {
 				t.Error("should be refused rather than resumed wrong")

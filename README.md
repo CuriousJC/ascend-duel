@@ -50,7 +50,7 @@ nothing.
 
 Then everything a run picks up, each touching a different thing. A **relic** is worn, a **stone**
 raises a rung, an **essence** eats a card, a **potion** changes the duelist, and a **rune** is the
-only one spent during a fight, between the turns of a round. A **sealed good** is the shop's
+only one spent during a fight, between the turns of a round. A **booster** is the shop's
 gamble: paid for and _then_ read, four stones or four essences inside and you keep one.
 
 Against all that, **creatures** sorted into realm bands, each with a deck of its own, and

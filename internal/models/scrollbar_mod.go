@@ -6,7 +6,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-// Scrollbar is a dragged thumb on a vertical track, saying which slice of a long list is being
+// Scrollbar is a dragged thumb on a vertical track, with a one-row arrow at each end, saying which slice of a long list is being
 // looked at.
 //
 // **It is the third widget in the game's vocabulary, and it is a drag for the reason the slider
@@ -54,6 +54,12 @@ type Scrollbar struct {
 	// Hovered is whether the cursor is over the track.
 	Hovered bool
 
+	// Up and Down are the arrows at the two ends of the bar, each a step of one row. **They are
+	// part of the bar rather than the panel's**, so every list that scrolls gets them, and they are
+	// what a focus ring will walk: a drag has no discrete step. Placed and drawn by the systems side,
+	// inside Height, so a panel lays out one rectangle as it always has.
+	Up, Down *Button
+
 	// grab is where inside the thumb the drag started, in pixels from its top edge, so a thumb
 	// picked up by its bottom does not jump under the cursor.
 	grab int
@@ -73,10 +79,10 @@ type paintedScrollbar struct {
 	width, height          int
 }
 
-// PaintedIsCurrent reports whether the cached face still matches the bar.
+// PaintedIsCurrent reports whether the cached face still matches the bar. The face is the track
+// alone, sized by the systems side, which repaints whenever it has to remake the image.
 func (s *Scrollbar) PaintedIsCurrent() bool {
-	return s.painted == s.snapshot() && s.Image != nil &&
-		s.Image.Bounds().Dx() == s.Width && s.Image.Bounds().Dy() == s.Height
+	return s.painted == s.snapshot() && s.Image != nil
 }
 
 // RecordPainted stores what was just drawn.
@@ -105,9 +111,17 @@ func (s *Scrollbar) snapshot() paintedScrollbar {
 
 // NewScrollbar makes a bar of a given size, at the top of an empty list.
 func NewScrollbar(width, height int) *Scrollbar {
-	return &Scrollbar{
-		Width:  width,
-		Height: height,
-		Image:  ebiten.NewImage(width, height),
-	}
+	s := &Scrollbar{Width: width, Height: height}
+	s.Up = NewButton(ScrollArrowSize, ScrollArrowSize, ScrollArrowUp, func() { s.Offset-- })
+	s.Down = NewButton(ScrollArrowSize, ScrollArrowSize, ScrollArrowDown, func() { s.Offset++ })
+	return s
 }
+
+// The arrows: square buttons on the smallest height tier, ui.ButtonTiny — written here because
+// models sits under ui, and held to it by TestTheScrollArrowsAreTiny — labelled with the figure
+// sheet's own arrows, the seed wheel's.
+const (
+	ScrollArrowSize = 32
+	ScrollArrowUp   = "▲"
+	ScrollArrowDown = "▼"
+)

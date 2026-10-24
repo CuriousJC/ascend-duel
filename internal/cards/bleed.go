@@ -180,7 +180,7 @@ func (st Style) scrimBands(s Spec) []image.Rectangle {
 	// and a card with nothing to say gets no scrim and shows the whole picture.
 	//
 	// **It follows the card's own text, not just the style's band** *(owner's call, 2026-09-15)*.
-	// It was the style alone until the potions and the sealed goods gave up their faces to their
+	// It was the style alone until the potions and the boosters gave up their faces to their
 	// tooltips: EssenceStyle still declares where a sentence goes, and a bottle with no sentence
 	// was drawing an empty band across the lower half of its picture — a scrim is a ground for
 	// type and a ground under nothing is a stain.

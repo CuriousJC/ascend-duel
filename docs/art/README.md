@@ -37,11 +37,11 @@ and both are things the repo produced. These are things the repo consumes.
   catalog's inbox named after the record, and run the command with that catalog's `-kind`:
   `relic`, `essence`, `rune`, `stone` or `other`. **A stem naming no record is refused rather than
   filed**, because a misspelled key is invisible in play — the card simply draws the fallback.
-- **`-kind other` is one inbox over two files.** The potions and the sealed goods
+- **`-kind other` is one inbox over two files.** The potions and the boosters
   share one prompt, so they are generated in one batch and there is nothing to be gained by making
   the person splitting a batch of six decide which three are which. `.scratch/to-process-other-art`
   is the inbox, `assets/other` the directory, and the tool writes each `"Art"` back into whichever
-  of `data/potions.json` and `data/goods.json` holds the record. An id appearing in both is
+  of `data/potions.json` and `data/boosters.json` holds the record. An id appearing in both is
   refused: one flat asset map means one id is one picture.
 - **The generic prompt is what lives here; each record's own description lives on the record.**
   A prompt is about no record at all. The subject paragraph is about exactly one, so it is `Draw` in
@@ -95,9 +95,9 @@ which is `reduce`'s default.
 |---|---|
 | `relic_art_prompt.MD` | the prompt for a relic — `cards.RelicStyle` |
 | `relic_art_prompt_pixel_archived.MD` | **not live.** The same relic prompt with the render language pixel rather than smooth, kept so switching direction is a regeneration rather than an archaeology dig. The relic pictures were drawn this way and the other catalogs were not |
-| `essence_art_prompt.MD` | the prompt for an essence or a rune — `cards.EssenceStyle` goods that print their sentence on a scrim across the lower half of the picture. Same style block, and the ephemeral fading an essence has and a relic does not |
+| `essence_art_prompt.MD` | the prompt for an essence or a rune — `cards.EssenceStyle` cards that print their sentence on a scrim across the lower half of the picture. Same style block, and the ephemeral fading an essence has and a relic does not |
 | `stone_art_prompt.MD` | the prompt for a stone — same style block and the same whole-object instruction, plus the three material ladders: the concept axis is silica, the form axis is plain rock, the element axis is gem |
-| `other_card_art_prompt.MD` | the prompt for every *other* `cards.EssenceStyle` good — the potions in `data/potions.json`, the tonics in `data/tonics.json`, the sealed goods in `data/goods.json`, and whatever is added next. Same style block and the same composition; the object is whole rather than coming apart |
+| `other_card_art_prompt.MD` | the prompt for every *other* `cards.EssenceStyle` card — the potions in `data/potions.json`, the tonics in `data/tonics.json`, the boosters in `data/boosters.json`, and whatever is added next. Same style block and the same composition; the object is whole rather than coming apart |
 | `cantrip_relic_art_prompt.MD` | **a cantrip's one picture**: its relic's spirit animal, glowing and dissolving into mist on a transparent ground, its glow as soft see-through light in its own color, with no drawn outline. The subject is the record's `Relic.Draw`. **Both of the cantrip's faces are generated from it** when it is filed with `go run ./tools/relicart -kind cantrip-relic`: the relic is the spirit on the near-black, and the scroll is the spirit laid on the blank parchment kept beside the tool (`tools/relicart/cantrip-scroll-blank.png`). There is no scroll prompt and no scroll brief. Files come back as `<record>-relic.png` |
 | `rune_art_prompt.MD` | the closed list of rune body plans, pasted into the essence prompt. A creature needs a shape where an object does not |
 | `card_art_prompt.MD` | **the third odd one out**: a figure for a *playing* card, one per card per element out of `data/card_art.json`. 5:7 like the relic prompt, but **on a transparent background** — with flat magenta as the fallback for a generator that cannot write one — because the figure is laid over whatever the card's face is: the plain off-white, or an upgrade's art. It asks for a dark outline round the vapor and the element's own ramp, so the figure reads on every ground. Filed by `tools/relicart -kind card` into `assets/card/` at 200x280. **There is no default face** — an unauthored record draws the card exactly as it looked before the catalog existed |
@@ -125,7 +125,7 @@ which is `reduce`'s default.
 **Neither bleeding card names itself**, so no prompt has to keep a title band clear: the picture
 is the card. What a relic card draws over its art is one counter disc in the bottom-right.
 `EssenceStyle` declares a text band from y 140 to y 265 of 280 and **no card in the catalog fills
-it** — the essences, runes, stones, potions and goods all say their rule in a tooltip — so an
+it** — the essences, runes, stones, potions and boosters all say their rule in a tooltip — so an
 `EssenceStyle` face is the whole picture.
 
 **Neither is a reservation.** Both go on top of a picture that

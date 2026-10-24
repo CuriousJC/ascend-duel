@@ -1,6 +1,6 @@
 package screens
 
-// The two sealed goods, and the dialog that opens them.
+// The two boosters, and the dialog that opens them.
 //
 // **A bag of rocks and a vial of essence** *(owner's call, 2026-08-27)*. Both cost five vitae, both
 // hold four of something, and both give the player exactly one of the four — the other three are
@@ -26,7 +26,7 @@ package screens
 //
 // **There is no X, and the way out is SKIP.** Every other modal in the game is a look at something
 // and closes without consequence; this stands between a purchase and what it bought, so leaving it
-// forfeits the vitae. That is a choice the player may make, and GoodsScene gives it a labelled
+// forfeits the vitae. That is a choice the player may make, and BoostersScene gives it a labelled
 // button rather than the red square that means "close" everywhere else. Every card is also an exit
 // — the screen ends when one is chosen.
 
@@ -52,12 +52,12 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
-// **There is no goodKind enum any more** *(2026-09-14)*. A shelf seat names a good by its record
-// key, the catalog is data/goods.json, and what the dialog does with one is switched on
-// session.GoodContents — the closed vocabulary that says which catalog is inside. The three names
+// **There is no boosterKind enum any more** *(2026-09-14)*. A shelf seat names a booster by its record
+// key, the catalog is data/boosters.json, and what the dialog does with one is switched on
+// session.BoosterContents — the closed vocabulary that says which catalog is inside. The three names
 // that used to be constants here are the records' own Name fields.
 
-// Where the goods rows sit.
+// Where the boosters rows sit.
 //
 // **Measured from the screen, and now standing on it** *(2026-09-19)*. These were always screen
 // percentages, because the modal panel covered most of it; what changed is what they have to clear.
@@ -65,58 +65,58 @@ import (
 // start below them rather than below a panel's title bar — see buildBandBottom and offerHintTop.
 const (
 	// The bag's and the sack's one row, centered, with nothing under it.
-	goodsChoiceRowPct = 42
+	boostersChoiceRowPct = 42
 
 	// The vial has two rows, and both of them plus the lift a selected card takes have to fit
 	// between the hint and the bottom of the screen.
-	vialEssenceRowPct = 38
-	goodsOfferRowPct  = 68
+	vialEssenceRowPct   = 38
+	boostersOfferRowPct = 68
 )
 
-// goodsStage is how far through opening a good the player is.
-type goodsStage int
+// boostersStage is how far through opening a booster the player is.
+type boostersStage int
 
 const (
-	// goodsClosed: nothing is open, and the shop is the shop.
-	goodsClosed goodsStage = iota
+	// boostersClosed: nothing is open, and the shop is the shop.
+	boostersClosed boostersStage = iota
 
-	// goodsPick: what was drawn is up, and a click takes one. **There is no second stage**
+	// boostersPick: what was drawn is up, and a click takes one. **There is no second stage**
 	// *(owner's call, 2026-09-06)*: the vial used to move on to a row of cards once an essence was
 	// chosen, so the essences disappeared at the moment the player had to judge one against a card.
 	// Both rows are up together now and the gesture is the row's own — select the card, then click
 	// the essence. See targeting.go, which is the rule the rune pane and the reward screen's own
 	// essence row already follow.
-	goodsPick
+	boostersPick
 
-	// goodsShowing: an essence has been spent and what it did is on screen — the essence is used
+	// boostersShowing: an essence has been spent and what it did is on screen — the essence is used
 	// where it stands and the picked cards change where they stand in the row, exactly as on the
 	// reward screen. See essenceInPlace. **Only the vial reaches this stage** — a stone and a rune
 	// change no card, so there is nothing to watch.
-	goodsShowing
+	boostersShowing
 
-	// goodsCarrying: a rune or a cantrip has been taken and is flying into its seat in the
+	// boostersCarrying: a rune or a cantrip has been taken and is flying into its seat in the
 	// consumables pane *(owner's call, 2026-10-04)* — cards fly, they never appear. The run already
 	// holds it; this is the picture catching up, and the screen leaves when it lands.
-	goodsCarrying
+	boostersCarrying
 
-	// goodsUsing: a stone has been taken out of a bag of rocks and is being used up — lifted to the
+	// boostersUsing: a stone has been taken out of a bag of rocks and is being used up — lifted to the
 	// middle, crumbled, its dust carried to the duelist card whose ladder it raised. The run already
 	// holds the raise; this is the picture, and the screen leaves when it ends. See stoneUseFrom.
-	goodsUsing
+	boostersUsing
 )
 
-// goods is the dialog: which good was opened, what was drawn from it, and how far through the
+// boosters is the dialog: which booster was opened, what was drawn from it, and how far through the
 // player is.
 //
-// **It holds no purse and no run.** The vitae is taken by the shop the moment a good is clicked —
-// see `ShopScene.openGood` — so what is here is the offer and the choice, exactly as the shelf
+// **It holds no purse and no run.** The vitae is taken by the shop the moment a booster is clicked —
+// see `ShopScene.openBooster` — so what is here is the offer and the choice, exactly as the shelf
 // holds a relic's key and not its price.
-type goods struct {
-	// good is the record that was opened: its name, its size, and what is inside it. **The whole
+type boosters struct {
+	// booster is the record that was opened: its name, its size, and what is inside it. **The whole
 	// record rather than a key**, because every question this dialog asks of it — how many were
 	// drawn, what to head the panel with, which catalog to deal — is a field on it.
-	good  session.Good
-	stage goodsStage
+	booster session.Booster
+	stage   boostersStage
 
 	// stones, essences, runes, cantrips and actions are what was drawn, and only the one matching
 	// kind is filled. actions are an action bundle's playing cards, traits already rolled onto them.
@@ -136,7 +136,7 @@ type goods struct {
 	// tip explains whichever card the cursor is resting on.
 	tip models.Tooltip
 
-	// What the spent essence did, held on screen through goodsShowing. **The reward screen's own
+	// What the spent essence did, held on screen through boostersShowing. **The reward screen's own
 	// fields and the same rules** — see PostBattleScene, where each of these is written up: the
 	// cards change in the seats the player picked them in, and the deck is not touched until the
 	// hold is over. The change itself runs on `use`.
@@ -146,7 +146,7 @@ type goods struct {
 	held     int
 	applyNow func(*session.Session)
 
-	// What a taken rune or cantrip looks like on its way to the pane, through goodsCarrying: its
+	// What a taken rune or cantrip looks like on its way to the pane, through boostersCarrying: its
 	// face, the seat it left, the pane seat it is landing in, and the clock. **A taken playing card
 	// flies to the deck pile instead** — carryTo is the pile and carrySeat is -1 — in the hand's style.
 	carryFace  cards.Spec
@@ -156,52 +156,52 @@ type goods struct {
 	carrySeat  int
 	carryTrip  ui.Travel
 
-	// use is a card being used up: a stone taken from a bag, through goodsUsing, or a vial's
-	// essence absorbed in its own seat, through goodsShowing.
+	// use is a card being used up: a stone taken from a bag, through boostersUsing, or a vial's
+	// essence absorbed in its own seat, through boostersShowing.
 	use ui.Consume
 }
 
-// open puts a good up, drawing what is inside it.
+// open puts a booster up, drawing what is inside it.
 //
 // **The contents are drawn here rather than by the run**, from a per-fight stream of their own, so
 // a purchase interrupted by a quit leaves nothing to snapshot. Buying the same bag twice in one
 // visit is not possible — see the shelf's `bought` flag — so a stream per fight is a stream per
 // bag.
-func (g *goods) open(gs *state.GlobalState, good session.Good) {
-	g.good, g.stage = good, goodsPick
+func (g *boosters) open(gs *state.GlobalState, booster session.Booster) {
+	g.booster, g.stage = booster, boostersPick
 	g.stones, g.essences, g.runes, g.cantrips, g.actions = nil, nil, nil, nil, nil
-	g.row.initRow(gs, func(gs *state.GlobalState) int { return gs.PctY(goodsOfferRowPct) })
+	g.row.initRow(gs, func(gs *state.GlobalState) int { return gs.PctY(boostersOfferRowPct) })
 	g.tip = models.Tooltip{DwellTicks: ui.TipDwell()}
 
-	switch good.Contains {
+	switch booster.Contains {
 	case session.ContentsStones:
-		g.stones = dealStones(gs, good.Record, good.Size)
+		g.stones = dealStones(gs, booster.Record, booster.Size)
 	case session.ContentsEssences:
-		g.essences = dealVialEssences(gs, good.Record, good.Size)
+		g.essences = dealVialEssences(gs, booster.Record, booster.Size)
 		g.row.deal(gs, dealVialOffer(gs))
 	case session.ContentsRunes:
-		g.runes = dealSackRunes(gs, good.Record, good.Size)
+		g.runes = dealSackRunes(gs, booster.Record, booster.Size)
 	case session.ContentsCantrips:
-		g.cantrips = dealScrolls(gs, good.Record, good.Size)
+		g.cantrips = dealScrolls(gs, booster.Record, booster.Size)
 	case session.ContentsCards:
-		g.actions = dealActionCards(gs, good.Record, good.Size)
+		g.actions = dealActionCards(gs, booster.Record, booster.Size)
 	}
 }
 
-// roomFull is whether what this good holds has nowhere to go: it is carried into the consumables
-// pane rather than spent here, and the pane is full. **The cards are held back rather than the good
+// roomFull is whether what this booster holds has nowhere to go: it is carried into the consumables
+// pane rather than spent here, and the pane is full. **The cards are held back rather than the booster
 // refused** *(owner's call, 2026-10-04)* — the player opens it, sees what is inside, and either sells
-// a carried card to make room or skips. See GoodsScene.
-func (g *goods) roomFull(gs *state.GlobalState) bool {
-	return gs.Run != nil && carried(g.good.Contains) && gs.Run.ConsumablesFull()
+// a carried card to make room or skips. See BoostersScene.
+func (g *boosters) roomFull(gs *state.GlobalState) bool {
+	return gs.Run != nil && carried(g.booster.Contains) && gs.Run.ConsumablesFull()
 }
 
 // openBag reports whether anything is up.
-func (g *goods) openNow() bool { return g.stage != goodsClosed }
+func (g *boosters) openNow() bool { return g.stage != boostersClosed }
 
 // close puts it away.
-func (g *goods) reset() {
-	g.good, g.stage = session.Good{}, goodsClosed
+func (g *boosters) reset() {
+	g.booster, g.stage = session.Booster{}, boostersClosed
 	g.stones, g.essences, g.runes, g.cantrips = nil, nil, nil, nil
 	g.row.offer, g.row.selected, g.row.hidden = nil, nil, nil
 	g.lands = nil
@@ -216,7 +216,7 @@ func (g *goods) reset() {
 //
 // **The run has already moved**: the card is held before this is called, so the seat it lands in is
 // read off the pane as it now stands — the last carried thing of that kind and that record.
-func (g *goods) carry(gs *state.GlobalState, i int, face cards.Spec, kind session.ConsumableKind, key string) {
+func (g *boosters) carry(gs *state.GlobalState, i int, face cards.Spec, kind session.ConsumableKind, key string) {
 	g.carrySeat = -1
 	for k, c := range heldConsumables(gs) {
 		if c.Kind == kind && consumableKey(c) == key {
@@ -227,7 +227,7 @@ func (g *goods) carry(gs *state.GlobalState, i int, face cards.Spec, kind sessio
 		g.reset()
 		return
 	}
-	g.stage, g.carryFace, g.carryFrom = goodsCarrying, face, g.slot(gs, i)
+	g.stage, g.carryFace, g.carryFrom = boostersCarrying, face, g.slot(gs, i)
 	g.carryStyle, g.carryTo = cards.EssenceStyle, heldSeat(gs, g.carrySeat)
 	g.carryTrip = ui.NewTravel(0, flightTicks())
 	g.tip.Forget()
@@ -235,9 +235,9 @@ func (g *goods) carry(gs *state.GlobalState, i int, face cards.Spec, kind sessio
 
 // carryToDeck sends the playing card taken from seat i into the deck pile — **it travels**, because a
 // card never simply appears in a place, and the pile is where the deck is on this screen.
-func (g *goods) carryToDeck(gs *state.GlobalState, i int, face cards.Spec) {
+func (g *boosters) carryToDeck(gs *state.GlobalState, i int, face cards.Spec) {
 	g.carrySeat = -1
-	g.stage, g.carryFace, g.carryStyle = goodsCarrying, face, cards.Hand
+	g.stage, g.carryFace, g.carryStyle = boostersCarrying, face, cards.Hand
 	g.carryFrom, g.carryTo = g.slot(gs, i), deckStackRect(gs)
 	g.carryTrip = ui.NewTravel(0, flightTicks())
 	g.tip.Forget()
@@ -245,12 +245,12 @@ func (g *goods) carryToDeck(gs *state.GlobalState, i int, face cards.Spec) {
 
 // landingSeat is whether a pane seat is the one a card is flying into, and so is drawn empty until
 // it lands — the seat a mover is headed for is an absence, never the card arriving twice.
-func (g *goods) landingSeat(i int) bool {
-	return g.stage == goodsCarrying && i == g.carrySeat
+func (g *boosters) landingSeat(i int) bool {
+	return g.stage == boostersCarrying && i == g.carrySeat
 }
 
 // drawCarry is the taken card mid-flight, shrinking from the size it was offered at to the pane's.
-func (g *goods) drawCarry(gs *state.GlobalState, screen *ebiten.Image) {
+func (g *boosters) drawCarry(gs *state.GlobalState, screen *ebiten.Image) {
 	to, st := g.carryTo, g.carryStyle
 	at := ui.FlyingTo(g.carryFrom, to, g.carryTrip)
 	p := ui.EaseOut(g.carryTrip.Progress())
@@ -265,8 +265,8 @@ func (g *goods) drawCarry(gs *state.GlobalState, screen *ebiten.Image) {
 
 // count is how many cards are in the row that is taken from: the stones, the runes, or the
 // essences. **Not the offer**, which is a second row with its own slot function.
-func (g *goods) count() int {
-	switch g.good.Contains {
+func (g *boosters) count() int {
+	switch g.booster.Contains {
 	case session.ContentsStones:
 		return len(g.stones)
 	case session.ContentsRunes:
@@ -321,7 +321,7 @@ func dealVialEssences(gs *state.GlobalState, seat string, size int) []session.Es
 
 // dealSackRunes is what a sack holds: four of the catalog, without repeats.
 //
-// **Its own stream** (`seeds.SackStock`), separate from both other goods and from the reward
+// **Its own stream** (`seeds.SackStock`), separate from both other boosters and from the reward
 // screen's essences — see internal/seeds. **Flat, not weighted**, on the bag's argument: a rune
 // has no rarity, and weighting them would be pricing the effect, which nothing has decided yet.
 //
@@ -464,14 +464,14 @@ func dealVialOffer(gs *state.GlobalState) []int {
 
 // slot is where one card of the current stage is drawn, and the rectangle it is clicked in. One
 // function for both, like every other row in the game.
-func (g *goods) slot(gs *state.GlobalState, i int) image.Rectangle {
+func (g *boosters) slot(gs *state.GlobalState, i int) image.Rectangle {
 	n := g.count()
 	if n == 0 {
 		return image.Rectangle{}
 	}
 
-	top := gs.PctY(goodsChoiceRowPct)
-	if g.good.Contains == session.ContentsEssences {
+	top := gs.PctY(boostersChoiceRowPct)
+	if g.booster.Contains == session.ContentsEssences {
 		top = gs.PctY(vialEssenceRowPct)
 	}
 	pitch := cardWidth + 40
@@ -488,25 +488,25 @@ func (g *goods) slot(gs *state.GlobalState, i int) image.Rectangle {
 // **A selected card is lifted**, exactly as it is in the hand and on the reward screen: the row a
 // consumable is aimed at says which card is picked by standing it up, not by a highlight nobody
 // has to learn.
-func (g *goods) offerSlot(gs *state.GlobalState, i int) image.Rectangle {
+func (g *boosters) offerSlot(gs *state.GlobalState, i int) image.Rectangle {
 	return g.row.slot(gs, i)
 }
 
 // targets is how many cards an essence takes here — one, whatever the relics make of it, and never
 // more than the offer is holding. See essence_targets.go.
-func (g *goods) targets(gs *state.GlobalState) int {
+func (g *boosters) targets(gs *state.GlobalState) int {
 	return essenceTargetCount(gs, len(g.row.offer))
 }
 
 // reachNow is how many cards a click on an essence would change right now: what is selected, or the
 // ceiling when nothing is — the reward screen's rule. See essenceReach.
-func (g *goods) reachNow(gs *state.GlobalState) int {
+func (g *boosters) reachNow(gs *state.GlobalState) int {
 	return essenceReach(len(g.row.selected), g.targets(gs))
 }
 
 // selectedSlots is the picked cards **in row order**, whatever order they were clicked in — the
 // reward screen's rule, and the combat screen's.
-func (g *goods) selectedSlots() []int {
+func (g *boosters) selectedSlots() []int {
 	out := append([]int(nil), g.row.selected...)
 	sort.Ints(out)
 	return out
@@ -514,7 +514,7 @@ func (g *goods) selectedSlots() []int {
 
 // selectedDeckIndexes is the offer's current picks as indexes into the run deck, in row order. The
 // reward screen's function of the same name, and the same job.
-func (g *goods) selectedDeckIndexes() []int {
+func (g *boosters) selectedDeckIndexes() []int {
 	out := make([]int, 0, len(g.row.selected))
 	for _, slot := range g.selectedSlots() {
 		if slot < 0 || slot >= len(g.row.offer) {
@@ -533,7 +533,7 @@ func (g *goods) selectedDeckIndexes() []int {
 // **The same question the click asks and the same one the card's lit state reads**, which is what
 // stops an essence looking available and doing nothing. It is the reward screen's predicate over the
 // same target rule — see targeting.go.
-func (g *goods) essenceSpendable(gs *state.GlobalState, w session.Essence) bool {
+func (g *boosters) essenceSpendable(gs *state.GlobalState, w session.Essence) bool {
 	if gs.Run == nil {
 		return false
 	}
@@ -552,19 +552,19 @@ func (g *goods) essenceSpendable(gs *state.GlobalState, w session.Essence) bool 
 	return target.satisfiedBy(g.selectedDeckIndexes())
 }
 
-// update runs the good and reports whether anything is still open. **It no longer claims the frame**
+// update runs the booster and reports whether anything is still open. **It no longer claims the frame**
 // *(2026-09-19)*: this is a screen now, so there is nothing behind it to protect and no ModalOpen to
 // set. False means the card has been taken and whatever it did has finished playing.
-func (g *goods) update(gs *state.GlobalState, pile func(image.Point) bool) bool {
+func (g *boosters) update(gs *state.GlobalState, pile func(image.Point) bool) bool {
 	if !g.openNow() {
 		return false
 	}
 
-	if g.stage == goodsShowing {
+	if g.stage == boostersShowing {
 		g.tickShowing(gs)
 		return true
 	}
-	if g.stage == goodsCarrying {
+	if g.stage == boostersCarrying {
 		g.carryTrip.Tick()
 		if g.carryTrip.Done() {
 			g.reset()
@@ -572,7 +572,7 @@ func (g *goods) update(gs *state.GlobalState, pile func(image.Point) bool) bool 
 		}
 		return true
 	}
-	if g.stage == goodsUsing {
+	if g.stage == boostersUsing {
 		g.use.Tick()
 		if g.use.Done() {
 			g.reset()
@@ -591,7 +591,7 @@ func (g *goods) update(gs *state.GlobalState, pile func(image.Point) bool) bool 
 
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && gs.CursorAllowed() {
 		// **The pile is asked first and it is the scene's**, because the panel it opens covers the
-		// cards this file draws — see GoodsScene.clickedPile.
+		// cards this file draws — see BoostersScene.clickedPile.
 		if pile == nil || !pile(image.Pt(gs.MouseX, gs.MouseY)) {
 			g.click(gs)
 		}
@@ -599,7 +599,7 @@ func (g *goods) update(gs *state.GlobalState, pile func(image.Point) bool) bool 
 	return true
 }
 
-func (g *goods) hover(gs *state.GlobalState) {
+func (g *boosters) hover(gs *state.GlobalState) {
 	if !gs.CursorAllowed() {
 		return
 	}
@@ -633,7 +633,7 @@ func (g *goods) hover(gs *state.GlobalState) {
 	if i := ui.HoveredSeat(at, g.count(), func(i int) image.Rectangle {
 		return g.slot(gs, i)
 	}); i >= 0 {
-		switch g.good.Contains {
+		switch g.booster.Contains {
 		case session.ContentsEssences:
 			// **An essence is tooltipped like everything else in this pane** *(owner's call,
 			// 2026-09-18)*, now that its face is a picture rather than a sentence on a scrim. What
@@ -662,7 +662,7 @@ func (g *goods) hover(gs *state.GlobalState) {
 // click is what this dialog does with a press. **A click on a card is the only input it takes
 // itself** — there is no confirm, because the purchase has already happened and what is left is
 // which one. The screen around it owns SKIP.
-func (g *goods) click(gs *state.GlobalState) {
+func (g *boosters) click(gs *state.GlobalState) {
 	at := image.Pt(gs.MouseX, gs.MouseY)
 
 	// **The offer row is the drag's**: a press that never travels selects, one that does reorders.
@@ -682,8 +682,8 @@ func (g *goods) click(gs *state.GlobalState) {
 }
 
 // take commits whichever card was clicked.
-func (g *goods) take(gs *state.GlobalState, i int) {
-	switch g.good.Contains {
+func (g *boosters) take(gs *state.GlobalState, i int) {
+	switch g.booster.Contains {
 	case session.ContentsEssences:
 		// **An essence is refused rather than falling back**, on the predicate its lit state already
 		// read: a dim essence cannot be taken and a lit one always works. With no card selected every
@@ -715,15 +715,15 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 		// its dust carried to the hands button — the ladder it raised — as one used from the
 		// consumables pane.
 		g.use = stoneUseFrom(gs, ui.StoneSpec(gs, stone, true), g.slot(gs, i))
-		g.stage = goodsUsing
+		g.stage = boostersUsing
 		g.tip.Forget()
 
 	case session.ContentsRunes:
 		// **A rune is not applied here — it goes into the sack.** That is the whole
-		// difference between this good and the other two: a stone and an essence are spent on the
+		// difference between this booster and the other two: a stone and an essence are spent on the
 		// spot, and a rune is carried into the next fight and spent between its turns.
 		// **A full pane takes nothing and closes nothing**: the card is dim, and the sack stays open
-		// until a carried card is sold or the good is skipped.
+		// until a carried card is sold or the booster is skipped.
 		p := g.runes[i]
 		if !gs.Run.Hold(p.Record) {
 			return
@@ -764,7 +764,7 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 // PostBattleScene.aimAt. A preview computed by its own arithmetic is a preview that can disagree
 // with the thing it is previewing, and a deck altered while the result is on screen would make the
 // after-card impossible to draw from anything but a deck that has already moved on.
-func (g *goods) show(gs *state.GlobalState, essence session.Essence, seat int, slots []int) {
+func (g *boosters) show(gs *state.GlobalState, essence session.Essence, seat int, slots []int) {
 	if gs.Run == nil || len(slots) == 0 {
 		return
 	}
@@ -794,7 +794,7 @@ func (g *goods) show(gs *state.GlobalState, essence session.Essence, seat int, s
 	g.removes = essence.Target == session.TargetRemove
 	g.copied = essence.Target == session.TargetDuplicate
 
-	g.stage, g.held = goodsShowing, settledHoldTicks()
+	g.stage, g.held = boostersShowing, settledHoldTicks()
 
 	// **The picked seats are the morphs' while it runs**, so the row leaves them empty — except for
 	// a copy, whose original is untouched and stays drawn. PostBattleScene.settle's rule.
@@ -817,7 +817,7 @@ func (g *goods) show(gs *state.GlobalState, essence session.Essence, seat int, s
 // tickShowing runs the held picture: the essence used in its seat and the cards changing in theirs,
 // then the hold, and the deck edit at the end of it. **The hold does not start until every change
 // has landed** — the reward screen's ordering.
-func (g *goods) tickShowing(gs *state.GlobalState) {
+func (g *boosters) tickShowing(gs *state.GlobalState) {
 	if !g.use.Done() {
 		g.use.Tick()
 		return
@@ -848,7 +848,7 @@ func (g *goods) tickShowing(gs *state.GlobalState) {
 // **A full selection replaces its oldest card rather than refusing the click** — the reward
 // screen's rule, written up in PostBattleScene.selectOffered: with one target it reads as the pick
 // moving, which is exactly what it always did.
-func (g *goods) selectCard(gs *state.GlobalState, i int) {
+func (g *boosters) selectCard(gs *state.GlobalState, i int) {
 	for k, sel := range g.row.selected {
 		if sel == i {
 			g.row.selected = append(g.row.selected[:k], g.row.selected[k+1:]...)
@@ -864,34 +864,34 @@ func (g *goods) selectCard(gs *state.GlobalState, i int) {
 	g.tip.Forget()
 }
 
-// drawCards puts the good's own rows up: what was drawn from it, and — for a vial — the cards an
+// drawCards puts the booster's own rows up: what was drawn from it, and — for a vial — the cards an
 // essence may be aimed at.
 //
 // **The screen around it is the scene's** *(2026-09-19)*. This was a modal frame with a title bar
-// and a scrim; the ground, the build band, the heading and the draw pile are GoodsScene's now, and
-// what is left here is the thing the good actually is.
-func (g *goods) drawCards(gs *state.GlobalState, screen *ebiten.Image) {
+// and a scrim; the ground, the build band, the heading and the draw pile are BoostersScene's now, and
+// what is left here is the thing the booster actually is.
+func (g *boosters) drawCards(gs *state.GlobalState, screen *ebiten.Image) {
 	if !g.openNow() || gs.Run == nil {
 		return
 	}
 
-	if g.stage == goodsShowing {
+	if g.stage == boostersShowing {
 		g.row.draw(gs, screen)
 		g.use.Draw(gs, screen)
 		return
 	}
-	if g.stage == goodsCarrying {
+	if g.stage == boostersCarrying {
 		g.drawCarry(gs, screen)
 		return
 	}
-	if g.stage == goodsUsing {
+	if g.stage == boostersUsing {
 		g.use.Draw(gs, screen)
 		return
 	}
 
 	for i := 0; i < g.count(); i++ {
 		at := g.slot(gs, i).Min
-		switch g.good.Contains {
+		switch g.booster.Contains {
 		case session.ContentsStones:
 			ui.DrawStoneCard(gs, screen, at, g.stones[i], true)
 		case session.ContentsRunes:
@@ -923,19 +923,19 @@ func (g *goods) drawCards(gs *state.GlobalState, screen *ebiten.Image) {
 // title names what is open, and hint says what to do with it. **Two short lines rather than a
 // paragraph**: the cards say what they are, and this says how many of them the player gets.
 //
-// **Both come off the record now** *(2026-09-14)*, resolved once at load — see session.Good, where a
-// blank Title becomes the good's Name and a blank Hint becomes session.DefaultGoodHint, with the figure the record's own Size rather than a number authored twice. The vial is
+// **Both come off the record now** *(2026-09-14)*, resolved once at load — see session.Booster, where a
+// blank Title becomes the booster's Name and a blank Hint becomes session.DefaultBoosterHint, with the figure the record's own Size rather than a number authored twice. The vial is
 // still the exception and still says one thing *(owner's call, 2026-09-05)*: the essences on the
 // table are the whole of what the dialog is, so it heads itself with an instruction rather than a
 // label with a caption. It authors both fields to say so.
-func (g *goods) title() string {
-	if g.stage == goodsShowing {
+func (g *boosters) title() string {
+	if g.stage == boostersShowing {
 		if g.removes {
 			return "EATEN"
 		}
 		return "CHANGED"
 	}
-	return g.good.Title
+	return g.booster.Title
 }
 
 // hint is the line under the title: the record's own, plus how far an essence reaches when a relic
@@ -944,9 +944,9 @@ func (g *goods) title() string {
 // **The reach is said in words because nothing else on the screen says it** — the row lights the
 // essences only once it has enough cards, which says when and never how many. "Up to", because the
 // reach is a ceiling rather than a quota; see consumableTarget.fewest.
-func (g *goods) hint(gs *state.GlobalState) string {
-	line := g.good.Hint
-	if g.good.Contains != session.ContentsEssences {
+func (g *boosters) hint(gs *state.GlobalState) string {
+	line := g.booster.Hint
+	if g.booster.Contains != session.ContentsEssences {
 		return line
 	}
 	if n := g.targets(gs); n > 1 {

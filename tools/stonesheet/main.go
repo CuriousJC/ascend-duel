@@ -89,9 +89,9 @@ func run(dir string) error {
 		Ground: ground,
 		Style:  styleFacts(cards.EssenceStyle),
 		Count:  len(session.Stones()),
-		Bags:   goodsPhrase(session.ContentsStones),
+		Bags:   boostersPhrase(session.ContentsStones),
 	}
-	page.Share = goodsShare(session.ContentsStones, page.Count)
+	page.Share = boostersShare(session.ContentsStones, page.Count)
 
 	// **Walked by shape in ladder order rather than by stone**, so the page reads bottom rung to
 	// top *and* a shape nobody authored a stone for is visible as a gap. Walking `session.Stones()`
@@ -321,15 +321,15 @@ type page struct {
 	States   []cell
 }
 
-// goodsPhrase is every sealed good holding this catalog, as one sentence: "3 for 3, 4 for 5 or 5
-// for 6 vitae". goodsShare is how much of the catalog gets a seat, as a figure or a range.
+// boostersPhrase is every booster holding this catalog, as one sentence: "3 for 3, 4 for 5 or 5
+// for 6 vitae". boostersShare is how much of the catalog gets a seat, as a figure or a range.
 //
 // **Asked of the catalog rather than written down**, so a page quoting what a sack costs cannot
 // disagree with what the shop charges. **A phrase rather than a size and a price** *(2026-09-15)*:
 // a catalog is held at three sizes now, and a page naming one of them would be quoting the shop
 // accurately about a third of what it sells.
-func goodsPhrase(c session.GoodContents) string {
-	held := goodsHolding(c)
+func boostersPhrase(c session.BoosterContents) string {
+	held := boostersHolding(c)
 	parts := make([]string, 0, len(held))
 	for _, g := range held {
 		parts = append(parts, fmt.Sprintf("%d for %d", g.Size, g.Price))
@@ -344,8 +344,8 @@ func goodsPhrase(c session.GoodContents) string {
 	}
 }
 
-func goodsShare(c session.GoodContents, count int) string {
-	held := goodsHolding(c)
+func boostersShare(c session.BoosterContents, count int) string {
+	held := boostersHolding(c)
 	if count == 0 || len(held) == 0 {
 		return ""
 	}
@@ -357,11 +357,11 @@ func goodsShare(c session.GoodContents, count int) string {
 	return fmt.Sprintf("%.1f-%.1f", lo, hi)
 }
 
-// goodsHolding is every good holding one catalog, smallest first.
-func goodsHolding(c session.GoodContents) []session.Good {
-	var out []session.Good
-	for _, key := range session.GoodKeys() {
-		if g, ok := session.GoodByKey(key); ok && g.Contains == c {
+// boostersHolding is every booster holding one catalog, smallest first.
+func boostersHolding(c session.BoosterContents) []session.Booster {
+	var out []session.Booster
+	for _, key := range session.BoosterKeys() {
+		if g, ok := session.BoosterByKey(key); ok && g.Contains == c {
 			out = append(out, g)
 		}
 	}

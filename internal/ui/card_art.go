@@ -715,8 +715,8 @@ var _ = func(c combat.Card, dmg int) (string, string, string, int, int) {
 // essenceSpec is an essence drawn as a card: a picture, and the color of whatever it grants.
 //
 // **The card carries no sentence** *(owner's call, 2026-09-18)*. The authored line is the tooltip's
-// now — see EssenceTip — which is the treatment the runes, the stones, the potions and the sealed
-// goods already take at this style: a scrim is a ground for type, and a card that says nothing
+// now — see EssenceTip — which is the treatment the runes, the stones, the potions and the
+// boosters already take at this style: a scrim is a ground for type, and a card that says nothing
 // shows the whole picture. What a player reads at a glance is the art and the border; what the
 // essence actually does is the question they rest the cursor to ask.
 //
@@ -765,9 +765,9 @@ func StoneSpec(gs *state.GlobalState, st session.Stone, enabled bool) cards.Spec
 	}
 }
 
-// goodSpec is one of the shop's two sealed goods as a card: the bag of rocks, or the vial of essence.
+// boosterSpec is one of the shop's two boosters as a card: the bag of rocks, or the vial of essence.
 //
-// **A sealed good is a card that says what is inside without saying which**, and since 2026-09-15
+// **A booster is a card that says what is inside without saying which**, and since 2026-09-15
 // it says it in the tooltip rather than on its face *(owner's call)*. It carried "4 stones / keep
 // 1" across the lower half of its picture until then — the shape of the offer and never its
 // contents, which is still exactly what the tooltip says, in the room it takes to say it properly.
@@ -779,8 +779,8 @@ func StoneSpec(gs *state.GlobalState, st session.Stone, enabled bool) cards.Spec
 // boulder, the essence default, the rune default — on the argument that a third picture was a
 // third thing to recognize for no gain. What that missed is that a borrowed face makes the vial
 // and the essence card in it the same picture, so the shelf says "essences" twice and says nothing
-// about the *vessel* being what is bought. The borrow is still the empty case; see goodArt.
-func goodSpec(gs *state.GlobalState, name string, art image.Image, enabled bool) cards.Spec {
+// about the *vessel* being what is bought. The borrow is still the empty case; see boosterArt.
+func boosterSpec(gs *state.GlobalState, name string, art image.Image, enabled bool) cards.Spec {
 	return cards.Spec{
 		Name:    name,
 		Form:    cards.FormNone,

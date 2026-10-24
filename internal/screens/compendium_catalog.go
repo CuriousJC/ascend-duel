@@ -6,7 +6,7 @@ package screens
 // in the catalog's own order. **A record the player has never had is drawn as the placeholder**, with
 // nothing of its own picture showing, and its tooltip keeps its name and its rule to itself: a
 // compendium that gave the whole catalog away on the first launch would leave nothing to find. One
-// that has been had carries its count under it and its full tooltip, and **one that has been had but
+// that has been had carries its full tooltip, ending on its count, and **one that has been had but
 // has no art of its own is its real card darkened**, so a found record waiting for a picture is not
 // mistaken for one still to find.
 //
@@ -15,6 +15,7 @@ package screens
 
 import (
 	"image"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -31,21 +32,21 @@ import (
 )
 
 // The grid. **Every catalog card is 200x280 and is drawn here at its own size**, except the
-// bestiary's, which is drawn at three fifths: a creature in every colour is many times any other
-// catalog, and a page of them at full size is a handful of cards.
+// bestiary's, which is drawn at three quarters: a creature in every colour is many times any other
+// catalog, and a page of them at full size is a handful of cards. Three quarters is the size that
+// stands four rows down the body.
 const (
 	catalogScaleNum = 3
-	catalogScaleDen = 5
+	catalogScaleDen = 4
 
-	catalogGapX     = 22
-	catalogGapY     = 14
-	catalogCaptionH = 34
+	catalogGapX = 14
+	catalogGapY = 14
 
 	// catalogTagH is one line of an entry's tags — the element and the motif a creature or a realm
-	// carries — set between the picture and the caption.
+	// carries — set under the picture.
 	catalogTagH = 22
 
-	// catalogTagGap is what a book whose count lives in the tooltip keeps under its tags.
+	// catalogTagGap is what a book with tags keeps under them.
 	catalogTagGap = 6
 
 	// catalogUndrawnScale is how far a found record with no art of its own is darkened, so the
@@ -80,6 +81,12 @@ type compendiumEntry struct {
 	element string
 	motif   string
 	tags    []models.TipLine
+
+	// rarity is a relic's tier, which the relic book's one facet reads, and room which of a realm's
+	// three rooms a realm-book entry is.
+	rarity     data.Rarity
+	room       string
+	affinities []string
 
 	// backdrop is a realm's: the room drawn in place of a card — see compendium_realm.go.
 	backdrop string
@@ -186,15 +193,6 @@ func (s *CompendiumScene) drawCatalog(gs *state.GlobalState, screen *ebiten.Imag
 			systems.DrawLine(screen, tag, face, x, ty, compendiumQuietInk)
 			ty += catalogTagH
 		}
-		if !e.found || s.open.countInTip {
-			continue
-		}
-		cap := &text.DrawOptions{}
-		cap.GeoM.Translate(float64(seat.Min.X+seat.Dx()/2), float64(seat.Max.Y-catalogCaptionH/2))
-		cap.PrimaryAlign = text.AlignCenter
-		cap.SecondaryAlign = text.AlignCenter
-		cap.ColorScale.ScaleWithColor(compendiumInk)
-		systems.DrawUI(screen, e.verb+" "+thousands(e.count), face, cap)
 	}
 }
 
@@ -218,7 +216,7 @@ func tagWidth(line models.TipLine, face *text.GoTextFace) float64 {
 }
 
 // catalogDialog finishes a book: the count line every found record's tooltip ends on, every entry
-// shown, and its "N of M found" line.
+// shown, and its "(N/M)" tally.
 //
 // **A revealing scenario or the reveal dev tool finds everything here**, so every catalog — and the bestiary's peek — reads
 // as found without each book asking. See scenario.Reveals: a roster entry is keyed by its realm, so a
@@ -243,23 +241,21 @@ func catalogDialog(gs *state.GlobalState, title string, entries []compendiumEntr
 		card = entries[0].style
 	}
 	d := &compendiumDialog{
-		title:    title,
-		entries:  entries,
-		pic:      image.Pt(card.Width, card.Height),
-		captionH: catalogCaptionH,
+		title:   title,
+		entries: entries,
+		pic:     image.Pt(card.Width, card.Height),
 	}
 	d.refilter()
 	return d
 }
 
-// tagged makes room in a book's caption for the tag lines its entries carry.
+// tagged makes room under a book's pictures for the tag lines its entries carry.
 func (d *compendiumDialog) tagged() {
 	most := 0
 	for _, e := range d.entries {
 		most = max(most, len(e.tags))
 	}
-	d.captionH = catalogCaptionH + most*catalogTagH
-	if d.countInTip {
+	if most > 0 {
 		d.captionH = catalogTagGap + most*catalogTagH
 	}
 }
@@ -290,7 +286,7 @@ func creatureStyle() cards.Style {
 	return cards.EssenceStyle.Scaled(catalogScaleNum, catalogScaleDen)
 }
 
-// entry is one record's card with its count against a stat family, and the verb its caption uses.
+// entry is one record's card with its count against a stat family, and the verb its tooltip uses.
 func entry(spec cards.Spec, style cards.Style, tally int, verb, title string, lines []string) compendiumEntry {
 	return compendiumEntry{
 		spec: spec, style: style, found: tally > 0, count: tally,
@@ -307,10 +303,14 @@ func relicsDialog(gs *state.GlobalState) *compendiumDialog {
 			continue
 		}
 		title, lines := ui.RelicTip(record)
-		out = append(out, entry(ui.RelicSpec(gs, record, "", true, false), bleedStyle(true),
-			all.Total(session.StatRelicBought+key), "BOUGHT", title, lines))
+		e := entry(ui.RelicSpec(gs, record, "", true, false), bleedStyle(true),
+			all.Total(session.StatRelicBought+key), "BOUGHT", title, lines)
+		e.rarity, e.affinities = record.Rarity, relicAffinities(record)
+		out = append(out, e)
 	}
-	return catalogDialog(gs, "RELICS", out)
+	d := catalogDialog(gs, "RELICS", out)
+	d.rarities(gs)
+	return d
 }
 
 func cantripsDialog(gs *state.GlobalState) *compendiumDialog {
@@ -345,15 +345,52 @@ func tonicsDialog(gs *state.GlobalState) *compendiumDialog {
 	return catalogDialog(gs, "TONICS", out)
 }
 
+// essencesDialog is the essence book, **in three runs**: the form essences in the forms' order, the
+// elemental ones in the affinity order, then every other upgrade to a card in the catalog's own
+// order. Sorted here rather than in data/essences.json, whose order is the family grouping the
+// essence sheet reads.
 func essencesDialog(gs *state.GlobalState) *compendiumDialog {
 	all := everything(gs)
 	var out []compendiumEntry
-	for _, w := range session.Essences() {
+	var file []session.Essence
+	for _, key := range data.EssenceFileOrder() {
+		if w, ok := session.EssenceByKey(key); ok {
+			file = append(file, w)
+		}
+	}
+	for _, w := range essenceBookOrder(file) {
 		title, lines := ui.EssenceTip(w, 1)
 		out = append(out, entry(ui.EssenceSpec(gs, w, true), bleedStyle(false),
 			all.Total(session.StatEssenceUsed+w.Record), "USED", title, lines))
 	}
 	return catalogDialog(gs, "ESSENCES", out)
+}
+
+// essenceForms is the order the form essences stand in.
+var essenceForms = []string{"stab", "slash", "crush", "defend"}
+
+// essenceBookOrder sorts the essences into the book's three runs, stably, so an essence the runs do
+// not order keeps its place in the catalog.
+func essenceBookOrder(ws []session.Essence) []session.Essence {
+	rank := func(w session.Essence) (run, at int) {
+		switch w.Target {
+		case session.TargetForm:
+			return 0, slices.Index(essenceForms, w.Form.String())
+		case session.TargetElement:
+			return 1, slices.Index(data.AffinityElements, w.Element.String())
+		}
+		return 2, 0
+	}
+	out := slices.Clone(ws)
+	slices.SortStableFunc(out, func(a, b session.Essence) int {
+		ra, ia := rank(a)
+		rb, ib := rank(b)
+		if ra != rb {
+			return ra - rb
+		}
+		return ia - ib
+	})
+	return out
 }
 
 func runesDialog(gs *state.GlobalState) *compendiumDialog {
@@ -376,19 +413,19 @@ func stonesDialog(gs *state.GlobalState) *compendiumDialog {
 	return catalogDialog(gs, "STONES", out)
 }
 
-func goodsDialog(gs *state.GlobalState) *compendiumDialog {
+func boostersDialog(gs *state.GlobalState) *compendiumDialog {
 	all := everything(gs)
 	var out []compendiumEntry
-	for _, g := range session.Goods() {
-		title, lines := goodTip(g, g.Price)
+	for _, g := range session.Boosters() {
+		title, lines := boosterTip(g, g.Price)
 		spec := cards.Spec{
 			Name: g.Name, Form: cards.FormNone, Element: ui.ArtFor(combat.Basic),
-			Art: goodArt(gs, g), Enabled: true,
+			Art: boosterArt(gs, g), Enabled: true,
 		}
 		out = append(out, entry(spec, bleedStyle(false),
-			all.Total(session.StatGoodBought+g.Record), "OPENED", title, lines))
+			all.Total(session.StatBoosterBought+g.Record), "OPENED", title, lines))
 	}
-	return catalogDialog(gs, "SEALED GOODS", out)
+	return catalogDialog(gs, "BOOSTERS", out)
 }
 
 // traitOdds is how often a trait turns up, said where it turns up — or that it is never sold.
@@ -406,7 +443,7 @@ func traitOdds(pct int, where string) string {
 // **Each element is found on its own, once it has been fought** in that colour, won or lost — a
 // player who fell to the Toll-Taker has met it. The figures are the per-element families, which
 // count from the build that introduced them, so a creature met before then is still to find in
-// every colour. Its caption is the wins; resting on a found one opens its card and its deck.
+// every colour. Resting on a found one opens its card and its deck.
 func creaturesDialog(gs *state.GlobalState) *compendiumDialog {
 	all := everything(gs)
 	var out []compendiumEntry
@@ -427,15 +464,16 @@ func creaturesDialog(gs *state.GlobalState) *compendiumDialog {
 				e.creature = &creaturePeek{
 					record: r, element: element, motif: motif.Name, beaten: beaten, fell: fell,
 				}
-				e.element, e.motif = element, key
+				e.element, e.motif, e.room = element, key, roomLabel(r.Tier)
 				out = append(out, e)
 			}
 		}
 	}
+	// **No tags under a creature**: the chips already say which colours and motifs are on the page,
+	// and the room they took is another row of cards.
 	d := catalogDialog(gs, "CREATURES", out)
-	d.roster(gs, func(_ bool, element, motif string) []models.TipLine {
-		return []models.TipLine{ui.TipLine(element), {{Text: motif}}}
-	})
+	d.roster(gs, func(bool, string, string) []models.TipLine { return nil })
+	d.rooms(gs)
 	return d
 }
 

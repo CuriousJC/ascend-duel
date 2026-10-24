@@ -20,9 +20,12 @@ package screens
 // **The key is the disk contract and the name is not.** A record's `APIName` may never
 // change once shipped; its `DisplayName` can be reworded any afternoon.
 //
-// **It scrolls now**, on `models.Scrollbar` — the third widget in the game, a drag rather than a
-// wheel because the input vocabulary has no wheel. The rows are a fixed height, so the bar counts
-// rows and the page cannot land half a line off.
+// **It scrolls**, on `models.Scrollbar`, a drag and a pair of arrows because the input vocabulary has
+// no wheel. **The entries stand three to a row**, a fixed height, so the bar counts rows and the page
+// cannot land half a line off.
+//
+// **The icon is the whole of "earned"**: the achieved picture in color on an earned entry and in
+// grayscale on a locked one, so the entry carries no second mark saying the same thing.
 
 import (
 	"image"
@@ -37,25 +40,35 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-// The page's shape. A heading, a column of rows under it, and the way back.
+// The page's shape. A heading carrying the tally, a grid of entries under it, and the way back.
 const (
 	achievementsTitle     = "ACHIEVEMENTS"
 	achievementsTitleSize = 40
 
-	// achievementRowHeight is the band one entry takes, and achievementRowGap the air between two.
-	// A row carries two lines of text, so it is deeper than a button.
-	achievementRowHeight = 78
-	achievementRowGap    = 14
-	achievementRowWidth  = 640
+	// achievementRowHeight is the band one entry takes, and achievementRowGap the air between two
+	// rows. An entry carries a name and up to two lines of description, so it is deeper than a
+	// button. achievementColumns stand across the page, achievementColumnGap apart.
+	achievementRowHeight = 106
+	achievementRowGap    = 12
+	achievementRowWidth  = 590
+	achievementColumns   = 3
+	achievementColumnGap = 20
 
-	achievementNameSize = systems.TextMedium
-	achievementLineSize = systems.TextSmall
+	// achievementLineTop is where an entry's description starts, and achievementLineStep the
+	// distance between its two lines.
+	achievementLineTop  = 46
+	achievementLineStep = 26
+
+	// achievementNameTop is the middle of the name's line, which the progress figure shares.
+	achievementNameTop = 24
+
+	achievementNameSize = systems.TextLarge
+	achievementLineSize = systems.TextMedium
 
 	// achievementRowInset is the margin at either end of a row: the icon sits that far in from the
-	// left edge, and the progress figure and the tick that far in from the right.
+	// left edge, and the progress figure that far in from the right.
 	achievementRowInset = 20
 
 	// achievementIconSize is the icon's side on the page — **Steam's own display size**, so the icon
@@ -64,8 +77,9 @@ const (
 	achievementIconSize = 64
 	achievementTextLeft = achievementRowInset/2 + achievementIconSize + achievementRowInset
 
-	// achievementTallySize is the "1 of 11" under the heading.
-	achievementTallySize = systems.TextSmall
+	// achievementTextWidth is how wide an entry's words may run: from achievementTextLeft to the
+	// right-hand margin.
+	achievementTextWidth = achievementRowWidth - achievementTextLeft - achievementRowInset
 
 	// The rows are cut off at the top of the Back button. **A count of rows rather than a pixel
 	// height**, because that is what the scrollbar is told and a page that could show two and a
@@ -77,14 +91,20 @@ const (
 	achievementScrollGap   = 18
 )
 
-// The two grounds a row is drawn on: earned, and not.
+// The two grounds a row is drawn on, earned and not, and the light inks written on them.
 //
-// **Earned is a warmer, lighter card and locked is nearly the screen itself.** The distinction is
-// carried by *weight* rather than by hue, per the color rule in CLAUDE.md — the wheel belongs to
-// the elements and an achievements page has no business claiming one.
+// **A row is a dark card with white type**, for the contrast the light ground cannot give small
+// type. Earned is a step lighter than locked and its words are brighter: the distinction is carried
+// by *weight* rather than by hue, per the color rule in CLAUDE.md — the wheel belongs to the
+// elements and an achievements page has no business claiming one.
 var (
-	achievementEarnedFill = color.RGBA{R: 244, G: 234, B: 214, A: 255}
-	achievementLockedFill = color.RGBA{R: 216, G: 200, B: 172, A: 255}
+	achievementEarnedFill = color.RGBA{R: 52, G: 50, B: 62, A: 255}
+	achievementLockedFill = color.RGBA{R: 34, G: 33, B: 42, A: 255}
+
+	achievementNameInk       = color.RGBA{R: 246, G: 246, B: 250, A: 255}
+	achievementLineInk       = color.RGBA{R: 214, G: 214, B: 224, A: 255}
+	achievementLockedNameInk = color.RGBA{R: 186, G: 186, B: 198, A: 255}
+	achievementLockedLineInk = color.RGBA{R: 156, G: 156, B: 170, A: 255}
 )
 
 // What a hidden achievement's row says while it is locked.
@@ -126,7 +146,7 @@ func (s *AchievementsScene) Update(gs *state.GlobalState) error {
 	s.scroll.Width, s.scroll.Height = track.Dx(), track.Dy()
 	s.scroll.ScreenX = track.Min.X + track.Dx()/2
 	s.scroll.ScreenY = track.Min.Y + track.Dy()/2
-	s.scroll.Total = len(achieve.Loaded().All())
+	s.scroll.Total = (len(achieve.Loaded().All()) + achievementColumns - 1) / achievementColumns
 	s.scroll.Visible = achievementsVisible
 	systems.UpdateScrollbar(gs, s.scroll)
 	return nil
@@ -140,28 +160,22 @@ func (s *AchievementsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	heading.PrimaryAlign = text.AlignCenter
 	heading.SecondaryAlign = text.AlignCenter
 	heading.ColorScale.ScaleWithColor(ui.GroundInk)
-	systems.DrawText(screen, achievementsTitle,
+	// **The tally rides on the heading**, because the whole reason to open this page is to find out
+	// how far along it you are.
+	got, total := achievementCount(gs)
+	systems.DrawText(screen, achievementsTitle+" ("+strconv.Itoa(got)+"/"+strconv.Itoa(total)+")",
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: achievementsTitleSize}, heading)
 
-	// **The tally is the one number worth having at the top**, because the whole reason to open
-	// this page is to find out how far along it you are.
-	tally := &text.DrawOptions{}
-	tally.GeoM.Translate(float64(gs.PctX(50)), float64(gs.PctY(20)))
-	tally.PrimaryAlign = text.AlignCenter
-	tally.SecondaryAlign = text.AlignCenter
-	tally.ColorScale.ScaleWithColor(systems.ColorToward(ui.GroundInk, ui.ScreenGround, 35))
-	systems.DrawText(screen, achievementTally(gs),
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: achievementTallySize}, tally)
-
-	left := gs.PctX(50) - achievementRowWidth/2
+	left := achievementsLeft(gs)
 	top := achievementsTop(gs)
 
 	all := achieve.Loaded().All()
-	offset := s.scroll.Offset
-	for i := 0; i < achievementsVisible && offset+i < len(all); i++ {
-		a := all[offset+i]
-		y := top + i*(achievementRowHeight+achievementRowGap)
-		s.drawRow(gs, screen, a, left, y, earned(gs, a.APIName))
+	first := s.scroll.Offset * achievementColumns
+	for i := 0; i < achievementsVisible*achievementColumns && first+i < len(all); i++ {
+		a := all[first+i]
+		x := left + (i%achievementColumns)*(achievementRowWidth+achievementColumnGap)
+		y := top + (i/achievementColumns)*(achievementRowHeight+achievementRowGap)
+		s.drawRow(gs, screen, a, x, y, earned(gs, a.APIName))
 	}
 
 	systems.DrawScrollbar(gs, screen, s.scroll)
@@ -185,10 +199,9 @@ func (s *AchievementsScene) drawRow(gs *state.GlobalState, screen *ebiten.Image,
 
 	// How far the words are pulled toward the ground. An earned row is at full strength; a locked
 	// one is quiet but still readable, which is the whole point of listing it.
-	nameInk, lineInk := ui.GroundInk, systems.ColorToward(ui.GroundInk, fill, 30)
+	nameInk, lineInk := achievementNameInk, achievementLineInk
 	if !got {
-		nameInk = systems.ColorToward(ui.GroundInk, fill, 45)
-		lineInk = systems.ColorToward(ui.GroundInk, fill, 60)
+		nameInk, lineInk = achievementLockedNameInk, achievementLockedLineInk
 	}
 
 	// **A hidden achievement says nothing about itself until it is earned** — Steam's meaning of the
@@ -215,30 +228,30 @@ func (s *AchievementsScene) drawRow(gs *state.GlobalState, screen *ebiten.Image,
 	}
 
 	name := &text.DrawOptions{}
-	name.GeoM.Translate(float64(x+achievementTextLeft), float64(y+22))
+	name.GeoM.Translate(float64(x+achievementTextLeft), float64(y+achievementNameTop))
 	name.SecondaryAlign = text.AlignCenter
 	name.ColorScale.ScaleWithColor(nameInk)
 	systems.DrawText(screen, shown.DisplayName,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: achievementNameSize}, name)
 
-	line := &text.DrawOptions{}
-	line.GeoM.Translate(float64(x+achievementTextLeft), float64(y+54))
-	line.SecondaryAlign = text.AlignCenter
-	line.ColorScale.ScaleWithColor(lineInk)
-	systems.DrawText(screen, shown.Description,
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: achievementLineSize}, line)
+	lineFace := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: achievementLineSize}
+	for i, l := range achievementLines(shown.Description, lineFace) {
+		systems.DrawLine(screen, l, lineFace, x+achievementTextLeft,
+			y+achievementLineTop+i*achievementLineStep, lineInk)
+	}
 
 	// **Progress, but only where there is any.** A tally has a fraction and a moment does not, so a
 	// row that is either done or not says nothing here rather than saying "0 / 1" — see
 	// achieve.Achievement.Progress, which is the one place that decision is made.
 	//
-	// **It is drawn on a locked row and not on an earned one.** A finished tally would read
-	// "300 / 300" next to a tick, which is the same fact twice.
+	// **It is drawn on a locked row and not on an earned one**, where a finished tally would read
+	// "300 / 300" beside an icon already in color. It stands on the name's line, the description
+	// below being free to wrap under it.
 	if !got && !a.Hidden && gs.Profile != nil {
 		if p := a.Progress(gs.Profile.Counters); p != "" {
 			prog := &text.DrawOptions{}
 			prog.GeoM.Translate(
-				float64(x+achievementRowWidth-achievementRowInset), float64(y+54))
+				float64(x+achievementRowWidth-achievementRowInset), float64(y+achievementNameTop))
 			prog.PrimaryAlign = text.AlignEnd
 			prog.SecondaryAlign = text.AlignCenter
 			prog.ColorScale.ScaleWithColor(lineInk)
@@ -247,38 +260,32 @@ func (s *AchievementsScene) drawRow(gs *state.GlobalState, screen *ebiten.Image,
 		}
 	}
 
-	// **A tick on an earned row, and nothing on a locked one.** A word would need a second column
-	// and a padlock would need art nobody has drawn; the mark is two strokes, which is the least
-	// that can say "this one".
-	if got {
-		s.drawTick(screen, x+achievementRowWidth-46, y+achievementRowHeight/2)
-	}
 }
 
-// drawTick is the earned mark: two strokes, drawn rather than glyphed.
-//
-// **Not an enum**, because an append-only ordinal keyed into a cache would be, and
-// a shape this small and this specific to one page does not earn a permanent seat in it. See
-// CLAUDE.md on what a generated glyph costs.
-func (s *AchievementsScene) drawTick(screen *ebiten.Image, cx, cy int) {
-	const w = 3
-	x, y := float32(cx), float32(cy)
-	vector.StrokeLine(screen, x-11, y, x-3, y+9, w, ui.GroundInk, true)
-	vector.StrokeLine(screen, x-3, y+9, x+12, y-10, w, ui.GroundInk, true)
+// achievementLines is a description wrapped to the entry's width.
+func achievementLines(description string, face *text.GoTextFace) []models.TipLine {
+	return systems.WrapLine(models.TipLine{{Text: description}}, face, achievementTextWidth)
 }
 
 // achievementsTop is where the first row sits, and achievementsColumnHeight how deep the whole
 // column is. **One is derived from the other**, so the scrollbar's track and the rows it scrolls
 // cannot drift apart.
-func achievementsTop(gs *state.GlobalState) int { return gs.PctY(28) }
+func achievementsTop(gs *state.GlobalState) int { return gs.PctY(19) }
+
+// achievementsGridWidth is how wide the grid of entries is, and achievementsLeft where it starts:
+// centered on the page.
+const achievementsGridWidth = achievementColumns*achievementRowWidth +
+	(achievementColumns-1)*achievementColumnGap
+
+func achievementsLeft(gs *state.GlobalState) int { return gs.PctX(50) - achievementsGridWidth/2 }
 
 func achievementsColumnHeight() int {
 	return achievementsVisible*(achievementRowHeight+achievementRowGap) - achievementRowGap
 }
 
-// achievementsScrollRect is the bar's track: beside the rows, the full depth of the column.
+// achievementsScrollRect is the bar's track: beside the grid, the full depth of the column.
 func achievementsScrollRect(gs *state.GlobalState) image.Rectangle {
-	left := gs.PctX(50) + achievementRowWidth/2 + achievementScrollGap
+	left := achievementsLeft(gs) + achievementsGridWidth + achievementScrollGap
 	top := achievementsTop(gs)
 	return image.Rect(left, top, left+achievementScrollWidth, top+achievementsColumnHeight())
 }
@@ -293,16 +300,21 @@ func earned(gs *state.GlobalState, key string) bool {
 	return gs.Profile != nil && gs.Profile.Has(key)
 }
 
-// achievementTally is the "N of M" line under the heading.
-func achievementTally(gs *state.GlobalState) string {
+// achievementCount is how many entries are earned, out of how many there are.
+func achievementCount(gs *state.GlobalState) (got, total int) {
 	all := achieve.Loaded().All()
-	got := 0
 	for _, a := range all {
 		if earned(gs, a.APIName) {
 			got++
 		}
 	}
-	return strconv.Itoa(got) + " of " + strconv.Itoa(len(all))
+	return got, len(all)
+}
+
+// achievementTally is the count written "N of M", as the statistics book's row reads it.
+func achievementTally(gs *state.GlobalState) string {
+	got, total := achievementCount(gs)
+	return strconv.Itoa(got) + " of " + strconv.Itoa(total)
 }
 
 // leave goes back to whichever screen opened this one, on the same terms the settings screen's Back

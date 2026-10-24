@@ -7,7 +7,7 @@ package screens
 // *(owner's call, 2026-08-22)*: the payout it narrates lands on the purse written on that card, and
 // choosing an essence is a choice about a deck you can only judge against the build you are holding.
 //
-// **The shop, a sealed good and the portal draw it too**, and **The Prismatic stands in the
+// **The shop, a booster and the portal draw it too**, and **The Prismatic stands in the
 // opponent's corner** on all of them *(owner's call, 2026-10-04)*, so the panes span the gap between
 // two corner cards exactly as they do in a fight. The shop draws its relic row itself, because its
 // row moves when a relic is bought or sold.

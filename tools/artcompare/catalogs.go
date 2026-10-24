@@ -72,7 +72,7 @@ var catalogs = map[string]*catalog{
 	"rune":       {Name: "rune", Dir: "assets/rune", File: "data/runes.json", Subjects: runeSubjects},
 	"cantrip":    {Name: "cantrip", Dir: "assets/cantrip", File: "data/cantrips.json", Subjects: cantripSubjects},
 	"stone":      {Name: "stone", Dir: "assets/stone", File: "data/stones.json", Subjects: stoneSubjects},
-	"other":      {Name: "other", Dir: "assets/other", File: "data/potions.json, data/tonics.json and data/goods.json", Subjects: otherSubjects},
+	"other":      {Name: "other", Dir: "assets/other", File: "data/potions.json, data/tonics.json and data/boosters.json", Subjects: otherSubjects},
 	"enemy-card": {Name: "enemy-card", Dir: "assets/enemy-card", File: "data/enemy_card_art.json", Subjects: enemyCardSubjects},
 }
 
@@ -269,8 +269,8 @@ func stoneSubjects() ([]subject, error) {
 	return out, nil
 }
 
-// otherSubjects is the catch-all family in assets/other: the potions, the tonics and the sealed
-// goods, which share a directory because they share a prompt and are too few to be catalogs of
+// otherSubjects is the catch-all family in assets/other: the potions, the tonics and the
+// boosters, which share a directory because they share a prompt and are too few to be catalogs of
 // their own.
 //
 // **Neither carries a Text the card prints**, so these draw as a picture and a name. That is what
@@ -297,9 +297,9 @@ func otherSubjects() ([]subject, error) {
 			Style: cards.EssenceStyle,
 		})
 	}
-	for _, rec := range data.LoadGoods() {
+	for _, rec := range data.LoadBoosters() {
 		out = append(out, subject{
-			Key: rec.GoodRecord, Stem: rec.Art, Group: "Sealed goods — " + rec.Family,
+			Key: rec.BoosterRecord, Stem: rec.Art, Group: "Boosters — " + rec.Family,
 			Caption: fmt.Sprintf("%s · %d vitae", rec.Name, rec.Price),
 			Spec: cards.Spec{
 				Name: rec.Name, Element: cards.Basic, Enabled: true,

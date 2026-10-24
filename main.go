@@ -138,7 +138,7 @@ func main() {
 	// The clock is read exactly once, at the one moment a run is allowed to be unpredictable.
 	// The seed is logged either way, because there will eventually be a field to type one
 	// back into and a seed nobody can see is a run nobody can ask about.
-	// `pinned` rather than a zero check on the seed itself: zero is the perfectly good run
+	// `pinned` rather than a zero check on the seed itself: zero is the perfectly booster run
 	// `000000` now, so "unset" needs saying separately.
 	pinned := false
 	if fixedRunSeed != "" {

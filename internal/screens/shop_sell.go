@@ -319,7 +319,7 @@ func (s *sellTab) drawTab(gs *state.GlobalState, screen *ebiten.Image) {
 }
 
 // sellCarried sells the carried card at one seat of the consumables pane, journals it, and reports
-// whether it went. **The one sale both screens make** — the shop's and the goods screen's, where a
+// whether it went. **The one sale both screens make** — the shop's and the boosters screen's, where a
 // full pane is emptied to make room for what a sack holds.
 func sellCarried(gs *state.GlobalState, i int) bool {
 	held := heldConsumables(gs)

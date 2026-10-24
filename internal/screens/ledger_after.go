@@ -182,7 +182,7 @@ func keyRecords(gs *state.GlobalState, gained, lost string, before, after []stri
 			kind, n = lost, -n
 		}
 		for i := 0; i < n; i++ {
-			out = append(out, session.LedgerRecord{Kind: kind, Subject: goodsName(gs, k)})
+			out = append(out, session.LedgerRecord{Kind: kind, Subject: boostersName(gs, k)})
 		}
 	}
 	return out
@@ -217,11 +217,11 @@ func vitaeRecords(before, after int) []session.LedgerRecord {
 	return nil
 }
 
-// goodsName is what a relic, rune or stone is called on screen, falling back to its key.
+// boostersName is what a relic, rune or stone is called on screen, falling back to its key.
 //
 // **A key is named rather than hidden**, for relicName's reason: a line in a saved account has to
 // read as something, and a record this build no longer has is better admitted than dropped.
-func goodsName(gs *state.GlobalState, key string) string {
+func boostersName(gs *state.GlobalState, key string) string {
 	if gs != nil {
 		if record, ok := gs.Relics[key]; ok {
 			return record.Name
@@ -239,7 +239,7 @@ func goodsName(gs *state.GlobalState, key string) string {
 	return key
 }
 
-// handWords is a rung's name, falling back to its key on goodsName's terms.
+// handWords is a rung's name, falling back to its key on boostersName's terms.
 func handWords(key string) string {
 	if id, ok := combat.HandIDForKey(key); ok {
 		if h, found := combat.HandByID(id); found {

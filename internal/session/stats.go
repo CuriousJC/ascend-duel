@@ -64,15 +64,15 @@ const (
 // The families: a prefix and a record key. **A prefix rather than one name per record**, so a relic
 // authored tomorrow is counted with nothing edited here.
 const (
-	StatRelicBought = "relic:"
-	StatPotionDrunk = "potion:"
-	StatTonicDrunk  = "tonic:"
-	StatCantripCast = "cantrip:"
-	StatEssenceUsed = "essence:"
-	StatRuneUsed    = "rune:"
-	StatStoneUsed   = "stone:"
-	StatGoodBought  = "good:"
-	StatHandFormed  = "hand:"
+	StatRelicBought   = "relic:"
+	StatPotionDrunk   = "potion:"
+	StatTonicDrunk    = "tonic:"
+	StatCantripCast   = "cantrip:"
+	StatEssenceUsed   = "essence:"
+	StatRuneUsed      = "rune:"
+	StatStoneUsed     = "stone:"
+	StatBoosterBought = "booster:"
+	StatHandFormed    = "hand:"
 
 	// The traits: a relic worn with one — bought so, or a cantrip's relic cast — and a card taken out
 	// of an action bundle carrying one.

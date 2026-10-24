@@ -120,7 +120,7 @@ func (c catalog) size() (int, int) {
 
 // source is one JSON file a catalog files art into, and what that file calls its key.
 //
-// **It is a list because one inbox can span two catalogs**: the potions and the sealed goods share
+// **It is a list because one inbox can span two catalogs**: the potions and the boosters share
 // docs/art/other_card_art_prompt.MD, so they are generated in one batch and filing them is one
 // command over two files. Every other kind has exactly one source, and a single-source catalog
 // behaves exactly as it did.
@@ -195,7 +195,7 @@ var catalogs = map[string]catalog{
 		sources: []source{
 			{json: "data/potions.json", key: "PotionRecord"},
 			{json: "data/tonics.json", key: "TonicRecord"},
-			{json: "data/goods.json", key: "GoodRecord"},
+			{json: "data/boosters.json", key: "BoosterRecord"},
 		},
 	},
 	"enemy-card": {

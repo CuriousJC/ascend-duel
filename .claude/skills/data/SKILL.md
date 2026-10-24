@@ -26,7 +26,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `stones.json` | `LoadStones` | one rung-raiser per hand: which rung it raises, and what its card says |
 | `potions.json` | `LoadPotions` | the bottles the shop sells every visit: which of the duelist's figures each moves, by how much, and what it costs |
 | `tonics.json` | `LoadTonics` | the run-long rule changes the shop offers one per realm: an `Effect`, an `Amount`, an optional `Requires`, and a `Price` — see `internal/session/tonic.go` |
-| `goods.json` | `LoadGoods` | the sealed goods: which catalog is inside, how many are drawn, what the player keeps, and what it costs |
+| `boosters.json` | `LoadBoosters` | the boosters: which catalog is inside, how many are drawn, what the player keeps, and what it costs |
 | `enemy_card_art.json` | `LoadEnemyCardArt` | the pictures a creature's cards wear: one record per attack flavor (`stab-bite`, `crush-grip`), each a `Form`, a `Name`, an `Art` stem drawn as `<Art>-<weight>-<element>` for each weight listed in `Weights`, a `Draw` brief for the medium weight and a `Ladder` line for each other weight, pasted after `docs/art/enemy_card_art_prompt.MD`. Every motif card names one in its `Flavor`; the `enemy-cards` skill is the procedure |
 | `upgrade_art.json` | `LoadUpgradeArt` | the art an upgraded card wears over its face: one record per upgrade plus `default`, each an `Art` stem under `assets/upgrade-art/` and a `Draw` brief — the `card_art.json` shape. Keys are checked against `systems.Upgrade` names in `internal/cards`, which `data` cannot import |
 | `screen_art.json` | `LoadScreenArt` | the backdrops behind every screen that is not a duel: one record per picture, the `Screens` it stands behind, a `Draw` brief pasted after `docs/art/screen_art_prompt.MD`, and optional `Anchors` — a card, a button or a painted place a brief positions something against, held to the layout by tests in `internal/screens`. Screen names are checked against `state.ActiveScreen` in `internal/state`, which `data` cannot import |
@@ -54,7 +54,7 @@ adding one** — a new catalog is a row in its `CATALOGS` table.
 | **Picture** | `Art`, an assets key, empty for the placeholder through `ArtKey()`; `Draw`, the brief | the record; the prompt in `docs/art/` |
 | **Family** | the motif it was authored beside, for its sheet to group by | the record |
 | **Grammar** | what it *does*, in closed vocabularies resolved at load and refused when wrong | parsed by whoever consumes it — see below |
-| **Source and odds** | where a run meets it — a shelf, a pack, a reward — and its price or chance, **written in data** | the record, or the good holding it |
+| **Source and odds** | where a run meets it — a shelf, a pack, a reward — and its price or chance, **written in data** | the record, or the booster holding it |
 | **Its own stream** | any roll that deals or decorates it, salted and split per the `randomness` skill | `internal/seeds` |
 | **Saved by name** | a run writes its key, never an ordinal | `internal/profile`, `internal/session/save.go` |
 | **Scenario hook** | a fixture can put it on without playing to it | `internal/scenario` |
@@ -286,9 +286,9 @@ catalogs carry all three; every record under `data/motifs/` carries `Art` and `D
   brief its portraits are generated from.
 - **`go run ./tools/relicart -kind relic|essence|rune|stone|cantrip-relic|card|upgrade|other|achievement`** files a generated picture into
   any of them: reduce to the card's size, commit under the family's asset directory, write `Art` on
-  the record. **`other` is the one kind spanning two files** — the potions and the sealed goods
+  the record. **`other` is the one kind spanning two files** — the potions and the boosters
   share a prompt and an inbox, and the tool writes each record's `Art` back into whichever of
-  `data/potions.json` and `data/goods.json` holds it.
+  `data/potions.json` and `data/boosters.json` holds it.
 
 ### Stones
 
@@ -319,7 +319,7 @@ own multiplier, so `+11` written into the file would be one number standing for 
 go stale the first time `hands.json` is tuned. The record carries the sentence and the shop's stone
 tooltip, `screens.stoneTipLines`, carries the arithmetic, a line per rung.
 
-### Potions and sealed goods
+### Potions and boosters
 
 **Two catalogs of shelf cards that are not relics**, both parsed and validated in
 `internal/session` for the reason the essences and the stones are: they are bought by a *run*, and
@@ -327,25 +327,25 @@ the rules have never heard of a shop.
 
 - **`potions.json` is an `Effect`, an `Amount` and a `Price`.** The effect vocabulary — `heal`,
   `dmg`, `life` — is closed and lives in Go. See `internal/session/potion.go`.
-- **`goods.json` is what the shop sells sight-unseen**: a `Contains` naming which catalog is
+- **`boosters.json` is what the shop sells sight-unseen**: a `Contains` naming which catalog is
   inside, a `Size` saying how many are drawn, and a `Price`. **`Contains` is the closed vocabulary**
   — `stones`, `essences`, `runes`, `cantrips`, `cards` — and it is read twice over: it decides which stream the contents
   are dealt from and what happens when one is chosen, *and* it is the noun the card's own face
   writes, so a face and a dialog cannot name different catalogs.
-- **One good per catalog *per size*** *(owner's call, 2026-09-15)*, refused at load. Two goods
-  holding the same catalog at the same size are the same sealed object twice. Goods of different
+- **One booster per catalog *per size*** *(owner's call, 2026-09-15)*, refused at load. Two boosters
+  holding the same catalog at the same size are the same sealed object twice. Boosters of different
   sizes deal unrelated contents, because `seeds.ForFightSeat` splits the catalog's stream by the
-  good's own record.
+  booster's own record.
 - **`Title` and `Hint` are the dialog's two lines, and blank is meaningful**: a blank Title becomes
-  the good's Name and a blank Hint becomes "take one of the four, the rest are gone", with the
+  the booster's Name and a blank Hint becomes "take one of the four, the rest are gone", with the
   figure the record's own `Size`. The vial authors both, because its dialog heads itself with an
   instruction. **The count and the price are never authored** — the face, the dialog and the
   tooltip all compute them from `Size` and `Price`, so nothing can quote a price the shop does not
   charge.
 - **They carry `Family`, `Art` and `Draw`** like the three catalogs above — see the shared section.
-  A good with no `Art` of its own is the one departure from every other catalog's fallback: it
+  A booster with no `Art` of its own is the one departure from every other catalog's fallback: it
   borrows the picture of *whatever is inside it*, which is a design rather than a placeholder.
-  See `screens.goodArt`.
+  See `screens.boosterArt`.
 - **The stone catalog reads the bag's `Size`**, so authoring a bigger bag is what makes
   `stones.json` have to cover more rungs — `internal/session/stone.go` panics on a catalog too
   short to fill it.

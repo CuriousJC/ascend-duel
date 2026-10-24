@@ -140,10 +140,10 @@ func NewGame() *Game {
 			// build, since a shipped game is exactly where it is needed. See screens/crash.go.
 			state.Crashed: &screens.CrashScene{},
 
-			// **A sealed good, opened.** Not a station of a run either — it is reached from the
+			// **A booster, opened.** Not a station of a run either — it is reached from the
 			// shop's shelf and goes back there — so it is in the registry and not in
-			// screens/flow.go. See screens/goods.go.
-			state.Goods: &screens.GoodsScene{},
+			// screens/flow.go. See screens/boosters.go.
+			state.Boosters: &screens.BoostersScene{},
 
 			// **The choice of realm after a portal room.** A station of the run, so it is also in
 			// screens/flow.go against session.PhasePortal. See screens/portal.go.

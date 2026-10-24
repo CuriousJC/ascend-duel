@@ -2,14 +2,14 @@ package main
 
 import "html/template"
 
-// The page. One static file, no JavaScript, no build step: the loop is "edit goods.json, re-run
+// The page. One static file, no JavaScript, no build step: the loop is "edit boosters.json, re-run
 // the tool, refresh the tab", the same loop every other tool here has.
 //
 // **Images are shown at their natural size with image-rendering: pixelated**, for the reason the
 // relic sheet's template gives: a card's rim is one pixel thick and a browser that scales it
 // resamples that rim into a blur, which makes the sheet lie about the art.
 //
-// **The ground is the one the goods actually sit on.** A gray border on white is a different card
+// **The ground is the one the boosters actually sit on.** A gray border on white is a different card
 // from a gray border on the game's own blue.
 //
 // **The tooltip is drawn as a panel rather than printed as a list.** The face says nothing now, so
@@ -19,9 +19,9 @@ import "html/template"
 // **A contents with no vessel is still a heading**, drawn as an empty seat rather than skipped.
 // That is the one layout decision this template makes that the essence sheet's does not, and it is
 // the stone sheet's argument on the other axis: the gap is the finding.
-var tmpl = template.Must(template.New("goodsheet").Parse(`<!doctype html>
+var tmpl = template.Must(template.New("boostersheet").Parse(`<!doctype html>
 <meta charset="utf-8">
-<title>Duello — sealed goods sheet</title>
+<title>Duello — boosters sheet</title>
 <style>
   :root {
     --ground: {{.Ground}};
@@ -102,31 +102,31 @@ var tmpl = template.Must(template.New("goodsheet").Parse(`<!doctype html>
   .draw.missing { color: var(--pink); border-left-color: var(--pink); }
 </style>
 
-<h1>Sealed goods sheet</h1>
+<h1>Boosters sheet</h1>
 <p class="facts">
-  {{.Count}} goods over {{.Catalog}} kinds of contents{{if .Unheld}} — {{.Unheld}} kind(s) have no
+  {{.Count}} boosters over {{.Catalog}} kinds of contents{{if .Unheld}} — {{.Unheld}} kind(s) have no
   vessel at all{{end}}. {{.Seats}} stand on a shelf at a time, one kind of contents each.
-  Good card <code>{{index .Style "width"}}&times;{{index .Style "height"}}</code>,
+  Booster card <code>{{index .Style "width"}}&times;{{index .Style "height"}}</code>,
   corner radius <code>{{index .Style "cornerRadius"}}</code>,
   border <code>{{index .Style "borderWidth"}}</code>,
   text band from <code>y={{index .Style "textBandTop"}}</code> — which nothing here fills.
-  Shown at 1:1 on the ground the goods are actually offered on.
+  Shown at 1:1 on the ground the boosters are actually offered on.
 </p>
 <p class="note">
-  Regenerate with <code>go run ./tools/goodsheet</code> and refresh. Every card here is drawn by
+  Regenerate with <code>go run ./tools/boostersheet</code> and refresh. Every card here is drawn by
   <code>internal/cards</code>, the same code the game blits, and every word beside it is read out
-  of <code>data/goods.json</code> through <code>internal/session</code>'s own validation — so a
-  good this page refuses to draw is a good the game refuses to start with.
+  of <code>data/boosters.json</code> through <code>internal/session</code>'s own validation — so a
+  booster this page refuses to draw is a booster the game refuses to start with.
 </p>
 <p class="note">
-  <strong>The face is a picture and a name, so the tooltip is the card.</strong> A good carried its
+  <strong>The face is a picture and a name, so the tooltip is the card.</strong> A booster carried its
   offer across the lower half of its art until 2026-09-15. What a player can know before paying is
   now said entirely by resting on it, and the dark panel beside each card is that paragraph, built
   the way the game builds it: the count and the noun computed from the record, the prose lines read
   off it, the price last.
 </p>
 <p class="note">
-  <strong>What a bigger vessel sells is a wider choice, not more cards.</strong> Every good gives
+  <strong>What a bigger vessel sells is a wider choice, not more cards.</strong> Every booster gives
   exactly one of what it holds whatever its size, so the figure to review is what the extra options
   cost over the size below — printed under each card. A ladder charging more for one option than
   for the next is a rung nobody has a reason to buy, and it is invisible reading prices down a
@@ -135,7 +135,7 @@ var tmpl = template.Must(template.New("goodsheet").Parse(`<!doctype html>
 <p class="note">
   <strong>Read the size against the catalog under it.</strong> The share on each card is how much
   of its contents the player is shown at once, computed from the live catalog rather than authored.
-  A vessel showing most of what there is to see is a sealed good that is barely sealed — the choice
+  A vessel showing most of what there is to see is a booster that is barely sealed — the choice
   it sells is nearly the whole shelf.
 </p>
 <p class="note">
@@ -146,8 +146,8 @@ var tmpl = template.Must(template.New("goodsheet").Parse(`<!doctype html>
   but this page reads it and nothing fails when a picture stops matching its brief.
 </p>
 <p class="note">
-  <strong>An unpainted good borrows the face of what is inside it</strong> —
-  <code>screens.goodArt</code> falls back to the default stone, essence or rune picture. That is
+  <strong>An unpainted booster borrows the face of what is inside it</strong> —
+  <code>screens.boosterArt</code> falls back to the default stone, essence or rune picture. That is
   the "nobody has painted this yet" state, and it is marked below: two vessels borrowing one
   contents' default face are two cards a player cannot tell apart on a shelf.
 </p>
@@ -163,12 +163,12 @@ var tmpl = template.Must(template.New("goodsheet").Parse(`<!doctype html>
 <h3 class="group">
   {{.Contents}}
   <span>
-    {{if .Goods}}{{len .Goods}} vessel(s), drawn from {{.Held}} in the catalog{{else}}nothing holds them{{end}}
+    {{if .Boosters}}{{len .Boosters}} vessel(s), drawn from {{.Held}} in the catalog{{else}}nothing holds them{{end}}
   </span>
 </h3>
 <div class="plates">
-  {{if .Goods}}
-    {{range .Goods}}
+  {{if .Boosters}}
+    {{range .Boosters}}
       <div class="plate">
         <img src="{{.Cell.File}}" width="{{.Cell.Width}}" height="{{.Cell.Height}}" alt="{{.Name}}">
         <div class="about">
@@ -209,7 +209,7 @@ var tmpl = template.Must(template.New("goodsheet").Parse(`<!doctype html>
         <div class="record">{{.Held}} in the catalog, and no way to be offered any</div>
         <p class="step">
           a contents the rules can open and the shop cannot sell — a record in
-          <code>goods.json</code> is all it wants
+          <code>boosters.json</code> is all it wants
         </p>
       </div>
     </div>
@@ -219,7 +219,7 @@ var tmpl = template.Must(template.New("goodsheet").Parse(`<!doctype html>
 
 <h2>Card states</h2>
 <p class="note">
-  The two states a sealed good is drawn in. A good is bought rather than chosen out of a set, so
+  The two states a booster is drawn in. A booster is bought rather than chosen out of a set, so
   the shelf dims what the purse cannot reach and lights nothing — there is no third.
 </p>
 <div class="plates">

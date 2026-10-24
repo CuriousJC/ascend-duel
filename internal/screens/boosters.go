@@ -1,6 +1,6 @@
 package screens
 
-// A sealed good, opened: **a screen, not a dialog** *(owner's call, 2026-09-19)*.
+// A booster, opened: **a screen, not a dialog** *(owner's call, 2026-09-19)*.
 //
 // What is on it is a decision about the build — which stone raises which rung, which rune is worth
 // carrying, which essence lands on which cards — and every one of those is judged against the
@@ -11,7 +11,7 @@ package screens
 // does on the shop and in a fight. What was a modal frame is now the screen's own ground, and the
 // cards sit where the reward screen's do.
 //
-// **SKIP is the one way out that is not a card** *(owner's call, 2026-09-26)*. The good is already
+// **SKIP is the one way out that is not a card** *(owner's call, 2026-09-26)*. The booster is already
 // paid for, so skipping it is the player's own choice to spend those vitae on nothing — the reward
 // screen's SKIP, on the same terms. It is a labelled button at the bottom of the screen
 // rather than an X, because an X means "put this away" everywhere else and this forfeits something.
@@ -39,27 +39,27 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/ui"
 )
 
-// openGoods pays nothing and decides nothing: it points the game at the screen that opens whichever
-// good the shop has already bought.
+// openBoosters pays nothing and decides nothing: it points the game at the screen that opens whichever
+// booster the shop has already bought.
 //
 // **It is here rather than in `internal/actions`** *(2026-09-19)*. That package holds the explicit
 // list of screens which may be opened from anywhere, and the list being explicit is what stops a
 // *run* screen being entered without its phase being set. This one is reached from exactly one
 // place and returns to exactly one place, so the door belongs beside the screen it opens.
-func openGoods(gs *state.GlobalState, key string) {
-	gs.PendingGood = key
-	gs.ActiveScreen = state.Goods
+func openBoosters(gs *state.GlobalState, key string) {
+	gs.PendingBooster = key
+	gs.ActiveScreen = state.Boosters
 	gs.NewScreen = true
 }
 
-// GoodsScene draws one opened sealed good.
+// BoostersScene draws one opened booster.
 //
-// **The dialog's own state is embedded rather than rewritten.** What a good holds, what a click on
+// **The dialog's own state is embedded rather than rewritten.** What a booster holds, what a click on
 // one of its cards does and how an essence's alteration is shown were all already written — see
-// shop_goods.go — and none of it was about being a modal. What this file adds is the screen around
+// shop_boosters.go — and none of it was about being a modal. What this file adds is the screen around
 // it.
-type GoodsScene struct {
-	goods
+type BoostersScene struct {
+	boosters
 
 	// deck is the panel over the whole deck, opened by clicking the pile. **The same widget the
 	// shop and the fight use**, so a player who has learned to click the pile has learned it here.
@@ -82,39 +82,39 @@ type GoodsScene struct {
 
 // The skip button: its face, and a size about a third of the shop's LEAVE.
 const (
-	goodsSkipLabel    = "SKIP"
-	goodsSkipWidth    = 140
-	goodsSkipHeight   = ui.ButtonSmall
-	goodsSkipTextSize = 28
+	boostersSkipLabel    = "SKIP"
+	boostersSkipWidth    = 140
+	boostersSkipHeight   = ui.ButtonSmall
+	boostersSkipTextSize = 28
 )
 
-// goodsSkipGap is how far under the good's row SKIP stands.
-const goodsSkipGap = 32
+// boostersSkipGap is how far under the booster's row SKIP stands.
+const boostersSkipGap = 32
 
-// goodsTypeDrop is how much lower than the reward screen's the good's title and hint sit, so the
+// boostersTypeDrop is how much lower than the reward screen's the booster's title and hint sit, so the
 // type stands off the band above it.
-const goodsTypeDrop = 15
+const boostersTypeDrop = 15
 
-// goodsTypeLiftPct is how much of the gap between the title and a one-row good's cards the title
+// boostersTypeLiftPct is how much of the gap between the title and a one-row booster's cards the title
 // and the hint are moved down by *(owner's call, 2026-10-04)*, so the type reads as the row's own
 // heading rather than as the band's caption.
-const goodsTypeLiftPct = 40
+const boostersTypeLiftPct = 40
 
-// goodsTitleTop and goodsHintTop are where the good's two lines are written: the reward screen's
-// places, dropped by goodsTypeDrop.
-func goodsTitleTop(gs *state.GlobalState) int { return offerTitleTop(gs) + goodsTypeDrop }
-func goodsHintTop(gs *state.GlobalState) int  { return offerHintTop(gs) + goodsTypeDrop }
+// boostersTitleTop and boostersHintTop are where the booster's two lines are written: the reward screen's
+// places, dropped by boostersTypeDrop.
+func boostersTitleTop(gs *state.GlobalState) int { return offerTitleTop(gs) + boostersTypeDrop }
+func boostersHintTop(gs *state.GlobalState) int  { return offerHintTop(gs) + boostersTypeDrop }
 
 // Init opens whatever the shop paid for.
 //
-// **Re-entered on every visit**, because each good is its own. A visit with nothing pending is a
+// **Re-entered on every visit**, because each booster is its own. A visit with nothing pending is a
 // screen reached by a route that should not exist, and it leaves rather than drawing an empty
 // table.
-func (s *GoodsScene) Init(gs *state.GlobalState) {
+func (s *BoostersScene) Init(gs *state.GlobalState) {
 	if s.skipButton == nil {
-		s.skipButton = models.NewButton(goodsSkipWidth, goodsSkipHeight, goodsSkipLabel,
+		s.skipButton = models.NewButton(boostersSkipWidth, boostersSkipHeight, boostersSkipLabel,
 			func() { s.skipping = true })
-		s.skipButton.TextSize = goodsSkipTextSize
+		s.skipButton.TextSize = boostersSkipTextSize
 		s.skipButton.BaseColor = ui.ButtonJade
 	}
 	s.skipping = false
@@ -125,19 +125,19 @@ func (s *GoodsScene) Init(gs *state.GlobalState) {
 		return ControlColumnSlotCenter(gs, SlotHands)
 	})
 
-	good, ok := session.GoodByKey(gs.PendingGood)
-	gs.PendingGood = ""
+	booster, ok := session.BoosterByKey(gs.PendingBooster)
+	gs.PendingBooster = ""
 	if !ok || gs.Run == nil {
 		s.reset()
 		return
 	}
-	s.open(gs, good)
+	s.open(gs, booster)
 }
 
-// Update runs the good, and leaves for the shop once a card has been taken.
-func (s *GoodsScene) Update(gs *state.GlobalState) error {
+// Update runs the booster, and leaves for the shop once a card has been taken.
+func (s *BoostersScene) Update(gs *state.GlobalState) error {
 	if gs.Run == nil {
-		leaveGoods(gs)
+		leaveBoosters(gs)
 		return nil
 	}
 
@@ -156,7 +156,7 @@ func (s *GoodsScene) Update(gs *state.GlobalState) error {
 	// there and never reaches the row underneath. Live only while the cards are up: once one is
 	// taken there is nothing left to make room for.
 	if s.band.update(gs, bandHooks{
-		live:   s.stage == goodsPick,
+		live:   s.stage == boostersPick,
 		forget: s.tip.Forget,
 	}) {
 		return nil
@@ -164,30 +164,30 @@ func (s *GoodsScene) Update(gs *state.GlobalState) error {
 
 	// **Only while the cards are up.** Once an essence is spent the change is playing and the
 	// choice is made, so there is nothing left to skip.
-	if s.stage == goodsPick {
+	if s.stage == boostersPick {
 		seat := s.skipSeat(gs)
 		s.skipButton.ScreenX, s.skipButton.ScreenY = seat.Min.X+seat.Dx()/2, seat.Min.Y+seat.Dy()/2
 		systems.UpdateButton(gs, s.skipButton)
 		if s.skipping {
 			s.skipping = false
-			trace.Logf("goods", "skipped %s, took nothing", s.good.Record)
+			trace.Logf("boosters", "skipped %s, took nothing", s.booster.Record)
 			s.reset()
-			leaveGoods(gs)
+			leaveBoosters(gs)
 			return nil
 		}
 	}
 
 	if !s.update(gs, func(at image.Point) bool { return s.clickedPile(gs, at) }) {
 		// Nothing is open any more: the card was taken and whatever it did has finished playing.
-		leaveGoods(gs)
+		leaveBoosters(gs)
 		return nil
 	}
 
 	return nil
 }
 
-// Draw puts the screen up: the build the good is being judged against, then the good itself.
-func (s *GoodsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
+// Draw puts the screen up: the build the booster is being judged against, then the booster itself.
+func (s *BoostersScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	ui.FillScreenBackdrop(gs, screen)
 	if gs.Run == nil {
 		return
@@ -219,13 +219,13 @@ func (s *GoodsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// **Under the band rather than at the top of the screen**, the reward screen's rule: the type
 	// follows the band the next time the band moves, instead of being absolute pixels written
 	// against where it used to end.
-	line(goodsTitleTop(gs)+s.typeLift(gs), heading, s.title())
-	if s.stage == goodsPick {
-		line(goodsHintTop(gs)+s.typeLift(gs), small, s.hint(gs))
+	line(boostersTitleTop(gs)+s.typeLift(gs), heading, s.title())
+	if s.stage == boostersPick {
+		line(boostersHintTop(gs)+s.typeLift(gs), small, s.hint(gs))
 	}
 
 	s.drawCards(gs, screen)
-	if s.stage == goodsPick {
+	if s.stage == boostersPick {
 		systems.DrawButton(gs, screen, s.skipButton)
 	}
 	drawBandOverlay(gs, screen, &s.band)
@@ -237,37 +237,37 @@ func (s *GoodsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.hands.Draw(gs, screen, ui.OwnedHands(gs))
 }
 
-// skipSeat is where SKIP stands: **centered under the good's row**, on the line the title and the
+// skipSeat is where SKIP stands: **centered under the booster's row**, on the line the title and the
 // hint are centered on *(owner's call, 2026-10-04)*.
 //
 // **The vial is the exception**: its second row — the cards an essence is aimed at — is right under
 // the first, so SKIP stays at the far right, its bottom level with the essences and its right edge
 // the build band's.
-func (s *GoodsScene) skipSeat(gs *state.GlobalState) image.Rectangle {
+func (s *BoostersScene) skipSeat(gs *state.GlobalState) image.Rectangle {
 	row := s.slot(gs, 0)
-	if s.good.Contains == session.ContentsEssences {
+	if s.booster.Contains == session.ContentsEssences {
 		right, bottom := buildOpponentRect(gs).Max.X, row.Max.Y
-		return image.Rect(right-goodsSkipWidth, bottom-goodsSkipHeight, right, bottom)
+		return image.Rect(right-boostersSkipWidth, bottom-boostersSkipHeight, right, bottom)
 	}
-	left, top := gs.PctX(50)-goodsSkipWidth/2, row.Max.Y+goodsSkipGap
-	return image.Rect(left, top, left+goodsSkipWidth, top+goodsSkipHeight)
+	left, top := gs.PctX(50)-boostersSkipWidth/2, row.Max.Y+boostersSkipGap
+	return image.Rect(left, top, left+boostersSkipWidth, top+boostersSkipHeight)
 }
 
-// typeLift is how far the title and the hint are moved down toward a one-row good's cards. **The
+// typeLift is how far the title and the hint are moved down toward a one-row booster's cards. **The
 // vial keeps its place**, because its second row leaves no gap above the first to move into.
-func (s *GoodsScene) typeLift(gs *state.GlobalState) int {
-	if s.good.Contains == session.ContentsEssences || s.count() == 0 {
+func (s *BoostersScene) typeLift(gs *state.GlobalState) int {
+	if s.booster.Contains == session.ContentsEssences || s.count() == 0 {
 		return 0
 	}
-	return (s.slot(gs, 0).Min.Y - goodsTitleTop(gs)) * goodsTypeLiftPct / 100
+	return (s.slot(gs, 0).Min.Y - boostersTitleTop(gs)) * boostersTypeLiftPct / 100
 }
 
-// leaveGoods puts the player back on the shop they bought the good from.
+// leaveBoosters puts the player back on the shop they bought the booster from.
 //
-// **The shop rather than `advance`**, because opening a good is not a station of the run: the run
-// is standing in the shop the whole time, and it is standing there when the good is finished with.
-func leaveGoods(gs *state.GlobalState) {
-	trace.Logf("goods", "closed, back to the shop")
+// **The shop rather than `advance`**, because opening a booster is not a station of the run: the run
+// is standing in the shop the whole time, and it is standing there when the booster is finished with.
+func leaveBoosters(gs *state.GlobalState) {
+	trace.Logf("boosters", "closed, back to the shop")
 	gs.ActiveScreen = state.Shop
 	gs.NewScreen = true
 }
@@ -275,7 +275,7 @@ func leaveGoods(gs *state.GlobalState) {
 // clickedPile is the click that opens and closes the deck panel — the shop's own, over the shared
 // pile. **It runs whether or not the panel is up**: the X is the exit and this is the opener, so a
 // press here while the panel is up must not reach the cards underneath.
-func (s *GoodsScene) clickedPile(gs *state.GlobalState, at image.Point) bool {
+func (s *BoostersScene) clickedPile(gs *state.GlobalState, at image.Point) bool {
 	if !at.In(deckStackBounds(gs)) {
 		return false
 	}
@@ -284,6 +284,6 @@ func (s *GoodsScene) clickedPile(gs *state.GlobalState, at image.Point) bool {
 	return true
 }
 
-// **The tutorial does not come here** *(2026-09-19)*. The lesson never buys a sealed good, so this
+// **The tutorial does not come here** *(2026-09-19)*. The lesson never buys a booster, so this
 // scene carries no overlay and answers none of tutorial.go's questions — a step that wanted to
 // point at a stone would add the three methods along with the step.

@@ -27,8 +27,8 @@ someone dies or when the **fifth round** ends, which kills whoever is still stan
 **Winning pays vitae and an essence.** An essence permanently edits one card of your deck. Vitae is
 spent in a shop on a **relic** — worn, five at a time, and each one bends a rule — or on a **stone**
 that raises one rung of the hand ladder, a **potion** that changes the duelist, a **rune** that
-alters cards mid-fight, a **cantrip** that strengthens the duelist for one fight, or a **sealed
-good**, which is paid for and *then* opened. Then the next room.
+alters cards mid-fight, a **cantrip** that strengthens the duelist for one fight, or a **
+booster**, which is paid for and *then* opened. Then the next room.
 
 Wounds carry from room to room, less a small share every win gives back, so the journey is an
 attrition budget: the rest of the life comes back only through what the player spends on it.
@@ -1872,7 +1872,7 @@ knows what comes after the shop — `session.PhaseShop` is a station of the run 
 - **That is a full relic or two a fight against an income of roughly 5–10**, so **the purse stops
   binding once the five fingers are full** — around the fourth or fifth fight, after which vitae
   has nothing to buy but swaps. What answers that is something else to spend on rather than
-  dearer relics: the sealed goods, the stones and the potions below.
+  dearer relics: the boosters, the stones and the potions below.
 - **Nothing measures whether any of those numbers is right.** Nothing in the repo measures what
   a relic does to a duel, so what a doubling of every slash card is worth in vitae is a
   judgment. Recorded as a judgment rather than dressed up as a derivation.
@@ -1906,7 +1906,7 @@ rest are gone. Each comes in three sizes, three, four or five inside, and the bi
 and a visit offers two of them. **The bundle of scrolls is the one that repeats**: it draws with replacement while the
 cantrip catalog is shorter than the smallest bundle — see §Cantrips.
 
-- **What is bought is the choice, not the thing.** A relic is read and then paid for; a good is paid
+- **What is bought is the choice, not the thing.** A relic is read and then paid for; a booster is paid
   for and then read. That is the whole design, and it is why neither card names its contents: the
   face says the shape of the offer ("4 stones, keep 1") and nothing about which ones.
 - **An action bundle holds playing cards, and it is where a card trait comes from**
@@ -1938,7 +1938,7 @@ cantrip catalog is shorter than the smallest bundle — see §Cantrips.
   labelled button at the bottom of the screen rather than the red X that means "close" everywhere
   else. Every card is an exit too.
 - **The row is five seats rather than two rows, and the screen decided that.** A relic is worn and a
-  good is opened, so two rows would have read better — but the shop is 960 tall with a build band,
+  booster is opened, so two rows would have read better — but the shop is 960 tall with a build band,
   two sentences of narration and the Continue Journey button at 88%, and a card is 224. There is room for one
   row of cards, not two.
 
@@ -2536,7 +2536,7 @@ kinds fill the seats is the player's business.
   run hoards rather than spends; with three seats, a pack bought while all are full is a consumable
   you have to spend one to make room for.
 - **The shop's sack and bundle seats go dim when the pane is full**, rather than taking vitae for a
-  consumable that would be refused. It is the same courtesy an unaffordable good already gets, and
+  consumable that would be refused. It is the same courtesy an unaffordable booster already gets, and
   it is the control the player actually meets — `Hold` and `HoldCantrip` refusing is the belt
   behind it.
 - **It is a rule about purchases.** A stone is spent in the dialog that opened the bag and an
@@ -2564,7 +2564,7 @@ kinds fill the seats is the player's business.
 ### Selling, on every screen that shows the band
 
 **Anything on the top row can be sold wherever the top row is shown** *(owner's call, 2026-10-04)*
-— the combat screen, the reward screen, the shop, an opened sealed good and the portal. The top
+— the combat screen, the reward screen, the shop, an opened booster and the portal. The top
 third of those screens is one scene, the duelist card, the worn relics, the consumables pane and
 the card in the opponent's corner, and what can be done to it is the same everywhere: a relic or a
 carried card drags along its row, and a click arms a `SELL FOR N?` tab under it; a click on the tab
@@ -2590,7 +2590,7 @@ time, and nothing is written under either until it is armed — the tab is where
   changed as it was dealt keeps the face it was dealt with.
 - **Selling is what frees a seat.** The pane holds two. A rune sack or a scroll bundle opens over a
   full pane all the same, and its cards are held back until a carried card is sold to make room —
-  or the good is skipped.
+  or the booster is skipped.
 
 ### Select the cards, then click the consumable
 
@@ -2610,7 +2610,7 @@ of the hand row anywhere in it.
   picked for the round where they are.
 - **Every consumable is freestanding or a fight's** *(owner's call)*. A freestanding one — a stone,
   a Hoard, a rock shower, a chimera — needs nothing selected and no fighter, so its USE is live on
-  every screen that shows the band: the shop, the reward, a sealed good and the portal as well as
+  every screen that shows the band: the shop, the reward, a booster and the portal as well as
   the fight. Everything else — a rune or an essence aimed at cards, and a cantrip, which is cast
   onto the fighter standing in the room — can only be sold off the table. A chimera used there
   turns into the last rune in its seat, and that rune waits for a fight like any other.
@@ -2663,9 +2663,9 @@ computed.
   is what a carried rune and a carried stone both do.
 - **Nothing puts one in the satchel yet except a fixture.** `scenarios.json` takes `"Essences"`, and
   the `ladder-wrap` record is ten of them. Where a run *acquires* a carried essence — a shop seat, a
-  sealed good, a reward that offers keep-or-spend — is an open question and a catalog decision.
+  booster, a reward that offers keep-or-spend — is an open question and a catalog decision.
 
-### A sealed good is a screen
+### A booster is a screen
 
 **Opening a bag of rocks, a sack of runes or a vial of essence takes the whole screen**, with the
 build band up, the draw pile in the corner and the deck panel a click away. What is on it is a
@@ -2681,10 +2681,10 @@ which cards — and a panel covering the screen to ask that was covering the ans
   blocked, the biggest hit, cards played, vitae earned and spent — the duel being fought included.
   See `internal/ui/deckpanel_record.go`.
 - **The ways out are taking a card or pressing SKIP**, which takes nothing and forfeits what the
-  good cost — the reward screen's LET THEM ESCAPE on the same terms. The chrome stands down, as it
+  booster cost — the reward screen's LET THEM ESCAPE on the same terms. The chrome stands down, as it
   does on the reward screen.
 - **It is not a station of the run.** The run is standing in the shop the whole time and is standing
-  there when the good is finished with. See CLAUDE.md §Five screens that are not stations of a run.
+  there when the booster is finished with. See CLAUDE.md §Five screens that are not stations of a run.
 
 ### An essence takes one card, and a relic widens it
 
@@ -3359,7 +3359,7 @@ shelf every visit; a tonic changes the run's rules and is offered **once per rea
 The currency. Earned from fights, spent in the shop. `Session` carries the purse; **winning a fight
 is the only thing that adds to it** and **the shop is what takes it out** —
 `Session.SpendVitae` is the one place a purse goes down. Its callers are `Session.Buy` and
-`Session.BuyGood`, the sealed goods.
+`Session.BuyBooster`, the boosters.
 
 **Vitae is crimson wherever it is written** — the purse on the duelist
 card and the word itself in the reward screen's prose. It is the run's only currency and now the

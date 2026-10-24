@@ -1,40 +1,40 @@
-// Command goodsheet renders every sealed good in data/goods.json to a PNG and writes an HTML page
+// Command boostersheet renders every booster in data/boosters.json to a PNG and writes an HTML page
 // that shows each one beside the offer it actually makes.
 //
-//	go run ./tools/goodsheet
+//	go run ./tools/boostersheet
 //
-// It exists for the reason tools/stonesheet does, one shelf further out. Two goods stand on a
+// It exists for the reason tools/stonesheet does, one shelf further out. Two boosters stand on a
 // shop's shelf and they are one catalog each, so meeting the nine in a launched game means a lot
 // of visits and a lot of rerolling. This draws all of them at once.
 //
 // # It is a report, not a drawing-board
 //
 // Same split as relicsheet against cardsheet: this reads the real file through internal/session,
-// which means the catalog is *validated* before anything is drawn. A good naming a catalog this
-// build has not got panics at init exactly as it would in the game, so a good this page refuses to
-// draw is a good the game refuses to start with.
+// which means the catalog is *validated* before anything is drawn. A booster naming a catalog this
+// build has not got panics at init exactly as it would in the game, so a booster this page refuses to
+// draw is a booster the game refuses to start with.
 //
 // # What to look at
 //
-// **The tooltip, because the face is a picture and a name.** A sealed good stopped printing its
+// **The tooltip, because the face is a picture and a name.** A booster stopped printing its
 // offer across the lower half of its art on 2026-09-15, so what a player can know before paying is
-// said entirely by resting on the card. The tip is built here the way screens.goodTip builds it —
+// said entirely by resting on the card. The tip is built here the way screens.boosterTip builds it —
 // the count and the noun computed, the prose read off the record — and this is the only place the
 // authored lines and the computed ones can be read as the one paragraph a player sees.
 //
-// **The marginal price of an option.** Every good gives the player exactly one of what it holds,
+// **The marginal price of an option.** Every booster gives the player exactly one of what it holds,
 // whatever its size, so what a larger vessel sells is not more cards — it is a wider choice. The
 // page prices that margin rather than the contents: what the extra options cost over the size
 // below. A ladder charging more for the fourth option than for the fifth is a ladder whose middle
 // rung nobody has a reason to buy, and it is invisible reading three prices down a column.
 //
 // **The size against the catalog it draws from.** A sack showing five of a catalog that holds six
-// is a sealed good that is barely sealed — the choice it sells is nearly the whole shelf. The
+// is a booster that is barely sealed — the choice it sells is nearly the whole shelf. The
 // share is computed from the live catalogs rather than authored, so authoring a sixth rune moves
 // it here.
 //
-// **A contents nobody has authored a vessel for.** session.GoodContents is a closed vocabulary and
-// every value gets a heading whether or not goods.json uses it, so a catalog with nothing holding
+// **A contents nobody has authored a vessel for.** session.BoosterContents is a closed vocabulary and
+// every value gets a heading whether or not boosters.json uses it, so a catalog with nothing holding
 // it shows as a gap rather than as an absence nobody notices — the stone sheet's rule, applied to
 // the other axis.
 //
@@ -44,7 +44,7 @@
 //
 // # Output
 //
-// Loose PNGs plus an index.html, written into `docs/sheets/goodsheet/` and **committed**
+// Loose PNGs plus an index.html, written into `docs/sheets/boostersheet/` and **committed**
 // *(owner's call, 2026-08-23)*, on the same terms as every other sheet. A clone opens
 // `docs/sheets/index.html`.
 package main
@@ -66,18 +66,18 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/session"
 )
 
-// ground is screens.screenGround, the light slate blue a good is actually offered on. Judging a
+// ground is screens.screenGround, the light slate blue a booster is actually offered on. Judging a
 // card against a white browser page would be the same failure as previewing art at a scale the
 // game does not use.
 const ground = "#a8bcd4"
 
-// packsOffered is screens.packsOffered, how many goods stand on one shelf. Said here because the
+// packsOffered is screens.packsOffered, how many boosters stand on one shelf. Said here because the
 // page's whole framing is how little of the catalog one visit shows; it is not a rule this tool
 // owns, and a shelf that grew would want editing in both places.
 const packsOffered = 2
 
 func main() {
-	dir := flag.String("dir", filepath.Join("docs", "sheets", "goodsheet"),
+	dir := flag.String("dir", filepath.Join("docs", "sheets", "boostersheet"),
 		"directory to write the PNGs and index.html into")
 	flag.Parse()
 
@@ -96,11 +96,11 @@ func run(dir string) error {
 		return err
 	}
 
-	goods := session.Goods()
+	boosters := session.Boosters()
 	page := page{
 		Ground:  ground,
 		Style:   styleFacts(cards.EssenceStyle),
-		Count:   len(goods),
+		Count:   len(boosters),
 		Seats:   packsOffered,
 		Catalog: len(allContents),
 	}
@@ -108,25 +108,25 @@ func run(dir string) error {
 	// **Walked by contents rather than by record**, which is the one decision in this file. The
 	// shelf picks a contents first and takes whichever size the shuffle landed on, so grouping the
 	// page the way the roll groups the catalog puts each ladder in one block and makes a contents
-	// nobody has authored a vessel for visible as a gap. Walking session.Goods() would put the
+	// nobody has authored a vessel for visible as a gap. Walking session.Boosters() would put the
 	// sizes in file order and hide it.
 	for _, c := range allContents {
 		g := group{Contents: c.Noun(), Held: catalogSize(c)}
-		for _, good := range sizeOrder(goods, c) {
-			p, err := build(dir, faces, good, g.Held, briefs[good.Record])
+		for _, booster := range sizeOrder(boosters, c) {
+			p, err := build(dir, faces, booster, g.Held, briefs[booster.Record])
 			if err != nil {
 				return err
 			}
 			// **The margin is over the size below, not over the smallest.** What a player weighs
 			// is this vessel against the one they could have had instead, and the ladder is walked
 			// smallest first so the previous plate is that one.
-			if n := len(g.Goods); n > 0 {
-				prev := g.Goods[n-1]
+			if n := len(g.Boosters); n > 0 {
+				prev := g.Boosters[n-1]
 				p.StepSize = p.Size - prev.Size
 				p.StepPrice = p.Price - prev.Price
 				p.HasStep = p.StepSize > 0
 			}
-			g.Goods = append(g.Goods, p)
+			g.Boosters = append(g.Boosters, p)
 			if p.Borrowed {
 				page.Borrowed++
 			}
@@ -134,17 +134,17 @@ func run(dir string) error {
 				page.Unwritten++
 			}
 		}
-		if len(g.Goods) == 0 {
+		if len(g.Boosters) == 0 {
 			page.Unheld++
 		}
 		page.Groups = append(page.Groups, g)
 	}
 
-	// The two states a sealed good is drawn in. **Not "selected"** — a good is bought rather than
+	// The two states a booster is drawn in. **Not "selected"** — a booster is bought rather than
 	// chosen out of a set, so the shelf dims what the purse cannot reach and lights nothing.
-	if first, ok := firstGood(page.Groups); ok {
-		good, _ := session.GoodByKey(first.Record)
-		art, err := goodArt(good)
+	if first, ok := firstBooster(page.Groups); ok {
+		booster, _ := session.BoosterByKey(first.Record)
+		art, err := boosterArt(booster)
 		if err != nil {
 			return err
 		}
@@ -153,10 +153,10 @@ func run(dir string) error {
 			label   string
 			enabled bool
 		}{
-			{"rest", good.Name + " — on the shelf", true},
-			{"disabled", good.Name + " — more than the purse holds", false},
+			{"rest", booster.Name + " — on the shelf", true},
+			{"disabled", booster.Name + " — more than the purse holds", false},
 		} {
-			cell, err := write(dir, faces, specFor(good, art, s.enabled), "state-"+s.name+".png", s.label)
+			cell, err := write(dir, faces, specFor(booster, art, s.enabled), "state-"+s.name+".png", s.label)
 			if err != nil {
 				return err
 			}
@@ -175,25 +175,25 @@ func run(dir string) error {
 		return fmt.Errorf("writing %s: %w", out, err)
 	}
 
-	fmt.Printf("wrote %s and %d PNGs — %d goods over %d contents, %d standing on a shelf at a time; "+
+	fmt.Printf("wrote %s and %d PNGs — %d boosters over %d contents, %d standing on a shelf at a time; "+
 		"%d drawing a borrowed face and %d with no subject\n",
 		out, page.Count+len(page.States), page.Count, page.Catalog, page.Seats,
 		page.Borrowed, page.Unwritten)
 	for _, g := range page.Groups {
-		if len(g.Goods) == 0 {
+		if len(g.Boosters) == 0 {
 			fmt.Printf("  %-10s no vessel holds them\n", g.Contents)
 			continue
 		}
 		fmt.Printf("  %-10s %d sizes — %s vitae — out of %d in the catalog\n",
-			g.Contents, len(g.Goods), g.Ladder(), g.Held)
+			g.Contents, len(g.Boosters), g.Ladder(), g.Held)
 	}
 	return nil
 }
 
-// allContents is the closed vocabulary session.GoodContents is, spelled out so the page can give
-// every value a heading whether or not goods.json uses it. A fourth contents is a stream to seed
+// allContents is the closed vocabulary session.BoosterContents is, spelled out so the page can give
+// every value a heading whether or not boosters.json uses it. A fourth contents is a stream to seed
 // and a dialog to draw, so it arrives here in the same commit it arrives in internal/session.
-var allContents = []session.GoodContents{
+var allContents = []session.BoosterContents{
 	session.ContentsStones,
 	session.ContentsEssences,
 	session.ContentsRunes,
@@ -201,53 +201,53 @@ var allContents = []session.GoodContents{
 	session.ContentsCards,
 }
 
-// briefs is each good's Draw, keyed by record.
+// briefs is each booster's Draw, keyed by record.
 //
-// **Read off data.LoadGoods rather than session.Good**, which does not carry it: Draw is the
+// **Read off data.LoadBoosters rather than session.Booster**, which does not carry it: Draw is the
 // subject paragraph an art generator is given and the engine ignores it, exactly as a relic's Art
 // is ignored — so it never had a reason to be resolved onto the run's side of the catalog.
 // A review sheet is the one reader it has.
 var briefs = func() map[string]string {
 	out := map[string]string{}
-	for _, rec := range data.LoadGoods() {
-		out[rec.GoodRecord] = rec.Draw
+	for _, rec := range data.LoadBoosters() {
+		out[rec.BoosterRecord] = rec.Draw
 	}
 	return out
 }()
 
-// build renders one good and gathers everything the page says about it.
-func build(dir string, faces *cards.Faces, good session.Good, held int, draw string) (plate, error) {
-	art, err := goodArt(good)
+// build renders one booster and gathers everything the page says about it.
+func build(dir string, faces *cards.Faces, booster session.Booster, held int, draw string) (plate, error) {
+	art, err := boosterArt(booster)
 	if err != nil {
 		return plate{}, err
 	}
-	cell, err := write(dir, faces, specFor(good, art, true), "good-"+good.Record+".png", good.Name)
+	cell, err := write(dir, faces, specFor(booster, art, true), "booster-"+booster.Record+".png", booster.Name)
 	if err != nil {
 		return plate{}, err
 	}
 
-	title, lines := goodTip(good)
+	title, lines := boosterTip(booster)
 	return plate{
 		Cell:     cell,
-		Record:   good.Record,
-		Name:     good.Name,
-		Family:   good.Family,
-		Contents: good.Contains.Noun(),
-		Size:     good.Size,
-		Price:    good.Price,
-		Per:      fmt.Sprintf("%.2f", float64(good.Price)/float64(good.Size)),
-		Share:    share(good.Size, held),
+		Record:   booster.Record,
+		Name:     booster.Name,
+		Family:   booster.Family,
+		Contents: booster.Contains.Noun(),
+		Size:     booster.Size,
+		Price:    booster.Price,
+		Per:      fmt.Sprintf("%.2f", float64(booster.Price)/float64(booster.Size)),
+		Share:    share(booster.Size, held),
 		TipTitle: title,
 		Tip:      lines,
-		Title:    good.Title,
-		Hint:     good.Hint,
-		Art:      good.Art,
+		Title:    booster.Title,
+		Hint:     booster.Hint,
+		Art:      booster.Art,
 		Draw:     draw,
-		Borrowed: good.Art == "",
+		Borrowed: booster.Art == "",
 	}, nil
 }
 
-// specFor is a good as the card the shelf draws, and it fills the same fields ui.goodSpec does: a
+// specFor is a booster as the card the shelf draws, and it fills the same fields ui.boosterSpec does: a
 // name, a picture, and nothing else.
 //
 // **No Text, deliberately.** The face carried "4 stones / keep 1" across the lower half of its art
@@ -255,11 +255,11 @@ func build(dir string, faces *cards.Faces, good session.Good, held int, draw str
 // rather than on it. A sheet drawing a band the game does not draw would be a picture of a card
 // that does not exist.
 //
-// **Basic, not a color** — a good holds a catalog rather than an element, so its border is the mid
+// **Basic, not a color** — a booster holds a catalog rather than an element, so its border is the mid
 // gray cards.BorderOf gives `basic`, exactly as a stone's and a potion's are.
-func specFor(good session.Good, art image.Image, enabled bool) cards.Spec {
+func specFor(booster session.Booster, art image.Image, enabled bool) cards.Spec {
 	return cards.Spec{
-		Name:    good.Name,
+		Name:    booster.Name,
 		Form:    cards.FormNone,
 		Cost:    0,
 		Element: cards.Basic,
@@ -268,29 +268,29 @@ func specFor(good session.Good, art image.Image, enabled bool) cards.Spec {
 	}
 }
 
-// goodTip is what resting on one says, built the way screens.goodTip builds it: the count and the
+// boosterTip is what resting on one says, built the way screens.boosterTip builds it: the count and the
 // noun computed from the record, the prose read off it, the price last.
 //
 // **Spelled here rather than called.** internal/screens links Ebitengine, so no review tool can
 // import it — the same wall internal/carddesc exists to get round. The cost is a second copy of
 // four lines, and the tripwire is this page: a tooltip that stopped matching would be visibly
 // wrong beside the card it describes.
-func goodTip(good session.Good) (string, []string) {
-	lines := make([]string, 0, len(good.Tip)+2)
-	lines = append(lines, fmt.Sprintf("%d %s, and you keep one", good.Size, good.Contains.Noun()))
-	lines = append(lines, good.Tip...)
-	return good.Name, append(lines, fmt.Sprintf("%d vitae", good.Price))
+func boosterTip(booster session.Booster) (string, []string) {
+	lines := make([]string, 0, len(booster.Tip)+2)
+	lines = append(lines, fmt.Sprintf("%d %s, and you keep one", booster.Size, booster.Contains.Noun()))
+	lines = append(lines, booster.Tip...)
+	return booster.Name, append(lines, fmt.Sprintf("%d vitae", booster.Price))
 }
 
-// goodArt is the picture one good draws, resolved exactly as screens.goodArt resolves it: its own
+// boosterArt is the picture one booster draws, resolved exactly as screens.boosterArt resolves it: its own
 // if it has one, and otherwise the default face of whatever is inside it.
 //
 // **A key naming no embedded file is an error rather than a blank face**, as every other sheet's
 // artwork is — a review tool that quietly drew nothing would hide what it is for.
-func goodArt(good session.Good) (image.Image, error) {
-	key := good.Art
+func boosterArt(booster session.Booster) (image.Image, error) {
+	key := booster.Art
 	if key == "" {
-		switch good.Contains {
+		switch booster.Contains {
 		case session.ContentsStones:
 			key = data.DefaultStoneArt
 		case session.ContentsRunes:
@@ -305,7 +305,7 @@ func goodArt(good session.Good) (image.Image, error) {
 	}
 	raw := assets.LoadImageData()[key]
 	if len(raw) == 0 {
-		return nil, fmt.Errorf("%s draws %q, which is in no embed", good.Record, key)
+		return nil, fmt.Errorf("%s draws %q, which is in no embed", booster.Record, key)
 	}
 	img, _, err := image.Decode(bytes.NewReader(raw))
 	if err != nil {
@@ -314,10 +314,10 @@ func goodArt(good session.Good) (image.Image, error) {
 	return img, nil
 }
 
-// sizeOrder is every good holding one catalog, smallest first — the order a ladder is read in.
-func sizeOrder(goods []session.Good, c session.GoodContents) []session.Good {
-	var out []session.Good
-	for _, g := range goods {
+// sizeOrder is every booster holding one catalog, smallest first — the order a ladder is read in.
+func sizeOrder(boosters []session.Booster, c session.BoosterContents) []session.Booster {
+	var out []session.Booster
+	for _, g := range boosters {
 		if g.Contains == c {
 			out = append(out, g)
 		}
@@ -328,7 +328,7 @@ func sizeOrder(goods []session.Good, c session.GoodContents) []session.Good {
 
 // catalogSize is how many records the contents are drawn from, asked of the live catalog rather
 // than written down — so authoring a sixth rune moves every share on this page.
-func catalogSize(c session.GoodContents) int {
+func catalogSize(c session.BoosterContents) int {
 	switch c {
 	case session.ContentsStones:
 		return len(session.Stones())
@@ -343,7 +343,7 @@ func catalogSize(c session.GoodContents) int {
 	}
 }
 
-// share is how much of a catalog one good puts in front of the player, to a tenth of a percent.
+// share is how much of a catalog one booster puts in front of the player, to a tenth of a percent.
 func share(size, held int) string {
 	if held == 0 {
 		return ""
@@ -351,13 +351,13 @@ func share(size, held int) string {
 	return fmt.Sprintf("%.1f", float64(size)*100/float64(held))
 }
 
-// firstGood is the first good on the page, for the states row. A search rather than the first
+// firstBooster is the first booster on the page, for the states row. A search rather than the first
 // group's first plate, because a contents nobody has authored a vessel for would otherwise draw
 // the states row blank.
-func firstGood(groups []group) (plate, bool) {
+func firstBooster(groups []group) (plate, bool) {
 	for _, g := range groups {
-		if len(g.Goods) > 0 {
-			return g.Goods[0], true
+		if len(g.Boosters) > 0 {
+			return g.Boosters[0], true
 		}
 	}
 	return plate{}, false
@@ -407,7 +407,7 @@ type cell struct {
 	Height int
 }
 
-// plate is one sealed good: the card, the offer it makes, and what it costs over the size below it.
+// plate is one booster: the card, the offer it makes, and what it costs over the size below it.
 type plate struct {
 	Cell cell
 
@@ -441,13 +441,13 @@ type plate struct {
 type group struct {
 	Contents string
 	Held     int
-	Goods    []plate
+	Boosters []plate
 }
 
 // Ladder is the sizes and prices as one phrase, for the tool's own report line.
 func (g group) Ladder() string {
 	out := ""
-	for i, p := range g.Goods {
+	for i, p := range g.Boosters {
 		if i > 0 {
 			out += ", "
 		}

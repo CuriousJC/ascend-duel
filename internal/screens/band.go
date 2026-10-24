@@ -3,7 +3,7 @@ package screens
 // **The band's input, and the same input on every screen that shows it** *(owner's call,
 // 2026-10-04)*.
 //
-// The top third of the combat screen, the reward screen, the shop, a sealed good and the portal is
+// The top third of the combat screen, the reward screen, the shop, a booster and the portal is
 // one scene: the duelist card, the relics on your fingers, the consumables you carry and the card in
 // the opponent's corner. What the player can *do* to it is the same everywhere, which is why it is
 // one controller rather than a copy per screen — the deck pile's argument, applied to the row beside

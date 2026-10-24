@@ -310,13 +310,13 @@ type GlobalState struct {
 	// handful of things a player is shown.
 	Crash *CrashInfo
 
-	// PendingGood is the sealed good the shop has just paid for, by record key, waiting for the
+	// PendingBooster is the booster the shop has just paid for, by record key, waiting for the
 	// screen that opens it to pick it up.
 	//
 	// **A screen cannot be handed an argument**, so a scene that needs to know what it is showing
 	// reads it off the state — the shape state.Summary already has for the run-over splash. It is
-	// cleared by the screen that consumes it, so a second visit cannot open a good nobody bought.
-	PendingGood string
+	// cleared by the screen that consumes it, so a second visit cannot open a booster nobody bought.
+	PendingBooster string
 
 	//Assets
 	Assets map[string]*ebiten.Image          // Store images as a map in the Game struct
@@ -450,7 +450,7 @@ const (
 	// and appended because ActiveScreen is append-only.
 	Animations
 
-	// Goods is a sealed good, opened: the three or four things that were inside it, and the one of
+	// Boosters is a booster, opened: the three or four things that were inside it, and the one of
 	// them the player takes.
 	//
 	// **It is a screen rather than a dialog** *(owner's call, 2026-09-19)*. What is on it is a
@@ -462,7 +462,7 @@ const (
 	// **Not a station of a run**, like Settings and the two menu screens: it never touches
 	// session.Phase, it is reached only from the shop and it goes back there. Appended, because
 	// ActiveScreen is append-only.
-	Goods
+	Boosters
 
 	// Crashed is the screen a panic ends on: what happened, the run code, where the report went,
 	// and the way out.
@@ -513,8 +513,8 @@ func (active ActiveScreen) String() string {
 		return "RunOver"
 	case Animations:
 		return "Animations"
-	case Goods:
-		return "Goods"
+	case Boosters:
+		return "Boosters"
 	case Crashed:
 		return "Crashed"
 	case Portal:

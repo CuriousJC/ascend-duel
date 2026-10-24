@@ -156,11 +156,11 @@ func DrawStoneCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 	BlitCard(gs, screen, at, StoneSpec(gs, st, enabled), cards.EssenceStyle)
 }
 
-// DrawGoodCard draws one of the shop's two sealed goods.
-func DrawGoodCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
+// DrawBoosterCard draws one of the shop's two boosters.
+func DrawBoosterCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 	name string, art image.Image, enabled bool) {
 
-	BlitCard(gs, screen, at, goodSpec(gs, name, art, enabled), cards.EssenceStyle)
+	BlitCard(gs, screen, at, boosterSpec(gs, name, art, enabled), cards.EssenceStyle)
 }
 
 // MarksFor is what a card in this seat is wearing, given where it is drawn.

@@ -199,7 +199,7 @@ func (s *Session) Drink(key string, maxLife int) bool {
 }
 
 // Grant adds a permanent bonus the rules rolled up during a fight — a golden card's gamble coming
-// good. See combat.RiderGolden.
+// booster. See combat.RiderGolden.
 //
 // **It lands on the same two figures a potion moves**, which is what makes it permanent: they ride
 // on the run, are saved with it, and are applied to the fighter by `Equip` at the top of every duel.

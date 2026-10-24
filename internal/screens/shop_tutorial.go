@@ -83,7 +83,7 @@ func (s *ShopScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([]i
 	if a != tutorial.AnchorShopShelf {
 		return nil, false
 	}
-	// **The relics only, not the two sealed goods beside them** *(2026-08-27)*. The shelf became a
+	// **The relics only, not the two boosters beside them** *(2026-08-27)*. The shelf became a
 	// five-seat row that day and the anchor deliberately did not grow with it: the lock leaves only
 	// what is lit clickable, so a lesson about buying a relic cannot be answered by opening a bag of
 	// rocks — and a first shop is not where a player should meet the stones.

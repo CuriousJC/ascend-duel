@@ -68,9 +68,10 @@ brawl in a corner. Draw the room for that, and leave the fighters out.
 
 **Every backdrop carries one feature at the far side of the floor that names its tier**, and it is
 the only thing in the picture with a job. A player glancing up from a hand has to be able to tell
-which of a realm's three fights they are in, so the feature is **centred on the far wall or the far
-boundary, in the open middle** (see the table below), large enough to read at a glance and plainly
-the most important object in the place. Paint it in the room's own materials and the element's
+which of a realm's three fights they are in, so the feature is **centred left to right on the
+canvas — on its vertical centre line, x = 960 — at the far wall or the far boundary**, large enough
+to read at a glance and plainly the most important object in the place. It is centred on the whole
+picture, not on the "open middle" region in the table below, which sits to the left of centre. Paint it in the room's own materials and the element's
 cast, so it belongs to the room rather than being pasted on.
 
 **Draw only the one for the record's `Tier`, exactly once.** The other two must not appear, and
@@ -106,8 +107,15 @@ one, never three, never a door or a gate in their place. **Every portal is that 
 the full spectrum, red through violet, swirling in a slow bright spiral. Never a portal in a
 single color, never one tinted toward the element, never a dark, empty, smoky or mirror-like
 opening — the frame may be any material the record names, and what fills it is always the
-rainbow. When the record names a centrepiece — a
-throne, a tree, an altar — the two portals stand one on each side of it, flanking it.
+rainbow.
+
+**The portal room is symmetrical about the canvas's centre line.** The record's centrepiece — a
+throne, a tree, an altar — stands **dead centre at x = 960**, and the two portals stand **one on each
+side of it, mirror images of each other**: the left portal centred near x = 660 and the right near
+x = 1260, the same size, the same height, the same distance from the centrepiece. The centrepiece and
+its two portals are one group, and that group is centred on the picture; never shifted left, never
+both portals on one side, never one portal nearer than the other. A record that names no centrepiece
+still keeps the two portals mirrored about x = 960, with the open floor between them.
 
 ### What covers what
 
@@ -126,7 +134,8 @@ Coordinates are pixels from the top-left of the 1920x1080 canvas.
 | the left edge                           | 0–230       | 330–1080   | a small card deck at the very bottom; otherwise open |
 
 **The open middle is the most-seen stretch of the picture**, and the natural home for the far
-distance of the scene — a far wall, windows, a sky, a vista — and for the tier's door or portals.
+distance of the scene — a far wall, windows, a sky, a vista. The tier's door or portals are not
+placed by this region: they are centred on the whole canvas, at x = 960.
 Let it be part of the place rather than a gap in it; it does not need to be empty or plain.
 
 **Put the place's character at the edges, along the top and in the open middle.** The lower half
@@ -228,8 +237,10 @@ element colors on top of it stop reading.
 6. **Is the place empty?** No person, creature, silhouette, statue or face anywhere in it, except a
    centrepiece statue the record names.
 7. **Does the far side say the tier?** A small door for `outer`, a large door for `inner`, two
-   rainbow portals for `boss`, each filled with the full swirling spectrum whatever the element — only that one, centred in the open middle, readable at a glance,
-   and no other door, gate, portal or flight of steps anywhere.
+   rainbow portals for `boss`, each filled with the full swirling spectrum whatever the element — only that one, centred left to right on the canvas at x = 960, readable at a glance,
+   and no other door, gate, portal or flight of steps anywhere. **In a portal room, fold the
+   picture down its centre line**: the centrepiece sits on the fold and the two portals land on each
+   other.
 8. **Is it a JPEG, opaque to all four edges, exactly 1920x1080**, normalized as **Canvas** says,
    with no frame, vignette or reserved patch anywhere?
 

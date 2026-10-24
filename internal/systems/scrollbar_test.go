@@ -72,3 +72,27 @@ func TestAnOffsetPastTheEndIsBroughtBack(t *testing.T) {
 		t.Errorf("a negative offset clamped to %d, want 0", got)
 	}
 }
+
+// **An arrow with nowhere to go is disabled**, so a list at its top offers no up and a list that
+// fits offers neither.
+func TestAnArrowAtItsEndIsDisabled(t *testing.T) {
+	s := testBar(500, 40)
+	arrowLive(s.Up, s.Offset > 0)
+	arrowLive(s.Down, s.Offset < s.Total-s.Visible)
+	if s.Up.State != models.ButtonStateDisabled {
+		t.Error("at the top of the list the up arrow is live")
+	}
+	if s.Down.State == models.ButtonStateDisabled {
+		t.Error("at the top of the list the down arrow is disabled")
+	}
+}
+
+// The track leaves room for an arrow at each end, so neither sits on the groove.
+func TestTheTrackClearsBothArrows(t *testing.T) {
+	s := testBar(500, 40)
+	placeArrows(s)
+	r := ScrollbarRect(s)
+	if s.Up.Rect().Max.Y > r.Min.Y || s.Down.Rect().Min.Y < r.Max.Y {
+		t.Errorf("track %v overlaps the arrows %v and %v", r, s.Up.Rect(), s.Down.Rect())
+	}
+}
